@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import PageLayout from '@/components/PageLayout'
 import HeroBanner from '@/components/HeroBanner'
 import NewsGrid from '@/components/NewsGrid'
+import InstagramSection from '@/components/InstagramSection'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -113,6 +114,9 @@ export default async function HomePage() {
 
       {/* News */}
       <NewsGrid noticias={noticiasRecentes ?? []} />
+
+      {/* Instagram */}
+      <InstagramSection />
 
       {/* Highlights */}
       <section className="bg-escola-creme-escuro py-14 border-t border-escola-cinza-claro">
