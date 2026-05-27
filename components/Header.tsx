@@ -20,6 +20,7 @@ const navItems = [
     ],
   },
   { href: '/noticias', label: 'JBInforma' },
+  { href: '/ranking', label: 'Ranking' },
   { href: '/contato', label: 'Contato' },
 ]
 

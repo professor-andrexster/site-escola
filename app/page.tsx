@@ -4,6 +4,7 @@ import HeroBanner from '@/components/HeroBanner'
 import NewsGrid from '@/components/NewsGrid'
 import YoutubeSection from '@/components/YoutubeSection'
 import InstagramSection from '@/components/InstagramSection'
+import QuizRankingSection from '@/components/QuizRankingSection'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -118,6 +119,9 @@ export default async function HomePage() {
 
       {/* YouTube */}
       <YoutubeSection />
+
+      {/* Quiz Ranking */}
+      <QuizRankingSection />
 
       {/* Instagram */}
       <InstagramSection />
