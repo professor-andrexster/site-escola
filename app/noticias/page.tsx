@@ -3,7 +3,7 @@ import PageLayout from '@/components/PageLayout'
 import NewsCard from '@/components/NewsCard'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Notícias' }
+export const metadata: Metadata = { title: 'JBInforma' }
 export const revalidate = 60
 
 export default async function NoticiasPage() {
@@ -18,7 +18,7 @@ export default async function NoticiasPage() {
     <PageLayout>
       <div className="bg-escola-azul text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="font-fraunces text-4xl font-bold">Notícias</h1>
+          <h1 className="font-fraunces text-4xl font-bold">JBInforma</h1>
           <p className="text-blue-200 mt-2">Fique por dentro de tudo que acontece na escola</p>
         </div>
       </div>

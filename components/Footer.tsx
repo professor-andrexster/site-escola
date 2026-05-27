@@ -46,7 +46,7 @@ export default function Footer() {
                 { href: '/', label: 'Início' },
                 { href: '/sobre', label: 'A Escola' },
                 { href: '/emti', label: 'Programa EMTI' },
-                { href: '/noticias', label: 'Notícias' },
+                { href: '/noticias', label: 'JBInforma' },
                 { href: '/contato', label: 'Contato' },
               ].map(({ href, label }) => (
                 <li key={href}>

@@ -19,7 +19,7 @@ const navItems = [
       { href: '/emti/protagonismo', label: 'Protagonismo Juvenil' },
     ],
   },
-  { href: '/noticias', label: 'Notícias' },
+  { href: '/noticias', label: 'JBInforma' },
   { href: '/contato', label: 'Contato' },
 ]
 
