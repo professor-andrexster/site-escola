@@ -3,6 +3,7 @@ import Image from 'next/image'
 const YOUTUBE_HANDLE = 'joaoberaldocarloschagas'
 const YOUTUBE_URL = `https://www.youtube.com/@${YOUTUBE_HANDLE}`
 const HANDLE = `@${YOUTUBE_HANDLE}`
+const CHANNEL_ID = 'UC5vWD-q1Z4zmVu0cs8XI-AQ'
 
 const YoutubeIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -32,23 +33,9 @@ const placeholders = [
 
 async function getLatestVideos(): Promise<VideoItem[]> {
   try {
-    // Passo 1: busca a página do canal para extrair o channelId
-    const pageRes = await fetch(YOUTUBE_URL, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-      },
-      next: { revalidate: 86400 }, // cache por 24h — channelId não muda
-    })
-    if (!pageRes.ok) return []
-
-    const html = await pageRes.text()
-    const channelId = html.match(/"channelId":"(UC[^"]+)"/)?.[1]
-    if (!channelId) return []
-
-    // Passo 2: busca o feed RSS com os últimos vídeos (sem API key)
     const rssRes = await fetch(
-      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
-      { next: { revalidate: 3600 } } // atualiza a cada 1h
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${CHANNEL_ID}`,
+      { next: { revalidate: 3600 } }
     )
     if (!rssRes.ok) return []
 
