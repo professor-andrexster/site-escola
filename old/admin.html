@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin — Informativo JB</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:wght@400;600&family=Source+Serif+4:wght@400;600&display=swap');
+
+    :root {
+      --azul: #1a3a5c; --vermelho: #c0392b; --creme: #f7f4ef;
+      --preto: #0a0a0a; --cinza: #555; --cinza-claro: #d8d5cf; --branco: #fff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Source Serif 4', serif; background: var(--creme); color: var(--preto); }
+
+    /* ── Tela de login ── */
+    #tela-login {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: var(--azul);
+    }
+    .login-card {
+      background: var(--branco); border-radius: 6px; padding: 48px 40px;
+      width: 100%; max-width: 400px; box-shadow: 0 12px 40px rgba(0,0,0,.25);
+      text-align: center;
+    }
+    .login-card .titulo {
+      font-family: 'Bebas Neue', sans-serif; font-size: 2.4rem;
+      letter-spacing: .06em; color: var(--azul); margin-bottom: 4px;
+    }
+    .login-card .subtitulo {
+      font-family: 'IBM Plex Mono', monospace; font-size: .75rem;
+      color: var(--cinza); margin-bottom: 32px; letter-spacing: .1em; text-transform: uppercase;
+    }
+    .login-card input {
+      width: 100%; padding: 13px 16px; border: 1.5px solid var(--cinza-claro);
+      border-radius: 4px; font-family: 'IBM Plex Mono', monospace; font-size: .95rem;
+      margin-bottom: 14px; transition: border-color .2s;
+    }
+    .login-card input:focus { outline: none; border-color: var(--azul); }
+    .login-card button {
+      width: 100%; padding: 13px; background: var(--vermelho); color: var(--branco);
+      border: none; border-radius: 4px; font-family: 'IBM Plex Mono', monospace;
+      font-size: .9rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+      cursor: pointer; transition: background .2s;
+    }
+    .login-card button:hover { background: #a0281e; }
+    .login-erro { color: var(--vermelho); font-family: 'IBM Plex Mono', monospace;
+      font-size: .82rem; margin-top: 12px; display: none; }
+
+    /* ── Painel principal ── */
+    #painel { display: none; }
+
+    .admin-header {
+      background: var(--azul); color: var(--branco); padding: 14px 28px;
+      display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100;
+    }
+    .admin-header .titulo-admin {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; letter-spacing: .06em;
+    }
+    .admin-header .btn-sair {
+      background: none; border: 1px solid rgba(255,255,255,.4); color: var(--branco);
+      padding: 7px 16px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace;
+      font-size: .78rem; cursor: pointer; transition: background .2s; letter-spacing: .05em;
+    }
+    .admin-header .btn-sair:hover { background: rgba(255,255,255,.1); }
+
+    .admin-body { max-width: 1060px; margin: 0 auto; padding: 36px 20px 60px; }
+
+    /* Abas */
+    .abas { display: flex; gap: 0; border-bottom: 2px solid var(--cinza-claro); margin-bottom: 36px; }
+    .aba-btn {
+      padding: 11px 24px; font-family: 'IBM Plex Mono', monospace; font-size: .82rem;
+      font-weight: 600; letter-spacing: .06em; text-transform: uppercase; background: none;
+      border: none; border-bottom: 3px solid transparent; margin-bottom: -2px;
+      cursor: pointer; color: var(--cinza); transition: color .2s, border-color .2s;
+    }
+    .aba-btn.ativa { color: var(--azul); border-bottom-color: var(--vermelho); }
+
+    /* Seções */
+    .aba-content { display: none; }
+    .aba-content.ativa { display: block; }
+
+    /* Cards de notícia no painel */
+    .noticia-lista { display: flex; flex-direction: column; gap: 14px; margin-top: 24px; }
+    .noticia-item {
+      background: var(--branco); border-radius: 4px; padding: 18px 20px;
+      display: flex; align-items: center; gap: 16px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .noticia-item img {
+      width: 80px; height: 60px; object-fit: cover; border-radius: 3px; flex-shrink: 0;
+    }
+    .noticia-item .info { flex: 1; }
+    .noticia-item .info .cat {
+      font-family: 'IBM Plex Mono', monospace; font-size: .68rem; font-weight: 600;
+      text-transform: uppercase; letter-spacing: .1em; color: var(--vermelho); margin-bottom: 4px;
+    }
+    .noticia-item .info h4 { font-family: 'Source Serif 4', serif; font-size: 1rem; font-weight: 600; }
+    .noticia-item .info .meta { font-family: 'IBM Plex Mono', monospace; font-size: .72rem; color: #999; margin-top: 4px; }
+    .noticia-item .acoes { display: flex; gap: 8px; flex-shrink: 0; }
+    .btn-editar, .btn-excluir {
+      padding: 7px 14px; border-radius: 3px; font-family: 'IBM Plex Mono', monospace;
+      font-size: .76rem; font-weight: 600; cursor: pointer; border: none; transition: background .2s;
+    }
+    .btn-editar { background: var(--azul); color: var(--branco); }
+    .btn-editar:hover { background: #0e2238; }
+    .btn-excluir { background: #fdecea; color: var(--vermelho); }
+    .btn-excluir:hover { background: var(--vermelho); color: var(--branco); }
+
+    /* Formulário */
+    .form-card {
+      background: var(--branco); border-radius: 4px; padding: 32px 28px; box-shadow: 0 1px 4px rgba(0,0,0,.08);
+    }
+    .form-card h3 {
+      font-family: 'Bebas Neue', sans-serif; font-size: 1.5rem; letter-spacing: .05em;
+      color: var(--azul); margin-bottom: 24px; padding-bottom: 12px;
+      border-bottom: 2px solid var(--cinza-claro);
+    }
+    .campo { margin-bottom: 18px; }
+    .campo label {
+      display: block; font-family: 'IBM Plex Mono', monospace; font-size: .78rem;
+      font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--cinza);
+      margin-bottom: 6px;
+    }
+    .campo input, .campo textarea, .campo select {
+      width: 100%; padding: 11px 14px; border: 1.5px solid var(--cinza-claro);
+      border-radius: 4px; font-family: 'Source Serif 4', serif; font-size: .98rem;
+      transition: border-color .2s; background: var(--branco);
+    }
+    .campo input:focus, .campo textarea:focus, .campo select:focus {
+      outline: none; border-color: var(--azul);
+    }
+    .campo textarea { min-height: 160px; resize: vertical; line-height: 1.6; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .btn-pub {
+      background: var(--vermelho); color: var(--branco); border: none; padding: 13px 32px;
+      font-family: 'IBM Plex Mono', monospace; font-size: .88rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase; border-radius: 4px; cursor: pointer;
+      transition: background .2s; margin-top: 8px;
+    }
+    .btn-pub:hover { background: #a0281e; }
+    .btn-cancelar {
+      background: var(--creme); color: var(--cinza); border: 1.5px solid var(--cinza-claro);
+      padding: 13px 24px; font-family: 'IBM Plex Mono', monospace; font-size: .88rem;
+      font-weight: 600; border-radius: 4px; cursor: pointer; margin-top: 8px; margin-left: 10px;
+      display: none;
+    }
+    .feedback {
+      font-family: 'IBM Plex Mono', monospace; font-size: .85rem; margin-top: 14px;
+      padding: 12px 16px; border-radius: 4px; display: none;
+    }
+    .feedback.ok { background: #eafaf1; color: #1a6b3c; border: 1px solid #a9dfbf; }
+    .feedback.erro { background: #fdecea; color: var(--vermelho); border: 1px solid #f5c6c0; }
+
+    .loading-lista { font-family: 'IBM Plex Mono', monospace; font-size: .85rem; color: var(--cinza); padding: 24px; text-align: center; }
+    @media (max-width: 600px) {
+      .form-row { grid-template-columns: 1fr; }
+      .noticia-item { flex-wrap: wrap; }
+      .noticia-item img { width: 100%; height: 140px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Tela de Login ─────────────────────────────────────── -->
+<div id="tela-login">
+  <div class="login-card">
+    <div class="titulo">INFORMATIVO JB</div>
+    <div class="subtitulo">Painel Administrativo</div>
+    <input type="password" id="campo-senha" placeholder="Senha de acesso" autocomplete="current-password" />
+    <button onclick="fazerLogin()"><i class="fas fa-sign-in-alt"></i>&nbsp; Entrar</button>
+    <p class="login-erro" id="login-erro">Senha incorreta. Tente novamente.</p>
+  </div>
+</div>
+
+<!-- ── Painel Principal ──────────────────────────────────── -->
+<div id="painel">
+
+  <div class="admin-header">
+    <div class="titulo-admin">INFORMATIVO JB &mdash; Admin</div>
+    <button class="btn-sair" onclick="sair()"><i class="fas fa-sign-out-alt"></i> Sair</button>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- Abas -->
+    <div class="abas">
+      <button class="aba-btn ativa" onclick="trocarAba('publicar', this)">
+        <i class="fas fa-pen"></i> Publicar Matéria
+      </button>
+      <button class="aba-btn" onclick="trocarAba('lista', this); carregarNoticias()">
+        <i class="fas fa-list"></i> Gerenciar Matérias
+      </button>
+    </div>
+
+    <!-- Aba: Publicar -->
+    <div class="aba-content ativa" id="aba-publicar">
+      <div class="form-card">
+        <h3 id="form-titulo-label">Nova Matéria</h3>
+        <input type="hidden" id="noticia-id" value="" />
+
+        <div class="campo">
+          <label>Título da matéria *</label>
+          <input type="text" id="campo-titulo" placeholder="Ex.: JB conquista 1º lugar em olimpíada de robótica" maxlength="255" />
+        </div>
+
+        <div class="form-row">
+          <div class="campo">
+            <label>Categoria *</label>
+            <select id="campo-categoria">
+              <option value="noticia">Geral / Notícia</option>
+              <option value="esporte">Esporte</option>
+              <option value="tecnologia">Tecnologia</option>
+              <option value="emti">EMTI</option>
+              <option value="cultura">Cultura</option>
+              <option value="projeto">Projeto de Aluno</option>
+            </select>
+          </div>
+          <div class="campo">
+            <label>Autor</label>
+            <input type="text" id="campo-autor" placeholder="Nome do autor ou Equipe JB" value="Equipe JB" />
+          </div>
+        </div>
+
+        <div class="campo">
+          <label>Texto da matéria *</label>
+          <textarea id="campo-texto" placeholder="Escreva o conteúdo completo da matéria aqui..."></textarea>
+        </div>
+
+        <div class="campo">
+          <label>URL da imagem <span style="font-weight:400;text-transform:none">(opcional — caminho relativo ou URL)</span></label>
+          <input type="text" id="campo-imagem" placeholder="Ex.: images/jecc2026/jecc01.jpg" />
+        </div>
+
+        <button class="btn-pub" onclick="publicarNoticia()">
+          <i class="fas fa-paper-plane"></i>&nbsp; Publicar Matéria
+        </button>
+        <button class="btn-cancelar" id="btn-cancelar" onclick="cancelarEdicao()">
+          Cancelar edição
+        </button>
+        <div class="feedback" id="feedback-form"></div>
+      </div>
+    </div>
+
+    <!-- Aba: Gerenciar -->
+    <div class="aba-content" id="aba-lista">
+      <div class="form-card">
+        <h3>Matérias Publicadas</h3>
+        <div id="lista-noticias" class="noticia-lista">
+          <p class="loading-lista">Carregando matérias...</p>
+        </div>
+        <div class="feedback" id="feedback-lista"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Em produção (Hostinger), troque pela URL do Railway após o deploy:
+  // const API = 'https://SEU-PROJETO.up.railway.app/api';
+  const API = '/api';
+  let token = sessionStorage.getItem('jb_token') || '';
+
+  // ── Login ──────────────────────────────────────────────────
+  if (token) mostrarPainel();
+
+  function fazerLogin() {
+    const senha = document.getElementById('campo-senha').value;
+    fetch(`${API}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ senha })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.token) {
+        token = data.token;
+        sessionStorage.setItem('jb_token', token);
+        mostrarPainel();
+      } else {
+        document.getElementById('login-erro').style.display = 'block';
+      }
+    })
+    .catch(() => {
+      document.getElementById('login-erro').textContent = 'Erro ao conectar ao servidor.';
+      document.getElementById('login-erro').style.display = 'block';
+    });
+  }
+
+  document.getElementById('campo-senha').addEventListener('keydown', e => {
+    if (e.key === 'Enter') fazerLogin();
+  });
+
+  function mostrarPainel() {
+    document.getElementById('tela-login').style.display = 'none';
+    document.getElementById('painel').style.display = 'block';
+  }
+
+  function sair() {
+    token = '';
+    sessionStorage.removeItem('jb_token');
+    location.reload();
+  }
+
+  // ── Abas ───────────────────────────────────────────────────
+  function trocarAba(id, btn) {
+    document.querySelectorAll('.aba-content').forEach(a => a.classList.remove('ativa'));
+    document.querySelectorAll('.aba-btn').forEach(b => b.classList.remove('ativa'));
+    document.getElementById('aba-' + id).classList.add('ativa');
+    btn.classList.add('ativa');
+  }
+
+  // ── Publicar / Editar ──────────────────────────────────────
+  function publicarNoticia() {
+    const id     = document.getElementById('noticia-id').value;
+    const titulo = document.getElementById('campo-titulo').value.trim();
+    const texto  = document.getElementById('campo-texto').value.trim();
+    const cat    = document.getElementById('campo-categoria').value;
+    const autor  = document.getElementById('campo-autor').value.trim() || 'Equipe JB';
+    const imagem = document.getElementById('campo-imagem').value.trim();
+
+    if (!titulo || !texto) {
+      mostrarFeedback('feedback-form', 'erro', 'Título e texto são obrigatórios.');
+      return;
+    }
+
+    const metodo = id ? 'PUT' : 'POST';
+    const url    = id ? `${API}/noticias/${id}` : `${API}/noticias`;
+
+    fetch(url, {
+      method: metodo,
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify({ titulo, texto, categoria: cat, autor, imagem_url: imagem || null })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.erro) {
+        mostrarFeedback('feedback-form', 'erro', data.erro);
+      } else {
+        mostrarFeedback('feedback-form', 'ok', id ? 'Matéria atualizada com sucesso!' : 'Matéria publicada com sucesso!');
+        limparFormulario();
+      }
+    })
+    .catch(() => mostrarFeedback('feedback-form', 'erro', 'Erro ao conectar ao servidor.'));
+  }
+
+  // ── Listar notícias ────────────────────────────────────────
+  function carregarNoticias() {
+    const lista = document.getElementById('lista-noticias');
+    lista.innerHTML = '<p class="loading-lista">Carregando...</p>';
+
+    fetch(`${API}/noticias?limit=50`)
+    .then(r => r.json())
+    .then(noticias => {
+      if (!noticias.length) {
+        lista.innerHTML = '<p class="loading-lista">Nenhuma matéria encontrada.</p>';
+        return;
+      }
+      lista.innerHTML = noticias.map(n => `
+        <div class="noticia-item">
+          <img src="${n.imagem_url || 'images/fachada.jpg'}"
+               onerror="this.src='images/fachada.jpg'" alt="" />
+          <div class="info">
+            <div class="cat">${n.categoria}</div>
+            <h4>${escHtml(n.titulo)}</h4>
+            <div class="meta">${new Date(n.criado_em).toLocaleDateString('pt-BR')} &middot; ${escHtml(n.autor)}</div>
+          </div>
+          <div class="acoes">
+            <button class="btn-editar" onclick="editarNoticia(${n.id})">
+              <i class="fas fa-pen"></i> Editar
+            </button>
+            <button class="btn-excluir" onclick="excluirNoticia(${n.id}, this)">
+              <i class="fas fa-trash"></i> Excluir
+            </button>
+          </div>
+        </div>`).join('');
+    })
+    .catch(() => {
+      lista.innerHTML = '<p class="loading-lista" style="color:#c0392b">Erro ao conectar ao servidor. Verifique se o backend está rodando.</p>';
+    });
+  }
+
+  // ── Editar ─────────────────────────────────────────────────
+  function editarNoticia(id) {
+    fetch(`${API}/noticias/${id}`)
+    .then(r => r.json())
+    .then(n => {
+      document.getElementById('noticia-id').value       = n.id;
+      document.getElementById('campo-titulo').value     = n.titulo;
+      document.getElementById('campo-texto').value      = n.texto;
+      document.getElementById('campo-categoria').value  = n.categoria;
+      document.getElementById('campo-autor').value      = n.autor;
+      document.getElementById('campo-imagem').value     = n.imagem_url || '';
+      document.getElementById('form-titulo-label').textContent = 'Editar Matéria';
+      document.getElementById('btn-cancelar').style.display = 'inline-block';
+      trocarAba('publicar', document.querySelectorAll('.aba-btn')[0]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  function cancelarEdicao() {
+    limparFormulario();
+  }
+
+  function limparFormulario() {
+    document.getElementById('noticia-id').value      = '';
+    document.getElementById('campo-titulo').value    = '';
+    document.getElementById('campo-texto').value     = '';
+    document.getElementById('campo-categoria').value = 'noticia';
+    document.getElementById('campo-autor').value     = 'Equipe JB';
+    document.getElementById('campo-imagem').value    = '';
+    document.getElementById('form-titulo-label').textContent = 'Nova Matéria';
+    document.getElementById('btn-cancelar').style.display = 'none';
+  }
+
+  // ── Excluir ────────────────────────────────────────────────
+  function excluirNoticia(id, btn) {
+    if (!confirm('Tem certeza que deseja excluir esta matéria? Esta ação não pode ser desfeita.')) return;
+    fetch(`${API}/noticias/${id}`, {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` }
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.erro) {
+        mostrarFeedback('feedback-lista', 'erro', data.erro);
+      } else {
+        btn.closest('.noticia-item').remove();
+        mostrarFeedback('feedback-lista', 'ok', 'Matéria excluída com sucesso.');
+      }
+    })
+    .catch(() => mostrarFeedback('feedback-lista', 'erro', 'Erro ao excluir.'));
+  }
+
+  // ── Utilitários ────────────────────────────────────────────
+  function mostrarFeedback(id, tipo, msg) {
+    const el = document.getElementById(id);
+    el.className = `feedback ${tipo}`;
+    el.textContent = msg;
+    el.style.display = 'block';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+  }
+
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+</script>
+</body>
+</html>

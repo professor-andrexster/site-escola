@@ -292,3 +292,15 @@ export type QuizParticipanteUpdate = Database['public']['Tables']['quiz_particip
 
 export type QuizResposta = Database['public']['Tables']['quiz_respostas']['Row']
 export type QuizRespostaInsert = Database['public']['Tables']['quiz_respostas']['Insert']
+
+// Profile
+export interface Profile {
+  id: string
+  nome_completo: string
+  role: 'aluno' | 'professor' | 'direcao'
+  turma: string | null
+  disciplina: string | null
+  aprovado: boolean
+  created_at: string
+  updated_at: string
+}

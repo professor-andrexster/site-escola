@@ -4,25 +4,94 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Newspaper, FileText, Settings, LogOut, Inbox, Gamepad2 } from 'lucide-react'
+import {
+  LayoutDashboard, Newspaper, FileText, Settings,
+  LogOut, Inbox, Gamepad2, Users, Globe,
+  GraduationCap, Trophy,
+} from 'lucide-react'
+import type { Profile } from '@/types/database'
+import { ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
 
-const navItems = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
-  { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
-  { href: '/admin/leads', label: 'Leads', icon: Inbox },
-  { href: '/admin/paginas', label: 'Páginas', icon: FileText },
-  { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
-]
+interface NavItem {
+  href: string
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+}
+
+interface NavGroup {
+  label: string
+  items: NavItem[]
+}
+
+const navByRole: Record<Profile['role'], NavGroup[]> = {
+  direcao: [
+    {
+      label: 'Gestão',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/usuarios', label: 'Usuários', icon: Users },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
+        { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
+      ],
+    },
+    {
+      label: 'Sistema',
+      items: [
+        { href: '/admin/leads', label: 'Leads', icon: Inbox },
+        { href: '/admin/paginas', label: 'Páginas', icon: FileText },
+        { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
+      ],
+    },
+  ],
+  professor: [
+    {
+      label: 'Geral',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: 'Conteúdo',
+      items: [
+        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
+        { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
+      ],
+    },
+  ],
+  aluno: [
+    {
+      label: 'Minha Área',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
+        { href: '/ranking', label: 'Ranking', icon: Trophy },
+      ],
+    },
+  ],
+}
 
 interface AdminSidebarProps {
+  profile: Profile
   userEmail?: string
 }
 
-export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
+export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const groups = navByRole[profile.role] ?? navByRole.aluno
+
+  const initials = profile.nome_completo
+    .split(' ')
+    .slice(0, 2)
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -31,43 +100,90 @@ export default function AdminSidebar({ userEmail }: AdminSidebarProps) {
   }
 
   return (
-    <aside className="w-60 bg-white border-r border-gray-200 flex flex-col min-h-screen">
-      <div className="p-5 border-b border-gray-100">
-        <Link href="/" className="font-fraunces text-lg font-bold text-escola-azul block">
-          Escola EMTI
+    <aside className="w-64 flex-shrink-0 bg-[#0d1f35] flex flex-col min-h-screen">
+      {/* Logo */}
+      <div className="px-5 py-5 border-b border-white/5">
+        <Link href="/" className="flex items-center gap-2.5 group">
+          <div className="w-7 h-7 bg-escola-vermelho flex items-center justify-center flex-shrink-0">
+            <GraduationCap className="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p className="text-white font-playfair font-bold text-sm leading-tight group-hover:text-white/80 transition-colors">
+              Dr. João Beraldo
+            </p>
+            <p className="text-white/30 text-[10px] font-mono uppercase tracking-wider">Painel Escolar</p>
+          </div>
         </Link>
-        <span className="text-xs text-gray-400 mt-0.5 block">Painel Administrativo</span>
       </div>
-      <nav className="flex-1 p-3">
-        <ul className="space-y-0.5">
-          {navItems.map(({ href, label, icon: Icon }) => (
-            <li key={href}>
-              <Link
-                href={href}
-                className={cn(
-                  'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                  pathname.startsWith(href)
-                    ? 'bg-escola-azul-claro text-escola-azul'
-                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                )}
-              >
-                <Icon className="w-4 h-4 flex-shrink-0" />
-                {label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+
+      {/* User card */}
+      <div className="px-4 py-4 border-b border-white/5">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-escola-vermelho flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-xs font-bold">{initials || '?'}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-white text-sm font-semibold truncate leading-tight">{profile.nome_completo}</p>
+            <p className="text-white/40 text-xs truncate">{userEmail}</p>
+          </div>
+        </div>
+        <div className="mt-2.5">
+          <span className={cn('text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
+            {ROLE_LABELS[profile.role]}
+          </span>
+        </div>
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+        {groups.map((group) => (
+          <div key={group.label}>
+            <p className="text-white/25 text-[10px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
+              {group.label}
+            </p>
+            <ul className="space-y-0.5">
+              {group.items.map(({ href, label, icon: Icon }) => {
+                const active = href === '/admin/dashboard'
+                  ? pathname === href
+                  : pathname.startsWith(href)
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={cn(
+                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150',
+                        active
+                          ? 'bg-escola-vermelho text-white font-semibold'
+                          : 'text-white/60 hover:text-white hover:bg-white/8'
+                      )}
+                    >
+                      <Icon className="w-4 h-4 flex-shrink-0" />
+                      {label}
+                    </Link>
+                  </li>
+                )
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
-      <div className="p-3 border-t border-gray-100">
-        {userEmail && (
-          <p className="text-xs text-gray-400 px-3 mb-2 truncate">{userEmail}</p>
-        )}
+
+      {/* Footer */}
+      <div className="px-3 py-4 border-t border-white/5 space-y-1">
+        <Link
+          href="/"
+          target="_blank"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/8 transition-all duration-150"
+        >
+          <Globe className="w-4 h-4 flex-shrink-0" />
+          Ver Site Público
+        </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 w-full"
         >
-          <LogOut className="w-4 h-4" />
-          Sair
+          <LogOut className="w-4 h-4 flex-shrink-0" />
+          Sair da Conta
         </button>
       </div>
     </aside>

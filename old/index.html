@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Informativo JB — E.E. Dr. João Beraldo</title>
+  <meta name="description" content="Informativo oficial da Escola Estadual Dr. João Beraldo, Carlos Chagas - MG. Notícias, projetos e conquistas dos protagonistas do EMTI." />
+  <meta name="keywords" content="Informativo JB, jornal escolar, E.E. Dr. João Beraldo, EMTI, Carlos Chagas, Minas Gerais" />
+  <meta property="og:title" content="Informativo JB — E.E. Dr. João Beraldo" />
+  <meta property="og:description" content="Notícias e conquistas dos protagonistas do EMTI de Carlos Chagas." />
+  <meta property="og:type" content="website" />
+
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+</head>
+<body>
+
+  <!-- Barra superior -->
+  <div class="topbar">
+    <div class="container">
+      <span class="data-topbar mono" id="data-hoje"></span>
+      <span>E.E. Dr. João Beraldo · Carlos Chagas, MG · EMTI</span>
+      <div class="social-icons">
+        <a href="https://www.instagram.com/escolajoaoberaldo" target="_blank" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+        <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+        <a href="https://www.facebook.com/share/1GrYbrPEvJ/" target="_blank" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Masthead -->
+  <div class="masthead">
+    <div class="container">
+      <div class="masthead-logo">
+        <img src="images/logo.jpg" alt="Logo E.E. Dr. João Beraldo" onerror="this.style.display='none'" />
+        <div>
+          <div class="masthead-titulo">INFORMATIVO JB</div>
+          <div class="masthead-subtitulo">E.E. Dr. João Beraldo &middot; Desde 1946</div>
+        </div>
+      </div>
+      <div class="masthead-meta">
+        <div>Carlos Chagas &middot; Minas Gerais</div>
+        <div>EMTI &mdash; Ensino Médio em Tempo Integral</div>
+        <div>(33) 99870-1618</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <header id="main-header"></header>
+
+  <main>
+
+    <!-- Manchete principal -->
+    <section class="hero-jornal">
+      <div class="hero-bg" style="background-image: url('images/jecc2026/jecc01.jpg')"></div>
+      <div class="hero-content">
+        <span class="hero-categoria">Esporte</span>
+        <h1>A JB brilha no JECC 2026 com grandes atuações dos protagonistas</h1>
+        <p class="hero-resumo">
+          Alunos da E.E. Dr. João Beraldo representaram Carlos Chagas com excelência nos
+          Jogos Escolares de Carlos Chagas 2026, conquistando resultados expressivos
+          nas modalidades coletivas e individuais realizadas em março.
+        </p>
+        <p class="hero-meta mono">25 de março de 2026 &middot; Equipe JB</p>
+        <a href="noticia-jecc.html" class="btn btn-primary" style="margin-top:18px">Ler a matéria completa</a>
+      </div>
+    </section>
+
+    <!-- Grade de Notícias -->
+    <section class="section-padding bg-creme">
+      <div class="container">
+
+        <div class="faixa-titulo">
+          <h2>Últimas Notícias</h2>
+          <span class="label-vermelho">Ao vivo</span>
+        </div>
+
+        <div class="news-grid-principal" id="news-grid">
+
+          <!-- Card destaque: Promotor -->
+          <article class="news-card destaque">
+            <div class="news-image">
+              <img src="images/promotor/promotor01.jpg"
+                   alt="Promotora de Justiça visita a Escola Estadual Dr. João Beraldo"
+                   onerror="this.src='images/fachada.jpg'" />
+            </div>
+            <div class="news-content">
+              <span class="tag tag-noticia">Cidadania</span>
+              <span class="news-categoria">Comunidade Escolar</span>
+              <h3>Promotoa de Justiça visita a Escola Estadual Dr. João Beraldo e debate direitos e cidadania com os protagonistas</h3>
+              <p>
+                Em ação do Ministério Público de Minas Gerais, o promotor de Justiça esteve
+                na escola para uma roda de conversa com os protagonistas do EMTI sobre
+                direitos fundamentais, deveres e protagonismo juvenil na sociedade.
+              </p>
+              <p class="news-meta mono">25 de março de 2026 &middot; Equipe JB</p>
+              <a href="noticia-promotor.html" class="read-more">
+                Leia mais <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </article>
+
+          <!-- JECC card -->
+          <article class="news-card">
+            <div class="news-image">
+              <img src="images/jecc2026/jecc05.jpg"
+                   alt="JECC 2026"
+                   onerror="this.src='images/fachada.jpg'" />
+            </div>
+            <div class="news-content">
+              <span class="tag tag-esporte">Esporte</span>
+              <h3>JECC 2026: conheça os atletas que representaram a escola</h3>
+              <p>Veja os resultados e os protagonistas que vestiram a camisa da Escola Estadual Dr. João Beraldo nos Jogos Escolares de Carlos Chagas.</p>
+              <p class="news-meta mono">25 mar. 2026 &middot; Esportes</p>
+              <a href="noticia-jecc.html" class="read-more">Leia mais <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </article>
+
+          <!-- Robótica -->
+          <article class="news-card">
+            <div class="news-image">
+              <img src="images/projeto robos/IMG-20251105-WA0035.jpg"
+                   alt="Projeto de Robótica"
+                   onerror="this.src='images/fachada.jpg'" />
+            </div>
+            <div class="news-content">
+              <span class="tag tag-tecnologia">Tecnologia</span>
+              <h3>JB Tech conquista 1º lugar em olimpíada de robótica regional</h3>
+              <p>Equipe desenvolveu sistema de irrigação sustentável com Arduino e levou o troféu na etapa regional.</p>
+              <p class="news-meta mono">Nov. 2025 &middot; Tecnologia</p>
+              <a href="noticias.html" class="read-more">Leia mais <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </article>
+
+          <!-- Formatura -->
+          <article class="news-card">
+            <div class="news-image">
+              <img src="images/IMG-20251030-WA0088.jpg"
+                   alt="Formatura EMTI 2025"
+                   onerror="this.src='images/fachada.jpg'" />
+            </div>
+            <div class="news-content">
+              <span class="tag tag-emti">EMTI</span>
+              <h3>Formatura e Colação de Grau EMTI 2025 emociona a comunidade</h3>
+              <p>Alunos recebem certificados técnicos em Informática na cerimônia que celebrou três anos de dedicação integral.</p>
+              <p class="news-meta mono">Dez. 2025 &middot; EMTI</p>
+              <a href="noticias.html" class="read-more">Leia mais <i class="fas fa-arrow-right"></i></a>
+            </div>
+          </article>
+
+        </div>
+
+        <div class="text-center mt-32">
+          <a href="noticias.html" class="btn btn-outline">Ver todas as notícias</a>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Pilares EMTI -->
+    <section class="section-dark">
+      <div class="container">
+        <div class="faixa-titulo">
+          <h2 style="color:#fff">Por que o EMTI?</h2>
+        </div>
+        <div class="pilares-grid">
+          <div class="pilar-card">
+            <i class="fas fa-chalkboard-user"></i>
+            <h3>Professores Qualificados</h3>
+            <p>100% graduados e em formação contínua com o estado.</p>
+          </div>
+          <div class="pilar-card">
+            <i class="fas fa-laptop-code"></i>
+            <h3>Tecnologia na Prática</h3>
+            <p>Laboratórios de informática, robótica e programação.</p>
+          </div>
+          <div class="pilar-card">
+            <i class="fas fa-medal"></i>
+            <h3>Protagonismo Juvenil</h3>
+            <p>Projeto de Vida, autonomia e liderança para o futuro.</p>
+          </div>
+          <div class="pilar-card">
+            <i class="fas fa-certificate"></i>
+            <h3>Certificado Técnico</h3>
+            <p>Ensino Médio + habilitação em Informática ao concluir.</p>
+          </div>
+          <div class="pilar-card">
+            <i class="fas fa-wind"></i>
+            <h3>Infraestrutura Premium</h3>
+            <p>Salas climatizadas, sala de cinema e espaços modernos.</p>
+          </div>
+        </div>
+        <div class="text-center mt-32">
+          <a href="emti.html" class="btn btn-outline-branco">Conheça o EMTI completo</a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Vídeos -->
+    <section class="section-creme">
+      <div class="container">
+        <div class="faixa-titulo">
+          <h2>Canal Oficial no YouTube</h2>
+        </div>
+        <div class="video-grid">
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=XUQmUPsekQI" target="_blank">
+              <img src="https://img.youtube.com/vi/XUQmUPsekQI/mqdefault.jpg" alt="Pensou em tecnologia?" />
+            </a>
+            <div class="video-content"><h3>Pensou em tecnologia? Vem pro João Beraldo.</h3></div>
+          </article>
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=zunyj1e3dTE" target="_blank">
+              <img src="https://img.youtube.com/vi/zunyj1e3dTE/mqdefault.jpg" alt="Encontro de Professores" />
+            </a>
+            <div class="video-content"><h3>Encontro de Professores e Equipe Pedagógica</h3></div>
+          </article>
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=EyCnBSWWSb4" target="_blank">
+              <img src="https://img.youtube.com/vi/EyCnBSWWSb4/mqdefault.jpg" alt="Dia de Inovação" />
+            </a>
+            <div class="video-content"><h3>Dia de Inovação e Tecnologia na JB</h3></div>
+          </article>
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=bkECSeUiJ1w" target="_blank">
+              <img src="https://img.youtube.com/vi/bkECSeUiJ1w/mqdefault.jpg" alt="Robótica" />
+            </a>
+            <div class="video-content"><h3>Venha aprender tecnologia no João Beraldo</h3></div>
+          </article>
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=V4VyIbAYwME" target="_blank">
+              <img src="https://img.youtube.com/vi/V4VyIbAYwME/mqdefault.jpg" alt="A Escola que Inspira" />
+            </a>
+            <div class="video-content"><h3>A Escola que Inspira o Futuro</h3></div>
+          </article>
+          <article class="video-card">
+            <a href="https://www.youtube.com/watch?v=zSqFu-y0w8k" target="_blank">
+              <img src="https://img.youtube.com/vi/zSqFu-y0w8k/mqdefault.jpg" alt="Especialização" />
+            </a>
+            <div class="video-content"><h3>Quer se especializar em tecnologia? Vem pra JB!</h3></div>
+          </article>
+        </div>
+        <div class="text-center mt-32">
+          <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" class="btn btn-primary">
+            <i class="fab fa-youtube"></i>&nbsp; Ver canal completo
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Galeria -->
+    <section class="section-padding bg-branco">
+      <div class="container">
+        <div class="faixa-titulo">
+          <h2>Nossa Escola em Imagens</h2>
+        </div>
+        <div class="gallery-grid">
+          <figure class="gallery-item">
+            <img src="images/fachada.jpg" alt="Fachada da escola" onerror="this.src='images/logo.jpg'" />
+            <figcaption>Fachada Principal</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="images/jecc2026/jecc03.jpg" alt="JECC 2026" onerror="this.src='images/fachada.jpg'" />
+            <figcaption>JECC 2026</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="images/promotor/promotor03.jpg" alt="Visita do Promotor" onerror="this.src='images/fachada.jpg'" />
+            <figcaption>Promotora de Justiça</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="images/IMG-20251030-WA0078.jpg" alt="Laboratório" onerror="this.src='images/fachada.jpg'" />
+            <figcaption>Laboratório de Tecnologia</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="images/IMG-20251030-WA0084.jpg" alt="Pátio" onerror="this.src='images/fachada.jpg'" />
+            <figcaption>Pátio e Refeitório</figcaption>
+          </figure>
+          <figure class="gallery-item">
+            <img src="images/IMG-20251030-WA0095.jpg" alt="Protagonismo" onerror="this.src='images/fachada.jpg'" />
+            <figcaption>Protagonismo Juvenil</figcaption>
+          </figure>
+        </div>
+        <div class="text-center mt-32">
+          <a href="galeria.html" class="btn btn-outline">Ver galeria completa <i class="fas fa-arrow-right"></i></a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer id="main-footer"></footer>
+
+  <script src="js/components.js"></script>
+  <script src="js/main.js"></script>
+  <script>
+    const hoje = new Date();
+    const opts = { weekday:'long', day:'numeric', month:'long', year:'numeric' };
+    document.getElementById('data-hoje').textContent =
+      hoje.toLocaleDateString('pt-BR', opts);
+  </script>
+</body>
+</html>
