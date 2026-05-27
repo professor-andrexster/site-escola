@@ -7,3 +7,9 @@ out/
 *.log
 .claude/
 *.zip
+old/
+supabase/
+cidadania.png
+erro_upload.png
+materias_ensinoMedio.png
+*.tsbuildinfo
