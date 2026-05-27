@@ -122,6 +122,143 @@ export interface Database {
           created_at?: string
         }
       }
+      quizzes: {
+        Row: {
+          id: string
+          titulo: string
+          codigo: string
+          descricao: string | null
+          ativo: boolean
+          encerrado: boolean
+          tempo_por_pergunta: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          titulo: string
+          codigo: string
+          descricao?: string | null
+          ativo?: boolean
+          encerrado?: boolean
+          tempo_por_pergunta?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          titulo?: string
+          codigo?: string
+          descricao?: string | null
+          ativo?: boolean
+          encerrado?: boolean
+          tempo_por_pergunta?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      quiz_perguntas: {
+        Row: {
+          id: string
+          quiz_id: string
+          ordem: number
+          enunciado: string
+          alternativa_a: string
+          alternativa_b: string
+          alternativa_c: string
+          alternativa_d: string
+          resposta_correta: 'a' | 'b' | 'c' | 'd'
+          pontos: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          quiz_id: string
+          ordem?: number
+          enunciado: string
+          alternativa_a: string
+          alternativa_b: string
+          alternativa_c: string
+          alternativa_d: string
+          resposta_correta: 'a' | 'b' | 'c' | 'd'
+          pontos?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          quiz_id?: string
+          ordem?: number
+          enunciado?: string
+          alternativa_a?: string
+          alternativa_b?: string
+          alternativa_c?: string
+          alternativa_d?: string
+          resposta_correta?: 'a' | 'b' | 'c' | 'd'
+          pontos?: number
+          created_at?: string
+        }
+      }
+      quiz_participantes: {
+        Row: {
+          id: string
+          quiz_id: string
+          nome: string
+          turma: string
+          pontuacao_total: number
+          concluido: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          quiz_id: string
+          nome: string
+          turma: string
+          pontuacao_total?: number
+          concluido?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          quiz_id?: string
+          nome?: string
+          turma?: string
+          pontuacao_total?: number
+          concluido?: boolean
+          created_at?: string
+        }
+      }
+      quiz_respostas: {
+        Row: {
+          id: string
+          participante_id: string
+          pergunta_id: string
+          resposta: 'a' | 'b' | 'c' | 'd' | null
+          correta: boolean
+          tempo_resposta: number | null
+          pontos_obtidos: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          participante_id: string
+          pergunta_id: string
+          resposta?: 'a' | 'b' | 'c' | 'd' | null
+          correta?: boolean
+          tempo_resposta?: number | null
+          pontos_obtidos?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          participante_id?: string
+          pergunta_id?: string
+          resposta?: 'a' | 'b' | 'c' | 'd' | null
+          correta?: boolean
+          tempo_resposta?: number | null
+          pontos_obtidos?: number
+          created_at?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: Record<string, never>
@@ -140,3 +277,18 @@ export type ConfiguracaoSite = Database['public']['Tables']['configuracoes_site'
 
 export type Lead = Database['public']['Tables']['leads']['Row']
 export type LeadInsert = Database['public']['Tables']['leads']['Insert']
+
+export type Quiz = Database['public']['Tables']['quizzes']['Row']
+export type QuizInsert = Database['public']['Tables']['quizzes']['Insert']
+export type QuizUpdate = Database['public']['Tables']['quizzes']['Update']
+
+export type QuizPergunta = Database['public']['Tables']['quiz_perguntas']['Row']
+export type QuizPerguntaInsert = Database['public']['Tables']['quiz_perguntas']['Insert']
+export type QuizPerguntaUpdate = Database['public']['Tables']['quiz_perguntas']['Update']
+
+export type QuizParticipante = Database['public']['Tables']['quiz_participantes']['Row']
+export type QuizParticipanteInsert = Database['public']['Tables']['quiz_participantes']['Insert']
+export type QuizParticipanteUpdate = Database['public']['Tables']['quiz_participantes']['Update']
+
+export type QuizResposta = Database['public']['Tables']['quiz_respostas']['Row']
+export type QuizRespostaInsert = Database['public']['Tables']['quiz_respostas']['Insert']

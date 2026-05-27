@@ -4,11 +4,12 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { LayoutDashboard, Newspaper, FileText, Settings, LogOut, Inbox } from 'lucide-react'
+import { LayoutDashboard, Newspaper, FileText, Settings, LogOut, Inbox, Gamepad2 } from 'lucide-react'
 
 const navItems = [
   { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
+  { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
   { href: '/admin/leads', label: 'Leads', icon: Inbox },
   { href: '/admin/paginas', label: 'Páginas', icon: FileText },
   { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
