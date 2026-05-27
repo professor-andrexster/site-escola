@@ -8,11 +8,18 @@ export const metadata: Metadata = {
   },
   description: 'Site oficial da Escola Estadual Dr. João Beraldo — Ensino Médio em Tempo Integral (EMTI), Carlos Chagas, Minas Gerais. Formando protagonistas desde 1946.',
   keywords: ['E.E. Dr. João Beraldo', 'EMTI', 'Ensino Médio em Tempo Integral', 'Carlos Chagas', 'Minas Gerais', 'escola estadual'],
+  metadataBase: new URL('https://escolaestadualdrjoaoberaldo.com'),
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
     siteName: 'E.E. Dr. João Beraldo',
-    images: [{ url: '/fachada.jpg', width: 1200, height: 630, alt: 'E.E. Dr. João Beraldo — Carlos Chagas, MG' }],
+    url: 'https://escolaestadualdrjoaoberaldo.com',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
+  icons: {
+    shortcut: '/favicon.ico',
   },
 }
 
