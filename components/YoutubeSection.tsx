@@ -1,11 +1,25 @@
-const YOUTUBE_URL = 'https://www.youtube.com/@joaoberaldocarloschagas'
-const HANDLE = '@joaoberaldocarloschagas'
+import Image from 'next/image'
+
+const YOUTUBE_HANDLE = 'joaoberaldocarloschagas'
+const YOUTUBE_URL = `https://www.youtube.com/@${YOUTUBE_HANDLE}`
+const HANDLE = `@${YOUTUBE_HANDLE}`
 
 const YoutubeIcon = () => (
   <svg viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
   </svg>
 )
+
+const PlayIcon = () => (
+  <svg viewBox="0 0 24 24" fill="white" className="w-6 h-6 ml-1">
+    <path d="M8 5v14l11-7z" />
+  </svg>
+)
+
+interface VideoItem {
+  videoId: string
+  title: string
+}
 
 const placeholders = [
   { label: 'Aulas', angle: '135deg', from: '#1a0a0a', to: '#8b0000' },
@@ -16,7 +30,54 @@ const placeholders = [
   { label: 'Escola', angle: '130deg', from: '#c0392b', to: '#1a0a0a' },
 ]
 
-export default function YoutubeSection() {
+async function getLatestVideos(): Promise<VideoItem[]> {
+  try {
+    // Passo 1: busca a página do canal para extrair o channelId
+    const pageRes = await fetch(YOUTUBE_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+      },
+      next: { revalidate: 86400 }, // cache por 24h — channelId não muda
+    })
+    if (!pageRes.ok) return []
+
+    const html = await pageRes.text()
+    const channelId = html.match(/"channelId":"(UC[^"]+)"/)?.[1]
+    if (!channelId) return []
+
+    // Passo 2: busca o feed RSS com os últimos vídeos (sem API key)
+    const rssRes = await fetch(
+      `https://www.youtube.com/feeds/videos.xml?channel_id=${channelId}`,
+      { next: { revalidate: 3600 } } // atualiza a cada 1h
+    )
+    if (!rssRes.ok) return []
+
+    const xml = await rssRes.text()
+    const entries = xml.match(/<entry>([\s\S]*?)<\/entry>/g) ?? []
+
+    return entries
+      .slice(0, 6)
+      .map((entry) => {
+        const videoId = entry.match(/<yt:videoId>(.*?)<\/yt:videoId>/)?.[1] ?? ''
+        const rawTitle = entry.match(/<title>(.*?)<\/title>/)?.[1] ?? ''
+        const title = rawTitle
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+        return { videoId, title }
+      })
+      .filter((v) => v.videoId)
+  } catch {
+    return []
+  }
+}
+
+export default async function YoutubeSection() {
+  const videos = await getLatestVideos()
+  const vagasRestantes = Math.max(0, 6 - videos.length)
+
   return (
     <section className="border-t border-escola-cinza-claro bg-white py-14">
       <div className="container mx-auto px-4">
@@ -49,19 +110,44 @@ export default function YoutubeSection() {
           </a>
         </div>
 
-        {/* Grid */}
-        <a
-          href={YOUTUBE_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group"
-          aria-label="Ver canal do YouTube da E.E. Dr. João Beraldo"
-        >
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-escola-cinza-claro border border-escola-cinza-claro overflow-hidden">
-            {placeholders.map((p) => (
-              <div
-                key={p.label}
-                className="relative aspect-square overflow-hidden"
+        {/* Grid de vídeos */}
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-escola-cinza-claro border border-escola-cinza-claro overflow-hidden">
+          {/* Thumbnails dos vídeos reais */}
+          {videos.map((video) => (
+            <a
+              key={video.videoId}
+              href={`https://www.youtube.com/watch?v=${video.videoId}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative aspect-square overflow-hidden group"
+              title={video.title}
+            >
+              <Image
+                src={`https://img.youtube.com/vi/${video.videoId}/hqdefault.jpg`}
+                alt={video.title}
+                fill
+                sizes="(max-width: 768px) 33vw, 16vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              {/* Overlay com botão play */}
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 flex items-center justify-center">
+                <div className="w-10 h-10 bg-[#FF0000] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
+                  <PlayIcon />
+                </div>
+              </div>
+            </a>
+          ))}
+
+          {/* Placeholders para vagas restantes */}
+          {Array.from({ length: vagasRestantes }).map((_, i) => {
+            const p = placeholders[i % placeholders.length]
+            return (
+              <a
+                key={`ph-${i}`}
+                href={YOUTUBE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative aspect-square overflow-hidden group"
                 style={{ background: `linear-gradient(${p.angle}, ${p.from}, ${p.to})` }}
               >
                 <div className="absolute inset-0 bg-[#FF0000]/0 group-hover:bg-[#FF0000]/10 transition-colors duration-300" />
@@ -70,15 +156,17 @@ export default function YoutubeSection() {
                   <span className="font-mono text-[8px] uppercase tracking-widest text-white">{p.label}</span>
                 </div>
                 <div className="absolute top-0 left-0 w-3 h-0.5 bg-[#FF0000] opacity-60" />
-              </div>
-            ))}
-          </div>
-        </a>
+              </a>
+            )
+          })}
+        </div>
 
         {/* Caption */}
         <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-serif text-escola-cinza text-sm">
-            Vídeos sobre projetos, eventos e a vida escolar da E.E. Dr. João Beraldo.
+            {videos.length > 0
+              ? `${videos.length} vídeos mais recentes do canal. Inscreva-se para não perder nenhum.`
+              : 'Vídeos sobre projetos, eventos e a vida escolar da E.E. Dr. João Beraldo.'}
           </p>
           <a
             href={YOUTUBE_URL}
