@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { Noticia } from '@/types/database'
 import { formatDate } from '@/lib/utils'
+import { badgeCategoria } from '@/lib/categorias'
 
 interface NewsCardProps {
   noticia: Noticia
@@ -28,7 +29,14 @@ export default function NewsCard({ noticia, featured = false }: NewsCardProps) {
         <div className="p-6 flex flex-col justify-between flex-1">
           <div>
             <div className="flex items-center gap-2 mb-3">
-              <span className="tag tag-noticia">Notícia</span>
+              {(() => {
+                const badge = badgeCategoria(noticia.categoria)
+                return badge ? (
+                  <span className={`tag border ${badge.bg} ${badge.text} ${badge.border}`}>{badge.label}</span>
+                ) : (
+                  <span className="tag tag-noticia">Notícia</span>
+                )
+              })()}
               <time className="font-mono text-xs text-escola-cinza">{formatDate(noticia.created_at)}</time>
             </div>
             <h3 className="font-playfair text-escola-azul font-bold text-xl md:text-2xl leading-tight mb-3 group-hover:text-escola-vermelho transition-colors line-clamp-3">
@@ -64,6 +72,12 @@ export default function NewsCard({ noticia, featured = false }: NewsCardProps) {
 
       <div className="p-4 flex flex-col flex-1 border-t-0">
         <div className="flex items-center gap-2 mb-2">
+          {(() => {
+            const badge = badgeCategoria(noticia.categoria)
+            return badge ? (
+              <span className={`font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border ${badge.bg} ${badge.text} ${badge.border}`}>{badge.label}</span>
+            ) : null
+          })()}
           <time className="font-mono text-[11px] text-escola-cinza">{formatDate(noticia.created_at)}</time>
         </div>
         <h3 className="font-playfair text-escola-preto font-bold text-base leading-snug line-clamp-3 mb-2 group-hover:text-escola-vermelho transition-colors flex-1">

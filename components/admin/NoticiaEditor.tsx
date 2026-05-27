@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Noticia } from '@/types/database'
+import { CATEGORIAS, type CategoriaKey } from '@/lib/categorias'
 import TipTapEditor from './TipTapEditor'
 
 function slugify(text: string): string {
@@ -28,6 +29,9 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
   const [resumo, setResumo] = useState(noticia?.resumo ?? '')
   const [conteudo, setConteudo] = useState(noticia?.conteudo ?? '')
   const [imagemUrl, setImagemUrl] = useState(noticia?.imagem_url ?? '')
+  const [categoria, setCategoria] = useState<CategoriaKey | ''>(
+    (noticia?.categoria as CategoriaKey) ?? ''
+  )
   const [publicado, setPublicado] = useState(noticia?.publicado ?? false)
   const [destaqueHome, setDestaqueHome] = useState(noticia?.destaque_home ?? false)
   const [uploading, setUploading] = useState(false)
@@ -71,12 +75,18 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
       imagem_url: imagemUrl || null,
       publicado: publish,
       destaque_home: destaqueHome,
+      categoria: categoria || null,
     }
     let result
     if (isEditing) {
       result = await supabase.from('noticias').update(payload).eq('id', noticia.id)
     } else {
-      result = await supabase.from('noticias').insert(payload)
+      const { data: { user } } = await supabase.auth.getUser()
+      result = await supabase.from('noticias').insert({
+        ...payload,
+        autor_id: user?.id ?? null,
+        autor_nome: user?.email ?? null,
+      })
     }
     if (result.error) {
       setError(result.error.message)
@@ -130,6 +140,20 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul resize-none"
             placeholder="Breve descrição da notícia (aparece nos cards e como subtítulo)"
           />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+          <select
+            value={categoria}
+            onChange={(e) => setCategoria(e.target.value as CategoriaKey | '')}
+            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul bg-white"
+          >
+            <option value="">Sem categoria</option>
+            {(Object.entries(CATEGORIAS) as [CategoriaKey, typeof CATEGORIAS[CategoriaKey]][]).map(([key, cat]) => (
+              <option key={key} value={key}>{cat.label}</option>
+            ))}
+          </select>
         </div>
 
         <div>

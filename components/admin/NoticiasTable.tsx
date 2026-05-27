@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
 import type { Noticia } from '@/types/database'
 import { Pencil, Trash2, Eye, EyeOff, Star } from 'lucide-react'
+import { badgeCategoria } from '@/lib/categorias'
 
 interface NoticiasTableProps {
   noticias: Noticia[]
@@ -59,6 +60,7 @@ export default function NoticiasTable({ noticias: initial }: NoticiasTableProps)
           <thead>
             <tr className="border-b border-gray-200 bg-gray-50">
               <th className="text-left px-4 py-3 font-semibold text-gray-700">Título</th>
+              <th className="text-center px-4 py-3 font-semibold text-gray-700 hidden lg:table-cell">Categoria</th>
               <th className="text-center px-4 py-3 font-semibold text-gray-700 hidden md:table-cell">Data</th>
               <th className="text-center px-4 py-3 font-semibold text-gray-700">Publicado</th>
               <th className="text-center px-4 py-3 font-semibold text-gray-700">Destaque</th>
@@ -71,6 +73,21 @@ export default function NoticiasTable({ noticias: initial }: NoticiasTableProps)
                 <td className="px-4 py-3">
                   <p className="font-medium text-gray-900 line-clamp-1">{noticia.titulo}</p>
                   <p className="text-gray-400 text-xs mt-0.5">/{noticia.slug}</p>
+                  {noticia.autor_nome && (
+                    <p className="text-gray-400 text-xs mt-0.5">por {noticia.autor_nome}</p>
+                  )}
+                </td>
+                <td className="px-4 py-3 text-center hidden lg:table-cell">
+                  {(() => {
+                    const badge = badgeCategoria(noticia.categoria)
+                    return badge ? (
+                      <span className={`inline-block text-xs font-medium px-2 py-0.5 rounded-full border ${badge.bg} ${badge.text} ${badge.border}`}>
+                        {badge.label}
+                      </span>
+                    ) : (
+                      <span className="text-gray-300 text-xs">—</span>
+                    )
+                  })()}
                 </td>
                 <td className="px-4 py-3 text-center text-gray-500 hidden md:table-cell">
                   {formatDate(noticia.created_at)}

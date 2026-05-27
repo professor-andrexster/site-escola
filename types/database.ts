@@ -19,6 +19,9 @@ export interface Database {
           imagem_url: string | null
           destaque_home: boolean
           publicado: boolean
+          categoria: string | null
+          autor_id: string | null
+          autor_nome: string | null
           created_at: string
           updated_at: string
         }
@@ -31,6 +34,9 @@ export interface Database {
           imagem_url?: string | null
           destaque_home?: boolean
           publicado?: boolean
+          categoria?: string | null
+          autor_id?: string | null
+          autor_nome?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -43,6 +49,9 @@ export interface Database {
           imagem_url?: string | null
           destaque_home?: boolean
           publicado?: boolean
+          categoria?: string | null
+          autor_id?: string | null
+          autor_nome?: string | null
           created_at?: string
           updated_at?: string
         }
