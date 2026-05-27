@@ -63,7 +63,7 @@ export default function Header() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-3 group">
             <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-escola-azul/20 group-hover:ring-escola-vermelho/40 transition-all duration-300 flex-shrink-0">
-              <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill className="object-cover" priority />
+              <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="48px" className="object-cover" priority />
             </div>
             <div>
               <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-escola-vermelho leading-none mb-0.5">

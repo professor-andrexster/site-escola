@@ -17,7 +17,7 @@ export default function NewsCard({ noticia, featured = false }: NewsCardProps) {
       >
         <div className="relative w-full md:w-2/5 h-52 md:h-auto flex-shrink-0 bg-escola-creme-escuro">
           {noticia.imagem_url ? (
-            <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+            <Image src={noticia.imagem_url} alt={noticia.titulo} fill sizes="(max-width: 768px) 100vw, 40vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-escola-azul to-escola-azul-medio flex items-center justify-center">
               <span className="font-playfair text-6xl font-black text-white/20">JB</span>
@@ -53,7 +53,7 @@ export default function NewsCard({ noticia, featured = false }: NewsCardProps) {
     >
       <div className="relative w-full h-44 bg-escola-creme-escuro flex-shrink-0 overflow-hidden">
         {noticia.imagem_url ? (
-          <Image src={noticia.imagem_url} alt={noticia.titulo} fill className="object-cover transition-transform duration-500 group-hover:scale-105" />
+          <Image src={noticia.imagem_url} alt={noticia.titulo} fill sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
         ) : (
           <div className="absolute inset-0 bg-gradient-to-br from-escola-azul to-escola-azul-medio flex items-center justify-center">
             <span className="font-playfair text-5xl font-black text-white/20">JB</span>

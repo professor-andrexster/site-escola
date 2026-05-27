@@ -14,7 +14,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <div className="relative w-12 h-12 rounded-full overflow-hidden ring-2 ring-white/20 flex-shrink-0">
-                <Image src="/logo.jpg" alt="Logo" fill className="object-cover" />
+                <Image src="/logo.jpg" alt="Logo" fill sizes="48px" className="object-cover" />
               </div>
               <div>
                 <p className="font-mono text-[10px] text-escola-vermelho uppercase tracking-widest">Escola Estadual</p>

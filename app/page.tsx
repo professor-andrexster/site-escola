@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import PageLayout from '@/components/PageLayout'
 import HeroBanner from '@/components/HeroBanner'
 import NewsGrid from '@/components/NewsGrid'
+import YoutubeSection from '@/components/YoutubeSection'
 import InstagramSection from '@/components/InstagramSection'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Image from 'next/image'
@@ -65,7 +66,7 @@ export default async function HomePage() {
         <HeroBanner noticia={noticiasDestaque} />
       ) : (
         <div className="relative w-full h-[480px] md:h-[580px] overflow-hidden">
-          <Image src="/fachada.jpg" alt="E.E. Dr. João Beraldo" fill className="object-cover" priority />
+          <Image src="/fachada.jpg" alt="E.E. Dr. João Beraldo" fill sizes="100vw" className="object-cover" priority />
           <div className="absolute inset-0 img-overlay-blue" />
           <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-escola-vermelho" />
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
@@ -114,6 +115,9 @@ export default async function HomePage() {
 
       {/* News */}
       <NewsGrid noticias={noticiasRecentes ?? []} />
+
+      {/* YouTube */}
+      <YoutubeSection />
 
       {/* Instagram */}
       <InstagramSection />

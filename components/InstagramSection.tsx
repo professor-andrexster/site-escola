@@ -1,4 +1,5 @@
-import Link from 'next/link'
+import Image from 'next/image'
+import { createClient } from '@/lib/supabase/server'
 
 const INSTAGRAM_URL = 'https://www.instagram.com/escolajoaoberaldo'
 const HANDLE = '@escolajoaoberaldo'
@@ -11,16 +12,29 @@ const InstagramIcon = () => (
   </svg>
 )
 
-const placeholders = [
-  { label: 'Notícias', angle: '135deg', from: '#1a3a5c', to: '#1e4a7a' },
-  { label: 'Projetos', angle: '135deg', from: '#1a3a5c', to: '#c0392b33' },
-  { label: 'Eventos', angle: '160deg', from: '#0e2238', to: '#1a3a5c' },
-  { label: 'Alunos', angle: '120deg', from: '#1a3a5c', to: '#1e4a7a' },
-  { label: 'EMTI', angle: '145deg', from: '#c0392b22', to: '#1a3a5c' },
-  { label: 'TI', angle: '130deg', from: '#0e2238', to: '#1e4a7a' },
+const placeholderColors = [
+  { angle: '135deg', from: '#1a3a5c', to: '#1e4a7a', label: 'Notícias' },
+  { angle: '135deg', from: '#1a3a5c', to: '#c0392b33', label: 'Projetos' },
+  { angle: '160deg', from: '#0e2238', to: '#1a3a5c', label: 'Eventos' },
+  { angle: '120deg', from: '#1a3a5c', to: '#1e4a7a', label: 'Alunos' },
+  { angle: '145deg', from: '#c0392b22', to: '#1a3a5c', label: 'EMTI' },
+  { angle: '130deg', from: '#0e2238', to: '#1e4a7a', label: 'TI' },
 ]
 
-export default function InstagramSection() {
+export default async function InstagramSection() {
+  const supabase = await createClient()
+
+  const { data: noticias } = await supabase
+    .from('noticias')
+    .select('id, titulo, imagem_url, slug')
+    .eq('publicado', true)
+    .not('imagem_url', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(6)
+
+  const fotos = noticias ?? []
+  const vagasRestantes = Math.max(0, 6 - fotos.length)
+
   return (
     <section className="border-t border-escola-cinza-claro bg-white py-14">
       <div className="container mx-auto px-4">
@@ -54,40 +68,61 @@ export default function InstagramSection() {
         </div>
 
         {/* Grid */}
-        <a
-          href={INSTAGRAM_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="block group"
-          aria-label="Ver perfil do Instagram da E.E. Dr. João Beraldo"
-        >
-          <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-escola-cinza-claro border border-escola-cinza-claro overflow-hidden">
-            {placeholders.map((p) => (
-              <div
-                key={p.label}
-                className="relative aspect-square overflow-hidden"
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-px bg-escola-cinza-claro border border-escola-cinza-claro overflow-hidden">
+          {/* Fotos reais das notícias */}
+          {fotos.map((noticia) => (
+            <a
+              key={noticia.id}
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative aspect-square overflow-hidden group"
+              aria-label={noticia.titulo}
+            >
+              <Image
+                src={noticia.imagem_url!}
+                alt={noticia.titulo}
+                fill
+                sizes="(max-width: 768px) 33vw, 16vw"
+                className="object-cover transition-transform duration-500 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors duration-300 flex items-center justify-center">
+                <span className="text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <InstagramIcon />
+                </span>
+              </div>
+            </a>
+          ))}
+
+          {/* Placeholders para as vagas restantes */}
+          {Array.from({ length: vagasRestantes }).map((_, i) => {
+            const p = placeholderColors[i % placeholderColors.length]
+            return (
+              <a
+                key={`ph-${i}`}
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="relative aspect-square overflow-hidden group"
                 style={{ background: `linear-gradient(${p.angle}, ${p.from}, ${p.to})` }}
               >
-                {/* Overlay on hover */}
                 <div className="absolute inset-0 bg-escola-vermelho/0 group-hover:bg-escola-vermelho/10 transition-colors duration-300" />
-
-                {/* Label */}
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-30 group-hover:opacity-50 transition-opacity">
                   <InstagramIcon />
                   <span className="font-mono text-[8px] uppercase tracking-widest text-white">{p.label}</span>
                 </div>
-
-                {/* Corner accent */}
                 <div className="absolute top-0 left-0 w-3 h-0.5 bg-escola-vermelho opacity-60" />
-              </div>
-            ))}
-          </div>
-        </a>
+              </a>
+            )
+          })}
+        </div>
 
         {/* Caption */}
         <div className="mt-5 flex flex-col sm:flex-row items-center justify-between gap-3">
           <p className="font-serif text-escola-cinza text-sm">
-            Acompanhe as notícias, eventos e projetos da escola no Instagram.
+            {fotos.length > 0
+              ? 'Fotos das últimas atividades e eventos da escola. Siga para mais conteúdo.'
+              : 'Acompanhe as notícias, eventos e projetos da escola no Instagram.'}
           </p>
           <a
             href={INSTAGRAM_URL}
