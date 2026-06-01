@@ -9,12 +9,12 @@ export const dynamic = 'force-dynamic'
 
 export default async function MeusQuizzesPage() {
   const supabase = await createClient()
-  const { profile } = await getProfileOrRedirect()
+  const { user, profile } = await getProfileOrRedirect()
 
   const { data: participacoes } = await supabase
     .from('quiz_participantes')
     .select('*, quizzes(titulo, codigo, encerrado), quiz_respostas(correta)')
-    .eq('nome', profile.nome_completo)
+    .eq('user_id', user.id)
     .eq('concluido', true)
     .order('created_at', { ascending: false })
 

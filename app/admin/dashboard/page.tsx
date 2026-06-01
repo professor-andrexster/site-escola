@@ -1,9 +1,10 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect, ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
+import { quizMatchesTurma } from '@/lib/turmas'
 import Link from 'next/link'
 import {
   Newspaper, Eye, Star, Plus, Inbox, Gamepad2,
-  Users, Trophy, BookOpen, TrendingUp,
+  Users, Trophy, BookOpen, TrendingUp, DoorOpen, Play,
 } from 'lucide-react'
 
 function StatCard({ label, value, icon: Icon, color, href }: {
@@ -30,14 +31,33 @@ export default async function DashboardPage() {
   const { user, profile } = await getProfileOrRedirect()
 
   if (profile.role === 'aluno') {
-    const [{ count: quizzesFeitos }, { data: ultimasRespostas }] = await Promise.all([
-      supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('nome', profile.nome_completo).eq('concluido', true),
+    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }] = await Promise.all([
+      supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
       supabase.from('quiz_participantes')
         .select('*, quizzes(titulo, codigo)')
+        .eq('user_id', user.id)
         .eq('concluido', true)
         .order('created_at', { ascending: false })
         .limit(5),
+      // Quizzes disponíveis (lobby aberto ou em andamento)
+      supabase.from('quizzes')
+        .select('id, titulo, codigo, turma_alvo, lobby_aberto, ativo, tempo_por_pergunta, quiz_perguntas(id)')
+        .eq('encerrado', false)
+        .or('lobby_aberto.eq.true,ativo.eq.true'),
     ])
+
+    // Filtra os quizzes que são para a turma do aluno
+    const quizzesDisponiveis = (allQuizzes ?? []).filter(q =>
+      quizMatchesTurma(q.turma_alvo, profile.turma)
+    )
+
+    // Verifica em quais o aluno já está inscrito
+    const quizIds = quizzesDisponiveis.map(q => q.id)
+    const { data: participacoes } = quizIds.length > 0
+      ? await supabase.from('quiz_participantes').select('id, quiz_id, concluido').eq('user_id', user.id).in('quiz_id', quizIds)
+      : { data: [] }
+
+    const participacaoMap = Object.fromEntries((participacoes ?? []).map(p => [p.quiz_id, p]))
 
     return (
       <div>
@@ -45,11 +65,75 @@ export default async function DashboardPage() {
           <div>
             <p className="text-gray-400 text-sm font-mono">Bem-vindo de volta,</p>
             <h1 className="text-3xl font-black text-gray-900 font-playfair">{profile.nome_completo}</h1>
+            <p className="text-gray-500 text-sm mt-0.5">{profile.turma}</p>
           </div>
           <span className={`text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg ${ROLE_COLORS[profile.role]}`}>
             {ROLE_LABELS[profile.role]}
           </span>
         </div>
+
+        {/* Quizzes disponíveis para a turma */}
+        {quizzesDisponiveis.length > 0 && (
+          <div className="mb-6">
+            <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
+              <DoorOpen className="w-4 h-4 text-blue-500" />
+              Quiz da Sua Turma
+            </h2>
+            <div className="space-y-3">
+              {quizzesDisponiveis.map(q => {
+                const part = participacaoMap[q.id]
+                return (
+                  <div key={q.id} className={`rounded-xl border p-4 flex items-center justify-between gap-4 ${q.ativo ? 'bg-green-50 border-green-200' : 'bg-blue-50 border-blue-200'}`}>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        {q.ativo
+                          ? <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                          : <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                        }
+                        <p className="font-semibold text-gray-900">{q.titulo}</p>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-0.5">
+                        {(q.quiz_perguntas as { id: string }[])?.length ?? 0} perguntas · {q.tempo_por_pergunta}s/pergunta
+                      </p>
+                      <p className="text-xs mt-1">
+                        {q.ativo
+                          ? <span className="text-green-700 font-semibold">🟢 Em andamento</span>
+                          : <span className="text-blue-700 font-semibold">🔵 Sala aberta — aguardando início</span>
+                        }
+                      </p>
+                    </div>
+                    {part ? (
+                      part.concluido ? (
+                        <Link
+                          href={`/quiz/${q.codigo}/${part.id}/resultado`}
+                          className="px-4 py-2 bg-gray-600 text-white rounded-xl text-sm font-semibold hover:bg-gray-700 transition-colors flex-shrink-0"
+                        >
+                          Ver resultado
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/quiz/${q.codigo}/${part.id}`}
+                          className="px-4 py-2 bg-green-600 text-white rounded-xl text-sm font-semibold hover:bg-green-700 transition-colors flex-shrink-0 flex items-center gap-1.5"
+                        >
+                          <Play className="w-3.5 h-3.5" />
+                          Continuar
+                        </Link>
+                      )
+                    ) : (
+                      <Link
+                        href={`/quiz?codigo=${q.codigo}`}
+                        className={`px-4 py-2 text-white rounded-xl text-sm font-semibold transition-colors flex-shrink-0 flex items-center gap-1.5 ${q.ativo ? 'bg-green-600 hover:bg-green-700' : 'bg-blue-600 hover:bg-blue-700'}`}
+                      >
+                        <DoorOpen className="w-3.5 h-3.5" />
+                        Entrar na Sala
+                      </Link>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
@@ -78,8 +162,8 @@ export default async function DashboardPage() {
           ) : (
             <p className="text-gray-400 text-sm text-center py-6">Você ainda não participou de nenhum quiz.</p>
           )}
-          <Link href="/quiz" className="block mt-4 text-center text-escola-azul text-sm font-semibold hover:underline">
-            Participar de um quiz →
+          <Link href="/ranking" className="block mt-4 text-center text-escola-azul text-sm font-semibold hover:underline">
+            Ver ranking geral →
           </Link>
         </div>
       </div>

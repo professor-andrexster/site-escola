@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { usePathname } from 'next/navigation'
-import { Menu, X, ChevronDown, Lock } from 'lucide-react'
+import { Menu, X, ChevronDown, Lock, UserCircle, Gamepad2, LogIn } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
@@ -33,6 +33,7 @@ function formatDate() {
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
   const [emtiOpen, setEmtiOpen] = useState(false)
+  const [alunoOpen, setAlunoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
 
@@ -86,7 +87,53 @@ export default function Header() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Link href="/admin" className="p-2 rounded text-escola-cinza hover:text-escola-azul transition-colors" title="Área administrativa">
+            {/* Botão Área do Aluno — desktop */}
+            <div className="relative hidden md:block">
+              <button
+                onClick={() => setAlunoOpen(!alunoOpen)}
+                onBlur={() => setTimeout(() => setAlunoOpen(false), 150)}
+                className="flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul/90 transition-colors"
+              >
+                <UserCircle className="w-4 h-4" />
+                Área do Aluno
+                <ChevronDown className={cn('w-3 h-3 transition-transform', alunoOpen && 'rotate-180')} />
+              </button>
+              {alunoOpen && (
+                <div className="absolute right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl min-w-[200px] overflow-hidden z-50">
+                  <Link
+                    href="/admin/cadastro"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-escola-azul transition-colors border-b border-gray-100"
+                  >
+                    <UserCircle className="w-4 h-4 text-escola-azul" />
+                    <div>
+                      <p className="font-semibold">Criar Conta</p>
+                      <p className="text-xs text-gray-400">Aluno ou professor</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/admin"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-escola-azul transition-colors border-b border-gray-100"
+                  >
+                    <LogIn className="w-4 h-4 text-gray-400" />
+                    <div>
+                      <p className="font-semibold">Entrar no Painel</p>
+                      <p className="text-xs text-gray-400">Já tem conta?</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/quiz"
+                    className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-purple-50 hover:text-purple-700 transition-colors"
+                  >
+                    <Gamepad2 className="w-4 h-4 text-purple-500" />
+                    <div>
+                      <p className="font-semibold">Participar do Quiz</p>
+                      <p className="text-xs text-gray-400">Tenho um código</p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+            <Link href="/admin" className="md:hidden p-2 rounded text-escola-cinza hover:text-escola-azul transition-colors" title="Área administrativa">
               <Lock className="w-3.5 h-3.5" />
             </Link>
             <button
@@ -211,6 +258,35 @@ export default function Header() {
               </Link>
             )
           })}
+
+          {/* Área do Aluno — mobile */}
+          <div className="border-t border-white/20 mt-1">
+            <p className="px-5 pt-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-white/30">Área do Aluno</p>
+            <Link
+              href="/admin/cadastro"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-5 py-3 text-sm text-white border-b border-white/10 hover:bg-white/10"
+            >
+              <UserCircle className="w-4 h-4 text-white/60" />
+              Criar Conta
+            </Link>
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-5 py-3 text-sm text-white border-b border-white/10 hover:bg-white/10"
+            >
+              <LogIn className="w-4 h-4 text-white/60" />
+              Entrar no Painel
+            </Link>
+            <Link
+              href="/quiz"
+              onClick={() => setMobileOpen(false)}
+              className="flex items-center gap-3 px-5 py-3 text-sm text-white hover:bg-white/10"
+            >
+              <Gamepad2 className="w-4 h-4 text-white/60" />
+              Participar do Quiz
+            </Link>
+          </div>
         </div>
       )}
     </header>

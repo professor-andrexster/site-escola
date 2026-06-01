@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect, notFound } from 'next/navigation'
-import QuizPlayer from '@/components/quiz/QuizPlayer'
+import QuizRoom from '@/components/quiz/QuizRoom'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -31,7 +31,13 @@ export default async function QuizJogarPage({
     redirect(`/quiz/${codigo}/${participanteId}/resultado`)
   }
 
-  if (!quiz.ativo && !quiz.encerrado) {
+  // Quiz encerrado sem o aluno ter concluído
+  if (quiz.encerrado) {
+    redirect(`/quiz?codigo=${codigo}`)
+  }
+
+  // Sala não aberta ainda
+  if (!quiz.lobby_aberto && !quiz.ativo) {
     redirect(`/quiz?codigo=${codigo}`)
   }
 
@@ -45,7 +51,7 @@ export default async function QuizJogarPage({
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <p className="text-xl font-bold mb-2">Quiz sem perguntas</p>
-          <p className="text-gray-400">O professor ainda não adicionou perguntas a este quiz.</p>
+          <p className="text-gray-400">O professor ainda não adicionou perguntas.</p>
         </div>
       </div>
     )
@@ -54,12 +60,19 @@ export default async function QuizJogarPage({
   const jaRespondidas = new Set((respostas ?? []).map(r => r.pergunta_id))
 
   return (
-    <QuizPlayer
+    <QuizRoom
+      quiz={{
+        id: quiz.id,
+        codigo: quiz.codigo,
+        titulo: quiz.titulo,
+        turma_alvo: quiz.turma_alvo,
+        lobby_aberto: quiz.lobby_aberto,
+        ativo: quiz.ativo,
+        encerrado: quiz.encerrado,
+        tempo_por_pergunta: quiz.tempo_por_pergunta,
+      }}
+      participante={participante}
       perguntas={perguntas}
-      participanteId={participanteId}
-      quizTitulo={quiz.titulo}
-      quizCodigo={codigo}
-      tempoPorPergunta={quiz.tempo_por_pergunta}
       jaRespondidas={jaRespondidas}
     />
   )

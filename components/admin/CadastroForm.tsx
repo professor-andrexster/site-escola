@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { TURMAS } from '@/lib/turmas'
 
 export default function CadastroForm() {
   const [nome, setNome] = useState('')
@@ -22,6 +23,7 @@ export default function CadastroForm() {
     if (password !== confirmPassword) { setError('As senhas não coincidem.'); return }
     if (password.length < 6) { setError('A senha deve ter pelo menos 6 caracteres.'); return }
     if (!nome.trim()) { setError('Informe seu nome completo.'); return }
+    if (role === 'aluno' && !turma) { setError('Selecione sua turma.'); return }
 
     setLoading(true)
     setError('')
@@ -33,13 +35,16 @@ export default function CadastroForm() {
       return
     }
 
+    // Alunos são aprovados automaticamente; professores aguardam aprovação da direção
+    const aprovado = role === 'aluno'
+
     const { error: profileError } = await supabase.from('profiles').insert({
       id: data.user.id,
       nome_completo: nome.trim(),
       role,
-      turma: role === 'aluno' ? turma.trim() || null : null,
+      turma: role === 'aluno' ? turma : null,
       disciplina: role === 'professor' ? disciplina.trim() || null : null,
-      aprovado: false,
+      aprovado,
     })
 
     if (profileError) {
@@ -48,8 +53,14 @@ export default function CadastroForm() {
       return
     }
 
-    await supabase.auth.signOut()
-    router.push('/admin?pendente=1')
+    if (aprovado) {
+      // Aluno já tem acesso — redireciona direto para o painel
+      router.push('/admin/dashboard')
+    } else {
+      // Professor aguarda aprovação da direção
+      await supabase.auth.signOut()
+      router.push('/admin?pendente=1')
+    }
   }
 
   return (
@@ -77,6 +88,11 @@ export default function CadastroForm() {
             </button>
           ))}
         </div>
+        {role === 'professor' && (
+          <p className="text-xs text-amber-600 mt-2 bg-amber-50 rounded-lg px-3 py-2">
+            Professores aguardam aprovação da direção antes de acessar o painel.
+          </p>
+        )}
       </div>
 
       <div>
@@ -93,14 +109,18 @@ export default function CadastroForm() {
 
       {role === 'aluno' && (
         <div>
-          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Turma</label>
-          <input
-            type="text"
+          <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Turma *</label>
+          <select
             value={turma}
             onChange={e => setTurma(e.target.value)}
-            placeholder="Ex: 1A, 2B, 3C"
-            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
-          />
+            required
+            className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors bg-white"
+          >
+            <option value="">Selecione sua turma</option>
+            {TURMAS.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
         </div>
       )}
 
@@ -158,12 +178,8 @@ export default function CadastroForm() {
         disabled={loading}
         className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm mt-2"
       >
-        {loading ? 'Enviando cadastro...' : 'Enviar Cadastro'}
+        {loading ? 'Criando conta...' : role === 'aluno' ? 'Criar Conta e Entrar' : 'Enviar Cadastro'}
       </button>
-
-      <p className="text-center text-gray-400 text-xs">
-        Após o cadastro, a direção analisará e aprovará seu acesso.
-      </p>
     </form>
   )
 }

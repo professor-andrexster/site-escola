@@ -1,8 +1,8 @@
-import { requireProfessorOrAbove } from '@/lib/profile'
+import { requireDirecao } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 
 export default async function NoticiasLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile } = await requireProfessorOrAbove()
+  const { user, profile } = await requireDirecao()
   return (
     <div className="min-h-screen bg-gray-50 flex">
       <AdminSidebar profile={profile} userEmail={user.email} />

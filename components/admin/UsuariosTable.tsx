@@ -3,11 +3,45 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Check, X, Trash2, ChevronDown } from 'lucide-react'
+import { Check, X, Trash2, GraduationCap, BookOpen, Crown } from 'lucide-react'
 import type { Profile } from '@/types/database'
-import { ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
+import { ROLE_LABELS } from '@/lib/roles'
 
 type ProfileComEmail = Profile & { email: string }
+
+const ROLE_CONFIG: Record<Profile['role'], {
+  label: string
+  icon: React.ComponentType<{ className?: string }>
+  bg: string
+  text: string
+  border: string
+  desc: string
+}> = {
+  aluno: {
+    label: 'Aluno',
+    icon: GraduationCap,
+    bg: 'bg-green-50',
+    text: 'text-green-700',
+    border: 'border-green-200',
+    desc: 'Acessa quizzes da sua turma',
+  },
+  professor: {
+    label: 'Professor',
+    icon: BookOpen,
+    bg: 'bg-blue-50',
+    text: 'text-blue-700',
+    border: 'border-blue-200',
+    desc: 'Cria e controla quizzes',
+  },
+  direcao: {
+    label: 'Direção',
+    icon: Crown,
+    bg: 'bg-red-50',
+    text: 'text-red-700',
+    border: 'border-red-200',
+    desc: 'Acesso total ao sistema',
+  },
+}
 
 interface UsuariosTableProps {
   profiles: ProfileComEmail[]
@@ -16,6 +50,7 @@ interface UsuariosTableProps {
 export default function UsuariosTable({ profiles: initial }: UsuariosTableProps) {
   const [profiles, setProfiles] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
+  const [changingRoleId, setChangingRoleId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,104 +75,154 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
     await supabase.from('profiles').update({ role }).eq('id', id)
     setProfiles(prev => prev.map(p => p.id === id ? { ...p, role } : p))
     setLoadingId(null)
+    setChangingRoleId(null)
   }
 
   const pendentes = profiles.filter(p => !p.aprovado)
   const aprovados = profiles.filter(p => p.aprovado)
 
-  const renderRow = (p: ProfileComEmail) => (
-    <tr key={p.id} className={`hover:bg-gray-50 transition-colors ${!p.aprovado ? 'bg-yellow-50/50' : ''}`}>
-      <td className="px-4 py-3">
-        <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-full bg-escola-azul flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">
+  const renderCard = (p: ProfileComEmail) => {
+    const cfg = ROLE_CONFIG[p.role]
+    const Icon = cfg.icon
+    const isLoading = loadingId === p.id
+    const isChanging = changingRoleId === p.id
+
+    return (
+      <div key={p.id} className={`bg-white border rounded-xl p-4 ${!p.aprovado ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200'}`}>
+        <div className="flex items-start gap-3">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-escola-azul flex items-center justify-center flex-shrink-0">
+            <span className="text-white text-sm font-bold">
               {p.nome_completo.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() || '?'}
             </span>
           </div>
-          <div>
-            <p className="font-medium text-gray-900 text-sm">{p.nome_completo}</p>
-            <p className="text-gray-400 text-xs">{p.email}</p>
-            {p.turma && <p className="text-gray-400 text-xs">Turma: {p.turma}</p>}
-            {p.disciplina && <p className="text-gray-400 text-xs">{p.disciplina}</p>}
+
+          {/* Info */}
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-gray-900 truncate">{p.nome_completo}</p>
+            <p className="text-gray-400 text-xs truncate">{p.email}</p>
+            {p.turma && <p className="text-gray-500 text-xs mt-0.5">Turma: <strong>{p.turma}</strong></p>}
+            {p.disciplina && <p className="text-gray-500 text-xs mt-0.5">{p.disciplina}</p>}
           </div>
+
+          {/* Status */}
+          {!p.aprovado && (
+            <span className="flex-shrink-0 text-xs font-semibold px-2 py-0.5 rounded-full bg-yellow-100 text-yellow-700 border border-yellow-200">
+              Pendente
+            </span>
+          )}
         </div>
-      </td>
 
-      <td className="px-4 py-3 text-center">
-        {p.aprovado ? (
-          <div className="relative inline-block">
-            <select
-              value={p.role}
-              onChange={e => mudarRole(p.id, e.target.value as Profile['role'])}
-              disabled={loadingId === p.id}
-              className="appearance-none text-xs font-mono uppercase tracking-wider pl-2 pr-6 py-1 rounded-lg border cursor-pointer focus:outline-none focus:ring-2 focus:ring-escola-azul disabled:opacity-50 bg-white"
-            >
-              {(['aluno', 'professor', 'direcao'] as const).map(r => (
-                <option key={r} value={r}>{ROLE_LABELS[r]}</option>
-              ))}
-            </select>
-            <ChevronDown className="w-3 h-3 absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400" />
-          </div>
-        ) : (
-          <span className="text-xs text-gray-400 italic">{ROLE_LABELS[p.role]}</span>
-        )}
-      </td>
+        {/* Nível de acesso */}
+        <div className="mt-3">
+          <p className="text-xs text-gray-400 mb-2 font-mono uppercase tracking-wider">Nível de Acesso</p>
 
-      <td className="px-4 py-3 text-center">
-        <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${p.aprovado ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-          {p.aprovado ? '● Ativo' : '○ Pendente'}
-        </span>
-      </td>
+          {p.aprovado ? (
+            isChanging ? (
+              // Seletor de nível expandido
+              <div className="grid grid-cols-3 gap-2">
+                {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
+                  const RoleIcon = config.icon
+                  const isActive = p.role === role
+                  return (
+                    <button
+                      key={role}
+                      onClick={() => mudarRole(p.id, role)}
+                      disabled={isLoading}
+                      className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border-2 text-xs font-semibold transition-all ${
+                        isActive
+                          ? `${config.bg} ${config.text} ${config.border} border-2`
+                          : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
+                      } disabled:opacity-50`}
+                    >
+                      <RoleIcon className="w-4 h-4" />
+                      {config.label}
+                    </button>
+                  )
+                })}
+              </div>
+            ) : (
+              // Badge do nível atual + botão para mudar
+              <div className="flex items-center justify-between gap-2">
+                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
+                  <Icon className="w-3.5 h-3.5" />
+                  <span className="text-xs font-semibold">{cfg.label}</span>
+                  <span className="text-xs opacity-60">— {cfg.desc}</span>
+                </div>
+                <button
+                  onClick={() => setChangingRoleId(p.id)}
+                  className="text-xs text-gray-400 hover:text-escola-azul underline flex-shrink-0 transition-colors"
+                >
+                  Mudar nível
+                </button>
+              </div>
+            )
+          ) : (
+            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cfg.bg} ${cfg.text} ${cfg.border} opacity-60`}>
+              <Icon className="w-3.5 h-3.5" />
+              <span className="text-xs font-semibold">{cfg.label}</span>
+            </div>
+          )}
+        </div>
 
-      <td className="px-4 py-3 text-center text-gray-400 text-xs hidden md:table-cell">
-        {new Date(p.created_at).toLocaleDateString('pt-BR')}
-      </td>
-
-      <td className="px-4 py-3">
-        <div className="flex items-center justify-center gap-1">
+        {/* Ações */}
+        <div className="mt-3 flex items-center gap-2 pt-3 border-t border-gray-100">
           {!p.aprovado && (
             <button
               onClick={() => aprovar(p.id)}
-              disabled={loadingId === p.id}
-              title="Aprovar"
-              className="p-1.5 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors disabled:opacity-50"
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
             >
-              <Check className="w-4 h-4" />
+              <Check className="w-3.5 h-3.5" />
+              Aprovar Acesso
+            </button>
+          )}
+          {isChanging && (
+            <button
+              onClick={() => setChangingRoleId(null)}
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors"
+            >
+              Cancelar
             </button>
           )}
           <button
             onClick={() => rejeitar(p.id)}
-            disabled={loadingId === p.id}
-            title={p.aprovado ? 'Remover usuário' : 'Rejeitar cadastro'}
-            className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+            disabled={isLoading}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 rounded-lg text-xs hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 ml-auto"
           >
-            {p.aprovado ? <Trash2 className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            <X className="w-3.5 h-3.5" />
+            {p.aprovado ? 'Remover' : 'Rejeitar'}
           </button>
         </div>
-      </td>
-    </tr>
-  )
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">
+      {/* Legenda dos níveis */}
+      <div className="grid grid-cols-3 gap-3">
+        {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
+          const Icon = config.icon
+          return (
+            <div key={role} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${config.bg} ${config.border}`}>
+              <Icon className={`w-4 h-4 ${config.text}`} />
+              <div>
+                <p className={`text-xs font-bold ${config.text}`}>{config.label}</p>
+                <p className="text-xs text-gray-500">{config.desc}</p>
+              </div>
+            </div>
+          )
+        })}
+      </div>
+
       {pendentes.length > 0 && (
         <div>
           <h2 className="text-sm font-semibold text-yellow-700 uppercase tracking-wider mb-3 flex items-center gap-2">
             <span className="w-2 h-2 bg-yellow-500 rounded-full animate-pulse" />
             Aguardando Aprovação ({pendentes.length})
           </h2>
-          <div className="bg-white border border-yellow-200 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead><tr className="bg-yellow-50 border-b border-yellow-100">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Usuário</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Tipo</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Status</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700 hidden md:table-cell">Cadastro</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Ações</th>
-              </tr></thead>
-              <tbody className="divide-y divide-gray-100">{pendentes.map(renderRow)}</tbody>
-            </table>
-          </div>
+          <div className="space-y-3">{pendentes.map(renderCard)}</div>
         </div>
       )}
 
@@ -150,17 +235,8 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
             Nenhum usuário ativo ainda.
           </div>
         ) : (
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead><tr className="bg-gray-50 border-b border-gray-200">
-                <th className="text-left px-4 py-3 font-semibold text-gray-700">Usuário</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Nível</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Status</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700 hidden md:table-cell">Desde</th>
-                <th className="text-center px-4 py-3 font-semibold text-gray-700">Ações</th>
-              </tr></thead>
-              <tbody className="divide-y divide-gray-100">{aprovados.map(renderRow)}</tbody>
-            </table>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {aprovados.map(renderCard)}
           </div>
         )}
       </div>

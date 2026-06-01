@@ -128,6 +128,8 @@ export interface Database {
           titulo: string
           codigo: string
           descricao: string | null
+          turma_alvo: string
+          lobby_aberto: boolean
           ativo: boolean
           encerrado: boolean
           tempo_por_pergunta: number
@@ -139,6 +141,8 @@ export interface Database {
           titulo: string
           codigo: string
           descricao?: string | null
+          turma_alvo?: string
+          lobby_aberto?: boolean
           ativo?: boolean
           encerrado?: boolean
           tempo_por_pergunta?: number
@@ -150,6 +154,8 @@ export interface Database {
           titulo?: string
           codigo?: string
           descricao?: string | null
+          turma_alvo?: string
+          lobby_aberto?: boolean
           ativo?: boolean
           encerrado?: boolean
           tempo_por_pergunta?: number
@@ -202,6 +208,7 @@ export interface Database {
         Row: {
           id: string
           quiz_id: string
+          user_id: string | null
           nome: string
           turma: string
           pontuacao_total: number
@@ -211,6 +218,7 @@ export interface Database {
         Insert: {
           id?: string
           quiz_id: string
+          user_id?: string | null
           nome: string
           turma: string
           pontuacao_total?: number
@@ -220,6 +228,7 @@ export interface Database {
         Update: {
           id?: string
           quiz_id?: string
+          user_id?: string | null
           nome?: string
           turma?: string
           pontuacao_total?: number

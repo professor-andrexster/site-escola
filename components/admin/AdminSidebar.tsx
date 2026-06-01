@@ -10,7 +10,7 @@ import {
   GraduationCap, Trophy,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
-import { ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
+import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 
 interface NavItem {
   href: string
@@ -56,10 +56,9 @@ const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
     {
-      label: 'Conteúdo',
+      label: 'JBQuiz',
       items: [
-        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
-        { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
+        { href: '/admin/quiz', label: 'Meus Quizzes', icon: Gamepad2 },
       ],
     },
   ],

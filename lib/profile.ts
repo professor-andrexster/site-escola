@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/types/database'
+export { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 
 export async function getProfileOrRedirect(): Promise<{ user: { id: string; email?: string }, profile: Profile }> {
   const supabase = await createClient()
@@ -31,14 +32,3 @@ export async function requireProfessorOrAbove() {
   return result
 }
 
-export const ROLE_LABELS: Record<Profile['role'], string> = {
-  direcao: 'Direção',
-  professor: 'Professor',
-  aluno: 'Aluno',
-}
-
-export const ROLE_COLORS: Record<Profile['role'], string> = {
-  direcao: 'bg-escola-vermelho text-white',
-  professor: 'bg-blue-600 text-white',
-  aluno: 'bg-green-600 text-white',
-}
