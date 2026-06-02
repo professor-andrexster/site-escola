@@ -30,8 +30,8 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  if (profile.role === 'aluno') {
-    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }] = await Promise.all([
+  if (profile.role === 'aluno' || profile.role === 'monitor') {
+    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }, { count: minhasNoticias }] = await Promise.all([
       supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
       supabase.from('quiz_participantes')
         .select('*, quizzes(titulo, codigo)')
@@ -44,6 +44,9 @@ export default async function DashboardPage() {
         .select('id, titulo, codigo, turma_alvo, lobby_aberto, ativo, tempo_por_pergunta, quiz_perguntas(id)')
         .eq('encerrado', false)
         .or('lobby_aberto.eq.true,ativo.eq.true'),
+      profile.role === 'monitor'
+        ? supabase.from('noticias').select('*', { count: 'exact', head: true }).eq('autor_id', user.id)
+        : Promise.resolve({ count: 0 }),
     ])
 
     // Filtra os quizzes que são para a turma do aluno
@@ -137,7 +140,10 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
-          <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
+          {profile.role === 'monitor'
+            ? <StatCard label="Minhas Notícias" value={minhasNoticias ?? 0} icon={Newspaper} color="bg-blue-50 text-escola-azul" href="/admin/noticias" />
+            : <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
+          }
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-6">

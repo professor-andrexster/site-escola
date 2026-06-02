@@ -56,9 +56,26 @@ const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
     {
+      label: 'Conteúdo',
+      items: [
+        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
+      ],
+    },
+    {
       label: 'JBQuiz',
       items: [
         { href: '/admin/quiz', label: 'Meus Quizzes', icon: Gamepad2 },
+      ],
+    },
+  ],
+  monitor: [
+    {
+      label: 'Minha Área',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/noticias', label: 'Minhas Notícias', icon: Newspaper },
+        { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
+        { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },
   ],

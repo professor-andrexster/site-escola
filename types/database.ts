@@ -306,7 +306,7 @@ export type QuizRespostaInsert = Database['public']['Tables']['quiz_respostas'][
 export interface Profile {
   id: string
   nome_completo: string
-  role: 'aluno' | 'professor' | 'direcao'
+  role: 'aluno' | 'monitor' | 'professor' | 'direcao'
   turma: string | null
   disciplina: string | null
   aprovado: boolean

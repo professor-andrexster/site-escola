@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Check, X, Trash2, GraduationCap, BookOpen, Crown } from 'lucide-react'
+import { Check, X, GraduationCap, BookOpen, Crown, Star } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS } from '@/lib/roles'
 
@@ -23,7 +23,15 @@ const ROLE_CONFIG: Record<Profile['role'], {
     bg: 'bg-green-50',
     text: 'text-green-700',
     border: 'border-green-200',
-    desc: 'Acessa quizzes da sua turma',
+    desc: 'Acessa quizzes da turma',
+  },
+  monitor: {
+    label: 'Monitor',
+    icon: Star,
+    bg: 'bg-purple-50',
+    text: 'text-purple-700',
+    border: 'border-purple-200',
+    desc: 'Posta matérias + quizzes',
   },
   professor: {
     label: 'Professor',
@@ -120,7 +128,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
           {p.aprovado ? (
             isChanging ? (
               // Seletor de nível expandido
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
                   const RoleIcon = config.icon
                   const isActive = p.role === role
@@ -201,7 +209,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   return (
     <div className="space-y-6">
       {/* Legenda dos níveis */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
           const Icon = config.icon
           return (

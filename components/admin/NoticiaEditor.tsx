@@ -6,6 +6,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Noticia } from '@/types/database'
 import { CATEGORIAS, type CategoriaKey } from '@/lib/categorias'
 import TipTapEditor from './TipTapEditor'
+import { User } from 'lucide-react'
 
 function slugify(text: string): string {
   return text
@@ -20,9 +21,11 @@ function slugify(text: string): string {
 
 interface NoticiaEditorProps {
   noticia?: Noticia
+  isMonitor?: boolean
+  autorNome?: string
 }
 
-export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
+export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }: NoticiaEditorProps) {
   const isEditing = !!noticia
   const [titulo, setTitulo] = useState(noticia?.titulo ?? '')
   const [slug, setSlug] = useState(noticia?.slug ?? '')
@@ -77,22 +80,45 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
       destaque_home: destaqueHome,
       categoria: categoria || null,
     }
+
+    let noticiaId: string | null = isEditing ? noticia.id : null
     let result
+
     if (isEditing) {
       result = await supabase.from('noticias').update(payload).eq('id', noticia.id)
     } else {
       const { data: { user } } = await supabase.auth.getUser()
-      result = await supabase.from('noticias').insert({
-        ...payload,
-        autor_id: user?.id ?? null,
-        autor_nome: user?.email ?? null,
-      })
+      const { data: inserted, error: insertError } = await supabase
+        .from('noticias')
+        .insert({
+          ...payload,
+          autor_id: user?.id ?? null,
+          autor_nome: autorNome ?? user?.email ?? null,
+        })
+        .select('id')
+        .single()
+      result = { error: insertError }
+      if (inserted) noticiaId = inserted.id
     }
+
     if (result.error) {
       setError(result.error.message)
       setSaving(false)
       return
     }
+
+    // Registra no log
+    if (noticiaId) {
+      const { data: { user } } = await supabase.auth.getUser()
+      await supabase.from('noticias_log').insert({
+        noticia_id: noticiaId,
+        noticia_titulo: titulo,
+        user_id: user?.id ?? null,
+        autor_nome: autorNome ?? user?.email ?? null,
+        acao: isEditing ? (publish ? 'publicou' : 'editou') : (publish ? 'criou e publicou' : 'criou rascunho'),
+      })
+    }
+
     router.push('/admin/noticias')
     router.refresh()
   }
@@ -106,6 +132,15 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
       )}
 
       <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+        {/* Autor — travado */}
+        {autorNome && (
+          <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
+            <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <span className="text-sm text-gray-500">Autor:</span>
+            <span className="text-sm font-semibold text-gray-800">{autorNome}</span>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
           <input
@@ -189,15 +224,17 @@ export default function NoticiaEditor({ noticia }: NoticiaEditorProps) {
           </div>
           <span className="text-sm font-medium text-gray-700">Publicado</span>
         </label>
-        <label className="flex items-center gap-3 cursor-pointer">
-          <div
-            onClick={() => setDestaqueHome(!destaqueHome)}
-            className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${destaqueHome ? 'bg-yellow-500' : 'bg-gray-300'}`}
-          >
-            <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${destaqueHome ? 'translate-x-5' : 'translate-x-0.5'}`} />
-          </div>
-          <span className="text-sm font-medium text-gray-700">Destaque na Home</span>
-        </label>
+        {!isMonitor && (
+          <label className="flex items-center gap-3 cursor-pointer">
+            <div
+              onClick={() => setDestaqueHome(!destaqueHome)}
+              className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${destaqueHome ? 'bg-yellow-500' : 'bg-gray-300'}`}
+            >
+              <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${destaqueHome ? 'translate-x-5' : 'translate-x-0.5'}`} />
+            </div>
+            <span className="text-sm font-medium text-gray-700">Destaque na Home</span>
+          </label>
+        )}
       </div>
 
       <div className="flex gap-3">

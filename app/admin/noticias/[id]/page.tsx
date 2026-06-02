@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import NoticiaEditor from '@/components/admin/NoticiaEditor'
 
@@ -9,6 +10,7 @@ interface Props {
 export default async function EditarNoticiaPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
+  const { user, profile } = await getProfileOrRedirect()
 
   const { data: noticia } = await supabase
     .from('noticias')
@@ -18,10 +20,17 @@ export default async function EditarNoticiaPage({ params }: Props) {
 
   if (!noticia) notFound()
 
+  // Monitor só pode editar suas próprias notícias
+  if (profile.role === 'monitor' && noticia.autor_id !== user.id) notFound()
+
   return (
     <>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Editar Notícia</h1>
-      <NoticiaEditor noticia={noticia} />
+      <NoticiaEditor
+        noticia={noticia}
+        isMonitor={profile.role === 'monitor'}
+        autorNome={noticia.autor_nome ?? profile.nome_completo}
+      />
     </>
   )
 }

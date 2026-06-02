@@ -28,7 +28,7 @@ export async function requireDirecao() {
 
 export async function requireProfessorOrAbove() {
   const result = await getProfileOrRedirect()
-  if (!['professor', 'direcao'].includes(result.profile.role)) redirect('/admin/dashboard')
+  if (!['professor', 'monitor', 'direcao'].includes(result.profile.role)) redirect('/admin/dashboard')
   return result
 }
 
