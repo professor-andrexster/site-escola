@@ -5,91 +5,11 @@ import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import {
-  LayoutDashboard, Newspaper, FileText, Settings,
-  LogOut, Inbox, Gamepad2, Users, Globe,
-  GraduationCap, Trophy,
+  LogOut, Globe, GraduationCap,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
-
-interface NavItem {
-  href: string
-  label: string
-  icon: React.ComponentType<{ className?: string }>
-}
-
-interface NavGroup {
-  label: string
-  items: NavItem[]
-}
-
-const navByRole: Record<Profile['role'], NavGroup[]> = {
-  direcao: [
-    {
-      label: 'Gestão',
-      items: [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/usuarios', label: 'Usuários', icon: Users },
-      ],
-    },
-    {
-      label: 'Conteúdo',
-      items: [
-        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
-        { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
-      ],
-    },
-    {
-      label: 'Sistema',
-      items: [
-        { href: '/admin/leads', label: 'Leads', icon: Inbox },
-        { href: '/admin/paginas', label: 'Páginas', icon: FileText },
-        { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
-      ],
-    },
-  ],
-  professor: [
-    {
-      label: 'Geral',
-      items: [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-      ],
-    },
-    {
-      label: 'Conteúdo',
-      items: [
-        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
-      ],
-    },
-    {
-      label: 'JBQuiz',
-      items: [
-        { href: '/admin/quiz', label: 'Meus Quizzes', icon: Gamepad2 },
-      ],
-    },
-  ],
-  monitor: [
-    {
-      label: 'Minha Área',
-      items: [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/noticias', label: 'Minhas Notícias', icon: Newspaper },
-        { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
-        { href: '/ranking', label: 'Ranking', icon: Trophy },
-      ],
-    },
-  ],
-  aluno: [
-    {
-      label: 'Minha Área',
-      items: [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
-        { href: '/ranking', label: 'Ranking', icon: Trophy },
-      ],
-    },
-  ],
-}
+import { navByRole } from '@/lib/adminNav'
 
 interface AdminSidebarProps {
   profile: Profile
@@ -116,7 +36,7 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
   }
 
   return (
-    <aside className="w-64 flex-shrink-0 bg-[#0d1f35] flex flex-col min-h-screen">
+    <aside className="hidden md:flex w-64 flex-shrink-0 bg-[#0d1f35] flex-col min-h-screen">
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/5">
         <Link href="/" className="flex items-center gap-2.5 group">
