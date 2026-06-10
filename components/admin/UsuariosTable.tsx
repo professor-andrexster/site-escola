@@ -59,31 +59,47 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   const [profiles, setProfiles] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [changingRoleId, setChangingRoleId] = useState<string | null>(null)
+  const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
 
   async function aprovar(id: string) {
     setLoadingId(id)
-    await supabase.from('profiles').update({ aprovado: true }).eq('id', id)
-    setProfiles(prev => prev.map(p => p.id === id ? { ...p, aprovado: true } : p))
+    setError('')
+    const { error: updateError } = await supabase.from('profiles').update({ aprovado: true }).eq('id', id)
+    if (updateError) {
+      setError('Erro ao aprovar usuário: ' + updateError.message)
+    } else {
+      setProfiles(prev => prev.map(p => p.id === id ? { ...p, aprovado: true } : p))
+    }
     setLoadingId(null)
   }
 
   async function rejeitar(id: string) {
     if (!confirm('Rejeitar e remover este cadastro?')) return
     setLoadingId(id)
-    await supabase.from('profiles').delete().eq('id', id)
-    setProfiles(prev => prev.filter(p => p.id !== id))
+    setError('')
+    const { error: deleteError } = await supabase.from('profiles').delete().eq('id', id)
+    if (deleteError) {
+      setError('Erro ao remover usuário: ' + deleteError.message)
+    } else {
+      setProfiles(prev => prev.filter(p => p.id !== id))
+      router.refresh()
+    }
     setLoadingId(null)
-    router.refresh()
   }
 
   async function mudarRole(id: string, role: Profile['role']) {
     setLoadingId(id)
-    await supabase.from('profiles').update({ role }).eq('id', id)
-    setProfiles(prev => prev.map(p => p.id === id ? { ...p, role } : p))
+    setError('')
+    const { error: updateError } = await supabase.from('profiles').update({ role }).eq('id', id)
+    if (updateError) {
+      setError('Erro ao mudar nível de acesso: ' + updateError.message)
+    } else {
+      setProfiles(prev => prev.map(p => p.id === id ? { ...p, role } : p))
+      setChangingRoleId(null)
+    }
     setLoadingId(null)
-    setChangingRoleId(null)
   }
 
   const pendentes = profiles.filter(p => !p.aprovado)
@@ -208,6 +224,12 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
 
   return (
     <div className="space-y-6">
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+          {error}
+        </div>
+      )}
+
       {/* Legenda dos níveis */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
