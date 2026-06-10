@@ -180,7 +180,7 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
                   value={turma}
                   onChange={e => setTurma(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && handleEntrar()}
-                  placeholder="Ex: 1° Ano A"
+                  placeholder="Ex: 1° Ano"
                   className="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-escola-azul transition-colors"
                 />
               </div>
