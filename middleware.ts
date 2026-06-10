@@ -26,16 +26,9 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname.startsWith('/admin') &&
-      !request.nextUrl.pathname.startsWith('/admin') === false &&
-      request.nextUrl.pathname !== '/admin' &&
-      !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin'
-    return NextResponse.redirect(url)
-  }
+  const publicPaths = ['/admin', '/admin/cadastro']
 
-  if (request.nextUrl.pathname.startsWith('/admin/') && !user) {
+  if (!publicPaths.includes(request.nextUrl.pathname) && !user) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
     return NextResponse.redirect(url)
