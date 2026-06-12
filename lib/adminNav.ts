@@ -46,7 +46,6 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Geral',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/alunos', label: 'Alunos', icon: GraduationCap },
       ],
     },
     {

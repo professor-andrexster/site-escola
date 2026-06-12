@@ -1,9 +1,9 @@
-import { requireProfessorOrAbove } from '@/lib/profile'
+import { requireDirecao } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import MobileAdminHeader from '@/components/admin/MobileAdminHeader'
 
 export default async function AlunosLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile } = await requireProfessorOrAbove()
+  const { user, profile } = await requireDirecao()
   return (
     <div className="min-h-screen bg-gray-50 md:flex">
       <AdminSidebar profile={profile} userEmail={user.email} />
