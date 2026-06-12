@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import UsuariosTable from '@/components/admin/UsuariosTable'
+import CriarUsuarioForm from '@/components/admin/CriarUsuarioForm'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Usuários — Admin' }
@@ -29,7 +30,7 @@ export default async function UsuariosPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Usuários</h1>
           {pendentes > 0 && (
@@ -38,6 +39,7 @@ export default async function UsuariosPage() {
             </p>
           )}
         </div>
+        <CriarUsuarioForm />
       </div>
       <UsuariosTable profiles={profilesComEmail} />
     </div>

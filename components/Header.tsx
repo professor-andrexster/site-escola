@@ -108,7 +108,7 @@ export default function Header() {
                     <UserCircle className="w-4 h-4 text-escola-azul" />
                     <div>
                       <p className="font-semibold">Criar Conta</p>
-                      <p className="text-xs text-gray-400">Aluno ou professor</p>
+                      <p className="text-xs text-gray-400">Professores e equipe</p>
                     </div>
                   </Link>
                   <Link

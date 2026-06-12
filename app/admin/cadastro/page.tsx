@@ -13,14 +13,15 @@ export default function CadastroPage() {
           <div className="inline-flex items-center justify-center w-14 h-14 bg-escola-vermelho mb-4">
             <GraduationCap className="w-7 h-7 text-white" />
           </div>
-          <h1 className="font-playfair text-white font-black text-2xl">Criar Conta</h1>
+          <h1 className="font-playfair text-white font-black text-2xl">Cadastro de Professores</h1>
           <p className="text-white/40 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
         </div>
 
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
           <div className="bg-escola-azul px-6 py-4">
             <p className="text-white/80 text-sm">
-              Preencha os dados abaixo. Após o cadastro, a direção aprovará seu acesso.
+              Cadastro para professores e equipe pedagógica. Contas de aluno são criadas pela direção.
+              Após o cadastro, a direção aprovará seu acesso.
             </p>
           </div>
           <CadastroForm />
