@@ -3,10 +3,14 @@ import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { createClient } from '@/lib/supabase/server'
+import { trilhaBg, trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 import {
   Target, BookOpen, Award, Users,
   PenLine, FlaskConical, Calculator, Globe,
   Clock, ChevronRight, Cpu, Monitor, Network, Code,
+  Stethoscope, Store, Landmark, School, Briefcase, Rocket,
+  ExternalLink, BadgeCheck,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -75,7 +79,37 @@ const itModulos = [
   { Icon: Monitor, titulo: 'Manutenção de Computadores', desc: 'Hardware, sistemas operacionais, diagnóstico e suporte técnico.' },
 ]
 
-export default function EmtiPage() {
+const trilhasTI = [
+  { nome: 'Excel & Dados', icone: '📊', cor: 'green-600', competencias: ['Planilhas avançadas', 'Fórmulas e automação', 'Análise de dados', 'Dashboards'] },
+  { nome: 'Hardware', icone: '🖥️', cor: 'orange-600', competencias: ['Montagem de PCs', 'Manutenção', 'Redes físicas', 'Eletrônica básica'] },
+  { nome: 'Software', icone: '⚙️', cor: 'gray-600', competencias: ['Instalação de SO', 'Suporte técnico', 'Configuração de sistemas', 'Diagnóstico de problemas'] },
+  { nome: 'Design Digital', icone: '🎨', cor: 'pink-600', competencias: ['Canva e Figma', 'Identidade visual', 'Criação de conteúdo', 'Edição de imagem/vídeo'] },
+  { nome: 'Programação', icone: '💻', cor: 'blue-600', competencias: ['Lógica de programação', 'HTML, CSS e JS', 'Python', 'Criação de sistemas'] },
+]
+
+const mercadoLocal = [
+  { Icon: Stethoscope, titulo: 'Clínicas e Consultórios', desc: 'Suporte de computador, organização de prontuários e planilhas de agendamento.' },
+  { Icon: Store, titulo: 'Comércio Local', desc: 'Nota fiscal eletrônica, sistemas de vendas e controle de estoque.' },
+  { Icon: Landmark, titulo: 'Prefeitura e Órgãos Públicos', desc: 'TI administrativa, suporte técnico e manutenção de equipamentos.' },
+  { Icon: School, titulo: 'Escolas', desc: 'Suporte técnico, criação de materiais digitais e apoio pedagógico.' },
+  { Icon: Briefcase, titulo: 'Freelancer', desc: 'Design, criação de sites e sistemas para negócios locais.' },
+  { Icon: Rocket, titulo: 'Empreendedorismo Próprio', desc: 'Monte seu próprio negócio de tecnologia em Carlos Chagas.' },
+]
+
+export default async function EmtiPage() {
+  const supabase = await createClient()
+  const { data: projetosDestaque } = await supabase
+    .from('projetos')
+    .select('id, titulo, descricao, imagem_url, trilhas(nome, icone, cor_tailwind), alunos(nome, matricula, ativo)')
+    .eq('destaque', true)
+    .order('criado_em', { ascending: false })
+    .limit(3)
+
+  const destaques = (projetosDestaque ?? []).filter(p => {
+    const aluno = Array.isArray(p.alunos) ? p.alunos[0] : p.alunos
+    return aluno?.ativo
+  })
+
   return (
     <PageLayout>
       {/* Hero */}
@@ -309,6 +343,135 @@ export default function EmtiPage() {
                 WhatsApp
               </a>
             </div>
+          </AnimateOnScroll>
+        </div>
+      </section>
+
+      {/* O que você vai aprender — Trilhas */}
+      <section className="container mx-auto px-4 py-14 max-w-5xl">
+        <AnimateOnScroll>
+          <p className="section-label mb-2">Formação técnica em TI</p>
+          <div className="w-10 h-px bg-escola-vermelho mb-5" />
+          <h2 className="font-playfair text-3xl md:text-4xl font-black text-escola-azul mb-10">
+            O que você vai aprender
+          </h2>
+        </AnimateOnScroll>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {trilhasTI.map((trilha, i) => (
+            <AnimateOnScroll key={trilha.nome} delay={(i % 4) as 0|1|2|3}>
+              <div className="bg-white border border-escola-cinza-claro rounded-xl p-5 h-full flex flex-col">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${trilhaBgLight(trilha.cor)}`}>
+                    {trilha.icone}
+                  </div>
+                  <h3 className="font-playfair font-bold text-escola-azul text-base">{trilha.nome}</h3>
+                </div>
+                <ul className="space-y-1.5 mb-4 flex-1">
+                  {trilha.competencias.map((c) => (
+                    <li key={c} className="font-serif text-escola-cinza text-xs flex items-start gap-2">
+                      <span className="text-escola-vermelho mt-0.5 flex-shrink-0">—</span>
+                      {c}
+                    </li>
+                  ))}
+                </ul>
+                <span className={`inline-flex items-center gap-1.5 self-start text-[10px] font-medium px-2.5 py-1 rounded-full ${trilhaBgLight(trilha.cor)} ${trilhaText(trilha.cor)}`}>
+                  <BadgeCheck className="w-3.5 h-3.5" /> Certificado ao concluir
+                </span>
+              </div>
+            </AnimateOnScroll>
+          ))}
+        </div>
+      </section>
+
+      {/* Onde você pode trabalhar em Carlos Chagas */}
+      <section className="bg-escola-creme py-14 border-t border-escola-cinza-claro">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <AnimateOnScroll>
+            <p className="section-label mb-2">Mercado local</p>
+            <div className="w-10 h-px bg-escola-vermelho mb-5" />
+            <h2 className="font-playfair text-3xl md:text-4xl font-black text-escola-azul mb-10">
+              Onde você pode trabalhar em Carlos Chagas
+            </h2>
+          </AnimateOnScroll>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {mercadoLocal.map((area, i) => (
+              <AnimateOnScroll key={area.titulo} delay={(i % 4) as 0|1|2|3}>
+                <div className="bg-white p-5 rounded-xl border border-escola-cinza-claro h-full">
+                  <div className="w-8 h-8 bg-escola-azul/10 flex items-center justify-center mb-4 rounded-lg">
+                    <area.Icon className="w-4 h-4 text-escola-azul" />
+                  </div>
+                  <h3 className="font-playfair font-bold text-escola-azul text-sm mb-2">{area.titulo}</h3>
+                  <p className="font-serif text-escola-cinza text-xs leading-relaxed">{area.desc}</p>
+                </div>
+              </AnimateOnScroll>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Projetos reais feitos aqui */}
+      {destaques.length > 0 && (
+        <section className="container mx-auto px-4 py-14 max-w-5xl">
+          <AnimateOnScroll>
+            <p className="section-label mb-2">Resultados</p>
+            <div className="w-10 h-px bg-escola-vermelho mb-5" />
+            <h2 className="font-playfair text-3xl md:text-4xl font-black text-escola-azul mb-10">
+              Projetos reais feitos aqui
+            </h2>
+          </AnimateOnScroll>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+            {destaques.map((p, i) => {
+              const trilha = Array.isArray(p.trilhas) ? p.trilhas[0] : p.trilhas
+              const aluno = Array.isArray(p.alunos) ? p.alunos[0] : p.alunos
+              return (
+                <AnimateOnScroll key={p.id} delay={(i % 4) as 0|1|2|3}>
+                  <div className={`rounded-xl overflow-hidden border border-escola-cinza-claro h-full flex flex-col`}>
+                    <div className={`h-32 flex items-center justify-center ${trilhaBg(trilha?.cor_tailwind)}`}>
+                      {p.imagem_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={p.imagem_url} alt={p.titulo} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-3xl">{trilha?.icone}</span>
+                      )}
+                    </div>
+                    <div className="p-4 bg-white flex-1 flex flex-col">
+                      <h3 className="font-playfair font-bold text-escola-azul text-sm mb-1">{p.titulo}</h3>
+                      {p.descricao && <p className="font-serif text-escola-cinza text-xs leading-relaxed mb-2 flex-1">{p.descricao}</p>}
+                      <p className="text-xs text-escola-cinza/70 font-mono">{aluno?.nome.split(' ')[0]}</p>
+                    </div>
+                  </div>
+                </AnimateOnScroll>
+              )
+            })}
+          </div>
+
+          <AnimateOnScroll>
+            <div className="text-center">
+              <Link href="/projetos" className="inline-flex items-center gap-2 border border-escola-azul text-escola-azul font-mono text-xs uppercase tracking-widest px-6 py-3 hover:bg-escola-azul hover:text-white transition-colors">
+                Ver todos os projetos <ExternalLink className="w-3 h-3" />
+              </Link>
+            </div>
+          </AnimateOnScroll>
+        </section>
+      )}
+
+      {/* CTA Inscrição */}
+      <section className="bg-yellow-400 py-14">
+        <div className="container mx-auto px-4 text-center max-w-2xl">
+          <AnimateOnScroll>
+            <h2 className="font-playfair text-gray-900 font-black text-2xl md:text-3xl mb-4">
+              Quer fazer parte do EMTI em TI?
+            </h2>
+            <p className="font-serif text-gray-900/70 mb-8 leading-relaxed">
+              Vagas limitadas. Fale com a coordenação e saiba como se inscrever no Ensino Médio em Tempo Integral
+              com formação técnica em Tecnologia da Informação.
+            </p>
+            <Link href="/contato" className="bg-gray-900 text-white font-mono text-xs uppercase tracking-widest px-8 py-4 hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2">
+              Quero me inscrever <ChevronRight className="w-3 h-3" />
+            </Link>
           </AnimateOnScroll>
         </div>
       </section>

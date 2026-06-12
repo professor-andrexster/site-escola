@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Newspaper, FileText, Settings,
-  Inbox, Gamepad2, Users, Trophy,
+  Inbox, Gamepad2, Users, Trophy, GraduationCap,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -22,6 +22,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/usuarios', label: 'Usuários', icon: Users },
+        { href: '/admin/alunos', label: 'Alunos', icon: GraduationCap },
       ],
     },
     {
@@ -45,6 +46,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Geral',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/alunos', label: 'Alunos', icon: GraduationCap },
       ],
     },
     {

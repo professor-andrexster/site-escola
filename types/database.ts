@@ -133,6 +133,7 @@ export interface Database {
           ativo: boolean
           encerrado: boolean
           tempo_por_pergunta: number
+          quiz_iniciado_em: string | null
           created_at: string
           updated_at: string
         }
@@ -146,6 +147,7 @@ export interface Database {
           ativo?: boolean
           encerrado?: boolean
           tempo_por_pergunta?: number
+          quiz_iniciado_em?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -159,6 +161,7 @@ export interface Database {
           ativo?: boolean
           encerrado?: boolean
           tempo_por_pergunta?: number
+          quiz_iniciado_em?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -268,9 +271,179 @@ export interface Database {
           created_at?: string
         }
       }
+      alunos: {
+        Row: {
+          id: string
+          nome: string
+          matricula: string
+          turma: string
+          serie: string
+          turno: string
+          data_nascimento: string | null
+          cpf: string | null
+          responsavel: string | null
+          telefone: string | null
+          email: string | null
+          foto_url: string | null
+          ativo: boolean
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          nome: string
+          matricula: string
+          turma: string
+          serie: string
+          turno?: string
+          data_nascimento?: string | null
+          cpf?: string | null
+          responsavel?: string | null
+          telefone?: string | null
+          email?: string | null
+          foto_url?: string | null
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          matricula?: string
+          turma?: string
+          serie?: string
+          turno?: string
+          data_nascimento?: string | null
+          cpf?: string | null
+          responsavel?: string | null
+          telefone?: string | null
+          email?: string | null
+          foto_url?: string | null
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+        }
+      }
+      trilhas: {
+        Row: {
+          id: string
+          nome: string
+          descricao: string | null
+          icone: string | null
+          cor_tailwind: string | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          descricao?: string | null
+          icone?: string | null
+          cor_tailwind?: string | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          descricao?: string | null
+          icone?: string | null
+          cor_tailwind?: string | null
+        }
+      }
+      perfis_vocacionais: {
+        Row: {
+          id: string
+          aluno_id: string
+          trilha_id: string
+          pontuacao: number
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          aluno_id: string
+          trilha_id: string
+          pontuacao?: number
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          aluno_id?: string
+          trilha_id?: string
+          pontuacao?: number
+          atualizado_em?: string
+        }
+      }
+      testes_vocacionais: {
+        Row: {
+          id: string
+          aluno_id: string
+          respostas: Json
+          realizado_em: string
+        }
+        Insert: {
+          id?: string
+          aluno_id: string
+          respostas: Json
+          realizado_em?: string
+        }
+        Update: {
+          id?: string
+          aluno_id?: string
+          respostas?: Json
+          realizado_em?: string
+        }
+      }
+      projetos: {
+        Row: {
+          id: string
+          aluno_id: string
+          trilha_id: string | null
+          titulo: string
+          descricao: string | null
+          imagem_url: string | null
+          link_externo: string | null
+          tags: string[] | null
+          destaque: boolean
+          criado_em: string
+          serie_na_epoca: string | null
+        }
+        Insert: {
+          id?: string
+          aluno_id: string
+          trilha_id?: string | null
+          titulo: string
+          descricao?: string | null
+          imagem_url?: string | null
+          link_externo?: string | null
+          tags?: string[] | null
+          destaque?: boolean
+          criado_em?: string
+          serie_na_epoca?: string | null
+        }
+        Update: {
+          id?: string
+          aluno_id?: string
+          trilha_id?: string | null
+          titulo?: string
+          descricao?: string | null
+          imagem_url?: string | null
+          link_externo?: string | null
+          tags?: string[] | null
+          destaque?: boolean
+          criado_em?: string
+          serie_na_epoca?: string | null
+        }
+      }
     }
     Views: Record<string, never>
-    Functions: Record<string, never>
+    Functions: {
+      ranking_geral_quiz: {
+        Args: Record<string, never>
+        Returns: {
+          user_id: string
+          nome_completo: string
+          turma: string | null
+          pontuacao_total: number
+        }[]
+      }
+    }
     Enums: Record<string, never>
   }
 }
@@ -301,6 +474,22 @@ export type QuizParticipanteUpdate = Database['public']['Tables']['quiz_particip
 
 export type QuizResposta = Database['public']['Tables']['quiz_respostas']['Row']
 export type QuizRespostaInsert = Database['public']['Tables']['quiz_respostas']['Insert']
+
+export type Aluno = Database['public']['Tables']['alunos']['Row']
+export type AlunoInsert = Database['public']['Tables']['alunos']['Insert']
+export type AlunoUpdate = Database['public']['Tables']['alunos']['Update']
+
+export type Trilha = Database['public']['Tables']['trilhas']['Row']
+
+export type PerfilVocacional = Database['public']['Tables']['perfis_vocacionais']['Row']
+export type PerfilVocacionalInsert = Database['public']['Tables']['perfis_vocacionais']['Insert']
+
+export type TesteVocacional = Database['public']['Tables']['testes_vocacionais']['Row']
+export type TesteVocacionalInsert = Database['public']['Tables']['testes_vocacionais']['Insert']
+
+export type Projeto = Database['public']['Tables']['projetos']['Row']
+export type ProjetoInsert = Database['public']['Tables']['projetos']['Insert']
+export type ProjetoUpdate = Database['public']['Tables']['projetos']['Update']
 
 // Profile
 export interface Profile {
