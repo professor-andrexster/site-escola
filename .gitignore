@@ -9,6 +9,7 @@ out/
 *.zip
 old/
 /supabase/
+/Cursos/
 cidadania.png
 erro_upload.png
 materias_ensinoMedio.png

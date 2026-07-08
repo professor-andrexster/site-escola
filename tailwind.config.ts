@@ -40,12 +40,23 @@ const config: Config = {
           cinza: '#555555',
           'cinza-claro': '#d8d5cf',
         },
+        curso: {
+          azul: '#2D5BFF',
+          'azul-claro': '#4F77FF',
+          tinta: '#0F1419',
+          ciano: '#0BC5C5',
+          papel: '#FBFCFE',
+          linha: '#E6EAF0',
+          'texto-suave': '#5A6675',
+        },
       },
       fontFamily: {
         playfair: ['Playfair Display', 'serif'],
         serif: ['Source Serif 4', 'Georgia', 'serif'],
         sans: ['DM Sans', 'sans-serif'],
         mono: ['IBM Plex Mono', 'monospace'],
+        geom: ['Geom', 'sans-serif'],
+        jetbrains: ['JetBrains Mono', 'monospace'],
       },
       borderRadius: {
         lg: 'var(--radius)',

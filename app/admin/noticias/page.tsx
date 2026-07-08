@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getProfileOrRedirect } from '@/lib/profile'
+import { requireMonitorOrAbove } from '@/lib/profile'
 import Link from 'next/link'
 import NoticiasTable from '@/components/admin/NoticiasTable'
 import { Plus, Clock, FileText } from 'lucide-react'
@@ -7,7 +7,7 @@ import { formatDate } from '@/lib/utils'
 
 export default async function AdminNoticiasPage() {
   const supabase = await createClient()
-  const { user, profile } = await getProfileOrRedirect()
+  const { user, profile } = await requireMonitorOrAbove()
 
   const isMonitor = profile.role === 'monitor'
   const isDirecao = profile.role === 'direcao'

@@ -32,3 +32,9 @@ export async function requireProfessorOrAbove() {
   return result
 }
 
+export async function requireMonitorOrAbove() {
+  const result = await getProfileOrRedirect()
+  if (!['monitor', 'direcao'].includes(result.profile.role)) redirect('/admin/dashboard')
+  return result
+}
+

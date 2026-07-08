@@ -1,6 +1,6 @@
 import {
-  LayoutDashboard, Newspaper, FileText, Settings,
-  Inbox, Gamepad2, Users, Trophy, GraduationCap,
+  LayoutDashboard, FileText, Settings,
+  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -28,8 +28,9 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
     {
       label: 'Conteúdo',
       items: [
-        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
         { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
       ],
     },
     {
@@ -49,15 +50,16 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
     {
-      label: 'Conteúdo',
-      items: [
-        { href: '/admin/noticias', label: 'Notícias', icon: Newspaper },
-      ],
-    },
-    {
       label: 'JBQuiz',
       items: [
         { href: '/admin/quiz', label: 'Meus Quizzes', icon: Gamepad2 },
+      ],
+    },
+    {
+      label: 'Cursos',
+      items: [
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
       ],
     },
   ],
@@ -66,8 +68,8 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Minha Área',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/noticias', label: 'Minhas Notícias', icon: Newspaper },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },
@@ -78,6 +80,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },

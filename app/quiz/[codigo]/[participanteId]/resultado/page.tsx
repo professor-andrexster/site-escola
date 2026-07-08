@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Trophy, Home, RotateCcw } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Medal, TrendingUp } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -22,17 +22,17 @@ export default async function ResultadoPage({
 
   if (!participante || !quiz) notFound()
 
-  const [{ data: respostas }, { count: rankCount }, { data: perguntas }] = await Promise.all([
+  const [{ data: respostas }, { data: rankingDia }, { data: perguntas }] = await Promise.all([
     supabase
       .from('quiz_respostas')
       .select('*, quiz_perguntas(enunciado, resposta_correta, pontos)')
       .eq('participante_id', participanteId),
     supabase
       .from('quiz_participantes')
-      .select('id', { count: 'exact', head: true })
+      .select('id, nome, turma, pontuacao_total')
       .eq('quiz_id', quiz.id)
       .eq('concluido', true)
-      .gt('pontuacao_total', participante.pontuacao_total),
+      .order('pontuacao_total', { ascending: false }),
     supabase
       .from('quiz_perguntas')
       .select('id')
@@ -41,10 +41,27 @@ export default async function ResultadoPage({
 
   const totalPerguntas = perguntas?.length ?? 0
   const acertos = respostas?.filter(r => r.correta).length ?? 0
-  const posicao = (rankCount ?? 0) + 1
   const percentual = totalPerguntas > 0 ? Math.round((acertos / totalPerguntas) * 100) : 0
 
   const emoji = percentual === 100 ? '🏆' : percentual >= 80 ? '⭐' : percentual >= 60 ? '👍' : percentual >= 40 ? '📚' : '💪'
+
+  // Ranking do dia (deste quiz)
+  const ranking = rankingDia ?? []
+  const posicaoDia = ranking.findIndex(p => p.id === participanteId)
+  const posicao = posicaoDia === -1 ? ranking.length + 1 : posicaoDia + 1
+  const acimaDia = posicaoDia > 0 ? ranking[posicaoDia - 1] : null
+  const top3Dia = ranking.slice(0, 3)
+
+  // Ranking geral acumulado (apenas alunos logados)
+  let rankingGeral: { user_id: string; nome_completo: string; turma: string | null; pontuacao_total: number }[] = []
+  let posicaoGeral = -1
+  let acimaGeral: typeof rankingGeral[number] | null = null
+  if (participante.user_id) {
+    const { data } = await supabase.rpc('ranking_geral_quiz')
+    rankingGeral = data ?? []
+    posicaoGeral = rankingGeral.findIndex(r => r.user_id === participante.user_id)
+    acimaGeral = posicaoGeral > 0 ? rankingGeral[posicaoGeral - 1] : null
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-escola-azul to-blue-900 flex items-center justify-center p-4">
@@ -81,19 +98,81 @@ export default async function ResultadoPage({
             </div>
           </div>
 
-          {/* Ranking */}
+          {/* Ranking do dia */}
           <div className="px-6 py-4 border-b border-gray-100">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Trophy className="w-5 h-5 text-yellow-500" />
-                <span className="font-semibold text-gray-700">Sua posição</span>
+                <span className="font-semibold text-gray-700">Ranking do dia — {quiz.titulo}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-2xl font-black text-escola-azul">#{posicao}</span>
                 <span className="text-gray-400 text-sm">no ranking</span>
               </div>
             </div>
+
+            {top3Dia.length > 0 && (
+              <div className="space-y-1.5">
+                {top3Dia.map((p, i) => (
+                  <div
+                    key={p.id}
+                    className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${
+                      p.id === participanteId ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
+                    }`}
+                  >
+                    <Medal className={`w-4 h-4 flex-shrink-0 ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
+                    <span className="flex-1 truncate font-medium text-gray-700">{p.nome}</span>
+                    <span className="font-mono font-bold text-escola-azul">{p.pontuacao_total}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {acimaDia && posicaoDia > 2 && (
+              <div className="mt-2 flex items-center gap-2 text-sm rounded-lg px-3 py-2 bg-yellow-50 border border-yellow-200">
+                <TrendingUp className="w-4 h-4 flex-shrink-0 text-yellow-600" />
+                <span className="flex-1 truncate text-yellow-800">
+                  Na sua frente: <strong>{acimaDia.nome}</strong>
+                </span>
+                <span className="font-mono font-bold text-yellow-700">{acimaDia.pontuacao_total}</span>
+              </div>
+            )}
           </div>
+
+          {/* Ranking geral acumulado */}
+          {participante.user_id && posicaoGeral !== -1 && (
+            <div className="px-6 py-4 border-b border-gray-100">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-escola-azul" />
+                  <span className="font-semibold text-gray-700">Ranking Geral (acumulado)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <span className="text-2xl font-black text-escola-azul">#{posicaoGeral + 1}</span>
+                  <span className="text-gray-400 text-sm">de {rankingGeral.length}</span>
+                </div>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2 flex items-center justify-between text-sm mb-2">
+                <span className="text-blue-800 font-medium">Seus pontos acumulados</span>
+                <span className="font-mono font-bold text-escola-azul text-lg">{rankingGeral[posicaoGeral]?.pontuacao_total ?? 0}</span>
+              </div>
+
+              {acimaGeral ? (
+                <div className="flex items-center gap-2 text-sm rounded-lg px-3 py-2 bg-yellow-50 border border-yellow-200">
+                  <TrendingUp className="w-4 h-4 flex-shrink-0 text-yellow-600" />
+                  <span className="flex-1 text-yellow-800">
+                    Faltam <strong>{acimaGeral.pontuacao_total - (rankingGeral[posicaoGeral]?.pontuacao_total ?? 0)}</strong> pontos para alcançar <strong>{acimaGeral.nome_completo}</strong>
+                  </span>
+                </div>
+              ) : posicaoGeral === 0 ? (
+                <div className="flex items-center gap-2 text-sm rounded-lg px-3 py-2 bg-green-50 border border-green-200 text-green-700">
+                  <Trophy className="w-4 h-4 flex-shrink-0" />
+                  <span>Você está em 1º lugar no ranking geral!</span>
+                </div>
+              ) : null}
+            </div>
+          )}
 
           {/* Answers review */}
           {respostas && respostas.length > 0 && (

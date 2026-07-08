@@ -70,6 +70,7 @@ export default async function QuizJogarPage({
         ativo: quiz.ativo,
         encerrado: quiz.encerrado,
         tempo_por_pergunta: quiz.tempo_por_pergunta,
+        quiz_iniciado_em: quiz.quiz_iniciado_em,
       }}
       participante={participante}
       perguntas={perguntas}

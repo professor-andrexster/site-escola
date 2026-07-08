@@ -3,9 +3,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { Clock } from 'lucide-react'
 import type { QuizPergunta } from '@/types/database'
-
-const ALTERNATIVAS = ['a', 'b', 'c', 'd'] as const
 
 const CORES = [
   { bg: 'bg-red-500', hover: 'hover:bg-red-600', revealed: 'bg-red-700' },
@@ -14,6 +13,8 @@ const CORES = [
   { bg: 'bg-green-500', hover: 'hover:bg-green-600', revealed: 'bg-green-700' },
 ]
 
+type RespostaStatus = 'correct' | 'wrong' | 'timeout' | 'already' | null
+
 interface QuizPlayerProps {
   perguntas: QuizPergunta[]
   participanteId: string
@@ -21,6 +22,8 @@ interface QuizPlayerProps {
   quizCodigo: string
   tempoPorPergunta: number
   jaRespondidas: Set<string>
+  quizIniciadoEm: string | null
+  encerrado: boolean
 }
 
 export default function QuizPlayer({
@@ -30,60 +33,112 @@ export default function QuizPlayer({
   quizCodigo,
   tempoPorPergunta,
   jaRespondidas,
+  quizIniciadoEm,
+  encerrado,
 }: QuizPlayerProps) {
   const router = useRouter()
   const supabase = createClient()
 
-  const primeiraIndex = perguntas.findIndex(p => !jaRespondidas.has(p.id))
-  const [currentIndex, setCurrentIndex] = useState(primeiraIndex === -1 ? 0 : primeiraIndex)
-  const [answered, setAnswered] = useState(false)
+  const tempoMs = tempoPorPergunta * 1000
+  const startMsRef = useRef<number>(quizIniciadoEm ? new Date(quizIniciadoEm).getTime() : Date.now())
+
+  function computeIndex(nowMs: number) {
+    const elapsed = Math.max(0, nowMs - startMsRef.current)
+    return Math.floor(elapsed / tempoMs)
+  }
+
+  function computeTimeLeft(nowMs: number) {
+    const elapsed = Math.max(0, nowMs - startMsRef.current)
+    const rem = elapsed % tempoMs
+    return Math.max(0, tempoPorPergunta - Math.floor(rem / 1000))
+  }
+
+  const [currentIndex, setCurrentIndex] = useState(() => computeIndex(Date.now()))
+  const [timeLeft, setTimeLeft] = useState(() => computeTimeLeft(Date.now()))
+  const [answered, setAnswered] = useState(() => {
+    const p = perguntas[computeIndex(Date.now())]
+    return p ? jaRespondidas.has(p.id) : false
+  })
+  const [status, setStatus] = useState<RespostaStatus>(() => {
+    const p = perguntas[computeIndex(Date.now())]
+    return p && jaRespondidas.has(p.id) ? 'already' : null
+  })
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
-  const [timeLeft, setTimeLeft] = useState(tempoPorPergunta)
   const [runningScore, setRunningScore] = useState(0)
   const [finishing, setFinishing] = useState(false)
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-  const startTimeRef = useRef<number>(Date.now())
+
+  const answeredRef = useRef(answered)
+  const lastIndexRef = useRef(currentIndex)
+  const finishedRef = useRef(false)
 
   const pergunta = perguntas[currentIndex]
 
   useEffect(() => {
-    if (primeiraIndex === -1) {
-      finishQuiz()
+    answeredRef.current = answered
+  }, [answered])
+
+  // Loop de sincronização: calcula a pergunta e o tempo restante a partir
+  // do horário compartilhado em que o quiz foi iniciado, fazendo todos os
+  // participantes avançarem juntos sem nenhuma ação manual.
+  useEffect(() => {
+    function tick() {
+      const nowMs = Date.now()
+      const idx = computeIndex(nowMs)
+      const tl = computeTimeLeft(nowMs)
+      setTimeLeft(tl)
+
+      if (idx >= perguntas.length) {
+        if (!finishedRef.current) {
+          finishedRef.current = true
+          finishQuiz()
+        }
+        return
+      }
+
+      if (idx !== lastIndexRef.current) {
+        lastIndexRef.current = idx
+        setCurrentIndex(idx)
+        const p = perguntas[idx]
+        const already = p ? jaRespondidas.has(p.id) : false
+        setAnswered(already)
+        setStatus(already ? 'already' : null)
+        setSelectedAnswer(null)
+        return
+      }
+
+      if (tl <= 0 && !answeredRef.current) {
+        handleAnswer(null)
+      }
     }
+
+    tick()
+    const interval = setInterval(tick, 1000)
+    return () => clearInterval(interval)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Quiz encerrado manualmente pelo professor — finaliza para todos.
   useEffect(() => {
-    if (!pergunta || answered || primeiraIndex === -1) return
-    setTimeLeft(tempoPorPergunta)
-    startTimeRef.current = Date.now()
-
-    timerRef.current = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev <= 1) {
-          clearInterval(timerRef.current!)
-          handleAnswer(null)
-          return 0
-        }
-        return prev - 1
-      })
-    }, 1000)
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
+    if (encerrado && !finishedRef.current) {
+      finishedRef.current = true
+      finishQuiz()
     }
-  }, [currentIndex])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [encerrado])
 
   async function handleAnswer(resposta: string | null) {
-    if (answered) return
-    if (timerRef.current) clearInterval(timerRef.current)
+    if (answeredRef.current || !pergunta) return
+    answeredRef.current = true
     setAnswered(true)
     setSelectedAnswer(resposta)
 
-    const tempoResposta = Math.round((Date.now() - startTimeRef.current) / 1000)
     const correta = resposta !== null && resposta === pergunta.resposta_correta
     const pontosObtidos = correta ? pergunta.pontos : 0
+    setStatus(resposta === null ? 'timeout' : correta ? 'correct' : 'wrong')
 
     if (correta) setRunningScore(prev => prev + pontosObtidos)
+
+    const tempoResposta = Math.max(0, tempoPorPergunta - timeLeft)
 
     await supabase.from('quiz_respostas').upsert(
       {
@@ -96,16 +151,6 @@ export default function QuizPlayer({
       },
       { onConflict: 'participante_id,pergunta_id' }
     )
-  }
-
-  async function nextQuestion() {
-    if (currentIndex >= perguntas.length - 1) {
-      await finishQuiz()
-    } else {
-      setCurrentIndex(prev => prev + 1)
-      setAnswered(false)
-      setSelectedAnswer(null)
-    }
   }
 
   async function finishQuiz() {
@@ -125,7 +170,7 @@ export default function QuizPlayer({
     router.push(`/quiz/${quizCodigo}/${participanteId}/resultado`)
   }
 
-  if (finishing || primeiraIndex === -1) {
+  if (finishing || !pergunta) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
@@ -135,8 +180,6 @@ export default function QuizPlayer({
       </div>
     )
   }
-
-  if (!pergunta) return null
 
   const timerPercent = (timeLeft / tempoPorPergunta) * 100
   const timerColor = timeLeft <= 5 ? 'bg-red-500' : timeLeft <= 10 ? 'bg-yellow-400' : 'bg-green-400'
@@ -175,7 +218,7 @@ export default function QuizPlayer({
       <div className="h-1.5 bg-gray-700">
         <div
           className={`h-full transition-all duration-1000 linear ${timerColor}`}
-          style={{ width: answered ? '0%' : `${timerPercent}%` }}
+          style={{ width: `${timerPercent}%` }}
         />
       </div>
 
@@ -241,27 +284,32 @@ export default function QuizPlayer({
         {/* After answer feedback */}
         {answered && (
           <div className="mt-6 text-center w-full">
-            <div className={`rounded-xl px-6 py-4 mb-4 ${
-              selectedAnswer === null ? 'bg-yellow-500/20 border border-yellow-500/30' :
-              selectedAnswer === pergunta.resposta_correta ? 'bg-green-500/20 border border-green-500/30' :
-              'bg-red-500/20 border border-red-500/30'
-            }`}>
-              {selectedAnswer === null ? (
-                <p className="text-yellow-300 font-bold text-lg">Tempo esgotado!</p>
-              ) : selectedAnswer === pergunta.resposta_correta ? (
-                <p className="text-green-300 font-bold text-lg">Correto! +{pergunta.pontos} pontos</p>
-              ) : (
-                <p className="text-red-300 font-bold text-lg">
-                  Errado! Resposta: <span className="uppercase">{pergunta.resposta_correta}</span>
-                </p>
-              )}
+            {status !== 'already' && (
+              <div className={`rounded-xl px-6 py-4 mb-4 ${
+                status === 'timeout' ? 'bg-yellow-500/20 border border-yellow-500/30' :
+                status === 'correct' ? 'bg-green-500/20 border border-green-500/30' :
+                'bg-red-500/20 border border-red-500/30'
+              }`}>
+                {status === 'timeout' ? (
+                  <p className="text-yellow-300 font-bold text-lg">Tempo esgotado!</p>
+                ) : status === 'correct' ? (
+                  <p className="text-green-300 font-bold text-lg">Correto! +{pergunta.pontos} pontos</p>
+                ) : (
+                  <p className="text-red-300 font-bold text-lg">
+                    Errado! Resposta: <span className="uppercase">{pergunta.resposta_correta}</span>
+                  </p>
+                )}
+              </div>
+            )}
+            {status === 'already' && (
+              <div className="rounded-xl px-6 py-4 mb-4 bg-white/5 border border-white/10">
+                <p className="text-white/60 font-semibold text-sm">Você já respondeu esta pergunta.</p>
+              </div>
+            )}
+            <div className="inline-flex items-center gap-2 text-white/50 text-sm">
+              <Clock className="w-4 h-4" />
+              <span>Próxima pergunta em {timeLeft}s — aguarde os colegas...</span>
             </div>
-            <button
-              onClick={nextQuestion}
-              className="bg-white text-escola-azul px-8 py-3 rounded-xl font-bold hover:bg-gray-100 transition-colors text-base"
-            >
-              {currentIndex >= perguntas.length - 1 ? 'Ver Resultado →' : 'Próxima →'}
-            </button>
           </div>
         )}
       </div>

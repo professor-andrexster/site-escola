@@ -15,6 +15,7 @@ interface QuizRow {
   ativo: boolean
   encerrado: boolean
   tempo_por_pergunta: number
+  quiz_iniciado_em: string | null
   created_at: string
   quiz_perguntas: { id: string }[]
   quiz_participantes: { id: string }[]
@@ -66,7 +67,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   }
 
   async function iniciarQuiz(id: string) {
-    await update(id, { ativo: true, lobby_aberto: true, encerrado: false })
+    await update(id, { ativo: true, lobby_aberto: true, encerrado: false, quiz_iniciado_em: new Date().toISOString() })
   }
 
   async function encerrarQuiz(id: string) {

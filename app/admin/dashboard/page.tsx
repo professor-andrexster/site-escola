@@ -3,7 +3,7 @@ import { getProfileOrRedirect, ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
 import { quizMatchesTurma } from '@/lib/turmas'
 import Link from 'next/link'
 import {
-  Newspaper, Eye, Star, Plus, Inbox, Gamepad2,
+  Star, Inbox, Gamepad2,
   Users, Trophy, BookOpen, TrendingUp, DoorOpen, Play,
 } from 'lucide-react'
 
@@ -31,7 +31,7 @@ export default async function DashboardPage() {
   const { user, profile } = await getProfileOrRedirect()
 
   if (profile.role === 'aluno' || profile.role === 'monitor') {
-    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }, { count: minhasNoticias }] = await Promise.all([
+    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }] = await Promise.all([
       supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
       supabase.from('quiz_participantes')
         .select('*, quizzes(titulo, codigo)')
@@ -44,9 +44,6 @@ export default async function DashboardPage() {
         .select('id, titulo, codigo, turma_alvo, lobby_aberto, ativo, tempo_por_pergunta, quiz_perguntas(id)')
         .eq('encerrado', false)
         .or('lobby_aberto.eq.true,ativo.eq.true'),
-      profile.role === 'monitor'
-        ? supabase.from('noticias').select('*', { count: 'exact', head: true }).eq('autor_id', user.id)
-        : Promise.resolve({ count: 0 }),
     ])
 
     // Filtra os quizzes que são para a turma do aluno
@@ -140,10 +137,7 @@ export default async function DashboardPage() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
           <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
-          {profile.role === 'monitor'
-            ? <StatCard label="Minhas Notícias" value={minhasNoticias ?? 0} icon={Newspaper} color="bg-blue-50 text-escola-azul" href="/admin/noticias" />
-            : <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
-          }
+          <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
         </div>
 
         <div className="bg-white rounded-xl border border-gray-100 p-6">
@@ -178,15 +172,11 @@ export default async function DashboardPage() {
 
   // Professor e Direção
   const [
-    { count: totalNoticias },
-    { count: noticiasPublicadas },
     { count: totalQuizzes },
     { count: totalParticipantes },
     { count: leadsNaoLidos },
     { count: usuariosPendentes },
   ] = await Promise.all([
-    supabase.from('noticias').select('*', { count: 'exact', head: true }),
-    supabase.from('noticias').select('*', { count: 'exact', head: true }).eq('publicado', true),
     supabase.from('quizzes').select('*', { count: 'exact', head: true }),
     supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('concluido', true),
     profile.role === 'direcao'
@@ -221,8 +211,6 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Notícias" value={totalNoticias ?? 0} icon={Newspaper} color="bg-blue-50 text-escola-azul" href="/admin/noticias" />
-        <StatCard label="Publicadas" value={noticiasPublicadas ?? 0} icon={Eye} color="bg-green-50 text-green-600" href="/admin/noticias" />
         <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/quiz" />
         <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-orange-50 text-orange-600" />
         {profile.role === 'direcao' && (
@@ -240,10 +228,6 @@ export default async function DashboardPage() {
           Ações Rápidas
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link href="/admin/noticias/nova" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <Plus className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
-            <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Nova Notícia</span>
-          </Link>
           <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all group">
             <Gamepad2 className="w-6 h-6 text-gray-400 group-hover:text-purple-600" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-purple-600 text-center">Novo Quiz</span>

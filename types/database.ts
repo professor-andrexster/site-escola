@@ -431,6 +431,123 @@ export interface Database {
           serie_na_epoca?: string | null
         }
       }
+      cursos: {
+        Row: {
+          id: string
+          titulo: string
+          slug: string
+          descricao: string | null
+          capa_url: string | null
+          categoria: string | null
+          nivel: string
+          autor_nome: string
+          publicado: boolean
+          ordem: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          titulo: string
+          slug: string
+          descricao?: string | null
+          capa_url?: string | null
+          categoria?: string | null
+          nivel?: string
+          autor_nome?: string
+          publicado?: boolean
+          ordem?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          titulo?: string
+          slug?: string
+          descricao?: string | null
+          capa_url?: string | null
+          categoria?: string | null
+          nivel?: string
+          autor_nome?: string
+          publicado?: boolean
+          ordem?: number
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      aulas: {
+        Row: {
+          id: string
+          curso_id: string
+          titulo: string
+          slug: string
+          descricao: string | null
+          ordem: number
+          slides_urls: string[]
+          duracao_estimada_min: number | null
+          publicado: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          curso_id: string
+          titulo: string
+          slug: string
+          descricao?: string | null
+          ordem?: number
+          slides_urls?: string[]
+          duracao_estimada_min?: number | null
+          publicado?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          curso_id?: string
+          titulo?: string
+          slug?: string
+          descricao?: string | null
+          ordem?: number
+          slides_urls?: string[]
+          duracao_estimada_min?: number | null
+          publicado?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      progresso_aulas: {
+        Row: {
+          id: string
+          user_id: string
+          aula_id: string
+          curso_id: string
+          slide_atual: number
+          concluida: boolean
+          concluida_em: string | null
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          aula_id: string
+          curso_id: string
+          slide_atual?: number
+          concluida?: boolean
+          concluida_em?: string | null
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          aula_id?: string
+          curso_id?: string
+          slide_atual?: number
+          concluida?: boolean
+          concluida_em?: string | null
+          atualizado_em?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -490,6 +607,18 @@ export type TesteVocacionalInsert = Database['public']['Tables']['testes_vocacio
 export type Projeto = Database['public']['Tables']['projetos']['Row']
 export type ProjetoInsert = Database['public']['Tables']['projetos']['Insert']
 export type ProjetoUpdate = Database['public']['Tables']['projetos']['Update']
+
+export type Curso = Database['public']['Tables']['cursos']['Row']
+export type CursoInsert = Database['public']['Tables']['cursos']['Insert']
+export type CursoUpdate = Database['public']['Tables']['cursos']['Update']
+
+export type Aula = Database['public']['Tables']['aulas']['Row']
+export type AulaInsert = Database['public']['Tables']['aulas']['Insert']
+export type AulaUpdate = Database['public']['Tables']['aulas']['Update']
+
+export type ProgressoAula = Database['public']['Tables']['progresso_aulas']['Row']
+export type ProgressoAulaInsert = Database['public']['Tables']['progresso_aulas']['Insert']
+export type ProgressoAulaUpdate = Database['public']['Tables']['progresso_aulas']['Update']
 
 // Profile
 export interface Profile {

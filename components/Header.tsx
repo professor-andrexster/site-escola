@@ -21,6 +21,7 @@ const navItems = [
   },
   { href: '/noticias', label: 'JBInforma' },
   { href: '/projetos', label: 'Projetos' },
+  { href: '/admin/cursos', label: 'Cursos' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/contato', label: 'Contato' },
 ]

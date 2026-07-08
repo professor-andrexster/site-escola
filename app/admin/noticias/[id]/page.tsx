@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
-import { getProfileOrRedirect } from '@/lib/profile'
+import { requireMonitorOrAbove } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import NoticiaEditor from '@/components/admin/NoticiaEditor'
 
@@ -10,7 +10,7 @@ interface Props {
 export default async function EditarNoticiaPage({ params }: Props) {
   const { id } = await params
   const supabase = await createClient()
-  const { user, profile } = await getProfileOrRedirect()
+  const { user, profile } = await requireMonitorOrAbove()
 
   const { data: noticia } = await supabase
     .from('noticias')
