@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Settings,
-  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library,
+  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -34,6 +34,13 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
     {
+      label: 'Protagonismo',
+      items: [
+        { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
+        { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+      ],
+    },
+    {
       label: 'Sistema',
       items: [
         { href: '/admin/leads', label: 'Leads', icon: Inbox },
@@ -62,6 +69,13 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
       ],
     },
+    {
+      label: 'Protagonismo',
+      items: [
+        { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
+        { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+      ],
+    },
   ],
   monitor: [
     {
@@ -70,6 +84,8 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
+        { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },
@@ -81,6 +97,8 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
+        { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },

@@ -403,6 +403,7 @@ export interface Database {
           destaque: boolean
           criado_em: string
           serie_na_epoca: string | null
+          equipe_id: string | null
         }
         Insert: {
           id?: string
@@ -416,6 +417,7 @@ export interface Database {
           destaque?: boolean
           criado_em?: string
           serie_na_epoca?: string | null
+          equipe_id?: string | null
         }
         Update: {
           id?: string
@@ -429,6 +431,7 @@ export interface Database {
           destaque?: boolean
           criado_em?: string
           serie_na_epoca?: string | null
+          equipe_id?: string | null
         }
       }
       cursos: {
@@ -548,6 +551,270 @@ export interface Database {
           atualizado_em?: string
         }
       }
+      ideias: {
+        Row: {
+          id: string
+          autor_id: string
+          titulo: string
+          dor: string | null
+          lacuna: string | null
+          inovacao: string | null
+          trilha_id: string | null
+          status: 'nova' | 'em_analise' | 'adotada' | 'arquivada'
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          autor_id: string
+          titulo: string
+          dor?: string | null
+          lacuna?: string | null
+          inovacao?: string | null
+          trilha_id?: string | null
+          status?: 'nova' | 'em_analise' | 'adotada' | 'arquivada'
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          autor_id?: string
+          titulo?: string
+          dor?: string | null
+          lacuna?: string | null
+          inovacao?: string | null
+          trilha_id?: string | null
+          status?: 'nova' | 'em_analise' | 'adotada' | 'arquivada'
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      ideia_votos: {
+        Row: {
+          id: string
+          ideia_id: string
+          profile_id: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ideia_id: string
+          profile_id: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ideia_id?: string
+          profile_id?: string
+          created_at?: string
+        }
+      }
+      ideia_comentarios: {
+        Row: {
+          id: string
+          ideia_id: string
+          autor_id: string
+          corpo: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          ideia_id: string
+          autor_id: string
+          corpo: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          ideia_id?: string
+          autor_id?: string
+          corpo?: string
+          created_at?: string
+        }
+      }
+      desafios: {
+        Row: {
+          id: string
+          titulo: string
+          subtitulo: string | null
+          briefing: string | null
+          professor_id: string | null
+          turma_alvo: string | null
+          ano_letivo: string
+          pontos_total: number
+          publicado: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          titulo: string
+          subtitulo?: string | null
+          briefing?: string | null
+          professor_id?: string | null
+          turma_alvo?: string | null
+          ano_letivo?: string
+          pontos_total?: number
+          publicado?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          titulo?: string
+          subtitulo?: string | null
+          briefing?: string | null
+          professor_id?: string | null
+          turma_alvo?: string | null
+          ano_letivo?: string
+          pontos_total?: number
+          publicado?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
+      desafio_fases: {
+        Row: {
+          id: string
+          desafio_id: string
+          ordem: number
+          titulo: string
+          descricao: string | null
+          entregavel_instrucoes: string | null
+          pontos_max: number
+          semana_sugerida: number | null
+        }
+        Insert: {
+          id?: string
+          desafio_id: string
+          ordem: number
+          titulo: string
+          descricao?: string | null
+          entregavel_instrucoes?: string | null
+          pontos_max?: number
+          semana_sugerida?: number | null
+        }
+        Update: {
+          id?: string
+          desafio_id?: string
+          ordem?: number
+          titulo?: string
+          descricao?: string | null
+          entregavel_instrucoes?: string | null
+          pontos_max?: number
+          semana_sugerida?: number | null
+        }
+      }
+      desafio_papeis: {
+        Row: {
+          id: string
+          desafio_id: string
+          nome: string
+          descricao: string | null
+        }
+        Insert: {
+          id?: string
+          desafio_id: string
+          nome: string
+          descricao?: string | null
+        }
+        Update: {
+          id?: string
+          desafio_id?: string
+          nome?: string
+          descricao?: string | null
+        }
+      }
+      equipes: {
+        Row: {
+          id: string
+          desafio_id: string
+          nome_empresa: string | null
+          ideia_id: string | null
+          turma: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          desafio_id: string
+          nome_empresa?: string | null
+          ideia_id?: string | null
+          turma?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          desafio_id?: string
+          nome_empresa?: string | null
+          ideia_id?: string | null
+          turma?: string | null
+          created_at?: string
+        }
+      }
+      equipe_membros: {
+        Row: {
+          id: string
+          equipe_id: string
+          profile_id: string
+          papel_id: string | null
+        }
+        Insert: {
+          id?: string
+          equipe_id: string
+          profile_id: string
+          papel_id?: string | null
+        }
+        Update: {
+          id?: string
+          equipe_id?: string
+          profile_id?: string
+          papel_id?: string | null
+        }
+      }
+      entregas: {
+        Row: {
+          id: string
+          equipe_id: string
+          fase_id: string
+          conteudo: string | null
+          arquivo_url: string | null
+          link_url: string | null
+          dados_estruturados: Record<string, unknown> | null
+          status: 'pendente' | 'entregue' | 'avaliada'
+          nota: number | null
+          feedback_professor: string | null
+          enviado_em: string | null
+          avaliado_em: string | null
+        }
+        Insert: {
+          id?: string
+          equipe_id: string
+          fase_id: string
+          conteudo?: string | null
+          arquivo_url?: string | null
+          link_url?: string | null
+          dados_estruturados?: Record<string, unknown> | null
+          status?: 'pendente' | 'entregue' | 'avaliada'
+          nota?: number | null
+          feedback_professor?: string | null
+          enviado_em?: string | null
+          avaliado_em?: string | null
+        }
+        Update: {
+          id?: string
+          equipe_id?: string
+          fase_id?: string
+          conteudo?: string | null
+          arquivo_url?: string | null
+          link_url?: string | null
+          dados_estruturados?: Record<string, unknown> | null
+          status?: 'pendente' | 'entregue' | 'avaliada'
+          nota?: number | null
+          feedback_professor?: string | null
+          enviado_em?: string | null
+          avaliado_em?: string | null
+        }
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -619,6 +886,34 @@ export type AulaUpdate = Database['public']['Tables']['aulas']['Update']
 export type ProgressoAula = Database['public']['Tables']['progresso_aulas']['Row']
 export type ProgressoAulaInsert = Database['public']['Tables']['progresso_aulas']['Insert']
 export type ProgressoAulaUpdate = Database['public']['Tables']['progresso_aulas']['Update']
+
+export type Ideia = Database['public']['Tables']['ideias']['Row']
+export type IdeiaInsert = Database['public']['Tables']['ideias']['Insert']
+export type IdeiaUpdate = Database['public']['Tables']['ideias']['Update']
+
+export type IdeiaVoto = Database['public']['Tables']['ideia_votos']['Row']
+export type IdeiaComentario = Database['public']['Tables']['ideia_comentarios']['Row']
+export type IdeiaComentarioInsert = Database['public']['Tables']['ideia_comentarios']['Insert']
+
+export type Desafio = Database['public']['Tables']['desafios']['Row']
+export type DesafioInsert = Database['public']['Tables']['desafios']['Insert']
+export type DesafioUpdate = Database['public']['Tables']['desafios']['Update']
+
+export type DesafioFase = Database['public']['Tables']['desafio_fases']['Row']
+export type DesafioFaseInsert = Database['public']['Tables']['desafio_fases']['Insert']
+
+export type DesafioPapel = Database['public']['Tables']['desafio_papeis']['Row']
+export type DesafioPapelInsert = Database['public']['Tables']['desafio_papeis']['Insert']
+
+export type Equipe = Database['public']['Tables']['equipes']['Row']
+export type EquipeInsert = Database['public']['Tables']['equipes']['Insert']
+
+export type EquipeMembro = Database['public']['Tables']['equipe_membros']['Row']
+export type EquipeMembroInsert = Database['public']['Tables']['equipe_membros']['Insert']
+
+export type Entrega = Database['public']['Tables']['entregas']['Row']
+export type EntregaInsert = Database['public']['Tables']['entregas']['Insert']
+export type EntregaUpdate = Database['public']['Tables']['entregas']['Update']
 
 // Profile
 export interface Profile {
