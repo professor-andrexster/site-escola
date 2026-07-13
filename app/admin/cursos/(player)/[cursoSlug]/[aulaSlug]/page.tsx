@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import SlideViewer from '@/components/cursos/SlideViewer'
+import ConteudoViewer from '@/components/cursos/ConteudoViewer'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -53,16 +54,42 @@ export default async function AulaPlayerPage({ params }: Params) {
     .eq('aula_id', aula.id)
     .maybeSingle()
 
+  // Aula em slides (cursos importados de pptx) usa o SlideViewer
+  if (aula.slides_urls && aula.slides_urls.length > 0) {
+    return (
+      <SlideViewer
+        userId={user.id}
+        cursoId={curso.id}
+        cursoSlug={curso.slug}
+        cursoTitulo={curso.titulo}
+        aulaId={aula.id}
+        aulaTitulo={aula.titulo}
+        slidesUrls={aula.slides_urls}
+        initialSlideAtual={progresso?.slide_atual ?? 0}
+        initialConcluida={progresso?.concluida ?? false}
+        nextAulaSlug={proximaAula?.slug ?? null}
+      />
+    )
+  }
+
+  // Aula em texto: busca os desafios (sem gabarito, coluna bloqueada para alunos)
+  const { data: desafios } = await supabase
+    .from('curso_desafios')
+    .select('id, titulo, enunciado, tipo, ordem')
+    .eq('aula_id', aula.id)
+    .order('ordem')
+
   return (
-    <SlideViewer
+    <ConteudoViewer
       userId={user.id}
       cursoId={curso.id}
       cursoSlug={curso.slug}
       cursoTitulo={curso.titulo}
       aulaId={aula.id}
       aulaTitulo={aula.titulo}
-      slidesUrls={aula.slides_urls}
-      initialSlideAtual={progresso?.slide_atual ?? 0}
+      duracaoMin={aula.duracao_estimada_min}
+      conteudo={aula.conteudo ?? '<p>Esta aula ainda não tem conteúdo.</p>'}
+      desafios={desafios ?? []}
       initialConcluida={progresso?.concluida ?? false}
       nextAulaSlug={proximaAula?.slug ?? null}
     />

@@ -16,6 +16,9 @@ interface QuizState {
   encerrado: boolean
   tempo_por_pergunta: number
   quiz_iniciado_em: string | null
+  pergunta_atual: number
+  pergunta_liberada_em: string | null
+  resposta_revelada: boolean
 }
 
 interface QuizRoomProps {
@@ -86,6 +89,9 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
         tempoPorPergunta={quiz.tempo_por_pergunta}
         jaRespondidas={jaRespondidas}
         quizIniciadoEm={quiz.quiz_iniciado_em}
+        perguntaAtual={quiz.pergunta_atual ?? 0}
+        perguntaLiberadaEm={quiz.pergunta_liberada_em}
+        respostaRevelada={quiz.resposta_revelada ?? false}
         encerrado={quiz.encerrado}
       />
     )

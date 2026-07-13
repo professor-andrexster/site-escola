@@ -3,7 +3,7 @@ import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Play } from 'lucide-react'
+import { ArrowLeft, Play, Trophy } from 'lucide-react'
 import AulaListItem, { type AulaStatus } from '@/components/cursos/AulaListItem'
 import type { Metadata } from 'next'
 
@@ -42,6 +42,14 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
     .select('aula_id, slide_atual, concluida')
     .eq('user_id', user.id)
     .in('aula_id', (aulas ?? []).map((a) => a.id))
+
+  // Desafios do curso inteiro (projeto integrador etc. — sem gabarito, bloqueado p/ aluno)
+  const { data: desafiosCurso } = await supabase
+    .from('curso_desafios')
+    .select('id, titulo, enunciado, tipo, ordem')
+    .eq('curso_id', curso.id)
+    .is('aula_id', null)
+    .order('ordem')
 
   const progressoMap = new Map((progresso ?? []).map((p) => [p.aula_id, p]))
 
@@ -110,6 +118,26 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
           />
         ))}
       </div>
+
+      {(desafiosCurso ?? []).length > 0 && (
+        <section className="mt-10">
+          <h2 className="text-white font-black text-lg font-geom flex items-center gap-2 mb-4">
+            <Trophy className="w-5 h-5 text-yellow-400" />
+            Projeto do curso
+          </h2>
+          <div className="space-y-3">
+            {(desafiosCurso ?? []).map(d => (
+              <div key={d.id} className="bg-white/5 border border-yellow-400/20 rounded-2xl p-5">
+                <h3 className="text-white font-bold mb-2">{d.titulo}</h3>
+                <div
+                  className="[&_p]:text-white/70 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:text-white/70 [&_li]:text-sm [&_ol]:list-decimal [&_ol]:pl-5 [&_code]:font-jetbrains [&_code]:text-curso-ciano [&_pre]:bg-black/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:text-sm [&_pre]:text-white/80 text-white/70 text-sm leading-relaxed"
+                  dangerouslySetInnerHTML={{ __html: d.enunciado }}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

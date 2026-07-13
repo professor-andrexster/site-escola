@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Pencil, Trash2, Trophy, Play, Square, Copy, DoorOpen, Users } from 'lucide-react'
+import { Pencil, Trash2, Trophy, Play, Square, Copy, DoorOpen, Users, MonitorPlay } from 'lucide-react'
 
 interface QuizRow {
   id: string
@@ -67,7 +67,18 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   }
 
   async function iniciarQuiz(id: string) {
-    await update(id, { ativo: true, lobby_aberto: true, encerrado: false, quiz_iniciado_em: new Date().toISOString() })
+    const agora = new Date().toISOString()
+    await supabase.from('quizzes').update({
+      ativo: true,
+      lobby_aberto: true,
+      encerrado: false,
+      quiz_iniciado_em: agora,
+      pergunta_atual: 0,
+      pergunta_liberada_em: agora,
+      resposta_revelada: false,
+    }).eq('id', id)
+    // Professor vai direto para o telão de comando
+    router.push(`/admin/quiz/${id}/controle`)
   }
 
   async function encerrarQuiz(id: string) {
@@ -178,14 +189,23 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                 )}
 
                 {status === 'ativo' && (
-                  <button
-                    onClick={() => encerrarQuiz(quiz.id)}
-                    disabled={isLoading}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    <Square className="w-3.5 h-3.5" />
-                    Encerrar
-                  </button>
+                  <>
+                    <Link
+                      href={`/admin/quiz/${quiz.id}/controle`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                    >
+                      <MonitorPlay className="w-3.5 h-3.5" />
+                      Controlar
+                    </Link>
+                    <button
+                      onClick={() => encerrarQuiz(quiz.id)}
+                      disabled={isLoading}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-red-600 text-white rounded-lg text-xs font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
+                    >
+                      <Square className="w-3.5 h-3.5" />
+                      Encerrar
+                    </button>
+                  </>
                 )}
 
                 {/* Ações fixas */}

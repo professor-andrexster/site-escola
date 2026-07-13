@@ -134,6 +134,9 @@ export interface Database {
           encerrado: boolean
           tempo_por_pergunta: number
           quiz_iniciado_em: string | null
+          pergunta_atual: number
+          pergunta_liberada_em: string | null
+          resposta_revelada: boolean
           created_at: string
           updated_at: string
         }
@@ -148,6 +151,9 @@ export interface Database {
           encerrado?: boolean
           tempo_por_pergunta?: number
           quiz_iniciado_em?: string | null
+          pergunta_atual?: number
+          pergunta_liberada_em?: string | null
+          resposta_revelada?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -162,6 +168,9 @@ export interface Database {
           encerrado?: boolean
           tempo_por_pergunta?: number
           quiz_iniciado_em?: string | null
+          pergunta_atual?: number
+          pergunta_liberada_em?: string | null
+          resposta_revelada?: boolean
           created_at?: string
           updated_at?: string
         }
@@ -490,6 +499,8 @@ export interface Database {
           descricao: string | null
           ordem: number
           slides_urls: string[]
+          conteudo: string | null
+          revisado: boolean
           duracao_estimada_min: number | null
           publicado: boolean
           created_at: string
@@ -503,6 +514,8 @@ export interface Database {
           descricao?: string | null
           ordem?: number
           slides_urls?: string[]
+          conteudo?: string | null
+          revisado?: boolean
           duracao_estimada_min?: number | null
           publicado?: boolean
           created_at?: string
@@ -516,6 +529,8 @@ export interface Database {
           descricao?: string | null
           ordem?: number
           slides_urls?: string[]
+          conteudo?: string | null
+          revisado?: boolean
           duracao_estimada_min?: number | null
           publicado?: boolean
           created_at?: string
@@ -929,6 +944,20 @@ export interface Profile {
   email: string | null
   created_at: string
   updated_at: string
+}
+
+// Desafio de aula/curso do módulo Cursos (gabarito só via service role).
+// Não confundir com Desafio (motor de desafios em fases da Fábrica de Ideias).
+export interface CursoDesafio {
+  id: string
+  curso_id: string
+  aula_id: string | null
+  titulo: string
+  enunciado: string
+  tipo: 'quiz' | 'pratico' | 'dissertativo'
+  gabarito: string | null
+  ordem: number
+  created_at: string
 }
 
 // Identidade (CPF + dados de recuperação, 1:1 com auth.users — leitura só do dono ou service role)
