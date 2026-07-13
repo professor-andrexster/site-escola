@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { Pencil, Trash2, Trophy, Play, Square, Copy, DoorOpen, Users, MonitorPlay } from 'lucide-react'
+import { Pencil, Trash2, Trophy, Play, Square, Copy, DoorOpen, Users, MonitorPlay, CopyPlus, RotateCcw } from 'lucide-react'
 
 interface QuizRow {
   id: string
@@ -87,6 +87,75 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
 
   async function fecharSala(id: string) {
     await update(id, { lobby_aberto: false, ativo: false })
+  }
+
+  function generateCode(): string {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+  }
+
+  async function duplicarQuiz(quiz: QuizRow) {
+    setLoadingId(quiz.id)
+
+    const { data: original } = await supabase
+      .from('quizzes')
+      .select('descricao, tempo_por_pergunta, turma_alvo')
+      .eq('id', quiz.id)
+      .single()
+
+    const { data: novo, error: quizError } = await supabase
+      .from('quizzes')
+      .insert({
+        titulo: `${quiz.titulo} (cópia)`,
+        codigo: generateCode(),
+        descricao: original?.descricao ?? null,
+        tempo_por_pergunta: original?.tempo_por_pergunta ?? quiz.tempo_por_pergunta,
+        turma_alvo: original?.turma_alvo ?? quiz.turma_alvo,
+        lobby_aberto: false,
+        ativo: false,
+        encerrado: false,
+      })
+      .select('id')
+      .single()
+
+    if (quizError || !novo) {
+      alert('Erro ao duplicar: ' + (quizError?.message ?? 'tente novamente'))
+      setLoadingId(null)
+      return
+    }
+
+    const { data: perguntas } = await supabase
+      .from('quiz_perguntas')
+      .select('ordem, enunciado, alternativa_a, alternativa_b, alternativa_c, alternativa_d, resposta_correta, pontos')
+      .eq('quiz_id', quiz.id)
+      .order('ordem')
+
+    if (perguntas && perguntas.length > 0) {
+      await supabase.from('quiz_perguntas').insert(perguntas.map(p => ({ ...p, quiz_id: novo.id })))
+    }
+
+    setLoadingId(null)
+    router.refresh()
+  }
+
+  async function reabrirQuiz(id: string) {
+    if (!confirm('Reabrir este quiz? As respostas e os participantes da rodada anterior serão APAGADOS e a sala volta a ficar aberta.')) return
+    setLoadingId(id)
+    const res = await fetch('/api/quiz/reabrir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizId: id }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      alert(json.error ?? 'Erro ao reabrir o quiz.')
+    } else {
+      setQuizzes(prev => prev.map(q => q.id === id
+        ? { ...q, encerrado: false, ativo: false, lobby_aberto: true, quiz_participantes: [] }
+        : q))
+      router.refresh()
+    }
+    setLoadingId(null)
   }
 
   async function deleteQuiz(id: string) {
@@ -208,7 +277,27 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                   </>
                 )}
 
+                {status === 'encerrado' && (
+                  <button
+                    onClick={() => reabrirQuiz(quiz.id)}
+                    disabled={isLoading}
+                    title="Reabrir: apaga as respostas da rodada e abre a sala de novo"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Reabrir
+                  </button>
+                )}
+
                 {/* Ações fixas */}
+                <button
+                  onClick={() => duplicarQuiz(quiz)}
+                  disabled={isLoading}
+                  title="Duplicar quiz (cria uma cópia em rascunho com as mesmas perguntas)"
+                  className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50"
+                >
+                  <CopyPlus className="w-4 h-4" />
+                </button>
                 <Link
                   href={`/admin/quiz/${quiz.id}/ranking`}
                   className="p-1.5 rounded-lg text-yellow-600 bg-yellow-50 hover:bg-yellow-100 transition-colors"
