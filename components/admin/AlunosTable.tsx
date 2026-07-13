@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Search, CheckCircle2, XCircle } from 'lucide-react'
+import { Search, CheckCircle2, XCircle, UserCheck, AlertTriangle } from 'lucide-react'
 import type { Aluno } from '@/types/database'
 import { TURMAS } from '@/lib/turmas'
 
@@ -88,6 +88,14 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{a.nome}</p>
                   <p className="text-xs text-gray-400 mt-0.5">Matrícula {a.matricula} · {a.turma}</p>
+                  <div className="flex items-center gap-3 mt-1">
+                    {a.user_id
+                      ? <span className="inline-flex items-center gap-1 text-[11px] text-green-600"><UserCheck className="w-3 h-3" /> Tem conta</span>
+                      : <span className="text-[11px] text-gray-300">Sem conta</span>}
+                    {!a.cpf && (
+                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-600"><AlertTriangle className="w-3 h-3" /> Falta CPF</span>
+                    )}
+                  </div>
                 </div>
                 {a.ativo
                   ? <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
@@ -107,6 +115,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                 <th className="px-4 py-3 font-medium">Nome</th>
                 <th className="px-4 py-3 font-medium">Matrícula</th>
                 <th className="px-4 py-3 font-medium">Turma</th>
+                <th className="px-4 py-3 font-medium">Conta</th>
                 <th className="px-4 py-3 font-medium">Status</th>
               </tr>
             </thead>
@@ -120,6 +129,18 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   </td>
                   <td className="px-4 py-3 text-gray-500">{a.matricula}</td>
                   <td className="px-4 py-3 text-gray-500">{a.turma}</td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {a.user_id
+                        ? <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium"><UserCheck className="w-3.5 h-3.5" /> Tem conta</span>
+                        : <span className="text-gray-300 text-xs">Sem conta</span>}
+                      {!a.cpf && (
+                        <span className="inline-flex items-center gap-1 text-amber-600 text-xs" title="Sem CPF o aluno não consegue criar a conta">
+                          <AlertTriangle className="w-3.5 h-3.5" /> Falta CPF
+                        </span>
+                      )}
+                    </div>
+                  </td>
                   <td className="px-4 py-3">
                     {a.ativo
                       ? <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Ativo</span>

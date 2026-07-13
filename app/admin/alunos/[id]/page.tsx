@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, FolderKanban, ExternalLink } from 'lucide-react'
@@ -12,7 +13,8 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
   const { id } = await params
   const supabase = await createClient()
 
-  const { data: aluno } = await supabase
+  // Admin client para ler as colunas protegidas do aluno (cpf, user_id) — rota é só direção
+  const { data: aluno } = await createAdminClient()
     .from('alunos')
     .select('*')
     .eq('id', id)

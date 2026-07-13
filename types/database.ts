@@ -286,6 +286,7 @@ export interface Database {
           email: string | null
           foto_url: string | null
           ativo: boolean
+          user_id: string | null
           criado_em: string
           atualizado_em: string
         }
@@ -303,6 +304,7 @@ export interface Database {
           email?: string | null
           foto_url?: string | null
           ativo?: boolean
+          user_id?: string | null
           criado_em?: string
           atualizado_em?: string
         }
@@ -320,6 +322,7 @@ export interface Database {
           email?: string | null
           foto_url?: string | null
           ativo?: boolean
+          user_id?: string | null
           criado_em?: string
           atualizado_em?: string
         }
@@ -923,6 +926,27 @@ export interface Profile {
   turma: string | null
   disciplina: string | null
   aprovado: boolean
+  email: string | null
   created_at: string
   updated_at: string
+}
+
+// Identidade (CPF + dados de recuperação, 1:1 com auth.users — leitura só do dono ou service role)
+export interface Identidade {
+  user_id: string
+  cpf: string
+  data_nascimento: string | null
+  email_alternativo: string | null
+  criado_via: 'auto_aluno' | 'auto_professor' | 'direcao'
+  criado_em: string
+}
+
+// Log de atividades (auditoria — leitura só direção)
+export interface LogAtividade {
+  id: string
+  user_id: string | null
+  acao: string
+  detalhes: Record<string, unknown> | null
+  ip: string | null
+  criado_em: string
 }

@@ -37,9 +37,11 @@ export default async function PortfolioPage({ params }: { params: Promise<{ matr
   const { matricula } = await params
   const supabase = await createClient()
 
+  // Colunas explícitas: as sensíveis (cpf, nascimento, contatos) são bloqueadas
+  // para leitura pública desde a migration 016 — select('*') falharia aqui
   const { data: aluno } = await supabase
     .from('alunos')
-    .select('*, perfis_vocacionais(pontuacao, trilhas(nome, icone, cor_tailwind))')
+    .select('id, nome, matricula, turma, serie, turno, foto_url, ativo, perfis_vocacionais(pontuacao, trilhas(nome, icone, cor_tailwind))')
     .eq('matricula', matricula)
     .eq('ativo', true)
     .maybeSingle()

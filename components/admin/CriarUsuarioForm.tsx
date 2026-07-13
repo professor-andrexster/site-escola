@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { UserPlus, X } from 'lucide-react'
 import { TURMAS } from '@/lib/turmas'
 import { ROLE_LABELS } from '@/lib/roles'
+import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Profile } from '@/types/database'
 
 const ROLES: Profile['role'][] = ['aluno', 'monitor', 'professor', 'direcao']
@@ -17,23 +18,35 @@ export default function CriarUsuarioForm() {
   const [role, setRole] = useState<Profile['role']>('aluno')
   const [turma, setTurma] = useState('')
   const [disciplina, setDisciplina] = useState('')
+  const [cpf, setCpf] = useState('')
+  const [nascimento, setNascimento] = useState('')
+  const [matricula, setMatricula] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
 
   function reset() {
-    setNome(''); setEmail(''); setPassword(''); setRole('aluno'); setTurma(''); setDisciplina(''); setError('')
+    setNome(''); setEmail(''); setPassword(''); setRole('aluno'); setTurma(''); setDisciplina('')
+    setCpf(''); setNascimento(''); setMatricula(''); setError('')
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (!validarCPF(cpf)) {
+      setError('CPF inválido. Confira os números digitados.')
+      return
+    }
     setLoading(true)
     setError('')
 
     const res = await fetch('/api/usuarios/criar', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ nome, email, password, role, turma, disciplina }),
+      body: JSON.stringify({
+        nome, email, password, role, turma, disciplina, cpf,
+        dataNascimento: nascimento || undefined,
+        matricula: matricula || undefined,
+      }),
     })
     const json = await res.json()
 
@@ -123,6 +136,30 @@ export default function CriarUsuarioForm() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">CPF *</label>
+            <input
+              type="text"
+              required
+              inputMode="numeric"
+              value={cpf}
+              onChange={e => setCpf(formatarCPF(e.target.value))}
+              placeholder="000.000.000-00"
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Data de Nascimento</label>
+            <input
+              type="date"
+              value={nascimento}
+              onChange={e => setNascimento(e.target.value)}
+              className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Senha *</label>
             <input
               type="password"
@@ -148,6 +185,21 @@ export default function CriarUsuarioForm() {
                   <option key={t} value={t}>{t}</option>
                 ))}
               </select>
+            </div>
+          )}
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {role === 'aluno' && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Matrícula (vincula à base de alunos)</label>
+              <input
+                type="text"
+                value={matricula}
+                onChange={e => setMatricula(e.target.value)}
+                placeholder="Opcional"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+              />
             </div>
           )}
 

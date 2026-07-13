@@ -2,50 +2,37 @@
 
 import { useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { GraduationCap, Lock } from 'lucide-react'
+import { GraduationCap, Lock, Eye, EyeOff } from 'lucide-react'
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('')
+  const [identificador, setIdentificador] = useState('')
   const [password, setPassword] = useState('')
+  const [mostrarSenha, setMostrarSenha] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
-  const supabase = createClient()
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
     setError('')
 
-    const { error: authError } = await supabase.auth.signInWithPassword({ email, password })
-    if (authError) {
-      setError('E-mail ou senha incorretos.')
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ identificador, senha: password }),
+    })
+    const json = await res.json()
+
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao entrar. Tente novamente.')
       setLoading(false)
       return
     }
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('aprovado, role')
-      .eq('id', (await supabase.auth.getUser()).data.user?.id ?? '')
-      .maybeSingle()
-
-    if (!profile) {
-      setError('Perfil não encontrado. Entre em contato com a direção.')
-      await supabase.auth.signOut()
-      setLoading(false)
-      return
-    }
-
-    if (!profile.aprovado) {
-      router.push('/admin/pendente')
-      return
-    }
-
-    router.push('/admin/dashboard')
+    router.push(json.destino ?? '/admin/dashboard')
     router.refresh()
   }
 
@@ -74,34 +61,61 @@ export default function AdminLoginPage() {
                 Cadastro enviado! Aguarde aprovação da direção.
               </div>
             )}
+            {searchParams.get('conta_criada') && (
+              <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
+                Conta criada com sucesso! Faça seu primeiro acesso abaixo.
+              </div>
+            )}
+            {searchParams.get('senha_redefinida') && (
+              <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
+                Senha redefinida! Entre com a nova senha.
+              </div>
+            )}
 
             <div>
-              <label htmlFor="login-email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">E-mail</label>
+              <label htmlFor="login-identificador" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                E-mail, matrícula ou CPF
+              </label>
               <input
-                id="login-email"
+                id="login-identificador"
                 name="email"
-                type="email"
+                type="text"
                 required
                 autoComplete="username"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                placeholder="seu@email.com"
+                value={identificador}
+                onChange={e => setIdentificador(e.target.value)}
+                placeholder="seu@email.com, matrícula ou CPF"
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
               />
             </div>
 
             <div>
               <label htmlFor="login-password" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Senha</label>
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                required
-                autoComplete="current-password"
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
-              />
+              <div className="relative">
+                <input
+                  id="login-password"
+                  name="password"
+                  type={mostrarSenha ? 'text' : 'password'}
+                  required
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-11 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+                />
+                <button
+                  type="button"
+                  onClick={() => setMostrarSenha(!mostrarSenha)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              <div className="text-right mt-1.5">
+                <Link href="/admin/recuperar-senha" className="text-xs text-escola-azul hover:underline">
+                  Esqueci minha senha
+                </Link>
+              </div>
             </div>
 
             {error && (

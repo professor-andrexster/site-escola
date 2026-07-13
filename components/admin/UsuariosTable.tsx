@@ -3,11 +3,22 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Check, X, GraduationCap, BookOpen, Crown, Star } from 'lucide-react'
+import { Check, X, GraduationCap, BookOpen, Crown, Star, KeyRound, Copy } from 'lucide-react'
 import type { Profile } from '@/types/database'
-import { ROLE_LABELS } from '@/lib/roles'
+import { formatarCPF } from '@/lib/cpf'
 
-type ProfileComEmail = Profile & { email: string }
+export type UsuarioLinha = Profile & {
+  email: string
+  cpf: string | null
+  email_alternativo: string | null
+  criado_via: string | null
+}
+
+const ORIGEM_LABELS: Record<string, string> = {
+  auto_aluno: 'Autocadastro (aluno)',
+  auto_professor: 'Autocadastro (professor)',
+  direcao: 'Criado pela direção',
+}
 
 const ROLE_CONFIG: Record<Profile['role'], {
   label: string
@@ -52,13 +63,14 @@ const ROLE_CONFIG: Record<Profile['role'], {
 }
 
 interface UsuariosTableProps {
-  profiles: ProfileComEmail[]
+  profiles: UsuarioLinha[]
 }
 
 export default function UsuariosTable({ profiles: initial }: UsuariosTableProps) {
   const [profiles, setProfiles] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [changingRoleId, setChangingRoleId] = useState<string | null>(null)
+  const [senhaTemp, setSenhaTemp] = useState<{ id: string; senha: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
   const supabase = createClient()
@@ -76,15 +88,38 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   }
 
   async function rejeitar(id: string) {
-    if (!confirm('Rejeitar e remover este cadastro?')) return
+    if (!confirm('Rejeitar e remover este cadastro? A conta será apagada por completo.')) return
     setLoadingId(id)
     setError('')
-    const { error: deleteError } = await supabase.from('profiles').delete().eq('id', id)
-    if (deleteError) {
-      setError('Erro ao remover usuário: ' + deleteError.message)
+    const res = await fetch('/api/usuarios/remover', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setError(json.error ?? 'Erro ao remover usuário.')
     } else {
       setProfiles(prev => prev.filter(p => p.id !== id))
       router.refresh()
+    }
+    setLoadingId(null)
+  }
+
+  async function redefinirSenha(id: string, nome: string) {
+    if (!confirm(`Redefinir a senha de ${nome}? Uma senha temporária será gerada.`)) return
+    setLoadingId(id)
+    setError('')
+    const res = await fetch('/api/usuarios/redefinir-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao redefinir senha.')
+    } else {
+      setSenhaTemp({ id, senha: json.senha })
     }
     setLoadingId(null)
   }
@@ -105,7 +140,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   const pendentes = profiles.filter(p => !p.aprovado)
   const aprovados = profiles.filter(p => p.aprovado)
 
-  const renderCard = (p: ProfileComEmail) => {
+  const renderCard = (p: UsuarioLinha) => {
     const cfg = ROLE_CONFIG[p.role]
     const Icon = cfg.icon
     const isLoading = loadingId === p.id
@@ -125,8 +160,15 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-900 truncate">{p.nome_completo}</p>
             <p className="text-gray-400 text-xs truncate">{p.email}</p>
+            {p.cpf && <p className="text-gray-500 text-xs mt-0.5 font-mono">CPF: {formatarCPF(p.cpf)}</p>}
             {p.turma && <p className="text-gray-500 text-xs mt-0.5">Turma: <strong>{p.turma}</strong></p>}
             {p.disciplina && <p className="text-gray-500 text-xs mt-0.5">{p.disciplina}</p>}
+            {p.email_alternativo && (
+              <p className="text-gray-400 text-xs mt-0.5 truncate">Alternativo: {p.email_alternativo}</p>
+            )}
+            {p.criado_via && (
+              <p className="text-gray-300 text-[11px] mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
+            )}
           </div>
 
           {/* Status */}
@@ -189,6 +231,28 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
           )}
         </div>
 
+        {/* Senha temporária gerada */}
+        {senhaTemp?.id === p.id && (
+          <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2.5">
+            <p className="text-xs text-purple-700 mb-1 font-semibold">Senha temporária gerada — anote e repasse com cuidado:</p>
+            <div className="flex items-center gap-2">
+              <code className="text-sm font-mono font-bold text-purple-900 bg-white px-2 py-1 rounded border border-purple-200">
+                {senhaTemp.senha}
+              </code>
+              <button
+                onClick={() => navigator.clipboard.writeText(senhaTemp.senha)}
+                className="text-purple-500 hover:text-purple-700"
+                title="Copiar"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => setSenhaTemp(null)} className="text-xs text-purple-400 hover:text-purple-600 ml-auto">
+                Fechar
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Ações */}
         <div className="mt-3 flex items-center gap-2 pt-3 border-t border-gray-100">
           {!p.aprovado && (
@@ -199,6 +263,16 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
             >
               <Check className="w-3.5 h-3.5" />
               Aprovar Acesso
+            </button>
+          )}
+          {p.aprovado && (
+            <button
+              onClick={() => redefinirSenha(p.id, p.nome_completo)}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-purple-600 bg-purple-50 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors disabled:opacity-50"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              Redefinir Senha
             </button>
           )}
           {isChanging && (

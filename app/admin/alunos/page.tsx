@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { Plus, GraduationCap } from 'lucide-react'
 import AlunosTable from '@/components/admin/AlunosTable'
@@ -8,7 +8,8 @@ export const metadata: Metadata = { title: 'Alunos — Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function AlunosPage({ searchParams }: { searchParams: Promise<{ criado?: string }> }) {
-  const supabase = await createClient()
+  // Layout já exige direção; admin client lê as colunas protegidas (cpf, user_id)
+  const supabase = createAdminClient()
   const { criado } = await searchParams
 
   const { data: alunos } = await supabase

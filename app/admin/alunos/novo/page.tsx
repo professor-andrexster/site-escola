@@ -4,14 +4,15 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { TURMAS } from '@/lib/turmas'
+import { formatarCPF, validarCPF } from '@/lib/cpf'
 
 interface FormState {
   nome: string
   matricula: string
   turma: string
   data_nascimento: string
+  cpf: string
   responsavel: string
   telefone: string
   email: string
@@ -22,6 +23,7 @@ const INITIAL: FormState = {
   matricula: '',
   turma: '',
   data_nascimento: '',
+  cpf: '',
   responsavel: '',
   telefone: '',
   email: '',
@@ -33,7 +35,6 @@ export default function NovoAlunoPage() {
   const [erroGeral, setErroGeral] = useState('')
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   function setField(field: keyof FormState, value: string) {
     setForm(prev => ({ ...prev, [field]: value }))
@@ -46,6 +47,10 @@ export default function NovoAlunoPage() {
     if (!form.nome.trim()) novosErros.nome = 'Informe o nome do aluno.'
     if (!form.matricula.trim()) novosErros.matricula = 'Informe a matrícula.'
     if (!form.turma) novosErros.turma = 'Selecione a turma.'
+
+    if (form.cpf.trim() && !validarCPF(form.cpf)) {
+      novosErros.cpf = 'CPF inválido. Confira os números digitados.'
+    }
 
     if (form.telefone.trim()) {
       const digitos = form.telefone.replace(/\D/g, '')
@@ -68,24 +73,24 @@ export default function NovoAlunoPage() {
 
     setLoading(true)
 
-    const { error } = await supabase.from('alunos').insert({
-      nome: form.nome.trim(),
-      matricula: form.matricula.trim(),
-      turma: form.turma,
-      serie: form.turma,
-      turno: 'Integral',
-      data_nascimento: form.data_nascimento || null,
-      responsavel: form.responsavel.trim() || null,
-      telefone: form.telefone.trim() || null,
-      email: form.email.trim() || null,
+    const res = await fetch('/api/alunos', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        nome: form.nome,
+        matricula: form.matricula,
+        turma: form.turma,
+        data_nascimento: form.data_nascimento || null,
+        cpf: form.cpf || null,
+        responsavel: form.responsavel || null,
+        telefone: form.telefone || null,
+        email: form.email || null,
+      }),
     })
 
-    if (error) {
-      if (error.code === '23505') {
-        setErros(prev => ({ ...prev, matricula: 'Matrícula já cadastrada.' }))
-      } else {
-        setErroGeral('Erro ao cadastrar aluno: ' + error.message)
-      }
+    if (!res.ok) {
+      const json = await res.json()
+      setErroGeral(json.error ?? 'Erro ao cadastrar aluno.')
       setLoading(false)
       return
     }
@@ -168,7 +173,24 @@ export default function NovoAlunoPage() {
               onChange={(e) => setField('data_nascimento', e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
             />
+            <p className="text-xs text-gray-400 mt-1">Usado pelo aluno para criar a conta e recuperar a senha.</p>
           </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">CPF</label>
+            <input
+              type="text"
+              inputMode="numeric"
+              value={form.cpf}
+              onChange={(e) => setField('cpf', formatarCPF(e.target.value))}
+              placeholder="000.000.000-00"
+              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 ${erros.cpf ? 'border-red-400' : 'border-gray-200'}`}
+            />
+            {erros.cpf && <p className="text-xs text-red-500 mt-1">{erros.cpf}</p>}
+            <p className="text-xs text-gray-400 mt-1">Sem o CPF o aluno não consegue criar a própria conta.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">Responsável</label>
             <input

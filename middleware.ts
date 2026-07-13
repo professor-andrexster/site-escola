@@ -26,7 +26,7 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
-  const publicPaths = ['/admin', '/admin/cadastro']
+  const publicPaths = ['/admin', '/admin/cadastro', '/admin/recuperar-senha', '/admin/redefinir-senha']
 
   if (!publicPaths.includes(request.nextUrl.pathname) && !user) {
     const url = request.nextUrl.clone()

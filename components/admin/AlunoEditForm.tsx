@@ -3,14 +3,16 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { TURMAS } from '@/lib/turmas'
+import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Aluno } from '@/types/database'
 
 export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
   const [nome, setNome] = useState(aluno.nome)
   const [matricula, setMatricula] = useState(aluno.matricula)
   const [turma, setTurma] = useState(aluno.turma)
+  const [nascimento, setNascimento] = useState(aluno.data_nascimento ?? '')
+  const [cpf, setCpf] = useState(aluno.cpf ? formatarCPF(aluno.cpf) : '')
   const [telefone, setTelefone] = useState(aluno.telefone ?? '')
   const [email, setEmail] = useState(aluno.email ?? '')
   const [responsavel, setResponsavel] = useState(aluno.responsavel ?? '')
@@ -19,7 +21,6 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
   const [sucesso, setSucesso] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleSalvar() {
     setErro('')
@@ -29,23 +30,33 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
       setErro('Nome, matrícula e turma são obrigatórios.')
       return
     }
+    if (cpf.trim() && !validarCPF(cpf)) {
+      setErro('CPF inválido. Confira os números digitados.')
+      return
+    }
 
     setLoading(true)
 
-    const { error } = await supabase.from('alunos').update({
-      nome: nome.trim(),
-      matricula: matricula.trim(),
-      turma,
-      serie: turma,
-      telefone: telefone.trim() || null,
-      email: email.trim() || null,
-      responsavel: responsavel.trim() || null,
-      ativo,
-      atualizado_em: new Date().toISOString(),
-    }).eq('id', aluno.id)
+    const res = await fetch('/api/alunos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: aluno.id,
+        nome,
+        matricula,
+        turma,
+        data_nascimento: nascimento || null,
+        cpf: cpf || null,
+        telefone: telefone || null,
+        email: email || null,
+        responsavel: responsavel || null,
+        ativo,
+      }),
+    })
 
-    if (error) {
-      setErro(error.code === '23505' ? 'Matrícula já cadastrada para outro aluno.' : 'Erro ao salvar: ' + error.message)
+    if (!res.ok) {
+      const json = await res.json()
+      setErro(json.error ?? 'Erro ao salvar.')
       setLoading(false)
       return
     }
@@ -58,9 +69,14 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
   async function handleExcluir() {
     if (!confirm(`Remover o aluno "${aluno.nome}" e todos os seus dados (projetos, perfil vocacional)?`)) return
     setLoading(true)
-    const { error } = await supabase.from('alunos').delete().eq('id', aluno.id)
-    if (error) {
-      setErro('Erro ao remover: ' + error.message)
+    const res = await fetch('/api/alunos', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: aluno.id }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setErro(json.error ?? 'Erro ao remover.')
       setLoading(false)
       return
     }
@@ -102,6 +118,30 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
           >
             {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">Data de nascimento</label>
+          <input
+            type="date"
+            value={nascimento}
+            onChange={(e) => setNascimento(e.target.value)}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1.5">CPF</label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={cpf}
+            onChange={(e) => setCpf(formatarCPF(e.target.value))}
+            placeholder="000.000.000-00"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+          />
+          <p className="text-xs text-gray-400 mt-1">Necessário para o aluno criar a conta e recuperar a senha.</p>
         </div>
       </div>
 
