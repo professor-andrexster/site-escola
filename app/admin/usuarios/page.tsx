@@ -18,6 +18,7 @@ export default async function UsuariosPage() {
     supabase
       .from('profiles')
       .select('*')
+      .neq('role', 'aluno') // Filtrar APENAS não-alunos (professor, monitor, direcao)
       .order('aprovado', { ascending: true })
       .order('created_at', { ascending: false }),
     admin.from('identidades').select('user_id, cpf, email_alternativo, criado_via'),
@@ -45,9 +46,10 @@ export default async function UsuariosPage() {
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Usuários</h1>
+          <p className="text-sm text-gray-400 mt-1">Professores, monitores e staff. Gerenciar roles, aprovação e acesso.</p>
           {pendentes > 0 && (
-            <p className="text-sm text-yellow-600 mt-1 font-medium">
-              {pendentes} cadastro{pendentes !== 1 ? 's' : ''} aguardando aprovação
+            <p className="text-sm text-yellow-600 mt-2 font-medium">
+              ⚠️ {pendentes} cadastro{pendentes !== 1 ? 's' : ''} aguardando aprovação
             </p>
           )}
         </div>

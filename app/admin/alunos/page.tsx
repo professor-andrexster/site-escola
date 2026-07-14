@@ -30,7 +30,7 @@ export default async function AlunosPage({ searchParams }: { searchParams: Promi
             <GraduationCap className="w-6 h-6 text-escola-azul" />
             Alunos
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Cadastro, trilhas e portfólios dos alunos.</p>
+          <p className="text-sm text-gray-400 mt-1">Base de dados de alunos. Aqui você cria, edita, gerencia matrícula, CPF e dados pessoais. Alunos cadastrados aqui podem criar sua conta de acesso em /admin/cadastro.</p>
         </div>
         <Link
           href="/admin/alunos/novo"

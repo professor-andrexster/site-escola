@@ -25,6 +25,8 @@ const CORES: Record<string, { accent: string; accent2: string }> = {
   'Programação': { accent: '#60a5fa', accent2: '#2563eb' },
   'Web': { accent: '#a78bfa', accent2: '#7c3aed' },
   'Sistemas': { accent: '#fb923c', accent2: '#ea580c' },
+  'Hardware': { accent: '#f87171', accent2: '#dc2626' },
+  'Redes': { accent: '#38bdf8', accent2: '#0284c7' },
   'Produtividade': { accent: '#4ade80', accent2: '#16a34a' },
   'Excel': { accent: '#4ade80', accent2: '#16a34a' },
 }
