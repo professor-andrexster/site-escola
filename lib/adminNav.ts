@@ -108,4 +108,18 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
   ],
+  bibliotecario: [
+    {
+      label: 'Minha Área',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/funcionarios', label: 'Equipe', icon: Briefcase },
+        { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
+        { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+        { href: '/ranking', label: 'Ranking', icon: Trophy },
+      ],
+    },
+  ],
 }

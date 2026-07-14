@@ -458,8 +458,10 @@ export interface Database {
           autor_nome: string
           publicado: boolean
           ordem: number
-          created_at: string
+          criado_por: string | null
+          criado_em: string
           updated_at: string
+          created_at: string
         }
         Insert: {
           id?: string
@@ -472,8 +474,10 @@ export interface Database {
           autor_nome?: string
           publicado?: boolean
           ordem?: number
-          created_at?: string
+          criado_por?: string | null
+          criado_em?: string
           updated_at?: string
+          created_at?: string
         }
         Update: {
           id?: string
@@ -486,8 +490,10 @@ export interface Database {
           autor_nome?: string
           publicado?: boolean
           ordem?: number
-          created_at?: string
+          criado_por?: string | null
+          criado_em?: string
           updated_at?: string
+          created_at?: string
         }
       }
       aulas: {

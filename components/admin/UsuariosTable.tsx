@@ -52,6 +52,14 @@ const ROLE_CONFIG: Record<Profile['role'], {
     border: 'border-blue-200',
     desc: 'Cria e controla quizzes',
   },
+  bibliotecario: {
+    label: 'Bibliotecário',
+    icon: BookOpen,
+    bg: 'bg-amber-50',
+    text: 'text-amber-700',
+    border: 'border-amber-200',
+    desc: 'Gerencia biblioteca e recursos',
+  },
   direcao: {
     label: 'Direção',
     icon: Crown,
