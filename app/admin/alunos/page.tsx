@@ -1,7 +1,7 @@
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { Plus, GraduationCap } from 'lucide-react'
-import AlunosTable from '@/components/admin/AlunosTable'
+import AlunosView from '@/components/admin/AlunosView'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Alunos — Admin' }
@@ -41,7 +41,7 @@ export default async function AlunosPage({ searchParams }: { searchParams: Promi
         </Link>
       </div>
 
-      <AlunosTable alunos={alunos ?? []} />
+      <AlunosView alunos={alunos ?? []} />
     </div>
   )
 }
