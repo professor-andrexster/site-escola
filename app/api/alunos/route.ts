@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { createClient } from '@/lib/supabase/server'
 import { exigirDirecao } from '@/lib/apiDirecao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 
 // Escrita na tabela alunos é só via service role (RLS fechada na migration 016).
-// Estas rotas são o único caminho, restritas à direção.
+// Estas rotas são o único caminho, restritas à direção (CREATE/DELETE) ou próprio aluno (UPDATE self).
 
 type CamposAluno = {
   nome?: string
@@ -16,6 +17,30 @@ type CamposAluno = {
   telefone?: string | null
   email?: string | null
   ativo?: boolean
+}
+
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function validarEmail(email: string): boolean {
+  return REGEX_EMAIL.test(email)
+}
+
+async function verificarDuplicatas(
+  campo: 'matricula' | 'cpf' | 'email',
+  valor: string | null | undefined,
+  alunoIdExcluindo?: string
+): Promise<{ existe: boolean; alunoNome?: string }> {
+  if (!valor) return { existe: false }
+
+  const admin = createAdminClient()
+  const query = admin.from('alunos').select('id, nome').eq(campo, valor)
+
+  if (alunoIdExcluindo) {
+    query.neq('id', alunoIdExcluindo)
+  }
+
+  const { data } = await query.limit(1).single()
+  return { existe: !!data, alunoNome: data?.nome }
 }
 
 function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: true; dados: Record<string, unknown> } | { ok: false; erro: string } {
@@ -34,8 +59,15 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
   if (body.data_nascimento !== undefined) dados.data_nascimento = body.data_nascimento || null
   if (body.responsavel !== undefined) dados.responsavel = body.responsavel?.trim() || null
   if (body.telefone !== undefined) dados.telefone = body.telefone?.trim() || null
-  if (body.email !== undefined) dados.email = body.email?.trim() || null
   if (body.ativo !== undefined) dados.ativo = body.ativo
+
+  if (body.email !== undefined) {
+    const emailTrimmed = body.email?.trim() || null
+    if (emailTrimmed && !validarEmail(emailTrimmed)) {
+      return { ok: false, erro: 'E-mail inválido. Insira um e-mail válido (ex: aluno@escola.com).' }
+    }
+    dados.email = emailTrimmed
+  }
 
   if (body.cpf !== undefined) {
     if (body.cpf) {
@@ -50,9 +82,19 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
   return { ok: true, dados }
 }
 
-function erroBanco(error: { code?: string; message: string }) {
+function erroBanco(error: { code?: string; message: string }, camposDuplicados?: string[]): NextResponse {
   if (error.code === '23505') {
-    return NextResponse.json({ error: 'Já existe um aluno com essa matrícula ou CPF.' }, { status: 400 })
+    // Constraint violation - diferenciar qual campo duplicou
+    if (camposDuplicados?.includes('matricula')) {
+      return NextResponse.json({ error: 'Já existe um aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
+    }
+    if (camposDuplicados?.includes('cpf')) {
+      return NextResponse.json({ error: 'Já existe um aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
+    }
+    if (camposDuplicados?.includes('email')) {
+      return NextResponse.json({ error: 'Já existe um aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
+    }
+    return NextResponse.json({ error: 'Dados duplicados no cadastro. Verifique matrícula, CPF e e-mail.' }, { status: 400 })
   }
   return NextResponse.json({ error: 'Erro ao salvar: ' + error.message }, { status: 400 })
 }
@@ -65,9 +107,29 @@ export async function POST(request: Request) {
   const validacao = validarCampos(body, true)
   if (!validacao.ok) return NextResponse.json({ error: validacao.erro }, { status: 400 })
 
+  // Verificar duplicatas antes de inserir
+  if (body.matricula) {
+    const dup = await verificarDuplicatas('matricula', body.matricula)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe um aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+  if (body.cpf) {
+    const dup = await verificarDuplicatas('cpf', body.cpf)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe um aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+  if (body.email) {
+    const dup = await verificarDuplicatas('email', body.email)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe um aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+
   const admin = createAdminClient()
   const { data, error } = await admin.from('alunos').insert(validacao.dados).select('id').single()
-  if (error) return erroBanco(error)
+  if (error) return erroBanco(error, ['matricula', 'cpf', 'email'])
 
   return NextResponse.json({ ok: true, id: data.id })
 }
@@ -84,8 +146,29 @@ export async function PUT(request: Request) {
   validacao.dados.atualizado_em = new Date().toISOString()
 
   const admin = createAdminClient()
+
+  // Se está atualizando matrícula, CPF ou email, verificar duplicatas (excluindo este aluno)
+  if (body.matricula) {
+    const dup = await verificarDuplicatas('matricula', body.matricula, body.id)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe outro aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+  if (body.cpf) {
+    const dup = await verificarDuplicatas('cpf', body.cpf, body.id)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe outro aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+  if (body.email) {
+    const dup = await verificarDuplicatas('email', body.email, body.id)
+    if (dup.existe) {
+      return NextResponse.json({ error: 'Já existe outro aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
+    }
+  }
+
   const { error } = await admin.from('alunos').update(validacao.dados).eq('id', body.id)
-  if (error) return erroBanco(error)
+  if (error) return erroBanco(error, ['matricula', 'cpf', 'email'])
 
   return NextResponse.json({ ok: true })
 }

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Settings,
-  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket,
+  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -82,6 +82,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Minha Área',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
@@ -95,6 +96,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Minha Área',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },

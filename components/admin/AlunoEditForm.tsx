@@ -2,12 +2,18 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Trash2 } from 'lucide-react'
+import { Save, Trash2, AlertCircle } from 'lucide-react'
 import { TURMAS } from '@/lib/turmas'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Aluno } from '@/types/database'
 
-export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
+const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
+function validarEmail(email: string): boolean {
+  return REGEX_EMAIL.test(email)
+}
+
+export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno: Aluno; somenteLeitura?: boolean }) {
   const [nome, setNome] = useState(aluno.nome)
   const [matricula, setMatricula] = useState(aluno.matricula)
   const [turma, setTurma] = useState(aluno.turma)
@@ -32,6 +38,10 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
     }
     if (cpf.trim() && !validarCPF(cpf)) {
       setErro('CPF inválido. Confira os números digitados.')
+      return
+    }
+    if (email.trim() && !validarEmail(email)) {
+      setErro('E-mail inválido. Insira um e-mail válido (ex: aluno@escola.com).')
       return
     }
 
@@ -95,7 +105,8 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
           type="text"
           value={nome}
           onChange={(e) => setNome(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+          disabled={somenteLeitura}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
         />
       </div>
 
@@ -106,7 +117,8 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
             type="text"
             value={matricula}
             onChange={(e) => setMatricula(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
         <div>
@@ -114,7 +126,8 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
           <select
             value={turma}
             onChange={(e) => setTurma(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           >
             {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -128,7 +141,8 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
             type="date"
             value={nascimento}
             onChange={(e) => setNascimento(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
         <div>
@@ -139,7 +153,8 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
             value={cpf}
             onChange={(e) => setCpf(formatarCPF(e.target.value))}
             placeholder="000.000.000-00"
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />
           <p className="text-xs text-gray-400 mt-1">Necessário para o aluno criar a conta e recuperar a senha.</p>
         </div>
@@ -152,16 +167,19 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
             type="text"
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">E-mail</label>
           <input
-            type="text"
+            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+            disabled={somenteLeitura}
+            placeholder="aluno@escola.com"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />
         </div>
       </div>
@@ -172,12 +190,13 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
           type="text"
           value={responsavel}
           onChange={(e) => setResponsavel(e.target.value)}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
+          disabled={somenteLeitura}
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
         />
       </div>
 
       <label className="flex items-center gap-2 cursor-pointer">
-        <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} className="w-4 h-4 accent-escola-azul" />
+        <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} disabled={somenteLeitura} className="w-4 h-4 accent-escola-azul disabled:opacity-50" />
         <span className="text-sm text-gray-700">Aluno ativo</span>
       </label>
 
@@ -185,24 +204,28 @@ export default function AlunoEditForm({ aluno }: { aluno: Aluno }) {
         <div
           role="button"
           tabIndex={0}
-          onClick={() => !loading && handleSalvar()}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !loading) handleSalvar() }}
-          className={`flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-lg text-sm font-semibold cursor-pointer hover:bg-escola-azul/90 transition-colors ${loading ? 'opacity-60 pointer-events-none' : ''}`}
+          onClick={() => !loading && !somenteLeitura && handleSalvar()}
+          onKeyDown={(e) => { if (e.key === 'Enter' && !loading && !somenteLeitura) handleSalvar() }}
+          className={`flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors ${
+            somenteLeitura ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:bg-escola-azul/90'
+          } ${loading ? 'opacity-60 pointer-events-none' : ''}`}
         >
           <Save className="w-4 h-4" />
           {loading ? 'Salvando...' : 'Salvar Alterações'}
         </div>
 
-        <div
-          role="button"
-          tabIndex={0}
-          onClick={() => !loading && handleExcluir()}
-          onKeyDown={(e) => { if (e.key === 'Enter' && !loading) handleExcluir() }}
-          className="flex items-center gap-2 text-escola-vermelho px-3 py-2.5 rounded-lg text-sm font-semibold cursor-pointer hover:bg-red-50 transition-colors"
-        >
-          <Trash2 className="w-4 h-4" />
-          Remover
-        </div>
+        {!somenteLeitura && (
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => !loading && handleExcluir()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !loading) handleExcluir() }}
+            className="flex items-center gap-2 text-escola-vermelho px-3 py-2.5 rounded-lg text-sm font-semibold cursor-pointer hover:bg-red-50 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Remover
+          </div>
+        )}
       </div>
     </div>
   )
