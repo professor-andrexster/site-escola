@@ -39,7 +39,7 @@ async function verificarDuplicatas(
     query.neq('id', alunoIdExcluindo)
   }
 
-  const { data } = await query.limit(1).single()
+  const { data } = await query.limit(1).maybeSingle()
   return { existe: !!data, alunoNome: data?.nome }
 }
 
