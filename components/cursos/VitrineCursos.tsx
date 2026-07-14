@@ -18,7 +18,7 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
           <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/50 mb-3">JB2026 · Cursos</p>
           <h1 className="font-playfair text-3xl md:text-4xl font-black mb-3">Cursos da E.E. Dr. João Beraldo</h1>
           <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto">
-            Trilhas de aprendizagem em vídeo e slides, feitas pelos nossos professores para alunos e equipe.
+            Trilhas de aprendizagem da grade de Informática do EMTI, por <strong className="text-white/90">Professor André Gomes</strong>.
           </p>
           <p className="font-mono text-xs text-yellow-400 mt-4">
             {cursos.length} curso{cursos.length !== 1 ? 's' : ''} disponível{cursos.length !== 1 ? 'is' : ''}
@@ -74,6 +74,7 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
                     <span className="text-[10px] text-gray-400 font-mono">{curso.nivel}</span>
                   </div>
                   <h3 className="font-semibold text-gray-900 text-sm mb-1">{curso.titulo}</h3>
+                  <p className="text-[11px] text-gray-400 mb-1.5">por {curso.autor_nome}</p>
                   {curso.descricao && <p className="text-xs text-gray-400 mb-3 line-clamp-2">{curso.descricao}</p>}
                   <div className="flex items-center justify-between text-xs mt-auto">
                     <span className="text-gray-400 font-mono">{curso.totalAulas} aula{curso.totalAulas !== 1 ? 's' : ''}</span>

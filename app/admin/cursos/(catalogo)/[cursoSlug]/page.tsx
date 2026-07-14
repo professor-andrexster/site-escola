@@ -82,7 +82,11 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
             <p className="text-curso-ciano text-xs font-jetbrains uppercase tracking-widest mb-2">{curso.categoria}</p>
           )}
           <h1 className="text-2xl md:text-4xl font-black text-white font-geom mb-2">{curso.titulo}</h1>
-          <p className="text-white/60 text-sm max-w-2xl">{curso.descricao}</p>
+          <p className="text-white/60 text-sm max-w-2xl mb-3">{curso.descricao}</p>
+          <div className="flex items-center gap-2">
+            <Image src="/cursos/avatar.png" alt="" width={28} height={28} className="rounded-full ring-1 ring-white/20" />
+            <span className="text-white/70 text-xs font-semibold">por {curso.autor_nome}</span>
+          </div>
         </div>
       </div>
 
