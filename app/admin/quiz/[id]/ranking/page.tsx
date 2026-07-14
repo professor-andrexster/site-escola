@@ -17,20 +17,33 @@ export default async function RankingPage({ params }: { params: Promise<{ id: st
   const { id } = await params
   const supabase = await createClient()
 
-  const [{ data: quiz }, { data: participantes }, { data: totalPerguntas }] = await Promise.all([
+  const [{ data: quiz }, { data: participantesRaw }, { data: totalPerguntas }] = await Promise.all([
     supabase.from('quizzes').select('*').eq('id', id).single(),
     supabase
       .from('quiz_participantes')
-      .select('*, quiz_respostas(correta)')
-      .eq('quiz_id', id)
-      .eq('concluido', true)
-      .order('pontuacao_total', { ascending: false }),
+      .select('*, quiz_respostas(correta, pontos_obtidos)')
+      .eq('quiz_id', id),
     supabase.from('quiz_perguntas').select('id').eq('quiz_id', id),
   ])
 
   if (!quiz) notFound()
 
   const numPerguntas = totalPerguntas?.length ?? 0
+
+  // Pontuação calculada direto das respostas (fonte da verdade), sem depender
+  // do celular do aluno ter finalizado o quiz
+  type Resp = { correta: boolean; pontos_obtidos: number }
+  const participantes = (participantesRaw ?? [])
+    .map(p => {
+      const respostas = (p.quiz_respostas ?? []) as Resp[]
+      return {
+        ...p,
+        pontuacao_calculada: respostas.reduce((s, r) => s + (r.pontos_obtidos ?? 0), 0),
+        total_respostas: respostas.length,
+      }
+    })
+    .filter(p => p.total_respostas > 0)
+    .sort((a, b) => b.pontuacao_calculada - a.pontuacao_calculada)
 
   return (
     <div className="max-w-4xl">
@@ -53,9 +66,9 @@ export default async function RankingPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      {!participantes || participantes.length === 0 ? (
+      {participantes.length === 0 ? (
         <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400">
-          Nenhum aluno concluiu este quiz ainda.
+          Nenhum aluno respondeu este quiz ainda.
         </div>
       ) : (
         <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
@@ -95,7 +108,7 @@ export default async function RankingPage({ params }: { params: Promise<{ id: st
                         </span>
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <span className="font-mono font-bold text-escola-azul text-base">{p.pontuacao_total}</span>
+                        <span className="font-mono font-bold text-escola-azul text-base">{p.pontuacao_calculada}</span>
                       </td>
                       <td className="px-4 py-3 text-center text-gray-400 text-xs hidden md:table-cell">
                         {new Date(p.created_at).toLocaleString('pt-BR', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' })}

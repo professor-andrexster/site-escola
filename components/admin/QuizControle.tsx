@@ -59,7 +59,8 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [quiz.id])
 
-  // Contagem de respostas da pergunta atual, ao vivo
+  // Contagem de respostas da pergunta atual: eventos Realtime + polling de
+  // segurança a cada 3s (se o Realtime falhar, o contador continua vivo)
   const perguntaIdRef = useRef(pergunta?.id)
   useEffect(() => {
     perguntaIdRef.current = pergunta?.id
@@ -70,10 +71,10 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
         .from('quiz_respostas')
         .select('resposta')
         .eq('pergunta_id', pergunta.id)
-      if (perguntaIdRef.current !== pergunta.id) return
-      setRespostasCount(data?.length ?? 0)
+      if (perguntaIdRef.current !== pergunta.id || !data) return
+      setRespostasCount(data.length)
       const cont: Record<string, number> = { a: 0, b: 0, c: 0, d: 0 }
-      for (const r of data ?? []) if (r.resposta) cont[r.resposta] = (cont[r.resposta] ?? 0) + 1
+      for (const r of data) if (r.resposta) cont[r.resposta] = (cont[r.resposta] ?? 0) + 1
       setContagem(cont)
     }
 
@@ -81,19 +82,20 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     setContagem({ a: 0, b: 0, c: 0, d: 0 })
     carregar()
 
+    const poll = setInterval(carregar, 3000)
+
     const channel = supabase
       .channel(`respostas-${pergunta.id}`)
       .on(
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'quiz_respostas', filter: `pergunta_id=eq.${pergunta.id}` },
-        (payload) => {
-          setRespostasCount(prev => prev + 1)
-          const resp = (payload.new as { resposta: string | null }).resposta
-          if (resp) setContagem(prev => ({ ...prev, [resp]: (prev[resp] ?? 0) + 1 }))
-        }
+        () => { carregar() }
       )
       .subscribe()
-    return () => { supabase.removeChannel(channel) }
+    return () => {
+      clearInterval(poll)
+      supabase.removeChannel(channel)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pergunta?.id])
 
@@ -118,7 +120,20 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
 
   async function encerrar() {
     if (!confirm('Encerrar o quiz para todos os alunos?')) return
-    await atualizar({ ativo: false, lobby_aberto: false, encerrado: true })
+    setLoading(true)
+    // A rota consolida a pontuação de todos os participantes no servidor,
+    // sem depender do celular de cada aluno finalizar
+    const res = await fetch('/api/quiz/encerrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizId: quiz.id }),
+    })
+    setLoading(false)
+    if (!res.ok) {
+      const json = await res.json()
+      alert(json.error ?? 'Erro ao encerrar o quiz.')
+      return
+    }
     router.push(`/admin/quiz/${quiz.id}/ranking`)
   }
 

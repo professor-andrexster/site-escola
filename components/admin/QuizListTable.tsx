@@ -82,7 +82,21 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   }
 
   async function encerrarQuiz(id: string) {
-    await update(id, { ativo: false, lobby_aberto: false, encerrado: true })
+    setLoadingId(id)
+    // Rota consolida a pontuação de todos os participantes no servidor
+    const res = await fetch('/api/quiz/encerrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ quizId: id }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      alert(json.error ?? 'Erro ao encerrar o quiz.')
+    } else {
+      setQuizzes(prev => prev.map(q => q.id === id ? { ...q, ativo: false, lobby_aberto: false, encerrado: true } : q))
+      router.refresh()
+    }
+    setLoadingId(null)
   }
 
   async function fecharSala(id: string) {
