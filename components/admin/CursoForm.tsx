@@ -18,9 +18,10 @@ function slugify(text: string): string {
 
 interface CursoFormProps {
   curso?: Curso
+  isDirecao?: boolean
 }
 
-export default function CursoForm({ curso }: CursoFormProps) {
+export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) {
   const isEditing = !!curso
   const [titulo, setTitulo] = useState(curso?.titulo ?? '')
   const [slug, setSlug] = useState(curso?.slug ?? '')
@@ -127,6 +128,13 @@ export default function CursoForm({ curso }: CursoFormProps) {
           </div>
         </div>
 
+        {!isDirecao && !publicado && (
+          <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 text-sm">
+            <p className="font-semibold">📋 Rascunho - Aguardando Aprovação</p>
+            <p className="text-xs mt-1">Este curso será publicado após aprovação da direção em &quot;Cursos Pendentes&quot;.</p>
+          </div>
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
           <textarea
@@ -182,14 +190,19 @@ export default function CursoForm({ curso }: CursoFormProps) {
       </div>
 
       <div className="bg-white border border-gray-200 rounded-xl p-6">
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className={`flex items-center gap-3 ${isDirecao ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
           <div
-            onClick={() => setPublicado(!publicado)}
-            className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${publicado ? 'bg-green-500' : 'bg-gray-300'}`}
+            onClick={() => isDirecao && setPublicado(!publicado)}
+            className={`w-11 h-6 rounded-full transition-colors relative ${isDirecao ? 'cursor-pointer' : 'cursor-not-allowed'} ${publicado ? 'bg-green-500' : 'bg-gray-300'}`}
           >
             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${publicado ? 'translate-x-5' : 'translate-x-0.5'}`} />
           </div>
-          <span className="text-sm font-medium text-gray-700">Publicado (visível para alunos e professores)</span>
+          <div>
+            <span className="text-sm font-medium text-gray-700">Publicado (visível para alunos e professores)</span>
+            {!isDirecao && (
+              <p className="text-xs text-amber-600 mt-1">Apenas direção pode publicar cursos</p>
+            )}
+          </div>
         </label>
       </div>
 

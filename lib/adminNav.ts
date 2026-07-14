@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Settings,
-  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase,
+  Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -32,6 +32,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
+        { href: '/admin/cursos/pendentes', label: 'Cursos Pendentes', icon: Clock },
       ],
     },
     {
