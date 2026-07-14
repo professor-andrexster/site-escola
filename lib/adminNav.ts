@@ -21,7 +21,8 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Gestão Escolar',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-        { href: '/admin/alunos', label: 'Alunos', icon: GraduationCap },
+        { href: '/admin/alunos', label: 'Alunos (Base de Dados)', icon: GraduationCap },
+        { href: '/admin/usuarios/alunos', label: 'Alunos Autenticados', icon: GraduationCap },
         { href: '/admin/funcionarios', label: 'Funcionários', icon: Briefcase },
         { href: '/admin/usuarios', label: 'Administradores', icon: Users },
       ],
