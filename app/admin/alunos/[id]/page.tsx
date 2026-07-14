@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, FolderKanban, ExternalLink } from 'lucide-react'
+import { ArrowLeft, FolderKanban, ExternalLink, Key } from 'lucide-react'
 import AlunoEditForm from '@/components/admin/AlunoEditForm'
+import ResetarSenhaForm from '@/components/admin/ResetarSenhaForm'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Editar Aluno — Admin' }
@@ -87,6 +88,16 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
               )
             })}
           </div>
+        </div>
+      )}
+
+      {aluno.user_id && (
+        <div className="mb-6">
+          <ResetarSenhaForm
+            alunoId={aluno.id}
+            alunoNome={aluno.nome}
+            userId={aluno.user_id}
+          />
         </div>
       )}
 
