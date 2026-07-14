@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     nome?: string
     email?: string
     password?: string
-    role?: 'aluno' | 'monitor' | 'professor' | 'direcao'
+    role?: 'aluno' | 'monitor' | 'professor' | 'direcao' | 'bibliotecario'
     turma?: string
     disciplina?: string
     cpf?: string

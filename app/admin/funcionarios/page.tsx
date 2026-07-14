@@ -3,14 +3,13 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import UsuariosTable, { type UsuarioLinha } from '@/components/admin/UsuariosTable'
 import CriarUsuarioForm from '@/components/admin/CriarUsuarioForm'
 import AtividadeLog from '@/components/admin/AtividadeLog'
+import { Users, BookOpen } from 'lucide-react'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Usuários — Admin' }
+export const metadata: Metadata = { title: 'Funcionários — Admin' }
 export const dynamic = 'force-dynamic'
 
-// Layout desta rota já exige direção (requireDirecao); aqui podemos usar o
-// admin client para ler CPF/identidades e o log, que são protegidos por RLS.
-export default async function UsuariosPage() {
+export default async function FuncionariosPage() {
   const supabase = await createClient()
   const admin = createAdminClient()
 
@@ -18,7 +17,7 @@ export default async function UsuariosPage() {
     supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'direcao') // Filtrar APENAS administradores (direção)
+      .in('role', ['professor', 'monitor', 'bibliotecario'])
       .order('aprovado', { ascending: true })
       .order('created_at', { ascending: false }),
     admin.from('identidades').select('user_id, cpf, email_alternativo, criado_via'),
@@ -41,12 +40,21 @@ export default async function UsuariosPage() {
   const nomePorId = new Map((profiles ?? []).map(p => [p.id as string, p.nome_completo as string]))
   const pendentes = linhas.filter(p => !p.aprovado).length
 
+  const roleTitulo: Record<string, string> = {
+    professor: '👨‍🏫 Professor',
+    monitor: '📋 Monitor',
+    bibliotecario: '📚 Bibliotecário',
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Administradores</h1>
-          <p className="text-sm text-gray-400 mt-1">Direção e gestão. Acesso total ao sistema.</p>
+          <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
+            <Users className="w-6 h-6 text-escola-azul" />
+            Funcionários
+          </h1>
+          <p className="text-sm text-gray-400 mt-1">Professores, monitores, bibliotecários e staff. Gerenciar aprovação e roles.</p>
           {pendentes > 0 && (
             <p className="text-sm text-yellow-600 mt-2 font-medium">
               ⚠️ {pendentes} cadastro{pendentes !== 1 ? 's' : ''} aguardando aprovação
@@ -55,12 +63,20 @@ export default async function UsuariosPage() {
         </div>
         <CriarUsuarioForm />
       </div>
+
       <UsuariosTable profiles={linhas} />
 
       <div className="mt-10">
-        <AtividadeLog
-          registros={(log ?? []).map(l => ({ ...l, nome: l.user_id ? nomePorId.get(l.user_id) ?? null : null }))}
-        />
+        <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+          <BookOpen className="w-5 h-5 text-escola-azul" />
+          Atividade Recente
+        </h2>
+        <AtividadeLog registros={
+          (log ?? []).map(l => ({
+            ...l,
+            nome: nomePorId.get(l.user_id || '') || 'Desconhecido',
+          }))
+        } />
       </div>
     </div>
   )

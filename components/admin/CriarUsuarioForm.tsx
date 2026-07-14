@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/roles'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Profile } from '@/types/database'
 
-const ROLES: Profile['role'][] = ['aluno', 'monitor', 'professor', 'direcao']
+const ROLES: Profile['role'][] = ['aluno', 'monitor', 'professor', 'bibliotecario', 'direcao']
 
 export default function CriarUsuarioForm() {
   const [open, setOpen] = useState(false)
