@@ -37,6 +37,7 @@ export default function VitrineCursosComModal({ cursos, aulasPorCurso }: Vitrine
           onClose={handleFecharModal}
           titulo={cursoSelecionado.titulo}
           descricao={cursoSelecionado.descricao || ''}
+          categoria={cursoSelecionado.categoria}
           aulas={aulasPorCurso[cursoSelecionado.id] || []}
         />
       )}
