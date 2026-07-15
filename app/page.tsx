@@ -1,7 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
 import PageLayout from '@/components/PageLayout'
-import HeroBanner from '@/components/HeroBanner'
-import NewsGrid from '@/components/NewsGrid'
+import CursosEmtiBanner from '@/components/CursosEmtiBanner'
 import YoutubeSection from '@/components/YoutubeSection'
 import InstagramSection from '@/components/InstagramSection'
 import QuizRankingSection from '@/components/QuizRankingSection'
@@ -47,51 +45,35 @@ const tecnologia = [
   { Icon: Award, titulo: 'Protagonismo Digital', desc: 'Alunos criam soluções para problemas reais da comunidade.' },
 ]
 
-export default async function HomePage() {
-  const supabase = await createClient()
-
-  const { data: noticiasDestaque } = await supabase
-    .from('noticias').select('*').eq('publicado', true).eq('destaque_home', true).limit(1).single()
-
-  const dataLimite = new Date()
-  dataLimite.setDate(dataLimite.getDate() - 7)
-
-  const { data: noticiasRecentes } = await supabase
-    .from('noticias').select('*').eq('publicado', true)
-    .gte('created_at', dataLimite.toISOString()).order('created_at', { ascending: false }).limit(6)
-
+export default function HomePage() {
   return (
     <PageLayout>
       {/* Hero */}
-      {noticiasDestaque ? (
-        <HeroBanner noticia={noticiasDestaque} />
-      ) : (
-        <div className="relative w-full h-[480px] md:h-[580px] overflow-hidden">
-          <Image src="/fachada.jpg" alt="E.E. Dr. João Beraldo" fill sizes="100vw" className="object-cover" priority />
-          <div className="absolute inset-0 img-overlay-blue" />
-          <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-escola-vermelho" />
-          <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/60 mb-3">
-              Escola Estadual · Carlos Chagas, MG
-            </p>
-            <div className="w-10 h-px bg-escola-vermelho mx-auto mb-5" />
-            <h1 className="font-playfair text-white text-4xl md:text-6xl lg:text-7xl font-black leading-none mb-4 text-balance">
-              Dr. João Beraldo
-            </h1>
-            <p className="font-serif text-white/75 text-lg md:text-xl max-w-xl leading-relaxed">
-              Ensino Médio em Tempo Integral com formação em Tecnologia da Informação.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-3 mt-8">
-              <Link href="/emti" className="bg-escola-vermelho text-white font-mono text-xs uppercase tracking-widest px-7 py-3.5 hover:bg-escola-vermelho-escuro transition-colors">
-                Conheça o EMTI
-              </Link>
-              <Link href="/sobre" className="bg-white/10 border border-white/25 text-white font-mono text-xs uppercase tracking-widest px-7 py-3.5 hover:bg-white/20 transition-colors">
-                A Escola
-              </Link>
-            </div>
+      <div className="relative w-full h-[480px] md:h-[580px] overflow-hidden">
+        <Image src="/fachada.jpg" alt="E.E. Dr. João Beraldo" fill sizes="100vw" className="object-cover" priority />
+        <div className="absolute inset-0 img-overlay-blue" />
+        <div className="absolute left-0 top-0 bottom-0 w-1.5 bg-escola-vermelho" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-6">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/60 mb-3">
+            Escola Estadual · Carlos Chagas, MG
+          </p>
+          <div className="w-10 h-px bg-escola-vermelho mx-auto mb-5" />
+          <h1 className="font-playfair text-white text-4xl md:text-6xl lg:text-7xl font-black leading-none mb-4 text-balance">
+            Dr. João Beraldo
+          </h1>
+          <p className="font-serif text-white/75 text-lg md:text-xl max-w-xl leading-relaxed">
+            Ensino Médio em Tempo Integral com formação em Tecnologia da Informação.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 mt-8">
+            <Link href="/emti" className="bg-escola-vermelho text-white font-mono text-xs uppercase tracking-widest px-7 py-3.5 hover:bg-escola-vermelho-escuro transition-colors">
+              Conheça o EMTI
+            </Link>
+            <Link href="/sobre" className="bg-white/10 border border-white/25 text-white font-mono text-xs uppercase tracking-widest px-7 py-3.5 hover:bg-white/20 transition-colors">
+              A Escola
+            </Link>
           </div>
         </div>
-      )}
+      </div>
 
       {/* Stats bar */}
       <div className="bg-escola-azul text-white border-b-2 border-escola-vermelho">
@@ -114,8 +96,8 @@ export default async function HomePage() {
         </div>
       </div>
 
-      {/* News */}
-      <NewsGrid noticias={noticiasRecentes ?? []} />
+      {/* Cursos & EMTI */}
+      <CursosEmtiBanner />
 
       {/* YouTube */}
       <YoutubeSection />
