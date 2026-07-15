@@ -1,0 +1,345 @@
+{
+  "marca": {
+    "nome": "Professor André Gomes",
+    "filosofia": "Uma marca pessoal entre a sala de aula e o código. As chaves { } abraçam as iniciais AG, simbolizando código para quem é da área e acolhimento para quem aprende. Jovem na linguagem, com o lastro de quem ensina e constrói de verdade.",
+    "simbolo": "{ } AG — Chaves em azul elétrico abraçando as iniciais"
+  },
+  "cores": {
+    "primaria": {
+      "nome": "Azul Elétrico",
+      "hex": "#2D5BFF",
+      "uso": "Marca primária, títulos principais, destaques, botões de ação, borders de foco"
+    },
+    "primaria_clara": {
+      "nome": "Azul Claro",
+      "hex": "#4F77FF",
+      "uso": "Símbolo sobre fundos escuros, variações da primária, backgrounds leves"
+    },
+    "texto_principal": {
+      "nome": "Tinta",
+      "hex": "#0F1419",
+      "uso": "Corpo de texto, títulos secundários, elemento principal em fundos claros"
+    },
+    "destaque": {
+      "nome": "Ciano",
+      "hex": "#0BC5C5",
+      "uso": "Apoio visual, destaques especiais, resumos finais, badges de conclusão"
+    },
+    "fundo": {
+      "nome": "Papel",
+      "hex": "#FBFCFE",
+      "uso": "Fundo principal de todas as páginas, cards, superfícies brancas"
+    },
+    "linha": {
+      "nome": "Linha",
+      "hex": "#E6EAF0",
+      "uso": "Divisores, borders suaves, separação de seções"
+    },
+    "texto_suave": {
+      "nome": "Texto Suave",
+      "hex": "#5A6675",
+      "uso": "Textos secundários, datas, metadados, descrições leves"
+    }
+  },
+  "tipografia": {
+    "titulos": {
+      "fonte": "Geom",
+      "peso": "700-900 (semibold a black)",
+      "tamanho_desktop": "28px a 40px",
+      "tamanho_mobile": "20px a 28px",
+      "cor": "#2D5BFF (azul elétrico)",
+      "uso": "H1 (capa do curso), H2 (objetivo de aprendizagem), H3 (subtítulos de seção)"
+    },
+    "corpo": {
+      "fonte": "Geom",
+      "peso": "400-500 (regular a medium)",
+      "tamanho": "16px (desktop), 14px (mobile)",
+      "linha_altura": "1.6",
+      "cor": "#0F1419 (tinta)",
+      "uso": "Texto principal, parágrafos, explicações"
+    },
+    "tecnico": {
+      "fonte": "JetBrains Mono",
+      "peso": "400-600",
+      "tamanho": "12px a 14px",
+      "cor": "#2D5BFF (azul elétrico) ou #0F1419 (tinta)",
+      "uso": "Labels, código, números de aula, tags de categoria"
+    }
+  },
+  "template_aula": {
+    "estrutura": [
+      "slide_capa",
+      "objetivo_aprendizagem",
+      "conceito_introducao",
+      "exemplo_pratico",
+      "exercicio_desafio",
+      "resumo_final",
+      "proxima_aula"
+    ],
+    "estilos": {
+      "slide_capa": {
+        "fundo": "#FBFCFE (papel)",
+        "elementos": [
+          "Logo { } AG (topo ou canto)",
+          "Número da aula em JetBrains Mono: 'Aula 01' (12px, #5A6675)",
+          "Título em Geom 40px, #2D5BFF, bold",
+          "Subtítulo em Geom 18px, #5A6675",
+          "Decoração: linha azul horizontal (4px height, #2D5BFF)"
+        ]
+      },
+      "objetivo_aprendizagem": {
+        "fundo": "#F0F3FF (azul 5%)",
+        "borda": "left 4px #2D5BFF",
+        "conteudo": "Geom 18px, #2D5BFF, bold",
+        "prefixo": "Ao fim desta aula você será capaz de..."
+      },
+      "titulo_secao": {
+        "fonte": "Geom 24px, #2D5BFF, bold",
+        "decoracao": "linha inferior #0BC5C5 (2px)"
+      },
+      "corpo_texto": {
+        "fonte": "Geom 16px, #0F1419",
+        "linha_altura": "1.6",
+        "espacamento": "16px entre parágrafos"
+      },
+      "destaque_importante": {
+        "fundo": "#E0F8F8 (ciano 10%)",
+        "borda": "left 3px #0BC5C5",
+        "ícone": "⚡ ou ★",
+        "cor_texto": "#0F1419"
+      },
+      "codigo_exemplo": {
+        "fundo": "#0F1419 (tinta)",
+        "texto": "#4F77FF (azul claro)",
+        "fonte": "JetBrains Mono 14px",
+        "padding": "16px",
+        "border_radius": "8px",
+        "linha_numero": "#5A6675"
+      },
+      "exercicio_desafio": {
+        "fundo": "#FBFCFE (papel)",
+        "borda": "2px dashed #2D5BFF",
+        "titulo": "Geom 16px, #2D5BFF, bold, prefixo '✏️ Desafio:'",
+        "conteudo": "Geom 14px, #0F1419",
+        "padding": "16px",
+        "border_radius": "8px"
+      },
+      "resumo_final": {
+        "fundo": "#E0F8F8 (ciano 10%)",
+        "borda": "1px solid #0BC5C5",
+        "titulo": "Geom 16px, #0BC5C5, bold, prefixo '✓ Resumo'",
+        "conteudo": "Geom 14px, #0F1419",
+        "padding": "16px",
+        "border_radius": "8px"
+      },
+      "rodape": {
+        "fundo": "#2D5BFF (azul elétrico)",
+        "texto": "#FBFCFE (papel)",
+        "conteudo": "Professor André Gomes • Desenvolvedor e Educador",
+        "align": "center",
+        "padding": "16px",
+        "fonte": "Geom 12px"
+      }
+    }
+  },
+  "estrutura_curso": {
+    "capa": {
+      "imagem": "1920x1080px (16:9), otimizada",
+      "logo": "Logo { } AG (posição: topo-esquerdo ou canto)",
+      "titulo": "Geom 56px, #2D5BFF, max 60 caracteres",
+      "descricao": "Geom 18px, #5A6675, max 150 caracteres",
+      "autor": "Professor André Gomes",
+      "metadados": "X aulas • Y minutos • Nível Z",
+      "botao_cta": "Começar Agora (azul elétrico #2D5BFF)"
+    },
+    "menu_lateral": {
+      "fundo": "#FBFCFE (papel)",
+      "titulo_secao": "Geom 12px, #2D5BFF, uppercase, tracking-wider",
+      "item": "Geom 14px, #0F1419",
+      "ativo": "background #2D5BFF, color #FBFCFE",
+      "hover": "background #F0F3FF",
+      "numero_aula": "JetBrains Mono 12px, #5A6675"
+    },
+    "conteudo_aula": {
+      "largura_maxima": "800px",
+      "padding": "32px",
+      "background": "#FBFCFE (papel)",
+      "espacamento_vertical": "32px entre seções"
+    },
+    "navegacao_aula": {
+      "anterior": "← Aula anterior (if exists)",
+      "proxima": "Próxima aula →",
+      "cor": "#2D5BFF",
+      "hover": "cor #0BC5C5",
+      "posicao": "bottom do conteúdo"
+    }
+  },
+  "paleta_completa_tailwind": {
+    "curso": {
+      "azul": "#2D5BFF",
+      "azul_claro": "#4F77FF",
+      "tinta": "#0F1419",
+      "ciano": "#0BC5C5",
+      "papel": "#FBFCFE",
+      "linha": "#E6EAF0",
+      "texto_suave": "#5A6675"
+    },
+    "backgrounds_semanticos": {
+      "destaque": "#F0F3FF (azul 5%)",
+      "destaque_ciano": "#E0F8F8 (ciano 10%)",
+      "codigo": "#0F1419"
+    },
+    "borderColors": {
+      "ativo": "#2D5BFF",
+      "suave": "#E6EAF0",
+      "destaque": "#0BC5C5"
+    }
+  },
+  "cursos_prioridade": [
+    {
+      "posicao": 1,
+      "nome": "HTML",
+      "slug": "html",
+      "descricao": "Estrutura e semântica da web",
+      "area": "web",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 2,
+      "nome": "CSS",
+      "slug": "css",
+      "descricao": "Estilo e responsividade",
+      "area": "web",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 3,
+      "nome": "JavaScript",
+      "slug": "javascript",
+      "descricao": "Interatividade no navegador",
+      "area": "web",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 4,
+      "nome": "Lógica de Programação",
+      "slug": "logica-programacao",
+      "descricao": "Algoritmos e fundamentos",
+      "area": "programacao",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 5,
+      "nome": "P.O.O / Java",
+      "slug": "poo-java",
+      "descricao": "Orientação a objetos (Java 21 LTS)",
+      "area": "programacao",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 6,
+      "nome": "PHP",
+      "slug": "php",
+      "descricao": "Back-end web (PHP 8.5)",
+      "area": "web",
+      "ano": "3º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 7,
+      "nome": "Redes de Computadores",
+      "slug": "redes",
+      "descricao": "Topologias, protocolos, segurança",
+      "area": "redes",
+      "ano": "3º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 8,
+      "nome": "Sistemas Operacionais",
+      "slug": "sistemas-operacionais",
+      "descricao": "SO, arquivos, processos, linha de comando",
+      "area": "sistemas",
+      "ano": "2º ano",
+      "status": "criar"
+    },
+    {
+      "posicao": 9,
+      "nome": "Arquitetura e Manutenção",
+      "slug": "arquitetura-manutencao",
+      "descricao": "Montagem, manutenção, reaproveitamento",
+      "area": "hardware",
+      "ano": "2º ano",
+      "status": "criar"
+    }
+  ],
+  "checklist_cada_curso": {
+    "pre_criacao": [
+      "✓ Pesquisar versões atuais das tecnologias",
+      "✓ Definir ementa com 1 objetivo geral + 4-8 específicos",
+      "✓ Quebrar em sprints (2-4 aulas cada)",
+      "✓ Definir pré-requisitos"
+    ],
+    "criacao_aula": [
+      "✓ Seguir template de estrutura (7 slides acima)",
+      "✓ Usar Geom para títulos e corpo",
+      "✓ Usar JetBrains Mono para código/labels",
+      "✓ Fundo BRANCO #FBFCFE",
+      "✓ Textos em AZUL ELÉTRICO #2D5BFF ou TINTA #0F1419",
+      "✓ Destaques em CIANO #0BC5C5",
+      "✓ Incluir objetivo de aprendizagem explícito",
+      "✓ Incluir pelo menos 1 exemplo prático",
+      "✓ Incluir 1 exercício/desafio com enunciado claro",
+      "✓ Incluir resumo final antes do rodapé"
+    ],
+    "revisao": [
+      "✓ Linguagem humana (sem IA detectável)",
+      "✓ Sem travessão '—' ou ' - ' como pausa",
+      "✓ Tecnologias atualizadas (pesquisar versão atual)",
+      "✓ Desafios calibrados (níveis: fixação→aplicação→análise)",
+      "✓ Alt text em todas as imagens",
+      "✓ Glossário de termos técnicos",
+      "✓ Nível de leitura apropriado (ensino médio)"
+    ],
+    "publicacao": [
+      "✓ Campo 'revisado' = true",
+      "✓ Imagem de capa (1920x1080)",
+      "✓ Descrição breve do curso",
+      "✓ Metadados: total de aulas, duração, nível",
+      "✓ Rodapé com 'Professor André Gomes • Desenvolvedor e Educador'",
+      "✓ Logo { } AG visível"
+    ]
+  },
+  "guia_implementacao": {
+    "passo_1": "Atualizar tailwind.config.ts com cores curso (JÁ FEITO)",
+    "passo_2": "Criar componentes padrão: SlideCapaCurso, AulaTemplate, ObjetivoBox, DesafioBox, ResumoBox",
+    "passo_3": "Criar template HTML para PowerPoint (PPTX) com theme do Professor André",
+    "passo_4": "Documentar guia de estilo para editores (designer/pedagogo)",
+    "passo_5": "Começar com HTML — estrutura de 4-6 aulas usando template",
+    "passo_6": "Passar HTML pelo pipeline (pedagogia → review → plágio → acessibilidade → desafio)",
+    "passo_7": "Publicar HTML como primeiro curso padrão",
+    "passo_8": "Replicar padrão para CSS, JavaScript, etc (em ordem)"
+  },
+  "proximos_passos_imediatos": {
+    "prioritario_1": "Criar componentes React para template de aula (SlideCapaCurso, AulaTemplate com sections)",
+    "prioritario_2": "Documentar brand guide visual em PDF/HTML para referência de editores",
+    "prioritario_3": "Começar estrutura de HTML: 6 aulas em Geom + JetBrains, fundo branco, textos azul/tinta",
+    "prioritario_4": "Integrar desafios calibrados (quiz + prático) entre aulas",
+    "prioritario_5": "Passar pelo review-agent e ajustar linguagem"
+  },
+  "observacoes_importantes": {
+    "nota_1": "FUNDO BRANCO (#FBFCFE) em TODOS os cursos — sair do cinza ilegível",
+    "nota_2": "Textos AZUL ELÉTRICO (#2D5BFF) para títulos, TINTA (#0F1419) para corpo",
+    "nota_3": "Geom é fonte PRIMÁRIA (títulos e corpo) — JetBrains Mono SÓ para código/labels técnicos",
+    "nota_4": "Logo { } AG deve estar visível em toda capa de aula",
+    "nota_5": "Rodapé padrão: 'Professor André Gomes • Desenvolvedor e Educador'",
+    "nota_6": "Desafios SEMPRE com enunciado claro, tipo definido (quiz/prático/dissertativo) e gabarito",
+    "nota_7": "Toda aula passa por pipeline de revisão OBRIGATÓRIO antes de publicar",
+    "nota_8": "Não colocar imagens sem alt text — acessibilidade é obrigatória"
+  }
+}

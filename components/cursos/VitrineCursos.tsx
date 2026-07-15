@@ -11,7 +11,7 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
   const categorias = Array.from(new Set(cursos.map(c => c.categoria).filter(Boolean))) as string[]
 
   return (
-    <div className="bg-gray-50">
+    <div className="bg-white">
       {/* Hero */}
       <div className="bg-escola-azul text-white">
         <div className="container mx-auto px-4 py-12 max-w-5xl text-center">
@@ -50,8 +50,8 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
             {cursos.map(curso => (
               <Link
                 key={curso.id}
-                href={`/admin/cursos/${curso.slug}`}
-                className="group bg-white border border-gray-200 rounded-xl overflow-hidden hover:border-escola-azul/30 transition-colors flex flex-col"
+                href={`/cursos/${curso.slug}`}
+                className="group bg-curso-papel border border-curso-linha rounded-xl overflow-hidden hover:border-curso-azul hover:shadow-lg transition-all flex flex-col"
               >
                 <div className="relative h-32 bg-escola-azul/10 flex items-center justify-center overflow-hidden">
                   {curso.capa_url ? (
@@ -67,18 +67,18 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
                 <div className="p-4 flex-1 flex flex-col">
                   <div className="flex items-center justify-between gap-2 mb-1.5">
                     {curso.categoria && (
-                      <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-escola-azul/10 text-escola-azul">
+                      <span className="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-curso-azul text-white">
                         {curso.categoria}
                       </span>
                     )}
-                    <span className="text-[10px] text-gray-400 font-mono">{curso.nivel}</span>
+                    <span className="text-[10px] text-curso-texto-suave font-mono uppercase tracking-wide">{curso.nivel}</span>
                   </div>
-                  <h3 className="font-semibold text-gray-900 text-sm mb-1">{curso.titulo}</h3>
-                  <p className="text-[11px] text-gray-400 mb-1.5">por {curso.autor_nome}</p>
-                  {curso.descricao && <p className="text-xs text-gray-400 mb-3 line-clamp-2">{curso.descricao}</p>}
-                  <div className="flex items-center justify-between text-xs mt-auto">
-                    <span className="text-gray-400 font-mono">{curso.totalAulas} aula{curso.totalAulas !== 1 ? 's' : ''}</span>
-                    <span className="text-escola-azul font-medium">Ver curso</span>
+                  <h3 className="font-semibold text-curso-azul text-sm mb-1.5">{curso.titulo}</h3>
+                  <p className="text-[11px] text-curso-texto-suave mb-2">por {curso.autor_nome}</p>
+                  {curso.descricao && <p className="text-xs text-curso-texto-suave mb-3 line-clamp-2">{curso.descricao}</p>}
+                  <div className="flex items-center justify-between text-xs mt-auto pt-2 border-t border-curso-linha">
+                    <span className="text-curso-texto-suave font-mono">{curso.totalAulas} aula{curso.totalAulas !== 1 ? 's' : ''}</span>
+                    <span className="text-curso-azul font-semibold">Ver curso →</span>
                   </div>
                 </div>
               </Link>
