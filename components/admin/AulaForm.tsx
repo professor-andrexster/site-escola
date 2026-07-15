@@ -30,7 +30,7 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
   const [slug, setSlug] = useState(aula?.slug ?? '')
   const [descricao, setDescricao] = useState(aula?.descricao ?? '')
   const [duracaoMin, setDuracaoMin] = useState(aula?.duracao_estimada_min?.toString() ?? '15')
-  const [publicado, setPublicado] = useState(aula?.publicado ?? false)
+  const [publicado, setPublicado] = useState(aula?.publicado ?? true)
   const [slidesUrls, setSlidesUrls] = useState<string[]>(aula?.slides_urls ?? [])
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -213,7 +213,10 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
           >
             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${publicado ? 'translate-x-5' : 'translate-x-0.5'}`} />
           </div>
-          <span className="text-sm font-medium text-gray-700">Publicada (visível para alunos e professores)</span>
+          <div>
+            <span className="text-sm font-medium text-gray-700">Publicada (visível na vitrine pública do curso)</span>
+            <p className="text-xs text-gray-400 mt-1">Já vem ativada — a aula aparece automaticamente na página do curso ao salvar.</p>
+          </div>
         </label>
       </div>
 

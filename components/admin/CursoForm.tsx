@@ -29,7 +29,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
   const [categoria, setCategoria] = useState(curso?.categoria ?? '')
   const [nivel, setNivel] = useState(curso?.nivel ?? 'Iniciante')
   const [capaUrl, setCapaUrl] = useState(curso?.capa_url ?? '')
-  const [publicado, setPublicado] = useState(curso?.publicado ?? false)
+  const [publicado, setPublicado] = useState(curso?.publicado ?? isDirecao)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -61,8 +61,18 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
   }
 
   async function handleSave() {
-    setSaving(true)
     setError('')
+
+    if (!descricao.trim()) {
+      setError('A descrição do curso é obrigatória.')
+      return
+    }
+    if (!capaUrl) {
+      setError('A imagem de capa do curso é obrigatória.')
+      return
+    }
+
+    setSaving(true)
     const payload = {
       titulo,
       slug,
@@ -136,13 +146,14 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
         )}
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Descrição *</label>
           <textarea
             value={descricao}
             onChange={(e) => setDescricao(e.target.value)}
+            required
             rows={3}
             className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul resize-none"
-            placeholder="Do que trata o curso"
+            placeholder="Do que trata o curso — aparece na vitrine pública para atrair alunos"
           />
         </div>
 
@@ -172,13 +183,14 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Imagem de capa</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Imagem de capa *</label>
           <input
             type="file"
             accept="image/*"
             onChange={(e) => e.target.files?.[0] && uploadCapa(e.target.files[0])}
             className="block text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-escola-azul-claro file:text-escola-azul hover:file:bg-blue-200 cursor-pointer"
           />
+          <p className="text-xs text-gray-400 mt-1">Obrigatória — é a imagem que os alunos veem na vitrine de cursos.</p>
           {uploading && <p className="text-xs text-gray-400 mt-1">Fazendo upload...</p>}
           {capaUrl && (
             <div className="mt-3">
@@ -198,9 +210,11 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
             <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${publicado ? 'translate-x-5' : 'translate-x-0.5'}`} />
           </div>
           <div>
-            <span className="text-sm font-medium text-gray-700">Publicado (visível para alunos e professores)</span>
-            {!isDirecao && (
-              <p className="text-xs text-amber-600 mt-1">Apenas direção pode publicar cursos</p>
+            <span className="text-sm font-medium text-gray-700">Publicado (visível na vitrine pública de cursos)</span>
+            {isDirecao ? (
+              <p className="text-xs text-gray-400 mt-1">Já vem ativado — o curso aparece automaticamente em /cursos ao salvar.</p>
+            ) : (
+              <p className="text-xs text-amber-600 mt-1">Apenas direção pode publicar cursos. Este curso ficará pendente de aprovação.</p>
             )}
           </div>
         </label>
@@ -209,7 +223,8 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
       <div className="flex gap-3">
         <button
           onClick={handleSave}
-          disabled={saving || !titulo || !slug}
+          disabled={saving || !titulo || !slug || !descricao.trim() || !capaUrl}
+          title={!descricao.trim() || !capaUrl ? 'Preencha descrição e capa para continuar' : undefined}
           className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
           {saving ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Curso'}
