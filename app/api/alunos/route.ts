@@ -16,6 +16,7 @@ type CamposAluno = {
   responsavel?: string | null
   telefone?: string | null
   email?: string | null
+  foto_url?: string | null
   ativo?: boolean
 }
 
@@ -78,6 +79,8 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
       dados.cpf = null
     }
   }
+
+  if (body.foto_url !== undefined) dados.foto_url = body.foto_url || null
 
   return { ok: true, dados }
 }

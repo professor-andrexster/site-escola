@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import PageLayout from '@/components/PageLayout'
-import VitrineCursos from '@/components/cursos/VitrineCursos'
+import VitrineCursosComModal from '@/components/cursos/VitrineCursosComModal'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
@@ -15,12 +15,18 @@ export default async function CursosPublicoPage() {
 
   const [{ data: cursos }, { data: aulas }] = await Promise.all([
     supabase.from('cursos').select('*').eq('publicado', true).order('ordem'),
-    supabase.from('aulas').select('id, curso_id').eq('publicado', true),
+    supabase.from('aulas').select('id, titulo, ordem, curso_id').eq('publicado', true).order('ordem'),
   ])
 
   const aulasPorCurso = new Map<string, number>()
+  const aulasDetalhesPorCurso: { [key: string]: any[] } = {}
+
   for (const a of aulas ?? []) {
     aulasPorCurso.set(a.curso_id, (aulasPorCurso.get(a.curso_id) ?? 0) + 1)
+    if (!aulasDetalhesPorCurso[a.curso_id]) {
+      aulasDetalhesPorCurso[a.curso_id] = []
+    }
+    aulasDetalhesPorCurso[a.curso_id].push(a)
   }
 
   const cursosComContagem = (cursos ?? []).map(c => ({
@@ -30,7 +36,7 @@ export default async function CursosPublicoPage() {
 
   return (
     <PageLayout>
-      <VitrineCursos cursos={cursosComContagem} />
+      <VitrineCursosComModal cursos={cursosComContagem} aulasPorCurso={aulasDetalhesPorCurso} />
     </PageLayout>
   )
 }

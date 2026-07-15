@@ -29,7 +29,7 @@ export async function GET(request: Request) {
   // Buscar dados do aluno
   const { data: aluno } = await admin
     .from('alunos')
-    .select('id, nome, matricula, turma, email, telefone, responsavel, data_nascimento')
+    .select('id, nome, matricula, turma, email, telefone, responsavel, data_nascimento, foto_url')
     .eq('id', identidade.aluno_id)
     .single()
 
@@ -64,6 +64,7 @@ export async function PUT(request: Request) {
     email?: string
     telefone?: string
     responsavel?: string
+    foto_url?: string | null
   }
 
   // Validações
@@ -91,6 +92,7 @@ export async function PUT(request: Request) {
   if (body.email !== undefined) dados.email = body.email?.trim() || null
   if (body.telefone !== undefined) dados.telefone = body.telefone?.trim() || null
   if (body.responsavel !== undefined) dados.responsavel = body.responsavel?.trim() || null
+  if (body.foto_url !== undefined) dados.foto_url = body.foto_url || null
 
   const { error } = await admin
     .from('alunos')

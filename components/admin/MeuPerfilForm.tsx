@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Save, AlertCircle } from 'lucide-react'
+import { Save, AlertCircle, Upload, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import type { Aluno } from '@/types/database'
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -11,10 +12,13 @@ function validarEmail(email: string): boolean {
 }
 
 export default function MeuPerfilForm() {
+  const supabase = createClient()
   const [aluno, setAluno] = useState<Partial<Aluno> | null>(null)
   const [telefone, setTelefone] = useState('')
   const [email, setEmail] = useState('')
   const [responsavel, setResponsavel] = useState('')
+  const [fotoUrl, setFotoUrl] = useState('')
+  const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -35,6 +39,7 @@ export default function MeuPerfilForm() {
         setTelefone(dados.telefone ?? '')
         setEmail(dados.email ?? '')
         setResponsavel(dados.responsavel ?? '')
+        setFotoUrl(dados.foto_url ?? '')
       } catch (err) {
         setErro('Erro ao carregar perfil.')
       } finally {
@@ -43,6 +48,38 @@ export default function MeuPerfilForm() {
     }
     carregarPerfil()
   }, [])
+
+  async function handleUploadFoto(file: File) {
+    if (!file || !aluno?.id) return
+
+    setUploadandoFoto(true)
+    setErro('')
+
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `alunos/${aluno.id}/foto-${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('alunos')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) {
+        setErro('Erro ao fazer upload da foto.')
+        setUploadandoFoto(false)
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('alunos')
+        .getPublicUrl(fileName)
+
+      setFotoUrl(publicUrl)
+      setUploadandoFoto(false)
+    } catch (err) {
+      setErro('Erro ao fazer upload da foto.')
+      setUploadandoFoto(false)
+    }
+  }
 
   async function handleSalvar() {
     setErro('')
@@ -62,6 +99,7 @@ export default function MeuPerfilForm() {
           email: email || null,
           telefone: telefone || null,
           responsavel: responsavel || null,
+          foto_url: fotoUrl || null,
         }),
       })
 
@@ -172,6 +210,40 @@ export default function MeuPerfilForm() {
           placeholder="Nome do responsável"
           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Sua Foto</label>
+        <div className="flex gap-4">
+          {fotoUrl ? (
+            <div className="flex flex-col gap-2">
+              <img src={fotoUrl} alt={aluno?.nome} className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
+              <button
+                type="button"
+                onClick={() => setFotoUrl('')}
+                disabled={uploadandoFoto}
+                className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
+              >
+                <X className="w-4 h-4 inline mr-1" />
+                Remover
+              </button>
+            </div>
+          ) : (
+            <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+              <Upload className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => e.target.files?.[0] && handleUploadFoto(e.target.files[0])}
+              disabled={uploadandoFoto}
+              className="w-full"
+            />
+            {uploadandoFoto && <p className="text-xs text-gray-500 mt-2">Enviando...</p>}
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

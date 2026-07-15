@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Save, Trash2, AlertCircle } from 'lucide-react'
+import { Save, Trash2, AlertCircle, Upload, X } from 'lucide-react'
+import { createClient } from '@/lib/supabase/client'
 import { TURMAS } from '@/lib/turmas'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Aluno } from '@/types/database'
@@ -22,11 +23,46 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
   const [telefone, setTelefone] = useState(aluno.telefone ?? '')
   const [email, setEmail] = useState(aluno.email ?? '')
   const [responsavel, setResponsavel] = useState(aluno.responsavel ?? '')
+  const [fotoUrl, setFotoUrl] = useState(aluno.foto_url ?? '')
   const [ativo, setAtivo] = useState(aluno.ativo)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
   const [loading, setLoading] = useState(false)
+  const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const router = useRouter()
+  const supabase = createClient()
+
+  async function handleUploadFoto(file: File) {
+    if (!file) return
+
+    setUploadandoFoto(true)
+    setErro('')
+
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `alunos/${aluno.id}/foto-${Date.now()}.${ext}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('alunos')
+        .upload(fileName, file, { upsert: true })
+
+      if (uploadError) {
+        setErro('Erro ao fazer upload da foto.')
+        setUploadandoFoto(false)
+        return
+      }
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('alunos')
+        .getPublicUrl(fileName)
+
+      setFotoUrl(publicUrl)
+      setUploadandoFoto(false)
+    } catch (err) {
+      setErro('Erro ao fazer upload da foto.')
+      setUploadandoFoto(false)
+    }
+  }
 
   async function handleSalvar() {
     setErro('')
@@ -60,6 +96,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
         telefone: telefone || null,
         email: email || null,
         responsavel: responsavel || null,
+        foto_url: fotoUrl || null,
         ativo,
       }),
     })
@@ -73,7 +110,10 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
 
     setSucesso(true)
     setLoading(false)
-    router.refresh()
+    // Aguardar um momento antes de fazer refresh para garantir propagação
+    setTimeout(() => {
+      router.refresh()
+    }, 500)
   }
 
   async function handleExcluir() {
@@ -193,6 +233,40 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
           disabled={somenteLeitura}
           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
         />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1.5">Foto do Aluno</label>
+        <div className="flex gap-4">
+          {fotoUrl ? (
+            <div className="flex flex-col gap-2">
+              <img src={fotoUrl} alt={nome} className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
+              <button
+                type="button"
+                onClick={() => setFotoUrl('')}
+                disabled={somenteLeitura || uploadandoFoto}
+                className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
+              >
+                <X className="w-4 h-4 inline mr-1" />
+                Remover
+              </button>
+            </div>
+          ) : (
+            <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
+              <Upload className="w-4 h-4 text-gray-400" />
+            </div>
+          )}
+          <div className="flex-1">
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => e.target.files?.[0] && handleUploadFoto(e.target.files[0])}
+              disabled={somenteLeitura || uploadandoFoto}
+              className="w-full"
+            />
+            {uploadandoFoto && <p className="text-xs text-gray-500 mt-2">Enviando...</p>}
+          </div>
+        </div>
       </div>
 
       <label className="flex items-center gap-2 cursor-pointer">

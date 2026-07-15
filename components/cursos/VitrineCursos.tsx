@@ -1,30 +1,29 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { GraduationCap, PlayCircle } from 'lucide-react'
+import HeroCursosSEO from './HeroCursosSEO'
 import type { Curso } from '@/types/database'
 
 interface CursoVitrine extends Curso {
   totalAulas: number
 }
 
-export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
+export default function VitrineCursos({
+  cursos,
+  onAbrirModal
+}: {
+  cursos: CursoVitrine[]
+  onAbrirModal?: (curso: CursoVitrine) => void
+}) {
   const categorias = Array.from(new Set(cursos.map(c => c.categoria).filter(Boolean))) as string[]
 
   return (
     <div className="bg-white">
-      {/* Hero */}
-      <div className="bg-escola-azul text-white">
-        <div className="container mx-auto px-4 py-12 max-w-5xl text-center">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/50 mb-3">JB2026 · Cursos</p>
-          <h1 className="font-playfair text-3xl md:text-4xl font-black mb-3">Cursos da E.E. Dr. João Beraldo</h1>
-          <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto">
-            Trilhas de aprendizagem da grade de Informática do EMTI, por <strong className="text-white/90">Professor André Gomes</strong>.
-          </p>
-          <p className="font-mono text-xs text-yellow-400 mt-4">
-            {cursos.length} curso{cursos.length !== 1 ? 's' : ''} disponível{cursos.length !== 1 ? 'is' : ''}
-          </p>
-        </div>
-      </div>
+      {/* Hero SEO */}
+      <HeroCursosSEO />
+
+      {/* Seção de Cursos */}
+      <div id="cursos"></div>
 
       <div className="container mx-auto px-4 py-10 max-w-5xl">
         {categorias.length > 0 && (
@@ -48,10 +47,10 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {cursos.map(curso => (
-              <Link
+              <button
                 key={curso.id}
-                href={`/cursos/${curso.slug}`}
-                className="group bg-curso-papel border border-curso-linha rounded-xl overflow-hidden hover:border-curso-azul hover:shadow-lg transition-all flex flex-col"
+                onClick={() => onAbrirModal?.(curso)}
+                className="group text-left bg-curso-papel border border-curso-linha rounded-xl overflow-hidden hover:border-curso-azul hover:shadow-lg transition-all flex flex-col cursor-pointer"
               >
                 <div className="relative h-32 bg-escola-azul/10 flex items-center justify-center overflow-hidden">
                   {curso.capa_url ? (
@@ -81,7 +80,7 @@ export default function VitrineCursos({ cursos }: { cursos: CursoVitrine[] }) {
                     <span className="text-curso-azul font-semibold">Ver curso →</span>
                   </div>
                 </div>
-              </Link>
+              </button>
             ))}
           </div>
         )}
