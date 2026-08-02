@@ -459,17 +459,17 @@ export default async function EmtiPage() {
       )}
 
       {/* CTA Inscrição */}
-      <section className="bg-yellow-400 py-14">
+      <section className="bg-escola-azul py-14">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <AnimateOnScroll>
-            <h2 className="font-playfair text-gray-900 font-black text-2xl md:text-3xl mb-4">
+            <h2 className="font-playfair text-white font-black text-2xl md:text-3xl mb-4">
               Quer fazer parte do EMTI em TI?
             </h2>
-            <p className="font-serif text-gray-900/70 mb-8 leading-relaxed">
+            <p className="font-serif text-white/70 mb-8 leading-relaxed">
               Vagas limitadas. Fale com a coordenação e saiba como se inscrever no Ensino Médio em Tempo Integral
               com formação técnica em Tecnologia da Informação.
             </p>
-            <Link href="/contato" className="bg-gray-900 text-white font-mono text-xs uppercase tracking-widest px-8 py-4 hover:bg-gray-800 transition-colors inline-flex items-center justify-center gap-2">
+            <Link href="/contato" className="bg-escola-vermelho text-white font-mono text-xs uppercase tracking-widest px-8 py-4 hover:bg-escola-vermelho-escuro transition-colors inline-flex items-center justify-center gap-2">
               Quero me inscrever <ChevronRight className="w-3 h-3" />
             </Link>
           </AnimateOnScroll>

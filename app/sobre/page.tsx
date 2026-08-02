@@ -9,7 +9,7 @@ import {
 } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'A Escola — E.E. Dr. João Beraldo',
+  title: 'A Escola',
   description: 'Conheça a Escola Estadual Dr. João Beraldo, fundada em 1946 em Carlos Chagas, MG. 79 anos formando cidadãos protagonistas.',
 }
 

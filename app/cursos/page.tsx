@@ -4,7 +4,7 @@ import VitrineCursosComModal from '@/components/cursos/VitrineCursosComModal'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Cursos — E.E. Dr. João Beraldo',
+  title: 'Cursos',
   description: 'Conheça os cursos em vídeo e slides da E.E. Dr. João Beraldo, feitos pelos professores para alunos e equipe.',
 }
 

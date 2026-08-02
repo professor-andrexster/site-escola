@@ -3,7 +3,7 @@ import ContatoForm from '@/components/ContatoForm'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Contato — E.E. Dr. João Beraldo',
+  title: 'Contato',
   description: 'Entre em contato com a E.E. Dr. João Beraldo. Atendemos de segunda a sexta, das 7h às 22h.',
 }
 
@@ -11,7 +11,7 @@ export default function ContatoPage() {
   return (
     <PageLayout>
       <div className="container mx-auto px-4 py-12 max-w-4xl">
-        <h1 className="font-fraunces text-4xl font-bold text-gray-900 mb-4">Contato</h1>
+        <h1 className="font-playfair text-4xl font-bold text-gray-900 mb-4">Contato</h1>
         <p className="text-gray-600 mb-10">
           Preencha o formulário abaixo ou fale diretamente pelo WhatsApp. Atendemos de segunda a sexta, das 7h às 22h.
         </p>
@@ -20,7 +20,7 @@ export default function ContatoPage() {
           <ContatoForm />
 
           <div className="space-y-5">
-            <h2 className="font-fraunces text-lg font-bold text-gray-900">Informações</h2>
+            <h2 className="font-playfair text-lg font-bold text-gray-900">Informações</h2>
 
             <dl className="space-y-4 text-sm">
               <div>

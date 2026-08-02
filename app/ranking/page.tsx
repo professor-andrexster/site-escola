@@ -5,7 +5,7 @@ import { Trophy, Medal, Gamepad2, ArrowRight } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Ranking JBQuiz — E.E. Dr. João Beraldo',
+  title: 'Ranking JBQuiz',
   description: 'Veja o ranking dos melhores alunos nos quizzes interativos da escola.',
 }
 export const revalidate = 60

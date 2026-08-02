@@ -22,7 +22,7 @@ export default async function AdminPaginasPage() {
 
   return (
     <div>
-      <h1 className="font-fraunces text-3xl font-bold text-gray-900 mb-8">Editar Páginas</h1>
+      <h1 className="font-playfair text-3xl font-bold text-gray-900 mb-8">Editar Páginas</h1>
       <div className="space-y-6">
         {PAGINAS.map(({ chave, label }) => (
           <PaginasEditor

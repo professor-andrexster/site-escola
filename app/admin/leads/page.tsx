@@ -29,7 +29,7 @@ export default async function LeadsPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-fraunces text-3xl font-bold text-gray-900">Leads</h1>
+          <h1 className="font-playfair text-3xl font-bold text-gray-900">Leads</h1>
           {naoLidos > 0 && (
             <p className="text-sm text-escola-azul mt-1">{naoLidos} nova{naoLidos > 1 ? 's' : ''} mensagen{naoLidos > 1 ? 's' : ''}</p>
           )}

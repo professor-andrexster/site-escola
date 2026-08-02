@@ -60,7 +60,7 @@ export default async function NoticiaPage({ params }: Props) {
           </div>
         )}
         <time className="text-gray-400 text-sm">{formatDate(noticia.created_at)}</time>
-        <h1 className="font-fraunces text-3xl md:text-5xl font-bold text-gray-900 mt-2 mb-4">
+        <h1 className="font-playfair text-3xl md:text-5xl font-bold text-gray-900 mt-2 mb-4">
           {noticia.titulo}
         </h1>
         {noticia.resumo && (

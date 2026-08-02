@@ -32,7 +32,7 @@ export default async function AdminNoticiasPage() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="font-fraunces text-3xl font-bold text-gray-900">
+          <h1 className="font-playfair text-3xl font-bold text-gray-900">
             {isMonitor ? 'Minhas Notícias' : 'Notícias'}
           </h1>
           {isMonitor && (

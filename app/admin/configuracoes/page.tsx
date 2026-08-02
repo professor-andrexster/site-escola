@@ -41,7 +41,7 @@ export default function ConfiguracoesPage() {
 
   return (
     <div>
-      <h1 className="font-fraunces text-3xl font-bold text-gray-900 mb-8">Configurações</h1>
+      <h1 className="font-playfair text-3xl font-bold text-gray-900 mb-8">Configurações</h1>
       <div className="panel p-6 max-w-xl space-y-5">
         {CAMPOS.map(({ chave, label, placeholder }) => (
           <div key={chave}>

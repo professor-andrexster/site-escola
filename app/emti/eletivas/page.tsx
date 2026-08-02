@@ -5,7 +5,7 @@ import type { Metadata } from 'next'
 import { BookOpen, ChevronRight, Pencil, Target, Brain, Zap, Trophy, AlertTriangle, CheckCircle, Star } from 'lucide-react'
 
 export const metadata: Metadata = {
-  title: 'Eletiva de Redação para o ENEM — E.E. Dr. João Beraldo',
+  title: 'Eletiva de Redação para o ENEM',
   description:
     'Na eletiva de Redação para o ENEM da E.E. Dr. João Beraldo você aprende a dominar as 5 competências, construir a proposta de intervenção e tirar nota 1000 — tudo com a linguagem que o ENEM quer. Vem com a gente!',
   keywords: [
@@ -33,8 +33,6 @@ const competencias = [
     resumo: 'Escrever certo sem parecer robô',
     descricao:
       'Aqui entra ortografia, concordância, pontuação — tudo aquilo que você ignora no zap mas o ENEM cobra sem dó. A boa notícia: dá pra aprender. A má notícia: "mais" e "mas" ainda confundem geral.',
-    cor: 'border-blue-400 bg-blue-50',
-    corIcone: 'text-blue-700',
   },
   {
     numero: 'C2',
@@ -43,8 +41,6 @@ const competencias = [
     resumo: 'Não fugir do tema (sim, isso acontece)',
     descricao:
       'Todo ano alguém escreve três páginas sobre um assunto completamente diferente do proposto. Seja você não essa pessoa. Aqui a gente treina leitura de proposta, recorte temático e como não sair pela tangente.',
-    cor: 'border-red-400 bg-red-50',
-    corIcone: 'text-red-700',
   },
   {
     numero: 'C3',
@@ -53,8 +49,6 @@ const competencias = [
     resumo: 'Convencer sem inventar',
     descricao:
       '"Segundo especialistas..." — mas quais especialistas? Na eletiva você aprende a usar dados reais, repertório cultural de verdade e a construir argumentos que fazem o corretor pensar "caramba, esse aluno sabe das coisas".',
-    cor: 'border-amber-400 bg-amber-50',
-    corIcone: 'text-amber-700',
   },
   {
     numero: 'C4',
@@ -63,8 +57,6 @@ const competencias = [
     resumo: 'O texto que faz sentido do começo ao fim',
     descricao:
       'Conectivos: portanto, entretanto, outrossim, dessarte (sim, essa última existe e impressiona). Aqui você aprende a costurar as ideias sem parecer que escreveu o texto em 4 pedaços separados e colou com fita.',
-    cor: 'border-green-400 bg-green-50',
-    corIcone: 'text-green-700',
   },
   {
     numero: 'C5',
@@ -73,8 +65,6 @@ const competencias = [
     resumo: 'O parágrafo que salva ou destrói a nota',
     descricao:
       'O famoso PI: Agente + Ação + Modo/Meio + Efeito + Detalhamento. Parece fórmula de química, e na prática é. Aqui a gente monta, desmonta e remonta esse bloco até ele sair na veia — mesmo às 5h da manhã no dia da prova.',
-    cor: 'border-purple-400 bg-purple-50',
-    corIcone: 'text-purple-700',
   },
 ]
 
@@ -176,9 +166,9 @@ export default function EletivasPage() {
               <div className="space-y-4">
                 {competencias.map((c, i) => (
                   <AnimateOnScroll key={c.numero} delay={(Math.min(i, 3)) as 0|1|2|3}>
-                    <div className={`border-l-4 ${c.cor} p-5 rounded-r-lg`}>
+                    <div className="border-l-4 border-escola-vermelho bg-white p-5 rounded-r-lg">
                       <div className="flex items-start gap-3">
-                        <div className={`font-mono text-xs font-bold ${c.corIcone} flex-shrink-0 mt-0.5 bg-white px-2 py-0.5 rounded border border-current`}>
+                        <div className="font-mono text-xs font-bold text-white flex-shrink-0 mt-0.5 bg-escola-azul px-2 py-0.5 rounded">
                           {c.numero}
                         </div>
                         <div className="flex-1">
