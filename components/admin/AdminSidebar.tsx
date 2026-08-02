@@ -5,12 +5,11 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import {
-  LogOut, Globe,
-} from 'lucide-react'
+import { LogOut, Globe } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 import { navByRole } from '@/lib/adminNav'
+import Avatar from '@/components/admin/ui/Avatar'
 
 interface AdminSidebarProps {
   profile: Profile
@@ -23,13 +22,6 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
   const supabase = createClient()
   const groups = navByRole[profile.role] ?? navByRole.aluno
 
-  const initials = profile.nome_completo
-    .split(' ')
-    .slice(0, 2)
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-
   async function handleLogout() {
     await supabase.auth.signOut()
     router.push('/admin')
@@ -39,9 +31,9 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
   return (
     <aside className="hidden md:flex w-64 flex-shrink-0 bg-[#0d1f35] flex-col min-h-screen">
       {/* Logo */}
-      <div className="px-5 py-5 border-b border-white/5">
+      <div className="px-fluid-xs py-fluid-xs border-b border-white/5">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white ring-1 ring-white/20 flex-shrink-0">
+          <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white ring-1 ring-white/20 flex-shrink-0 shadow-elevation-low">
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="36px" className="object-cover" />
           </div>
           <div>
@@ -54,25 +46,27 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
       </div>
 
       {/* User card */}
-      <div className="px-4 py-4 border-b border-white/5">
+      <Link
+        href="/admin/meu-perfil"
+        className="mx-3 mt-3 mb-1 px-3 py-3 rounded-xl bg-white/[0.03] hover:bg-white/[0.06] border border-white/5 transition-colors group"
+      >
         <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-xs font-bold">{initials || '?'}</span>
-          </div>
+          <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="md" />
           <div className="flex-1 min-w-0">
             <p className="text-white text-sm font-semibold truncate leading-tight">{profile.nome_completo}</p>
             <p className="text-white/40 text-xs truncate">{userEmail}</p>
           </div>
         </div>
-        <div className="mt-2.5">
+        <div className="mt-2.5 flex items-center justify-between">
           <span className={cn('text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
             {ROLE_LABELS[profile.role]}
           </span>
+          <span className="text-[10px] text-white/0 group-hover:text-white/40 transition-colors">Editar →</span>
         </div>
-      </div>
+      </Link>
 
       {/* Navigation */}
-      <nav className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
+      <nav className="flex-1 px-3 py-fluid-2xs space-y-fluid-2xs overflow-y-auto">
         {groups.map((group) => (
           <div key={group.label}>
             <p className="text-white/25 text-[10px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
@@ -88,12 +82,15 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
                     <Link
                       href={href}
                       className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150',
+                        'relative flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-all duration-150 ease-out',
                         active
-                          ? 'bg-escola-vermelho text-white font-semibold'
-                          : 'text-white/60 hover:text-white hover:bg-white/8'
+                          ? 'bg-escola-vermelho text-white font-semibold shadow-elevation-low'
+                          : 'text-white/60 hover:text-white hover:bg-white/[0.06] hover:translate-x-0.5'
                       )}
                     >
+                      {active && (
+                        <span className="absolute inset-y-1 -start-3 w-1 rounded-full bg-white/70" aria-hidden />
+                      )}
                       <Icon className="w-4 h-4 flex-shrink-0" />
                       {label}
                     </Link>
@@ -106,11 +103,11 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
       </nav>
 
       {/* Footer */}
-      <div className="px-3 py-4 border-t border-white/5 space-y-1">
+      <div className="px-3 py-fluid-2xs border-t border-white/5 space-y-1">
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/8 transition-all duration-150"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/[0.06] transition-all duration-150"
         >
           <Globe className="w-4 h-4 flex-shrink-0" />
           Ver Site Público

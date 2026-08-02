@@ -3,6 +3,7 @@ import { getProfileOrRedirect, ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { quizMatchesTurma } from '@/lib/turmas'
 import Link from 'next/link'
+import Avatar from '@/components/admin/ui/Avatar'
 import {
   Star, Inbox, Gamepad2,
   Users, Trophy, BookOpen, TrendingUp, DoorOpen, Play, UserCheck,
@@ -12,13 +13,13 @@ function StatCard({ label, value, icon: Icon, color, href }: {
   label: string; value: number; icon: React.ComponentType<{ className?: string }>; color: string; href?: string
 }) {
   const content = (
-    <div className="bg-white rounded-xl border border-gray-100 p-5 hover:shadow-md transition-shadow">
+    <div className="group bg-white rounded-xl border border-gray-100 p-fluid-xs shadow-elevation-low hover:shadow-elevation-medium hover:-translate-y-0.5 transition-all duration-200 ease-out">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">{label}</p>
-          <p className="text-3xl font-black text-gray-900 mt-1">{value}</p>
+          <p className="text-fluid-3xl font-black text-gray-900 mt-1 leading-none">{value}</p>
         </div>
-        <div className={`p-3 rounded-xl ${color}`}>
+        <div className={`p-3 rounded-xl transition-transform duration-200 ease-out group-hover:scale-105 ${color}`}>
           <Icon className="w-6 h-6" />
         </div>
       </div>
@@ -62,13 +63,16 @@ export default async function DashboardPage() {
 
     return (
       <div>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="text-gray-400 text-sm font-mono">Bem-vindo de volta,</p>
-            <h1 className="text-3xl font-black text-gray-900 font-playfair">{profile.nome_completo}</h1>
-            <p className="text-gray-500 text-sm mt-0.5">{profile.turma}</p>
+        <div className="flex items-center justify-between gap-4 mb-fluid-s">
+          <div className="flex items-center gap-4 min-w-0">
+            <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="lg" className="hidden sm:flex" />
+            <div className="min-w-0">
+              <p className="text-gray-400 text-sm font-mono">Bem-vindo de volta,</p>
+              <h1 className="text-fluid-3xl font-black text-gray-900 font-playfair truncate">{profile.nome_completo}</h1>
+              <p className="text-gray-500 text-sm mt-0.5">{profile.turma}</p>
+            </div>
           </div>
-          <span className={`text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg ${ROLE_COLORS[profile.role]}`}>
+          <span className={`flex-shrink-0 text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg ${ROLE_COLORS[profile.role]}`}>
             {ROLE_LABELS[profile.role]}
           </span>
         </div>
@@ -98,8 +102,8 @@ export default async function DashboardPage() {
                       </p>
                       <p className="text-xs mt-1">
                         {q.ativo
-                          ? <span className="text-green-700 font-semibold">🟢 Em andamento</span>
-                          : <span className="text-blue-700 font-semibold">🔵 Sala aberta — aguardando início</span>
+                          ? <span className="text-green-700 font-semibold">Em andamento</span>
+                          : <span className="text-blue-700 font-semibold">Sala aberta, aguardando início</span>
                         }
                       </p>
                     </div>
@@ -136,12 +140,14 @@ export default async function DashboardPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-          <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
-          <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
+        <div className="@container mb-fluid-s">
+          <div className="grid grid-cols-1 @sm:grid-cols-2 gap-5">
+            <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
+            <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
+          </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="bg-white rounded-xl border border-gray-100 shadow-elevation-low p-fluid-s">
           <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Trophy className="w-4 h-4 text-yellow-500" />
             Últimos Quizzes
@@ -196,13 +202,16 @@ export default async function DashboardPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <p className="text-gray-400 text-sm font-mono">Bem-vindo,</p>
-          <h1 className="text-3xl font-black text-gray-900 font-playfair">{profile.nome_completo}</h1>
-          {profile.disciplina && <p className="text-gray-500 text-sm mt-0.5">{profile.disciplina}</p>}
+      <div className="flex items-start justify-between gap-4 flex-wrap mb-fluid-s">
+        <div className="flex items-center gap-4 min-w-0">
+          <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="lg" className="hidden sm:flex" />
+          <div className="min-w-0">
+            <p className="text-gray-400 text-sm font-mono">Bem-vindo,</p>
+            <h1 className="text-fluid-3xl font-black text-gray-900 font-playfair truncate">{profile.nome_completo}</h1>
+            {profile.disciplina && <p className="text-gray-500 text-sm mt-0.5">{profile.disciplina}</p>}
+          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span className={`text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg ${ROLE_COLORS[profile.role]}`}>
             {ROLE_LABELS[profile.role]}
           </span>
@@ -222,43 +231,45 @@ export default async function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/quiz" />
-        <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-orange-50 text-orange-600" />
-        {isGestao(profile.role) && (
-          <>
-            <StatCard label="Leads" value={leadsNaoLidos ?? 0} icon={Inbox} color="bg-indigo-50 text-indigo-600" href="/admin/leads" />
-            <StatCard label="Usuários Pendentes" value={usuariosPendentes ?? 0} icon={Users} color="bg-yellow-50 text-yellow-600" href="/admin/usuarios" />
-          </>
-        )}
-        {!isGestao(profile.role) && podeAprovarAlunos && (
-          <StatCard label="Alunos Aguardando" value={alunosPendentes ?? 0} icon={UserCheck} color="bg-yellow-50 text-yellow-600" href="/admin/aprovacoes" />
-        )}
+      <div className="@container mb-fluid-s">
+        <div className="grid grid-cols-2 @lg:grid-cols-4 gap-4">
+          <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/quiz" />
+          <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-orange-50 text-orange-600" />
+          {isGestao(profile.role) && (
+            <>
+              <StatCard label="Leads" value={leadsNaoLidos ?? 0} icon={Inbox} color="bg-indigo-50 text-indigo-600" href="/admin/leads" />
+              <StatCard label="Usuários Pendentes" value={usuariosPendentes ?? 0} icon={Users} color="bg-yellow-50 text-yellow-600" href="/admin/usuarios" />
+            </>
+          )}
+          {!isGestao(profile.role) && podeAprovarAlunos && (
+            <StatCard label="Alunos Aguardando" value={alunosPendentes ?? 0} icon={UserCheck} color="bg-yellow-50 text-yellow-600" href="/admin/aprovacoes" />
+          )}
+        </div>
       </div>
 
       {/* Quick actions */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6">
+      <div className="bg-white rounded-xl border border-gray-100 shadow-elevation-low p-fluid-s">
         <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Star className="w-4 h-4 text-yellow-500" />
           Ações Rápidas
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 transition-all group">
+          <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
             <Gamepad2 className="w-6 h-6 text-gray-400 group-hover:text-purple-600" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-purple-600 text-center">Novo Quiz</span>
           </Link>
-          <Link href="/ranking" target="_blank" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-yellow-400 hover:bg-yellow-50 transition-all group">
+          <Link href="/ranking" target="_blank" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-yellow-400 hover:bg-yellow-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
             <Trophy className="w-6 h-6 text-gray-400 group-hover:text-yellow-600" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-yellow-600 text-center">Ver Ranking</span>
           </Link>
           {isGestao(profile.role) && (
-            <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all group">
+            <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
               <Users className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
               <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Usuários</span>
             </Link>
           )}
           {podeAprovarAlunos && (
-            <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all group">
+            <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
               <UserCheck className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
               <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Aprovações</span>
             </Link>

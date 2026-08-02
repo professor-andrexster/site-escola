@@ -25,6 +25,7 @@ const navGestao: NavGroup[] = [
         { href: '/admin/funcionarios', label: 'Funcionários', icon: Briefcase },
         { href: '/admin/usuarios', label: 'Administradores', icon: Users },
         { href: '/admin/aprovacoes', label: 'Aprovações', icon: UserCheck },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
       ],
     },
     {
@@ -74,6 +75,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/funcionarios', label: 'Equipe', icon: Briefcase },
         { href: '/admin/aprovacoes', label: 'Aprovações', icon: UserCheck },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
       ],
     },
     {
@@ -140,6 +142,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Minha Área',
       items: [
         { href: '/admin/funcionarios', label: 'Equipe', icon: Briefcase },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },

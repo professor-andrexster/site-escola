@@ -15,6 +15,7 @@ export type AcaoLog =
   | 'usuario_revogado_gestao'
   | 'aluno_bloqueado_por_inatividade'
   | 'papel_alterado'
+  | 'perfil_atualizado'
   | 'convite_bibliotecario_criado'
   | 'convite_bibliotecario_aceito'
   | 'convite_bibliotecario_revogado'

@@ -29,6 +29,7 @@ const ACAO_LABELS: Record<string, { label: string; cor: string }> = {
   usuario_revogado_gestao: { label: 'Acesso revogado (gestão)', cor: 'bg-red-100 text-red-700' },
   aluno_bloqueado_por_inatividade: { label: 'Acesso bloqueado (cadastro inativado)', cor: 'bg-red-100 text-red-700' },
   papel_alterado: { label: 'Nível de acesso alterado', cor: 'bg-blue-100 text-blue-700' },
+  perfil_atualizado: { label: 'Perfil atualizado', cor: 'bg-gray-100 text-gray-600' },
   convite_bibliotecario_criado: { label: 'Convite de bibliotecária enviado', cor: 'bg-amber-100 text-amber-700' },
   convite_bibliotecario_aceito: { label: 'Convite de bibliotecária aceito', cor: 'bg-green-100 text-green-700' },
   convite_bibliotecario_revogado: { label: 'Convite de bibliotecária revogado', cor: 'bg-red-100 text-red-700' },

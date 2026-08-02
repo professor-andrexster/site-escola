@@ -2,9 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, GraduationCap, BookOpen, Crown, ShieldCheck, Cog, Star, KeyRound, Copy } from 'lucide-react'
+import { Check, X, GraduationCap, BookOpen, Crown, ShieldCheck, Cog, Star, KeyRound, Copy, Pencil, Upload } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { formatarCPF } from '@/lib/cpf'
+import { createClient } from '@/lib/supabase/client'
+import Avatar from '@/components/admin/ui/Avatar'
 
 export type UsuarioLinha = Profile & {
   email: string
@@ -95,9 +97,55 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   const [profiles, setProfiles] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [changingRoleId, setChangingRoleId] = useState<string | null>(null)
+  const [editandoId, setEditandoId] = useState<string | null>(null)
+  const [editNome, setEditNome] = useState('')
+  const [editAvatarUrl, setEditAvatarUrl] = useState('')
+  const [uploadandoAvatar, setUploadandoAvatar] = useState(false)
   const [senhaTemp, setSenhaTemp] = useState<{ id: string; senha: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
+  const supabase = createClient()
+
+  function abrirEdicao(p: UsuarioLinha) {
+    setEditandoId(p.id)
+    setEditNome(p.nome_completo)
+    setEditAvatarUrl(p.avatar_url ?? '')
+  }
+
+  async function uploadAvatarEdicao(id: string, file: File) {
+    setUploadandoAvatar(true)
+    setError('')
+    const ext = file.name.split('.').pop()
+    const fileName = `avatars/${id}-${Date.now()}.${ext}`
+    const { error: uploadError } = await supabase.storage.from('imagens').upload(fileName, file, { upsert: true })
+    if (uploadError) {
+      setError('Erro ao enviar a foto.')
+      setUploadandoAvatar(false)
+      return
+    }
+    const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(fileName)
+    setEditAvatarUrl(publicUrl)
+    setUploadandoAvatar(false)
+  }
+
+  async function salvarEdicao(id: string) {
+    if (!editNome.trim()) { setError('O nome não pode ficar vazio.'); return }
+    setLoadingId(id)
+    setError('')
+    const res = await fetch('/api/usuarios/perfil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id, nomeCompleto: editNome, avatarUrl: editAvatarUrl || null }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao salvar perfil.')
+    } else {
+      setProfiles(prev => prev.map(p => p.id === id ? { ...p, nome_completo: editNome, avatar_url: editAvatarUrl || null } : p))
+      setEditandoId(null)
+    }
+    setLoadingId(null)
+  }
 
   async function aprovar(id: string) {
     setLoadingId(id)
@@ -180,15 +228,15 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
     const isLoading = loadingId === p.id
     const isChanging = changingRoleId === p.id
 
+    const estaEditando = editandoId === p.id
+
     return (
-      <div key={p.id} className={`bg-white border rounded-xl p-4 ${!p.aprovado ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200'}`}>
+      <div
+        key={p.id}
+        className={`bg-white border rounded-xl p-4 shadow-elevation-low transition-shadow hover:shadow-elevation-medium ${!p.aprovado ? 'border-yellow-200 bg-yellow-50/30' : 'border-gray-200'}`}
+      >
         <div className="flex items-start gap-3">
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-escola-azul flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-sm font-bold">
-              {p.nome_completo.split(' ').slice(0, 2).map(n => n[0]).join('').toUpperCase() || '?'}
-            </span>
-          </div>
+          <Avatar nome={p.nome_completo} avatarUrl={p.avatar_url} role={p.role} tamanho="md" />
 
           {/* Info */}
           <div className="flex-1 min-w-0">
@@ -212,6 +260,49 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
             </span>
           )}
         </div>
+
+        {estaEditando && (
+          <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+            <div className="flex items-center gap-4">
+              <Avatar nome={editNome || p.nome_completo} avatarUrl={editAvatarUrl} role={p.role} tamanho="lg" />
+              <label className="cursor-pointer inline-flex items-center gap-2 px-3 py-2 border-2 border-gray-200 rounded-lg text-xs font-semibold text-gray-600 hover:border-escola-azul hover:text-escola-azul transition-colors">
+                <Upload className="w-3.5 h-3.5" />
+                {uploadandoAvatar ? 'Enviando...' : 'Trocar foto'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  disabled={uploadandoAvatar}
+                  onChange={e => e.target.files?.[0] && uploadAvatarEdicao(p.id, e.target.files[0])}
+                />
+              </label>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Nome completo</label>
+              <input
+                value={editNome}
+                onChange={e => setEditNome(e.target.value)}
+                className="w-full border-2 border-gray-200 rounded-lg px-3 py-2 text-sm focus-visible:outline-none"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => salvarEdicao(p.id)}
+                disabled={loadingId === p.id}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul/90 transition-colors disabled:opacity-50"
+              >
+                <Check className="w-3.5 h-3.5" />
+                Salvar
+              </button>
+              <button
+                onClick={() => setEditandoId(null)}
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-100 text-gray-600 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Nível de acesso */}
         <div className="mt-3">
@@ -309,6 +400,16 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
               Redefinir Senha
             </button>
           )}
+          {!estaEditando && (
+            <button
+              onClick={() => abrirEdicao(p)}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-escola-azul bg-escola-azul/10 rounded-lg text-xs font-semibold hover:bg-escola-azul/20 transition-colors disabled:opacity-50"
+            >
+              <Pencil className="w-3.5 h-3.5" />
+              Editar
+            </button>
+          )}
           {isChanging && (
             <button
               onClick={() => setChangingRoleId(null)}
@@ -369,12 +470,14 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
           Usuários Ativos ({aprovados.length})
         </h2>
         {aprovados.length === 0 ? (
-          <div className="bg-white border border-gray-200 rounded-xl p-10 text-center text-gray-400 text-sm">
+          <div className="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center text-gray-400 text-sm">
             Nenhum usuário ativo ainda.
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {aprovados.map(renderCard)}
+          <div className="@container">
+            <div className="grid grid-cols-1 @lg:grid-cols-2 gap-3">
+              {aprovados.map(renderCard)}
+            </div>
           </div>
         )}
       </div>

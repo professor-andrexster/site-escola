@@ -1507,6 +1507,7 @@ export interface Profile {
   disciplina: string | null
   aprovado: boolean
   email: string | null
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }

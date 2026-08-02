@@ -10,6 +10,7 @@ import { Menu, X, LogOut, Globe } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 import { navByRole } from '@/lib/adminNav'
+import Avatar from '@/components/admin/ui/Avatar'
 
 interface Props {
   profile: Profile
@@ -23,12 +24,6 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
   const supabase = createClient()
 
   const groups = navByRole[profile.role] ?? navByRole.aluno
-  const initials = profile.nome_completo
-    .split(' ')
-    .slice(0, 2)
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
 
   async function handleLogout() {
     setOpen(false)
@@ -40,10 +35,10 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
   return (
     <>
       {/* Barra superior — só no mobile */}
-      <header className="md:hidden bg-[#0d1f35] flex items-center justify-between px-4 py-3 sticky top-0 z-40 shadow-md">
+      <header className="md:hidden bg-[#0d1f35] flex items-center justify-between px-fluid-2xs py-3 sticky top-0 z-40 shadow-elevation-medium">
         <button
           onClick={() => setOpen(true)}
-          className="text-white/70 hover:text-white p-1 -ml-1"
+          className="text-white/70 hover:text-white p-1 -ms-1"
           aria-label="Abrir menu"
         >
           <Menu className="w-6 h-6" />
@@ -56,9 +51,9 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
           <span className="text-white font-playfair font-bold text-sm">João Beraldo</span>
         </Link>
 
-        <div className="w-8 h-8 rounded-full bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-          <span className="text-white text-xs font-bold">{initials || '?'}</span>
-        </div>
+        <Link href="/admin/meu-perfil" aria-label="Meu perfil">
+          <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="sm" />
+        </Link>
       </header>
 
       {/* Drawer overlay */}
@@ -71,9 +66,9 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
           />
 
           {/* Painel lateral */}
-          <aside className="relative w-72 max-w-[85vw] bg-[#0d1f35] flex flex-col h-full overflow-y-auto shadow-2xl">
+          <aside className="relative w-72 max-w-[85vw] bg-[#0d1f35] flex flex-col h-full overflow-y-auto shadow-elevation-high">
             {/* Topo */}
-            <div className="px-5 py-5 border-b border-white/5 flex items-center justify-between">
+            <div className="px-fluid-xs py-fluid-xs border-b border-white/5 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
                 <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white flex-shrink-0">
                   <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="36px" className="object-cover" />
@@ -93,11 +88,13 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
             </div>
 
             {/* Usuário */}
-            <div className="px-4 py-4 border-b border-white/5">
+            <Link
+              href="/admin/meu-perfil"
+              onClick={() => setOpen(false)}
+              className="mx-3 mt-3 mb-1 px-3 py-3 rounded-xl bg-white/[0.03] active:bg-white/[0.06] border border-white/5 transition-colors"
+            >
               <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-full bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-                  <span className="text-white text-xs font-bold">{initials || '?'}</span>
-                </div>
+                <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="md" />
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate leading-tight">{profile.nome_completo}</p>
                   <p className="text-white/40 text-xs truncate">{userEmail}</p>
@@ -108,10 +105,10 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
                   {ROLE_LABELS[profile.role]}
                 </span>
               </div>
-            </div>
+            </Link>
 
             {/* Navegação */}
-            <nav className="flex-1 px-3 py-4 space-y-5">
+            <nav className="flex-1 px-3 py-fluid-2xs space-y-fluid-2xs">
               {groups.map((group) => (
                 <div key={group.label}>
                   <p className="text-white/25 text-[10px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
@@ -130,8 +127,8 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
                             className={cn(
                               'flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all',
                               active
-                                ? 'bg-escola-vermelho text-white font-semibold'
-                                : 'text-white/60 hover:text-white hover:bg-white/8'
+                                ? 'bg-escola-vermelho text-white font-semibold shadow-elevation-low'
+                                : 'text-white/60 hover:text-white hover:bg-white/[0.06]'
                             )}
                           >
                             <Icon className="w-4 h-4 flex-shrink-0" />
@@ -146,12 +143,12 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
             </nav>
 
             {/* Rodapé */}
-            <div className="px-3 py-4 border-t border-white/5 space-y-1">
+            <div className="px-3 py-fluid-2xs border-t border-white/5 space-y-1">
               <Link
                 href="/"
                 target="_blank"
                 onClick={() => setOpen(false)}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/8 transition-all"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/[0.06] transition-all"
               >
                 <Globe className="w-4 h-4 flex-shrink-0" />
                 Ver Site Público

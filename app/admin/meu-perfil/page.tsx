@@ -1,23 +1,15 @@
-import { createClient } from '@/lib/supabase/server'
+import { getProfileOrRedirect } from '@/lib/profile'
 import Link from 'next/link'
 import { ArrowLeft, User } from 'lucide-react'
 import MeuPerfilForm from '@/components/admin/MeuPerfilForm'
+import StaffPerfilForm from '@/components/admin/StaffPerfilForm'
 import type { Metadata } from 'next'
 
-export const metadata: Metadata = { title: 'Meu Perfil — Área do Aluno' }
+export const metadata: Metadata = { title: 'Meu Perfil, Painel Escolar' }
 export const dynamic = 'force-dynamic'
 
 export default async function MeuPerfilPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
-    return (
-      <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">
-        Você precisa estar autenticado para acessar esta página.
-      </div>
-    )
-  }
+  const { profile } = await getProfileOrRedirect()
 
   return (
     <div>
@@ -33,9 +25,11 @@ export default async function MeuPerfilPage() {
         <User className="w-6 h-6 text-escola-azul" />
         Meu Perfil
       </h1>
-      <p className="text-sm text-gray-400 mb-6">Atualize seus dados de contato e responsável</p>
+      <p className="text-sm text-gray-400 mb-6">
+        {profile.role === 'aluno' ? 'Atualize seus dados de contato e responsável' : 'Atualize sua foto e seus dados'}
+      </p>
 
-      <MeuPerfilForm />
+      {profile.role === 'aluno' ? <MeuPerfilForm /> : <StaffPerfilForm profile={profile} />}
     </div>
   )
 }

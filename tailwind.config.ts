@@ -63,6 +63,33 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      // Sombra em camadas (Josh Comeau) em vez de um unico blur achatado.
+      boxShadow: {
+        'elevation-low': 'var(--shadow-elevation-low)',
+        'elevation-medium': 'var(--shadow-elevation-medium)',
+        'elevation-high': 'var(--shadow-elevation-high)',
+      },
+      // Escala fluida (Andy Bell / utopia): cresce sozinha com a tela,
+      // sem escadinha de breakpoint pra cada tamanho de texto ou espaco.
+      fontSize: {
+        'fluid-xs': 'var(--text-xs)',
+        'fluid-sm': 'var(--text-sm)',
+        'fluid-base': 'var(--text-base)',
+        'fluid-lg': 'var(--text-lg)',
+        'fluid-xl': 'var(--text-xl)',
+        'fluid-2xl': 'var(--text-2xl)',
+        'fluid-3xl': 'var(--text-3xl)',
+      },
+      spacing: {
+        'fluid-3xs': 'var(--space-3xs)',
+        'fluid-2xs': 'var(--space-2xs)',
+        'fluid-xs': 'var(--space-xs)',
+        'fluid-s': 'var(--space-s)',
+        'fluid-m': 'var(--space-m)',
+        'fluid-l': 'var(--space-l)',
+        'fluid-xl': 'var(--space-xl)',
+        'fluid-2xl': 'var(--space-2xl)',
+      },
       keyframes: {
         'accordion-down': { from: { height: '0' }, to: { height: 'var(--radix-accordion-content-height)' } },
         'accordion-up': { from: { height: 'var(--radix-accordion-content-height)' }, to: { height: '0' } },

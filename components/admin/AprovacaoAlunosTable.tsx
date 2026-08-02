@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, GraduationCap, UserCheck } from 'lucide-react'
+import { Check, X, UserCheck } from 'lucide-react'
 import type { Profile } from '@/types/database'
+import Avatar from '@/components/admin/ui/Avatar'
 
 export type AlunoPendente = Profile & { matricula: string | null }
 
@@ -76,16 +77,14 @@ export default function AprovacaoAlunosTable({ pendentes: initial }: AprovacaoAl
       {pendentes.map(p => {
         const isLoading = loadingId === p.id
         return (
-          <div key={p.id} className="bg-white border border-yellow-200 bg-yellow-50/30 rounded-xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-escola-azul flex items-center justify-center flex-shrink-0">
-              <GraduationCap className="w-5 h-5 text-white" />
-            </div>
+          <div key={p.id} className="bg-white border border-yellow-200 bg-yellow-50/30 rounded-xl p-4 shadow-elevation-low flex items-center gap-3">
+            <Avatar nome={p.nome_completo} avatarUrl={p.avatar_url} role={p.role} tamanho="md" />
 
             <div className="flex-1 min-w-0">
               <p className="font-semibold text-gray-900 truncate">{p.nome_completo}</p>
               <p className="text-gray-500 text-xs mt-0.5">
                 {p.turma && <span>Turma: <strong>{p.turma}</strong></span>}
-                {p.matricula && <span className="ml-2">Matrícula: {p.matricula}</span>}
+                {p.matricula && <span className="ms-2">Matrícula: {p.matricula}</span>}
               </p>
               <p className="text-gray-400 text-xs mt-0.5">{p.email}</p>
             </div>

@@ -15,6 +15,49 @@
 
 @layer base {
   :root {
+    /* Escala fluida de espaco (Andy Bell / metodo utopia): cresce sozinha
+       entre 375px e 1440px de largura de tela, sem escadinha de media query. */
+    --space-3xs: clamp(0.25rem, 0.23rem + 0.11vw, 0.3125rem);
+    --space-2xs: clamp(0.5rem, 0.46rem + 0.22vw, 0.625rem);
+    --space-xs: clamp(0.75rem, 0.68rem + 0.33vw, 0.9375rem);
+    --space-s: clamp(1rem, 0.91rem + 0.43vw, 1.25rem);
+    --space-m: clamp(1.5rem, 1.37rem + 0.65vw, 1.875rem);
+    --space-l: clamp(2rem, 1.83rem + 0.87vw, 2.5rem);
+    --space-xl: clamp(3rem, 2.74rem + 1.3vw, 3.75rem);
+    --space-2xl: clamp(4rem, 3.65rem + 1.74vw, 5rem);
+
+    /* Escala fluida de tipografia, mesma logica. */
+    --text-xs: clamp(0.75rem, 0.72rem + 0.11vw, 0.8125rem);
+    --text-sm: clamp(0.875rem, 0.83rem + 0.22vw, 0.9375rem);
+    --text-base: clamp(1rem, 0.94rem + 0.33vw, 1.0625rem);
+    --text-lg: clamp(1.125rem, 1.04rem + 0.43vw, 1.25rem);
+    --text-xl: clamp(1.25rem, 1.11rem + 0.65vw, 1.5rem);
+    --text-2xl: clamp(1.5rem, 1.28rem + 1.09vw, 1.875rem);
+    --text-3xl: clamp(1.875rem, 1.52rem + 1.74vw, 2.5rem);
+
+    /* Sombra em camadas (Josh Comeau): varias camadas finas com o mesmo
+       matiz da marca em vez de uma unica sombra borrada. Da profundidade
+       de verdade, nao so um blur generico atras do card. */
+    --shadow-color: 210 45% 20%;
+    --shadow-elevation-low:
+      0.3px 0.5px 0.6px hsl(var(--shadow-color) / 0.30),
+      0.4px 0.9px 1.1px -1.2px hsl(var(--shadow-color) / 0.30),
+      1px 2.1px 2.6px -2.5px hsl(var(--shadow-color) / 0.30);
+    --shadow-elevation-medium:
+      0.3px 0.5px 0.6px hsl(var(--shadow-color) / 0.28),
+      0.8px 1.7px 2.1px -0.8px hsl(var(--shadow-color) / 0.28),
+      2.1px 4.2px 5.2px -1.7px hsl(var(--shadow-color) / 0.28),
+      5px 10px 12.5px -2.5px hsl(var(--shadow-color) / 0.28);
+    --shadow-elevation-high:
+      0.3px 0.5px 0.6px hsl(var(--shadow-color) / 0.24),
+      1.7px 3.4px 4.2px -0.4px hsl(var(--shadow-color) / 0.24),
+      3.1px 6.1px 7.7px -0.7px hsl(var(--shadow-color) / 0.24),
+      5.2px 10.4px 13px -1.1px hsl(var(--shadow-color) / 0.24),
+      8.4px 16.9px 21.2px -1.4px hsl(var(--shadow-color) / 0.24),
+      13.6px 27.1px 34px -1.8px hsl(var(--shadow-color) / 0.24),
+      20.9px 41.9px 52.5px -2.1px hsl(var(--shadow-color) / 0.24),
+      31px 62px 77.8px -2.5px hsl(var(--shadow-color) / 0.24);
+
     --background: 40 30% 97%;
     --foreground: 210 40% 6%;
     --card: 0 0% 100%;
@@ -54,6 +97,33 @@
 
   h1, h2, h3, h4, h5, h6 {
     @apply font-playfair;
+  }
+
+  /* Foco sempre visivel e bonito, nunca removido (Josh Comeau). Baixa
+     especificidade via :where(), pra qualquer componente conseguir
+     sobrescrever sem briga de cascata (Andy Bell / CUBE). */
+  :where(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px hsl(var(--background)), 0 0 0 4.5px theme('colors.escola.azul');
+    border-radius: theme('borderRadius.sm');
+  }
+
+  /* Ritmo vertical automatico: irmao adjacente recebe margem de bloco,
+     sem precisar espacar cada filho na mao (Andy Bell / owl selector). */
+  :where(.flow > * + *) {
+    margin-block-start: var(--flow-space, 1em);
+  }
+
+  /* Sarah Drasner: toda animacao respeita quem pediu menos movimento. */
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
