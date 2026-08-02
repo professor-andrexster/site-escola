@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { GraduationCap, Lock, Eye, EyeOff, X } from 'lucide-react'
+import Image from 'next/image'
+import { Lock, Eye, EyeOff, X } from 'lucide-react'
 
 // Guarda só o identificador (email, matrícula ou CPF), nunca a senha, e só
 // quando a própria pessoa marcou a caixa. Sem isso ligado por padrão: num
@@ -71,15 +72,15 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-escola-vermelho mb-4">
-            <GraduationCap className="w-7 h-7 text-white" />
+          <div className="relative inline-block w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/20 shadow-elevation-low mb-4">
+            <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Dr. João Beraldo</h1>
           <p className="text-white/40 text-sm font-mono mt-1">Painel Escolar</p>
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center gap-2">
             <Lock className="w-4 h-4 text-gray-400" />
             <span className="text-sm font-semibold text-gray-700">Acesso ao Painel</span>
@@ -122,7 +123,7 @@ export default function AdminLoginPage() {
                 value={identificador}
                 onChange={e => { setIdentificador(e.target.value); setPreenchidoSalvo(false) }}
                 placeholder="seu@email.com, matrícula ou CPF"
-                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors"
               />
             </div>
 
@@ -137,7 +138,7 @@ export default function AdminLoginPage() {
                   autoComplete="current-password"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
-                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-11 text-sm focus:outline-none focus:border-escola-azul transition-colors"
+                  className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 pr-11 text-sm focus:border-escola-azul transition-colors"
                 />
                 <button
                   type="button"

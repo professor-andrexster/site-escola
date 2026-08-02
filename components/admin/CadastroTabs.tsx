@@ -6,7 +6,7 @@ import { Eye, EyeOff, BookOpen, Briefcase } from 'lucide-react'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import { cn } from '@/lib/utils'
 
-const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors'
+const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors'
 const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5'
 
 function CampoSenha({ id, label, valor, onChange, placeholder }: {
@@ -280,7 +280,7 @@ export default function CadastroTabs() {
   const [aba, setAba] = useState<'aluno' | 'professor'>('aluno')
 
   return (
-    <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+    <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
       <div className="grid grid-cols-2">
         <button
           onClick={() => setAba('aluno')}

@@ -1,14 +1,15 @@
 import Link from 'next/link'
-import { Clock, GraduationCap } from 'lucide-react'
+import Image from 'next/image'
+import { Clock } from 'lucide-react'
 
 export default function PendentePage() {
   return (
     <div className="min-h-screen bg-[#0d1f35] flex items-center justify-center p-4">
       <div className="w-full max-w-sm text-center">
-        <div className="inline-flex items-center justify-center w-14 h-14 bg-escola-vermelho mb-6">
-          <GraduationCap className="w-7 h-7 text-white" />
+        <div className="relative inline-block w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/20 shadow-elevation-low mb-6">
+          <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
         </div>
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
+        <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-elevation-high">
           <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
             <Clock className="w-7 h-7 text-yellow-500" />
           </div>

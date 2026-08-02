@@ -3,11 +3,12 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { KeyRound, Eye, EyeOff } from 'lucide-react'
+import Image from 'next/image'
+import { Eye, EyeOff } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
-const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors'
+const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors'
 const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5'
 
 // Destino do link "esqueci minha senha" enviado por email.
@@ -62,14 +63,14 @@ export default function RedefinirSenhaPage() {
     <div className="min-h-screen bg-[#0d1f35] flex items-center justify-center p-4">
       <div className="w-full max-w-sm">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 bg-escola-vermelho mb-4">
-            <KeyRound className="w-7 h-7 text-white" />
+          <div className="relative inline-block w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/20 shadow-elevation-low mb-4">
+            <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Nova Senha</h1>
           <p className="text-white/40 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           {!pronto ? (
             <p className="p-6 text-sm text-gray-400 text-center">Verificando o link...</p>
           ) : !sessaoValida ? (
