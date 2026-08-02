@@ -32,6 +32,7 @@ const config: Config = {
           azul: '#1a3a5c',
           'azul-medio': '#1e4a7a',
           'azul-claro': '#dbeafe',
+          marinho: '#0d1f35',
           vermelho: '#c0392b',
           'vermelho-escuro': '#96281b',
           creme: '#f7f4ef',

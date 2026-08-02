@@ -225,7 +225,7 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
           onClick={handleSave}
           disabled={saving || !titulo || !slug || slidesUrls.length === 0}
           title={slidesUrls.length === 0 ? 'Adicione pelo menos um slide' : undefined}
-          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
         >
           {saving ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Aula'}
         </button>

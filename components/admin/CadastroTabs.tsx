@@ -152,7 +152,7 @@ function FormAluno() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm mt-2"
+        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2"
       >
         {loading ? 'Criando conta...' : 'Criar Minha Conta'}
       </button>
@@ -268,7 +268,7 @@ function FormProfessor() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm mt-2"
+        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2"
       >
         {loading ? 'Enviando...' : 'Enviar Cadastro'}
       </button>

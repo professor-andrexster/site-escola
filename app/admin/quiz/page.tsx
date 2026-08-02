@@ -23,7 +23,7 @@ export default async function QuizAdminPage() {
         </div>
         <Link
           href="/admin/quiz/novo"
-          className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+          className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors"
         >
           <Plus className="w-4 h-4" />
           Novo Quiz

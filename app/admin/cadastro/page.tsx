@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: 'Criar Conta — E.E. Dr. João Beral
 
 export default function CadastroPage() {
   return (
-    <div className="min-h-screen bg-[#0d1f35] flex items-center justify-center p-4">
+    <div className="min-h-screen bg-escola-marinho flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <div className="relative inline-block w-14 h-14 rounded-full overflow-hidden ring-2 ring-white/20 shadow-elevation-low mb-4">

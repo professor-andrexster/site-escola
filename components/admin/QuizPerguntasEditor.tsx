@@ -267,7 +267,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
                 <button
                   onClick={() => saveEdit(pergunta.id)}
                   disabled={savingEdit}
-                  className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
                 >
                   {savingEdit ? 'Salvando...' : 'Salvar'}
                 </button>
@@ -372,7 +372,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
             <button
               onClick={addPergunta}
               disabled={saving}
-              className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
             >
               {saving ? 'Adicionando...' : 'Adicionar Pergunta'}
             </button>

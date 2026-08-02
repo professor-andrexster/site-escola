@@ -161,7 +161,7 @@ export default function IdeiaDetail({
           <button
             onClick={comentar}
             disabled={enviando || !texto.trim()}
-            className="px-3.5 py-2.5 bg-escola-azul text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-40"
+            className="px-3.5 py-2.5 bg-escola-azul text-white rounded-lg hover:bg-escola-azul-medio transition-colors disabled:opacity-40"
           >
             <Send className="w-4 h-4" />
           </button>

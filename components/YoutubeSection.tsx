@@ -22,13 +22,15 @@ interface VideoItem {
   title: string
 }
 
+// Tons batidos direto da paleta escola.* (preto, vermelho-escuro, vermelho),
+// nunca hex solto: mesma disciplina de escala do resto do site.
 const placeholders = [
-  { label: 'Aulas', angle: '135deg', from: '#1a0a0a', to: '#8b0000' },
-  { label: 'Eventos', angle: '150deg', from: '#8b0000', to: '#1a0a0a' },
-  { label: 'Projetos', angle: '140deg', from: '#1a0a0a', to: '#c0392b' },
-  { label: 'EMTI', angle: '125deg', from: '#8b0000', to: '#1a0a0a' },
-  { label: 'TI', angle: '155deg', from: '#1a0a0a', to: '#8b0000' },
-  { label: 'Escola', angle: '130deg', from: '#c0392b', to: '#1a0a0a' },
+  { label: 'Aulas', angle: '135deg', from: '#0a0a0a', to: '#96281b' },
+  { label: 'Eventos', angle: '150deg', from: '#96281b', to: '#0a0a0a' },
+  { label: 'Projetos', angle: '140deg', from: '#0a0a0a', to: '#c0392b' },
+  { label: 'EMTI', angle: '125deg', from: '#96281b', to: '#0a0a0a' },
+  { label: 'TI', angle: '155deg', from: '#0a0a0a', to: '#96281b' },
+  { label: 'Escola', angle: '130deg', from: '#c0392b', to: '#0a0a0a' },
 ]
 
 async function getLatestVideos(): Promise<VideoItem[]> {
@@ -73,7 +75,7 @@ export default async function YoutubeSection() {
           <div>
             <div className="border-t-4 border-escola-azul" style={{ boxShadow: '0 2px 0 0 #c0392b' }} />
             <div className="mt-4 flex items-center gap-3">
-              <div className="w-8 h-8 bg-[#FF0000] flex items-center justify-center text-white">
+              <div className="w-8 h-8 bg-escola-vermelho flex items-center justify-center text-white">
                 <YoutubeIcon />
               </div>
               <div>
@@ -90,7 +92,7 @@ export default async function YoutubeSection() {
             href={YOUTUBE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-shrink-0 bg-[#FF0000] text-white font-mono text-xs uppercase tracking-widest px-6 py-3.5 hover:bg-red-700 transition-colors inline-flex items-center gap-2"
+            className="flex-shrink-0 bg-escola-vermelho text-white font-mono text-xs uppercase tracking-widest px-6 py-3.5 hover:bg-escola-vermelho-escuro transition-colors inline-flex items-center gap-2"
           >
             <YoutubeIcon />
             Ver no YouTube
@@ -118,7 +120,7 @@ export default async function YoutubeSection() {
               />
               {/* Overlay com botão play */}
               <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors duration-300 flex items-center justify-center">
-                <div className="w-10 h-10 bg-[#FF0000] rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
+                <div className="w-10 h-10 bg-escola-vermelho rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-75 group-hover:scale-100">
                   <PlayIcon />
                 </div>
               </div>
@@ -137,12 +139,12 @@ export default async function YoutubeSection() {
                 className="relative aspect-square overflow-hidden group"
                 style={{ background: `linear-gradient(${p.angle}, ${p.from}, ${p.to})` }}
               >
-                <div className="absolute inset-0 bg-[#FF0000]/0 group-hover:bg-[#FF0000]/10 transition-colors duration-300" />
+                <div className="absolute inset-0 bg-escola-vermelho/0 group-hover:bg-escola-vermelho/10 transition-colors duration-300" />
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 opacity-30 group-hover:opacity-50 transition-opacity">
                   <YoutubeIcon />
                   <span className="font-mono text-[8px] uppercase tracking-widest text-white">{p.label}</span>
                 </div>
-                <div className="absolute top-0 left-0 w-3 h-0.5 bg-[#FF0000] opacity-60" />
+                <div className="absolute top-0 left-0 w-3 h-0.5 bg-escola-vermelho opacity-60" />
               </a>
             )
           })}
@@ -159,7 +161,7 @@ export default async function YoutubeSection() {
             href={YOUTUBE_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-xs uppercase tracking-widest text-[#FF0000] hover:text-escola-azul transition-colors inline-flex items-center gap-1.5 flex-shrink-0"
+            className="font-mono text-xs uppercase tracking-widest text-escola-vermelho hover:text-escola-azul transition-colors inline-flex items-center gap-1.5 flex-shrink-0"
           >
             <YoutubeIcon />
             {HANDLE}

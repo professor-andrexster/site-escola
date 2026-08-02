@@ -43,9 +43,9 @@ const STATUS_STYLE: Record<QuizStatus, string> = {
 
 const STATUS_LABEL: Record<QuizStatus, string> = {
   rascunho: 'Rascunho',
-  lobby: '🔵 Sala Aberta',
-  ativo: '🟢 Em andamento',
-  encerrado: '🔴 Encerrado',
+  lobby: 'Sala Aberta',
+  ativo: 'Em andamento',
+  encerrado: 'Encerrado',
 }
 
 export default function QuizListTable({ quizzes: initial }: QuizListTableProps) {
@@ -243,7 +243,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                     onClick={() => abrirSala(quiz.id)}
                     disabled={isLoading || (quiz.quiz_perguntas?.length ?? 0) === 0}
                     title={(quiz.quiz_perguntas?.length ?? 0) === 0 ? 'Adicione perguntas primeiro' : 'Abrir sala de espera'}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-40"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-40"
                   >
                     <DoorOpen className="w-3.5 h-3.5" />
                     Abrir Sala
@@ -275,7 +275,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                   <>
                     <Link
                       href={`/admin/quiz/${quiz.id}/controle`}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul-medio transition-colors"
                     >
                       <MonitorPlay className="w-3.5 h-3.5" />
                       Controlar

@@ -135,7 +135,7 @@ export default function QuizEditor({ quiz }: QuizEditorProps) {
         <button
           onClick={handleSubmit}
           disabled={saving || !titulo.trim()}
-          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
         >
           {saving ? 'Salvando...' : saved ? 'Salvo!' : isEditing ? 'Salvar Alterações' : 'Criar Quiz'}
         </button>

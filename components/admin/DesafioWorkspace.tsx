@@ -138,7 +138,7 @@ export default function DesafioWorkspace({
           </div>
 
           <button onClick={criarEquipe} disabled={criando}
-            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50">
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50">
             {criando ? 'Criando...' : 'Criar equipe'}
           </button>
         </div>
@@ -333,7 +333,7 @@ function FaseParticipante({
           )}
 
           <button onClick={enviar} disabled={saving}
-            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50">
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50">
             {saving ? 'Enviando...' : 'Enviar entrega'}
           </button>
         </div>
@@ -424,7 +424,7 @@ function FaseAvaliacao({
             <input type="text" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Feedback"
               className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30" />
             <button onClick={salvar} disabled={saving}
-              className="px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50 flex-shrink-0">
+              className="px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 flex-shrink-0">
               {saving ? '...' : 'Salvar'}
             </button>
           </div>

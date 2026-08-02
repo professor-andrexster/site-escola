@@ -46,7 +46,7 @@ export default async function MeusQuizzesPage() {
         <div className="empty-state p-12">
           <Gamepad2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 mb-4">Você ainda não participou de nenhum quiz.</p>
-          <Link href="/quiz" className="inline-flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
+          <Link href="/quiz" className="inline-flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-escola-azul-medio transition-colors">
             <Gamepad2 className="w-4 h-4" />
             Participar de um Quiz
           </Link>

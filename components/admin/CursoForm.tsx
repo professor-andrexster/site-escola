@@ -225,7 +225,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
           onClick={handleSave}
           disabled={saving || !titulo || !slug || !descricao.trim() || !capaUrl}
           title={!descricao.trim() || !capaUrl ? 'Preencha descrição e capa para continuar' : undefined}
-          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+          className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
         >
           {saving ? 'Salvando...' : isEditing ? 'Salvar Alterações' : 'Criar Curso'}
         </button>

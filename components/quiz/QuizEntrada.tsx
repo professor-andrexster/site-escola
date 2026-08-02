@@ -190,7 +190,7 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
           <button
             onClick={handleEntrar}
             disabled={loading || !codigo}
-            className="w-full bg-escola-azul text-white rounded-xl py-3.5 font-bold text-base flex items-center justify-center gap-2 hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-escola-azul text-white rounded-xl py-3.5 font-bold text-base flex items-center justify-center gap-2 hover:bg-escola-azul-medio transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Entrando...' : (
               <>

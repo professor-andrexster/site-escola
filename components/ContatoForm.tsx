@@ -89,7 +89,7 @@ export default function ContatoForm() {
       <button
         type="submit"
         disabled={isPending}
-        className="w-full bg-escola-azul text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
+        className="w-full bg-escola-azul text-white py-2.5 px-4 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         {isPending ? 'Enviando...' : 'Enviar mensagem'}
       </button>

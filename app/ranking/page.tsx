@@ -101,7 +101,7 @@ export default async function RankingPublicoPage() {
               {quiz.ativo && (
                 <Link
                   href={`/quiz?codigo=${quiz.codigo}`}
-                  className="flex-shrink-0 bg-escola-azul text-white font-mono text-xs uppercase tracking-widest px-5 py-3 hover:bg-blue-700 transition-colors inline-flex items-center gap-2"
+                  className="flex-shrink-0 bg-escola-azul text-white font-mono text-xs uppercase tracking-widest px-5 py-3 hover:bg-escola-azul-medio transition-colors inline-flex items-center gap-2"
                 >
                   <Gamepad2 className="w-4 h-4" />
                   Participar agora

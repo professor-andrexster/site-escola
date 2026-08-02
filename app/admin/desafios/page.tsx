@@ -30,7 +30,7 @@ export default async function DesafiosPage() {
         {podeCriar && (
           <Link
             href="/admin/desafios/novo"
-            className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors flex-shrink-0"
+            className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors flex-shrink-0"
           >
             <Plus className="w-4 h-4" />
             Novo Desafio

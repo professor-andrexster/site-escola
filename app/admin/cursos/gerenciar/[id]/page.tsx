@@ -53,7 +53,7 @@ export default async function EditarCursoPage({ params }: Params) {
           <h2 className="text-lg font-bold text-gray-900">Aulas</h2>
           <Link
             href={`/admin/cursos/gerenciar/${id}/aulas/nova`}
-            className="inline-flex items-center gap-2 bg-escola-azul text-white px-3.5 py-2 rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center gap-2 bg-escola-azul text-white px-3.5 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors"
           >
             <Plus className="w-4 h-4" />
             Nova Aula

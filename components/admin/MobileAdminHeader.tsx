@@ -35,7 +35,7 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
   return (
     <>
       {/* Barra superior — só no mobile */}
-      <header className="md:hidden bg-[#0d1f35] flex items-center justify-between px-fluid-2xs py-3 sticky top-0 z-40 shadow-elevation-medium">
+      <header className="md:hidden bg-escola-marinho flex items-center justify-between px-fluid-2xs py-3 sticky top-0 z-40 shadow-elevation-medium">
         <button
           onClick={() => setOpen(true)}
           className="text-white/70 hover:text-white p-1 -ms-1"
@@ -66,7 +66,7 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
           />
 
           {/* Painel lateral */}
-          <aside className="relative w-72 max-w-[85vw] bg-[#0d1f35] flex flex-col h-full overflow-y-auto shadow-elevation-high">
+          <aside className="relative w-72 max-w-[85vw] bg-escola-marinho flex flex-col h-full overflow-y-auto shadow-elevation-high">
             {/* Topo */}
             <div className="px-fluid-xs py-fluid-xs border-b border-white/5 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>

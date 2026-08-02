@@ -207,7 +207,7 @@ export default async function ResultadoPage({
             </Link>
             <Link
               href="/quiz"
-              className="flex-1 flex items-center justify-center gap-2 bg-escola-azul text-white rounded-xl py-2.5 font-semibold text-sm hover:bg-blue-700 transition-colors"
+              className="flex-1 flex items-center justify-center gap-2 bg-escola-azul text-white rounded-xl py-2.5 font-semibold text-sm hover:bg-escola-azul-medio transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Novo Quiz

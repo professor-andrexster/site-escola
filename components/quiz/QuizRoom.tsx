@@ -99,7 +99,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
 
   // Sala de espera (lobby)
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#0d1f35] to-blue-900 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-escola-marinho to-curso-azul flex flex-col items-center justify-center p-4">
       <div className="w-full max-w-md text-center">
         {/* Ícone animado */}
         <div className="inline-flex items-center justify-center w-20 h-20 bg-white/10 rounded-3xl mb-6">

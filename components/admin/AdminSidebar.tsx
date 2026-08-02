@@ -29,7 +29,7 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
   }
 
   return (
-    <aside className="hidden md:flex w-64 flex-shrink-0 bg-[#0d1f35] flex-col min-h-screen">
+    <aside className="hidden md:flex w-64 flex-shrink-0 bg-escola-marinho flex-col min-h-screen">
       {/* Logo */}
       <div className="px-fluid-xs py-fluid-xs border-b border-white/5">
         <Link href="/" className="flex items-center gap-2.5 group">

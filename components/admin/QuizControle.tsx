@@ -210,7 +210,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={revelar}
             disabled={loading}
-            className="inline-flex items-center gap-2 bg-escola-azul text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-blue-700 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-escola-azul text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
           >
             <Eye className="w-4 h-4" />
             Revelar Resposta

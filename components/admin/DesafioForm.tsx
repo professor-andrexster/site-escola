@@ -230,7 +230,7 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
       <button
         onClick={salvar}
         disabled={saving || !titulo.trim()}
-        className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors disabled:opacity-50"
+        className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
       >
         {saving ? 'Criando...' : 'Criar Desafio'}
       </button>
