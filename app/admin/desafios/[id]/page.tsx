@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -32,7 +33,7 @@ export default async function DesafioPage({ params }: Props) {
   ])
   if (!desafio) notFound()
 
-  const podeAvaliar = profile.role === 'direcao' || (profile.role === 'professor' && desafio.professor_id === user.id)
+  const podeAvaliar = isGestao(profile.role) || (profile.role === 'professor' && desafio.professor_id === user.id)
   const podeEntrarEquipe = profile.role === 'aluno' || profile.role === 'monitor'
 
   return (

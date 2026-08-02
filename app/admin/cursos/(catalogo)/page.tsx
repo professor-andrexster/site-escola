@@ -1,5 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
+import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
 import Image from 'next/image'
 import Link from 'next/link'
 import { GraduationCap, Settings } from 'lucide-react'
@@ -13,28 +15,15 @@ export default async function CursosPage() {
   const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  const [{ data: cursos }, { data: aulas }, { data: progresso }] = await Promise.all([
+  const [{ data: cursos }, progressos] = await Promise.all([
     supabase.from('cursos').select('*').eq('publicado', true).order('ordem'),
-    supabase.from('aulas').select('id, curso_id').eq('publicado', true),
-    supabase.from('progresso_aulas').select('aula_id').eq('user_id', user.id).eq('concluida', true),
+    progressoCursosPorUsuario(supabase, user.id),
   ])
 
-  const aulasPorCurso = new Map<string, number>()
-  for (const a of aulas ?? []) {
-    aulasPorCurso.set(a.curso_id, (aulasPorCurso.get(a.curso_id) ?? 0) + 1)
-  }
+  const aulasPorCurso = new Map(progressos.map(p => [p.id, p.totalAulas]))
+  const concluidasPorCurso = new Map(progressos.map(p => [p.id, p.aulasConcluidas]))
 
-  const aulaIdParaCurso = new Map<string, string>()
-  for (const a of aulas ?? []) aulaIdParaCurso.set(a.id, a.curso_id)
-
-  const concluidasPorCurso = new Map<string, number>()
-  for (const p of progresso ?? []) {
-    const cursoId = aulaIdParaCurso.get(p.aula_id)
-    if (!cursoId) continue
-    concluidasPorCurso.set(cursoId, (concluidasPorCurso.get(cursoId) ?? 0) + 1)
-  }
-
-  const podeGerenciar = profile.role === 'professor' || profile.role === 'direcao'
+  const podeGerenciar = profile.role === 'professor' || isGestao(profile.role)
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto">

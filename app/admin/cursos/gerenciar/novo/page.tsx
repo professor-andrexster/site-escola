@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import CursoForm from '@/components/admin/CursoForm'
+import { isGestao } from '@/lib/roles'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Novo Curso' }
@@ -14,7 +15,7 @@ export default async function NovoCursoPage() {
     .eq('id', user?.id || '')
     .single()
 
-  const isDirecao = profile?.role === 'direcao'
+  const isDirecao = isGestao(profile?.role ?? 'aluno')
 
   return (
     <div>

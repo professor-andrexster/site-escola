@@ -839,6 +839,565 @@ export interface Database {
           avaliado_em?: string | null
         }
       }
+      biblioteca_categorias: {
+        Row: {
+          id: string
+          nome: string
+          ativo: boolean
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_editoras: {
+        Row: {
+          id: string
+          nome: string
+          ativo: boolean
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_autores: {
+        Row: {
+          id: string
+          nome: string
+          ativo: boolean
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          nome: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          nome?: string
+          ativo?: boolean
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_obras: {
+        Row: {
+          id: string
+          titulo: string
+          subtitulo: string | null
+          ano_publicacao: number | null
+          edicao: string | null
+          isbn: string | null
+          idioma: string
+          numero_paginas: number | null
+          sinopse: string | null
+          palavras_chave: string[]
+          publico_indicado: string | null
+          area_conhecimento: string | null
+          classificacao_catalogacao: string | null
+          situacao: 'ativa' | 'inativa'
+          capa_url: string | null
+          observacoes_internas: string | null
+          editora_id: string | null
+          categoria_id: string | null
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          titulo: string
+          subtitulo?: string | null
+          ano_publicacao?: number | null
+          edicao?: string | null
+          isbn?: string | null
+          idioma?: string
+          numero_paginas?: number | null
+          sinopse?: string | null
+          palavras_chave?: string[]
+          publico_indicado?: string | null
+          area_conhecimento?: string | null
+          classificacao_catalogacao?: string | null
+          situacao?: 'ativa' | 'inativa'
+          capa_url?: string | null
+          observacoes_internas?: string | null
+          editora_id?: string | null
+          categoria_id?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          titulo?: string
+          subtitulo?: string | null
+          ano_publicacao?: number | null
+          edicao?: string | null
+          isbn?: string | null
+          idioma?: string
+          numero_paginas?: number | null
+          sinopse?: string | null
+          palavras_chave?: string[]
+          publico_indicado?: string | null
+          area_conhecimento?: string | null
+          classificacao_catalogacao?: string | null
+          situacao?: 'ativa' | 'inativa'
+          capa_url?: string | null
+          observacoes_internas?: string | null
+          editora_id?: string | null
+          categoria_id?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_obras_autores: {
+        Row: {
+          id: string
+          obra_id: string
+          autor_id: string
+        }
+        Insert: {
+          id?: string
+          obra_id: string
+          autor_id: string
+        }
+        Update: {
+          id?: string
+          obra_id?: string
+          autor_id?: string
+        }
+      }
+      biblioteca_exemplares: {
+        Row: {
+          id: string
+          obra_id: string
+          tombo: string
+          codigo_barras: string | null
+          situacao: 'disponivel' | 'emprestado' | 'reservado' | 'em_reparo' | 'extraviado' | 'baixado'
+          estado_conservacao: 'novo' | 'bom' | 'regular' | 'ruim'
+          estante: string | null
+          prateleira: string | null
+          data_entrada: string
+          origem_aquisicao: 'compra' | 'doacao' | 'programa_governo' | 'transferencia'
+          valor_referencia: number | null
+          consulta_local: boolean
+          observacoes: string | null
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          obra_id: string
+          tombo: string
+          codigo_barras?: string | null
+          situacao?: 'disponivel' | 'emprestado' | 'reservado' | 'em_reparo' | 'extraviado' | 'baixado'
+          estado_conservacao?: 'novo' | 'bom' | 'regular' | 'ruim'
+          estante?: string | null
+          prateleira?: string | null
+          data_entrada?: string
+          origem_aquisicao?: 'compra' | 'doacao' | 'programa_governo' | 'transferencia'
+          valor_referencia?: number | null
+          consulta_local?: boolean
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          obra_id?: string
+          tombo?: string
+          codigo_barras?: string | null
+          situacao?: 'disponivel' | 'emprestado' | 'reservado' | 'em_reparo' | 'extraviado' | 'baixado'
+          estado_conservacao?: 'novo' | 'bom' | 'regular' | 'ruim'
+          estante?: string | null
+          prateleira?: string | null
+          data_entrada?: string
+          origem_aquisicao?: 'compra' | 'doacao' | 'programa_governo' | 'transferencia'
+          valor_referencia?: number | null
+          consulta_local?: boolean
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_leitores: {
+        Row: {
+          id: string
+          nome_completo: string
+          nome_social: string | null
+          tipo_leitor: 'aluno' | 'professor' | 'funcionario' | 'comunidade'
+          matricula: string | null
+          data_nascimento: string | null
+          turma: string | null
+          turno: string | null
+          ano_escolar: string | null
+          telefone: string | null
+          email: string | null
+          nome_responsavel: string | null
+          telefone_responsavel: string | null
+          situacao: 'ativo' | 'inativo' | 'bloqueado'
+          motivo_bloqueio: string | null
+          data_cadastro: string
+          observacoes: string | null
+          criado_em: string
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: string
+          nome_completo: string
+          nome_social?: string | null
+          tipo_leitor: 'aluno' | 'professor' | 'funcionario' | 'comunidade'
+          matricula?: string | null
+          data_nascimento?: string | null
+          turma?: string | null
+          turno?: string | null
+          ano_escolar?: string | null
+          telefone?: string | null
+          email?: string | null
+          nome_responsavel?: string | null
+          telefone_responsavel?: string | null
+          situacao?: 'ativo' | 'inativo' | 'bloqueado'
+          motivo_bloqueio?: string | null
+          data_cadastro?: string
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: string
+          nome_completo?: string
+          nome_social?: string | null
+          tipo_leitor?: 'aluno' | 'professor' | 'funcionario' | 'comunidade'
+          matricula?: string | null
+          data_nascimento?: string | null
+          turma?: string | null
+          turno?: string | null
+          ano_escolar?: string | null
+          telefone?: string | null
+          email?: string | null
+          nome_responsavel?: string | null
+          telefone_responsavel?: string | null
+          situacao?: 'ativo' | 'inativo' | 'bloqueado'
+          motivo_bloqueio?: string | null
+          data_cadastro?: string
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_emprestimos: {
+        Row: {
+          id: string
+          exemplar_id: string
+          leitor_id: string
+          data_emprestimo: string
+          data_prevista: string
+          data_devolucao: string | null
+          renovacoes_feitas: number
+          situacao: 'em_andamento' | 'devolvido' | 'devolvido_com_atraso' | 'renovado' | 'perdido'
+          registrado_por: string | null
+          devolvido_por: string | null
+          observacoes: string | null
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          exemplar_id: string
+          leitor_id: string
+          data_emprestimo?: string
+          data_prevista: string
+          data_devolucao?: string | null
+          renovacoes_feitas?: number
+          situacao?: 'em_andamento' | 'devolvido' | 'devolvido_com_atraso' | 'renovado' | 'perdido'
+          registrado_por?: string | null
+          devolvido_por?: string | null
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          exemplar_id?: string
+          leitor_id?: string
+          data_emprestimo?: string
+          data_prevista?: string
+          data_devolucao?: string | null
+          renovacoes_feitas?: number
+          situacao?: 'em_andamento' | 'devolvido' | 'devolvido_com_atraso' | 'renovado' | 'perdido'
+          registrado_por?: string | null
+          devolvido_por?: string | null
+          observacoes?: string | null
+          criado_em?: string
+          atualizado_em?: string
+        }
+      }
+      biblioteca_renovacoes: {
+        Row: {
+          id: string
+          emprestimo_id: string
+          autorizado_por: string | null
+          data_prevista_anterior: string
+          nova_data_prevista: string
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          emprestimo_id: string
+          autorizado_por?: string | null
+          data_prevista_anterior: string
+          nova_data_prevista: string
+          criado_em?: string
+        }
+        Update: {
+          id?: string
+          emprestimo_id?: string
+          autorizado_por?: string | null
+          data_prevista_anterior?: string
+          nova_data_prevista?: string
+          criado_em?: string
+        }
+      }
+      biblioteca_reservas: {
+        Row: {
+          id: string
+          obra_id: string
+          leitor_id: string
+          data_reserva: string
+          posicao_fila: number
+          validade: string
+          situacao: 'aguardando' | 'disponivel' | 'atendida' | 'expirada' | 'cancelada'
+          criado_em: string
+          atualizado_em: string
+        }
+        Insert: {
+          id?: string
+          obra_id: string
+          leitor_id: string
+          data_reserva?: string
+          posicao_fila: number
+          validade: string
+          situacao?: 'aguardando' | 'disponivel' | 'atendida' | 'expirada' | 'cancelada'
+          criado_em?: string
+          atualizado_em?: string
+        }
+        Update: {
+          id?: string
+          obra_id?: string
+          leitor_id?: string
+          data_reserva?: string
+          posicao_fila?: number
+          validade?: string
+          situacao?: 'aguardando' | 'disponivel' | 'atendida' | 'expirada' | 'cancelada'
+          criado_em?: string
+          atualizado_em?: string
+        }
+      }
+      biblioteca_movimentacoes: {
+        Row: {
+          id: string
+          exemplar_id: string
+          situacao_anterior: string | null
+          situacao_nova: string
+          motivo: string | null
+          responsavel_id: string | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          exemplar_id: string
+          situacao_anterior?: string | null
+          situacao_nova: string
+          motivo?: string | null
+          responsavel_id?: string | null
+          criado_em?: string
+        }
+        Update: {
+          id?: string
+          exemplar_id?: string
+          situacao_anterior?: string | null
+          situacao_nova?: string
+          motivo?: string | null
+          responsavel_id?: string | null
+          criado_em?: string
+        }
+      }
+      biblioteca_configuracoes: {
+        Row: {
+          id: true
+          prazo_dias_aluno: number
+          prazo_dias_professor: number
+          prazo_dias_funcionario: number
+          prazo_dias_comunidade: number
+          limite_exemplares_aluno: number
+          limite_exemplares_professor: number
+          limite_exemplares_funcionario: number
+          limite_exemplares_comunidade: number
+          max_renovacoes: number
+          dias_suspensao_por_atraso: number
+          multa_habilitada: boolean
+          valor_multa_por_dia: number
+          gera_tombo_automatico: boolean
+          prefixo_tombo: string
+          reserva_habilitada: boolean
+          prazo_validade_reserva_dias: number
+          consulta_interna_professor_habilitada: boolean
+          nome_biblioteca: string
+          texto_comprovante: string | null
+          observacoes_implantacao: string | null
+          atualizado_em: string
+          atualizado_por: string | null
+        }
+        Insert: {
+          id?: true
+          prazo_dias_aluno?: number
+          prazo_dias_professor?: number
+          prazo_dias_funcionario?: number
+          prazo_dias_comunidade?: number
+          limite_exemplares_aluno?: number
+          limite_exemplares_professor?: number
+          limite_exemplares_funcionario?: number
+          limite_exemplares_comunidade?: number
+          max_renovacoes?: number
+          dias_suspensao_por_atraso?: number
+          multa_habilitada?: boolean
+          valor_multa_por_dia?: number
+          gera_tombo_automatico?: boolean
+          prefixo_tombo?: string
+          reserva_habilitada?: boolean
+          prazo_validade_reserva_dias?: number
+          consulta_interna_professor_habilitada?: boolean
+          nome_biblioteca?: string
+          texto_comprovante?: string | null
+          observacoes_implantacao?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+        Update: {
+          id?: true
+          prazo_dias_aluno?: number
+          prazo_dias_professor?: number
+          prazo_dias_funcionario?: number
+          prazo_dias_comunidade?: number
+          limite_exemplares_aluno?: number
+          limite_exemplares_professor?: number
+          limite_exemplares_funcionario?: number
+          limite_exemplares_comunidade?: number
+          max_renovacoes?: number
+          dias_suspensao_por_atraso?: number
+          multa_habilitada?: boolean
+          valor_multa_por_dia?: number
+          gera_tombo_automatico?: boolean
+          prefixo_tombo?: string
+          reserva_habilitada?: boolean
+          prazo_validade_reserva_dias?: number
+          consulta_interna_professor_habilitada?: boolean
+          nome_biblioteca?: string
+          texto_comprovante?: string | null
+          observacoes_implantacao?: string | null
+          atualizado_em?: string
+          atualizado_por?: string | null
+        }
+      }
+      biblioteca_calendario: {
+        Row: {
+          id: string
+          data: string
+          motivo: string
+          criado_em: string
+          criado_por: string | null
+        }
+        Insert: {
+          id?: string
+          data: string
+          motivo: string
+          criado_em?: string
+          criado_por?: string | null
+        }
+        Update: {
+          id?: string
+          data?: string
+          motivo?: string
+          criado_em?: string
+          criado_por?: string | null
+        }
+      }
+      biblioteca_auditoria: {
+        Row: {
+          id: string
+          usuario_id: string | null
+          acao: string
+          tabela_afetada: string
+          registro_afetado: string | null
+          valor_anterior: Json | null
+          valor_novo: Json | null
+          criado_em: string
+        }
+        Insert: {
+          id?: string
+          usuario_id?: string | null
+          acao: string
+          tabela_afetada: string
+          registro_afetado?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+          criado_em?: string
+        }
+        Update: {
+          id?: string
+          usuario_id?: string | null
+          acao?: string
+          tabela_afetada?: string
+          registro_afetado?: string | null
+          valor_anterior?: Json | null
+          valor_novo?: Json | null
+          criado_em?: string
+        }
+      }
     }
     Views: Record<string, never>
     Functions: {
@@ -943,7 +1502,7 @@ export type EntregaUpdate = Database['public']['Tables']['entregas']['Update']
 export interface Profile {
   id: string
   nome_completo: string
-  role: 'aluno' | 'monitor' | 'professor' | 'bibliotecario' | 'direcao'
+  role: 'aluno' | 'monitor' | 'professor' | 'bibliotecario' | 'diretora' | 'vice_diretora' | 'admin'
   turma: string | null
   disciplina: string | null
   aprovado: boolean
@@ -966,17 +1525,83 @@ export interface CursoDesafio {
   created_at: string
 }
 
-// Identidade (CPF + dados de recuperação, 1:1 com auth.users — leitura só do dono ou service role)
+// Identidade (CPF e dados de recuperação, 1:1 com auth.users, leitura só do dono ou service role)
 export interface Identidade {
   user_id: string
   cpf: string
   data_nascimento: string | null
   email_alternativo: string | null
-  criado_via: 'auto_aluno' | 'auto_professor' | 'direcao'
+  criado_via: 'auto_aluno' | 'auto_professor' | 'direcao' | 'gestao' | 'convite_bibliotecario'
   criado_em: string
 }
 
-// Log de atividades (auditoria — leitura só direção)
+// Convite de acesso (hoje so bibliotecario), com token de aceite unico
+export interface ConviteUsuario {
+  id: string
+  nome: string
+  email: string
+  papel: 'bibliotecario'
+  token: string
+  criado_por: string | null
+  criado_em: string
+  expira_em: string
+  aceito_em: string | null
+  usuario_id: string | null
+  revogado_em: string | null
+}
+
+// Biblioteca
+export type BibliotecaCategoria = Database['public']['Tables']['biblioteca_categorias']['Row']
+export type BibliotecaCategoriaInsert = Database['public']['Tables']['biblioteca_categorias']['Insert']
+export type BibliotecaCategoriaUpdate = Database['public']['Tables']['biblioteca_categorias']['Update']
+
+export type BibliotecaEditora = Database['public']['Tables']['biblioteca_editoras']['Row']
+export type BibliotecaEditoraInsert = Database['public']['Tables']['biblioteca_editoras']['Insert']
+export type BibliotecaEditoraUpdate = Database['public']['Tables']['biblioteca_editoras']['Update']
+
+export type BibliotecaAutor = Database['public']['Tables']['biblioteca_autores']['Row']
+export type BibliotecaAutorInsert = Database['public']['Tables']['biblioteca_autores']['Insert']
+export type BibliotecaAutorUpdate = Database['public']['Tables']['biblioteca_autores']['Update']
+
+export type BibliotecaObra = Database['public']['Tables']['biblioteca_obras']['Row']
+export type BibliotecaObraInsert = Database['public']['Tables']['biblioteca_obras']['Insert']
+export type BibliotecaObraUpdate = Database['public']['Tables']['biblioteca_obras']['Update']
+
+export type BibliotecaObraAutor = Database['public']['Tables']['biblioteca_obras_autores']['Row']
+export type BibliotecaObraAutorInsert = Database['public']['Tables']['biblioteca_obras_autores']['Insert']
+
+export type BibliotecaExemplar = Database['public']['Tables']['biblioteca_exemplares']['Row']
+export type BibliotecaExemplarInsert = Database['public']['Tables']['biblioteca_exemplares']['Insert']
+export type BibliotecaExemplarUpdate = Database['public']['Tables']['biblioteca_exemplares']['Update']
+
+export type BibliotecaLeitor = Database['public']['Tables']['biblioteca_leitores']['Row']
+export type BibliotecaLeitorInsert = Database['public']['Tables']['biblioteca_leitores']['Insert']
+export type BibliotecaLeitorUpdate = Database['public']['Tables']['biblioteca_leitores']['Update']
+
+export type BibliotecaEmprestimo = Database['public']['Tables']['biblioteca_emprestimos']['Row']
+export type BibliotecaEmprestimoInsert = Database['public']['Tables']['biblioteca_emprestimos']['Insert']
+export type BibliotecaEmprestimoUpdate = Database['public']['Tables']['biblioteca_emprestimos']['Update']
+
+export type BibliotecaRenovacao = Database['public']['Tables']['biblioteca_renovacoes']['Row']
+export type BibliotecaRenovacaoInsert = Database['public']['Tables']['biblioteca_renovacoes']['Insert']
+
+export type BibliotecaReserva = Database['public']['Tables']['biblioteca_reservas']['Row']
+export type BibliotecaReservaInsert = Database['public']['Tables']['biblioteca_reservas']['Insert']
+export type BibliotecaReservaUpdate = Database['public']['Tables']['biblioteca_reservas']['Update']
+
+export type BibliotecaMovimentacao = Database['public']['Tables']['biblioteca_movimentacoes']['Row']
+export type BibliotecaMovimentacaoInsert = Database['public']['Tables']['biblioteca_movimentacoes']['Insert']
+
+export type BibliotecaConfiguracoes = Database['public']['Tables']['biblioteca_configuracoes']['Row']
+export type BibliotecaConfiguracoesUpdate = Database['public']['Tables']['biblioteca_configuracoes']['Update']
+
+export type BibliotecaCalendario = Database['public']['Tables']['biblioteca_calendario']['Row']
+export type BibliotecaCalendarioInsert = Database['public']['Tables']['biblioteca_calendario']['Insert']
+
+export type BibliotecaAuditoria = Database['public']['Tables']['biblioteca_auditoria']['Row']
+export type BibliotecaAuditoriaInsert = Database['public']['Tables']['biblioteca_auditoria']['Insert']
+
+// Log de atividades (auditoria, leitura só gestão)
 export interface LogAtividade {
   id: string
   user_id: string | null

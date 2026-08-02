@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
 import Link from 'next/link'
 import { Plus, Rocket, Users } from 'lucide-react'
 import type { Metadata } from 'next'
@@ -10,7 +11,7 @@ export const dynamic = 'force-dynamic'
 export default async function DesafiosPage() {
   const supabase = await createClient()
   const { profile } = await getProfileOrRedirect()
-  const podeCriar = profile.role === 'professor' || profile.role === 'direcao'
+  const podeCriar = profile.role === 'professor' || isGestao(profile.role)
 
   const query = supabase
     .from('desafios')

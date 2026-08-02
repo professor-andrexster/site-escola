@@ -10,6 +10,14 @@ export type AcaoLog =
   | 'senha_redefinida_admin'
   | 'recuperacao_recusada'
   | 'usuario_criado_direcao'
+  | 'aluno_aprovado_professor'
+  | 'usuario_aprovado_gestao'
+  | 'usuario_revogado_gestao'
+  | 'aluno_bloqueado_por_inatividade'
+  | 'papel_alterado'
+  | 'convite_bibliotecario_criado'
+  | 'convite_bibliotecario_aceito'
+  | 'convite_bibliotecario_revogado'
 
 /** Extrai o IP do request (Vercel preenche x-forwarded-for). */
 export function ipDoRequest(request: Request): string | null {

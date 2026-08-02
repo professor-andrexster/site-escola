@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { exigirDirecao } from '@/lib/apiDirecao'
+import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { registrarAtividade, ipDoRequest } from '@/lib/log'
 
 export async function POST(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const body = await request.json()
@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     nome?: string
     email?: string
     password?: string
-    role?: 'aluno' | 'monitor' | 'professor' | 'direcao' | 'bibliotecario'
+    role?: 'aluno' | 'monitor' | 'professor' | 'diretora' | 'vice_diretora' | 'admin' | 'bibliotecario'
     turma?: string
     disciplina?: string
     cpf?: string
@@ -23,6 +23,12 @@ export async function POST(request: Request) {
 
   if (!nome?.trim() || !email?.trim() || !password || !role) {
     return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 })
+  }
+  if (role === 'bibliotecario') {
+    return NextResponse.json(
+      { error: 'Bibliotecária é cadastrada por convite, na tela de configurações da biblioteca.' },
+      { status: 400 }
+    )
   }
   if (password.length < 6) {
     return NextResponse.json({ error: 'A senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
@@ -75,7 +81,7 @@ export async function POST(request: Request) {
     user_id: userId,
     cpf: cpfLimpo,
     data_nascimento: dataNascimento || null,
-    criado_via: 'direcao',
+    criado_via: 'gestao',
   })
   if (identError) {
     if (identError.code === '23505') {

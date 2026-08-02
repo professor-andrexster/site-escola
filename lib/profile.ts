@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/types/database'
+import { GESTAO_ROLES, isGestao } from '@/lib/roles'
 export { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 
 export async function getProfileOrRedirect(): Promise<{ user: { id: string; email?: string }, profile: Profile }> {
@@ -20,21 +21,33 @@ export async function getProfileOrRedirect(): Promise<{ user: { id: string; emai
   return { user: { id: user.id, email: user.email }, profile }
 }
 
-export async function requireDirecao() {
+export async function requireGestao() {
   const result = await getProfileOrRedirect()
-  if (result.profile.role !== 'direcao') redirect('/admin/dashboard')
+  if (!isGestao(result.profile.role)) redirect('/admin/dashboard')
+  return result
+}
+
+export async function requireProfessorOuGestao() {
+  const result = await getProfileOrRedirect()
+  if (result.profile.role !== 'professor' && !isGestao(result.profile.role)) redirect('/admin/dashboard')
   return result
 }
 
 export async function requireProfessorOrAbove() {
   const result = await getProfileOrRedirect()
-  if (!['professor', 'monitor', 'direcao'].includes(result.profile.role)) redirect('/admin/dashboard')
+  if (!['professor', 'monitor', ...GESTAO_ROLES].includes(result.profile.role)) redirect('/admin/dashboard')
   return result
 }
 
 export async function requireMonitorOrAbove() {
   const result = await getProfileOrRedirect()
-  if (!['monitor', 'direcao'].includes(result.profile.role)) redirect('/admin/dashboard')
+  if (!['monitor', ...GESTAO_ROLES].includes(result.profile.role)) redirect('/admin/dashboard')
+  return result
+}
+
+export async function requireBibliotecaStaff() {
+  const result = await getProfileOrRedirect()
+  if (result.profile.role !== 'bibliotecario' && !isGestao(result.profile.role)) redirect('/admin/dashboard')
   return result
 }
 

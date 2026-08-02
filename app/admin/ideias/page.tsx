@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
 import IdeiasBoard from '@/components/admin/IdeiasBoard'
 import type { Metadata } from 'next'
 
@@ -32,7 +33,7 @@ export default async function IdeiasPage() {
     votei: minhasVotadas.has(i.id),
   }))
 
-  const podeModerar = profile.role === 'professor' || profile.role === 'monitor' || profile.role === 'direcao'
+  const podeModerar = profile.role === 'professor' || profile.role === 'monitor' || isGestao(profile.role)
 
   return (
     <div className="max-w-5xl mx-auto">

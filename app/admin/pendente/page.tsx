@@ -14,7 +14,7 @@ export default function PendentePage() {
           </div>
           <h1 className="font-playfair text-gray-900 font-black text-2xl mb-2">Cadastro em Análise</h1>
           <p className="text-gray-500 text-sm leading-relaxed mb-6">
-            Seu cadastro foi recebido e está aguardando aprovação da direção da escola.
+            Seu cadastro foi recebido e está aguardando aprovação de um professor ou da direção da escola.
             Você receberá acesso assim que for aprovado.
           </p>
           <Link

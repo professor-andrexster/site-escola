@@ -96,7 +96,7 @@ export async function POST(request: Request) {
     role: 'aluno',
     turma: aluno.turma,
     disciplina: null,
-    aprovado: true,
+    aprovado: false,
     email: email.trim().toLowerCase(),
   })
   if (profileError) return desfazer('Erro ao salvar o perfil. Tente novamente.')

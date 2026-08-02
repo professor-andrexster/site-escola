@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { requireMonitorOrAbove } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
 import Link from 'next/link'
 import NoticiasTable from '@/components/admin/NoticiasTable'
 import { Plus, Clock, FileText } from 'lucide-react'
@@ -10,7 +11,7 @@ export default async function AdminNoticiasPage() {
   const { user, profile } = await requireMonitorOrAbove()
 
   const isMonitor = profile.role === 'monitor'
-  const isDirecao = profile.role === 'direcao'
+  const isDirecao = isGestao(profile.role)
 
   let query = supabase.from('noticias').select('*').order('created_at', { ascending: false })
   if (isMonitor) {

@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Clock, ArrowLeft } from 'lucide-react'
 import CursoPendenteForm from '@/components/admin/CursoPendenteForm'
+import { isGestao } from '@/lib/roles'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Cursos Pendentes — Admin' }
@@ -20,7 +21,7 @@ export default async function CursosPendentesPage() {
     .single()
 
   // Apenas direção pode aprovar
-  if (profile?.role !== 'direcao') {
+  if (!isGestao(profile?.role ?? 'aluno')) {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 p-6">
         <p className="font-semibold">Acesso Negado</p>

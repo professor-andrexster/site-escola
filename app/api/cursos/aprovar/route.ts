@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { exigirDirecao } from '@/lib/apiDirecao'
+import { exigirGestao } from '@/lib/apiGestao'
 
 export async function POST(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const { cursoId } = await request.json() as { cursoId?: string }

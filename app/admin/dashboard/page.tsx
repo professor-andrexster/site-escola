@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server'
 import { getProfileOrRedirect, ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
+import { isGestao } from '@/lib/roles'
 import { quizMatchesTurma } from '@/lib/turmas'
 import Link from 'next/link'
 import {
   Star, Inbox, Gamepad2,
-  Users, Trophy, BookOpen, TrendingUp, DoorOpen, Play,
+  Users, Trophy, BookOpen, TrendingUp, DoorOpen, Play, UserCheck,
 } from 'lucide-react'
 
 function StatCard({ label, value, icon: Icon, color, href }: {
@@ -170,20 +171,25 @@ export default async function DashboardPage() {
     )
   }
 
-  // Professor e Direção
+  // Professor e gestão
+  const podeAprovarAlunos = profile.role === 'professor' || isGestao(profile.role)
   const [
     { count: totalQuizzes },
     { count: totalParticipantes },
     { count: leadsNaoLidos },
     { count: usuariosPendentes },
+    { count: alunosPendentes },
   ] = await Promise.all([
     supabase.from('quizzes').select('*', { count: 'exact', head: true }),
     supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('concluido', true),
-    profile.role === 'direcao'
+    isGestao(profile.role)
       ? supabase.from('leads').select('*', { count: 'exact', head: true }).eq('lido', false)
       : Promise.resolve({ count: 0 }),
-    profile.role === 'direcao'
+    isGestao(profile.role)
       ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('aprovado', false)
+      : Promise.resolve({ count: 0 }),
+    podeAprovarAlunos
+      ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'aluno').eq('aprovado', false)
       : Promise.resolve({ count: 0 }),
   ])
 
@@ -200,10 +206,16 @@ export default async function DashboardPage() {
           <span className={`text-xs font-mono uppercase tracking-widest px-3 py-1.5 rounded-lg ${ROLE_COLORS[profile.role]}`}>
             {ROLE_LABELS[profile.role]}
           </span>
-          {usuariosPendentes! > 0 && (
+          {isGestao(profile.role) && usuariosPendentes! > 0 && (
             <Link href="/admin/usuarios" className="flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 text-yellow-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-colors">
               <Users className="w-3.5 h-3.5" />
               {usuariosPendentes} pendente{usuariosPendentes !== 1 ? 's' : ''}
+            </Link>
+          )}
+          {podeAprovarAlunos && alunosPendentes! > 0 && (
+            <Link href="/admin/aprovacoes" className="flex items-center gap-1.5 bg-yellow-50 border border-yellow-200 text-yellow-700 text-xs font-semibold px-3 py-1.5 rounded-lg hover:bg-yellow-100 transition-colors">
+              <UserCheck className="w-3.5 h-3.5" />
+              {alunosPendentes} aluno{alunosPendentes !== 1 ? 's' : ''} aguardando
             </Link>
           )}
         </div>
@@ -213,11 +225,14 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/quiz" />
         <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-orange-50 text-orange-600" />
-        {profile.role === 'direcao' && (
+        {isGestao(profile.role) && (
           <>
             <StatCard label="Leads" value={leadsNaoLidos ?? 0} icon={Inbox} color="bg-indigo-50 text-indigo-600" href="/admin/leads" />
             <StatCard label="Usuários Pendentes" value={usuariosPendentes ?? 0} icon={Users} color="bg-yellow-50 text-yellow-600" href="/admin/usuarios" />
           </>
+        )}
+        {!isGestao(profile.role) && podeAprovarAlunos && (
+          <StatCard label="Alunos Aguardando" value={alunosPendentes ?? 0} icon={UserCheck} color="bg-yellow-50 text-yellow-600" href="/admin/aprovacoes" />
         )}
       </div>
 
@@ -236,10 +251,16 @@ export default async function DashboardPage() {
             <Trophy className="w-6 h-6 text-gray-400 group-hover:text-yellow-600" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-yellow-600 text-center">Ver Ranking</span>
           </Link>
-          {profile.role === 'direcao' && (
+          {isGestao(profile.role) && (
             <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all group">
               <Users className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
               <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Usuários</span>
+            </Link>
+          )}
+          {podeAprovarAlunos && (
+            <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 transition-all group">
+              <UserCheck className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
+              <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Aprovações</span>
             </Link>
           )}
         </div>

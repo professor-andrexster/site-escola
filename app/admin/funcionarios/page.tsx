@@ -2,8 +2,9 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import UsuariosTable, { type UsuarioLinha } from '@/components/admin/UsuariosTable'
 import CriarUsuarioForm from '@/components/admin/CriarUsuarioForm'
+import ConvidarBibliotecariaForm from '@/components/admin/ConvidarBibliotecariaForm'
 import AtividadeLog from '@/components/admin/AtividadeLog'
-import { Users, BookOpen } from 'lucide-react'
+import { Users, BookOpen, AlertTriangle } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Funcionários — Admin' }
@@ -40,12 +41,6 @@ export default async function FuncionariosPage() {
   const nomePorId = new Map((profiles ?? []).map(p => [p.id as string, p.nome_completo as string]))
   const pendentes = linhas.filter(p => !p.aprovado).length
 
-  const roleTitulo: Record<string, string> = {
-    professor: '👨‍🏫 Professor',
-    monitor: '📋 Monitor',
-    bibliotecario: '📚 Bibliotecário',
-  }
-
   return (
     <div>
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
@@ -56,12 +51,16 @@ export default async function FuncionariosPage() {
           </h1>
           <p className="text-sm text-gray-400 mt-1">Professores, monitores, bibliotecários e staff. Gerenciar aprovação e roles.</p>
           {pendentes > 0 && (
-            <p className="text-sm text-yellow-600 mt-2 font-medium">
-              ⚠️ {pendentes} cadastro{pendentes !== 1 ? 's' : ''} aguardando aprovação
+            <p className="text-sm text-yellow-600 mt-2 font-medium flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4" />
+              {pendentes} cadastro{pendentes !== 1 ? 's' : ''} aguardando aprovação
             </p>
           )}
         </div>
-        <CriarUsuarioForm />
+        <div className="flex items-center gap-3 flex-wrap">
+          <ConvidarBibliotecariaForm />
+          <CriarUsuarioForm />
+        </div>
       </div>
 
       <UsuariosTable profiles={linhas} />

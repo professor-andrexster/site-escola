@@ -21,16 +21,25 @@ const ACAO_LABELS: Record<string, { label: string; cor: string }> = {
   login_ok: { label: 'Login', cor: 'bg-gray-100 text-gray-600' },
   login_falha: { label: 'Login falhou', cor: 'bg-orange-100 text-orange-700' },
   senha_redefinida_cpf: { label: 'Senha redefinida (CPF)', cor: 'bg-purple-100 text-purple-700' },
-  senha_redefinida_admin: { label: 'Senha redefinida (direção)', cor: 'bg-purple-100 text-purple-700' },
+  senha_redefinida_admin: { label: 'Senha redefinida (gestão)', cor: 'bg-purple-100 text-purple-700' },
   recuperacao_recusada: { label: 'Recuperação recusada', cor: 'bg-red-100 text-red-700' },
-  usuario_criado_direcao: { label: 'Usuário criado (direção)', cor: 'bg-blue-100 text-blue-700' },
+  usuario_criado_direcao: { label: 'Usuário criado (gestão)', cor: 'bg-blue-100 text-blue-700' },
+  aluno_aprovado_professor: { label: 'Aluno aprovado (professor)', cor: 'bg-green-100 text-green-700' },
+  usuario_aprovado_gestao: { label: 'Usuário aprovado (gestão)', cor: 'bg-green-100 text-green-700' },
+  usuario_revogado_gestao: { label: 'Acesso revogado (gestão)', cor: 'bg-red-100 text-red-700' },
+  aluno_bloqueado_por_inatividade: { label: 'Acesso bloqueado (cadastro inativado)', cor: 'bg-red-100 text-red-700' },
+  papel_alterado: { label: 'Nível de acesso alterado', cor: 'bg-blue-100 text-blue-700' },
+  convite_bibliotecario_criado: { label: 'Convite de bibliotecária enviado', cor: 'bg-amber-100 text-amber-700' },
+  convite_bibliotecario_aceito: { label: 'Convite de bibliotecária aceito', cor: 'bg-green-100 text-green-700' },
+  convite_bibliotecario_revogado: { label: 'Convite de bibliotecária revogado', cor: 'bg-red-100 text-red-700' },
 }
 
 const FILTROS = [
   { id: 'todos', label: 'Tudo' },
-  { id: 'cadastros', label: 'Cadastros', acoes: ['cadastro_aluno', 'cadastro_professor', 'usuario_criado_direcao'] },
+  { id: 'cadastros', label: 'Cadastros', acoes: ['cadastro_aluno', 'cadastro_professor', 'usuario_criado_direcao', 'convite_bibliotecario_aceito'] },
   { id: 'recusados', label: 'Tentativas recusadas', acoes: ['cadastro_recusado', 'recuperacao_recusada', 'login_falha'] },
   { id: 'senhas', label: 'Senhas', acoes: ['senha_redefinida_cpf', 'senha_redefinida_admin'] },
+  { id: 'aprovacoes', label: 'Aprovações e níveis', acoes: ['aluno_aprovado_professor', 'usuario_aprovado_gestao', 'usuario_revogado_gestao', 'aluno_bloqueado_por_inatividade', 'papel_alterado'] },
 ] as const
 
 function detalheLegivel(detalhes: Record<string, unknown> | null): string {

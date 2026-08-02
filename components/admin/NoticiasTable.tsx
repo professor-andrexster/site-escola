@@ -8,6 +8,7 @@ import { formatDate } from '@/lib/utils'
 import type { Noticia, Profile } from '@/types/database'
 import { Pencil, Trash2, Eye, EyeOff, Star } from 'lucide-react'
 import { badgeCategoria } from '@/lib/categorias'
+import { isGestao } from '@/lib/roles'
 
 interface NoticiasTableProps {
   noticias: Noticia[]
@@ -19,14 +20,14 @@ interface NoticiasTableProps {
 export default function NoticiasTable({
   noticias: initial,
   canSetDestaque = true,
-  role = 'direcao',
+  role = 'diretora',
   autorNome,
 }: NoticiasTableProps) {
   const [noticias, setNoticias] = useState(initial)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
-  const canDelete = role === 'direcao'
+  const canDelete = isGestao(role)
 
   async function log(noticiaId: string, noticiaTitulo: string, acao: string) {
     const { data: { user } } = await supabase.auth.getUser()

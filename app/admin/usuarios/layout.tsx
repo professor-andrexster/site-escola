@@ -1,9 +1,9 @@
-import { requireDirecao } from '@/lib/profile'
+import { requireGestao } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import MobileAdminHeader from '@/components/admin/MobileAdminHeader'
 
 export default async function UsuariosLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile } = await requireDirecao()
+  const { user, profile } = await requireGestao()
   return (
     <div className="min-h-screen bg-gray-50 md:flex">
       <AdminSidebar profile={profile} userEmail={user.email} />

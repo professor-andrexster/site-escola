@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { GESTAO_ROLES } from '@/lib/roles'
 import { createAdminClient } from '@/lib/supabase/admin'
 
 // Reabre um quiz que deu errado: apaga respostas e participantes da rodada
@@ -15,7 +16,7 @@ export async function POST(request: Request) {
     .eq('id', user.id)
     .maybeSingle()
 
-  if (!profile?.aprovado || !['professor', 'monitor', 'direcao'].includes(profile.role)) {
+  if (!profile?.aprovado || !['professor', 'monitor', ...GESTAO_ROLES].includes(profile.role)) {
     return NextResponse.json({ error: 'Sem permissão.' }, { status: 403 })
   }
 

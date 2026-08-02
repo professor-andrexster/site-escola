@@ -84,7 +84,7 @@ function FormAluno() {
       return
     }
 
-    router.push('/admin?conta_criada=1')
+    router.push('/admin?pendente=1')
   }
 
   return (
@@ -93,6 +93,7 @@ function FormAluno() {
 
       <p className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
         Seus dados precisam bater com o cadastro da secretaria. Se der erro, procure a direção.
+        Depois de criada, sua conta aguarda a aprovação de um professor ou da direção antes de acessar o painel.
       </p>
 
       <div>
@@ -209,7 +210,7 @@ function FormProfessor() {
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{erro}</div>}
 
       <p className="text-xs text-amber-600 bg-amber-50 rounded-lg px-3 py-2">
-        Cadastro para professores e equipe pedagógica. Sua conta aguardará aprovação da direção antes de acessar o painel.
+        Cadastro para professores e equipe pedagógica. Sua conta aguardará aprovação da gestão da escola antes de acessar o painel.
       </p>
 
       <div>

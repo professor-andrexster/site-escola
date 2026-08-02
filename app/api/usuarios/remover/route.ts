@@ -1,12 +1,16 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { exigirDirecao } from '@/lib/apiDirecao'
+import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 
 // Remove a conta por completo (auth.users + profiles). Antes o "Rejeitar" da
 // tela de usuários deletava só o profile e deixava a conta órfã no auth,
 // travando o email/CPF para sempre.
+//
+// Professor tambem pode chamar esta rota, mas so para rejeitar um cadastro de
+// aluno ainda pendente (a mesma restricao da rota de aprovar). Gestao pode
+// remover qualquer conta, aprovada ou nao.
 export async function POST(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirProfessorOuGestao()
   if (!auth.ok) return auth.res
 
   const { userId } = (await request.json()) as { userId?: string }
@@ -16,6 +20,13 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient()
+
+  if (auth.role === 'professor') {
+    const { data: alvo } = await admin.from('profiles').select('role, aprovado').eq('id', userId).maybeSingle()
+    if (!alvo || alvo.role !== 'aluno' || alvo.aprovado) {
+      return NextResponse.json({ error: 'Professor só pode rejeitar cadastro de aluno ainda pendente.' }, { status: 403 })
+    }
+  }
 
   // identidades cai em cascata com o auth user; profiles removemos explicitamente
   await admin.from('profiles').delete().eq('id', userId)

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { exigirDirecao } from '@/lib/apiDirecao'
+import { exigirGestao } from '@/lib/apiGestao'
 import { registrarAtividade, ipDoRequest } from '@/lib/log'
 
 // Senha temporária fácil de ditar e digitar (sem caracteres ambíguos como 0/O, 1/l)
@@ -12,7 +12,7 @@ function gerarSenhaTemporaria(): string {
 }
 
 export async function POST(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const body = await request.json()

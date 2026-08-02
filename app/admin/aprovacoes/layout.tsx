@@ -1,9 +1,9 @@
-import { requireGestao } from '@/lib/profile'
+import { requireProfessorOuGestao } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import MobileAdminHeader from '@/components/admin/MobileAdminHeader'
 
-export default async function LeadsLayout({ children }: { children: React.ReactNode }) {
-  const { user, profile } = await requireGestao()
+export default async function AprovacoesLayout({ children }: { children: React.ReactNode }) {
+  const { user, profile } = await requireProfessorOuGestao()
   return (
     <div className="min-h-screen bg-gray-50 md:flex">
       <AdminSidebar profile={profile} userEmail={user.email} />

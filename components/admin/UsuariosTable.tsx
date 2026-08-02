@@ -1,9 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { useRouter } from 'next/navigation'
-import { Check, X, GraduationCap, BookOpen, Crown, Star, KeyRound, Copy } from 'lucide-react'
+import { Check, X, GraduationCap, BookOpen, Crown, ShieldCheck, Cog, Star, KeyRound, Copy } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { formatarCPF } from '@/lib/cpf'
 
@@ -17,7 +16,9 @@ export type UsuarioLinha = Profile & {
 const ORIGEM_LABELS: Record<string, string> = {
   auto_aluno: 'Autocadastro (aluno)',
   auto_professor: 'Autocadastro (professor)',
-  direcao: 'Criado pela direção',
+  direcao: 'Criado pela gestão',
+  gestao: 'Criado pela gestão',
+  convite_bibliotecario: 'Convite aceito (bibliotecária)',
 }
 
 const ROLE_CONFIG: Record<Profile['role'], {
@@ -60,13 +61,29 @@ const ROLE_CONFIG: Record<Profile['role'], {
     border: 'border-amber-200',
     desc: 'Gerencia biblioteca e recursos',
   },
-  direcao: {
-    label: 'Direção',
+  diretora: {
+    label: 'Diretora',
     icon: Crown,
     bg: 'bg-red-50',
     text: 'text-red-700',
     border: 'border-red-200',
     desc: 'Acesso total ao sistema',
+  },
+  vice_diretora: {
+    label: 'Vice Diretora',
+    icon: ShieldCheck,
+    bg: 'bg-rose-50',
+    text: 'text-rose-700',
+    border: 'border-rose-200',
+    desc: 'Acesso total ao sistema',
+  },
+  admin: {
+    label: 'Administrador do Sistema',
+    icon: Cog,
+    bg: 'bg-slate-50',
+    text: 'text-slate-700',
+    border: 'border-slate-200',
+    desc: 'Acesso técnico total ao sistema',
   },
 }
 
@@ -81,14 +98,18 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   const [senhaTemp, setSenhaTemp] = useState<{ id: string; senha: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function aprovar(id: string) {
     setLoadingId(id)
     setError('')
-    const { error: updateError } = await supabase.from('profiles').update({ aprovado: true }).eq('id', id)
-    if (updateError) {
-      setError('Erro ao aprovar usuário: ' + updateError.message)
+    const res = await fetch('/api/usuarios/aprovar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao aprovar usuário.')
     } else {
       setProfiles(prev => prev.map(p => p.id === id ? { ...p, aprovado: true } : p))
     }
@@ -135,9 +156,14 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   async function mudarRole(id: string, role: Profile['role']) {
     setLoadingId(id)
     setError('')
-    const { error: updateError } = await supabase.from('profiles').update({ role }).eq('id', id)
-    if (updateError) {
-      setError('Erro ao mudar nível de acesso: ' + updateError.message)
+    const res = await fetch('/api/usuarios/papel', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id, role }),
+    })
+    const json = await res.json()
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao mudar nível de acesso.')
     } else {
       setProfiles(prev => prev.map(p => p.id === id ? { ...p, role } : p))
       setChangingRoleId(null)
@@ -221,7 +247,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
                 <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
                   <Icon className="w-3.5 h-3.5" />
                   <span className="text-xs font-semibold">{cfg.label}</span>
-                  <span className="text-xs opacity-60">— {cfg.desc}</span>
+                  <span className="text-xs opacity-60">· {cfg.desc}</span>
                 </div>
                 <button
                   onClick={() => setChangingRoleId(p.id)}
@@ -242,7 +268,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
         {/* Senha temporária gerada */}
         {senhaTemp?.id === p.id && (
           <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2.5">
-            <p className="text-xs text-purple-700 mb-1 font-semibold">Senha temporária gerada — anote e repasse com cuidado:</p>
+            <p className="text-xs text-purple-700 mb-1 font-semibold">Senha temporária gerada, anote e repasse com cuidado:</p>
             <div className="flex items-center gap-2">
               <code className="text-sm font-mono font-bold text-purple-900 bg-white px-2 py-1 rounded border border-purple-200">
                 {senhaTemp.senha}

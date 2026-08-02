@@ -1,6 +1,7 @@
 import {
   LayoutDashboard, FileText, Settings,
   Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
+  UserCheck,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -15,8 +16,7 @@ export interface NavGroup {
   items: NavItem[]
 }
 
-export const navByRole: Record<Profile['role'], NavGroup[]> = {
-  direcao: [
+const navGestao: NavGroup[] = [
     {
       label: 'Gestão Escolar',
       items: [
@@ -24,6 +24,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/alunos', label: 'Alunos', icon: GraduationCap },
         { href: '/admin/funcionarios', label: 'Funcionários', icon: Briefcase },
         { href: '/admin/usuarios', label: 'Administradores', icon: Users },
+        { href: '/admin/aprovacoes', label: 'Aprovações', icon: UserCheck },
       ],
     },
     {
@@ -43,6 +44,13 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
     {
+      label: 'Biblioteca',
+      items: [
+        { href: '/admin/biblioteca/acervo', label: 'Acervo', icon: BookOpen },
+        { href: '/admin/biblioteca/leitores', label: 'Leitores', icon: Users },
+      ],
+    },
+    {
       label: 'Sistema',
       items: [
         { href: '/admin/leads', label: 'Leads', icon: Inbox },
@@ -50,13 +58,19 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/configuracoes', label: 'Configurações', icon: Settings },
       ],
     },
-  ],
+]
+
+export const navByRole: Record<Profile['role'], NavGroup[]> = {
+  diretora: navGestao,
+  vice_diretora: navGestao,
+  admin: navGestao,
   professor: [
     {
       label: 'Geral',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/funcionarios', label: 'Equipe', icon: Briefcase },
+        { href: '/admin/aprovacoes', label: 'Aprovações', icon: UserCheck },
       ],
     },
     {
@@ -110,9 +124,16 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
   ],
   bibliotecario: [
     {
-      label: 'Minha Área',
+      label: 'Biblioteca',
       items: [
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/biblioteca/acervo', label: 'Acervo', icon: BookOpen },
+        { href: '/admin/biblioteca/leitores', label: 'Leitores', icon: Users },
+      ],
+    },
+    {
+      label: 'Minha Área',
+      items: [
         { href: '/admin/funcionarios', label: 'Equipe', icon: Briefcase },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },

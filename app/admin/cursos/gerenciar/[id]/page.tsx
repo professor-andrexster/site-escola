@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
 import CursoForm from '@/components/admin/CursoForm'
 import AulaManager from '@/components/admin/AulaManager'
+import { isGestao } from '@/lib/roles'
 import type { Metadata } from 'next'
 
 interface Params {
@@ -35,7 +36,7 @@ export default async function EditarCursoPage({ params }: Params) {
 
   const { data: aulas } = await supabase.from('aulas').select('*').eq('curso_id', id).order('ordem')
 
-  const isDirecao = profile?.role === 'direcao'
+  const isDirecao = isGestao(profile?.role ?? 'aluno')
 
   return (
     <div>
