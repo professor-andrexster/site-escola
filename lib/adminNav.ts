@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, Settings,
   Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
-  UserCheck,
+  UserCheck, ScanLine, RotateCcw,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -46,6 +46,9 @@ const navGestao: NavGroup[] = [
     {
       label: 'Biblioteca',
       items: [
+        { href: '/admin/biblioteca', label: 'Painel', icon: Library },
+        { href: '/admin/biblioteca/emprestimo', label: 'Emprestar', icon: ScanLine },
+        { href: '/admin/biblioteca/devolucao', label: 'Devolver', icon: RotateCcw },
         { href: '/admin/biblioteca/acervo', label: 'Acervo', icon: BookOpen },
         { href: '/admin/biblioteca/leitores', label: 'Leitores', icon: Users },
       ],
@@ -126,7 +129,9 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
     {
       label: 'Biblioteca',
       items: [
-        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/biblioteca', label: 'Painel', icon: Library },
+        { href: '/admin/biblioteca/emprestimo', label: 'Emprestar', icon: ScanLine },
+        { href: '/admin/biblioteca/devolucao', label: 'Devolver', icon: RotateCcw },
         { href: '/admin/biblioteca/acervo', label: 'Acervo', icon: BookOpen },
         { href: '/admin/biblioteca/leitores', label: 'Leitores', icon: Users },
       ],

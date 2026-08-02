@@ -22,6 +22,28 @@ type CorpoLeitor = {
   motivoBloqueio?: string | null
 }
 
+// Ficha rapida do leitor com o que esta com ele agora, usada no cartao do
+// balcao de emprestimo e na tela de devolucao.
+export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await exigirBibliotecaStaff()
+  if (!auth.ok) return auth.res
+
+  const { id } = await params
+  const admin = createAdminClient()
+
+  const { data: leitor } = await admin.from('biblioteca_leitores').select('*').eq('id', id).maybeSingle()
+  if (!leitor) return NextResponse.json({ error: 'Leitor não encontrado.' }, { status: 404 })
+
+  const { data: emprestimos } = await admin
+    .from('biblioteca_emprestimos')
+    .select('*, biblioteca_exemplares(id, tombo, biblioteca_obras(titulo))')
+    .eq('leitor_id', id)
+    .in('situacao', ['em_andamento', 'renovado'])
+    .order('data_prevista')
+
+  return NextResponse.json({ leitor, emprestimosAbertos: emprestimos ?? [] })
+}
+
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const auth = await exigirBibliotecaStaff()
   if (!auth.ok) return auth.res

@@ -18,6 +18,39 @@ type CorpoExemplar = {
   observacoes?: string | null
 }
 
+// Localiza um exemplar por tombo ou codigo de barras, usado no balcao de
+// emprestimo e devolucao (leitor de codigo de barras USB entra como
+// teclado, o Enter dispara a busca).
+export async function GET(request: Request) {
+  const auth = await exigirBibliotecaStaff()
+  if (!auth.ok) return auth.res
+
+  const codigo = new URL(request.url).searchParams.get('codigo')?.trim()
+  if (!codigo) return NextResponse.json({ error: 'Informe o tombo ou código de barras.' }, { status: 400 })
+
+  const admin = createAdminClient()
+  const { data: exemplar } = await admin
+    .from('biblioteca_exemplares')
+    .select('*, biblioteca_obras(id, titulo, capa_url)')
+    .or(`tombo.eq.${codigo},codigo_barras.eq.${codigo}`)
+    .maybeSingle()
+
+  if (!exemplar) return NextResponse.json({ error: 'Nenhum exemplar encontrado com esse tombo ou código de barras.' }, { status: 404 })
+
+  let emprestimo = null
+  if (exemplar.situacao === 'emprestado') {
+    const { data } = await admin
+      .from('biblioteca_emprestimos')
+      .select('*, biblioteca_leitores(id, nome_completo, turma, tipo_leitor)')
+      .eq('exemplar_id', exemplar.id)
+      .in('situacao', ['em_andamento', 'renovado'])
+      .maybeSingle()
+    emprestimo = data
+  }
+
+  return NextResponse.json({ exemplar, emprestimo })
+}
+
 export async function POST(request: Request) {
   const auth = await exigirBibliotecaStaff()
   if (!auth.ok) return auth.res

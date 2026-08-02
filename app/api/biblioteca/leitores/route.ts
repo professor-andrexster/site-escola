@@ -20,6 +20,30 @@ type CorpoLeitor = {
   observacoes?: string | null
 }
 
+// Busca por nome, matricula ou turma, usada no balcao de emprestimo e na
+// listagem. Resultado aparece enquanto digita, por isso limitado e leve.
+export async function GET(request: Request) {
+  const auth = await exigirBibliotecaStaff()
+  if (!auth.ok) return auth.res
+
+  const busca = new URL(request.url).searchParams.get('q')?.trim()
+  const admin = createAdminClient()
+
+  let query = admin
+    .from('biblioteca_leitores')
+    .select('id, nome_completo, nome_social, tipo_leitor, matricula, turma, turno, situacao, motivo_bloqueio')
+    .order('nome_completo')
+    .limit(20)
+
+  if (busca) {
+    query = query.or(`nome_completo.ilike.%${busca}%,matricula.ilike.%${busca}%,turma.ilike.%${busca}%`)
+  }
+
+  const { data, error } = await query
+  if (error) return NextResponse.json({ error: 'Erro ao buscar leitores.' }, { status: 400 })
+  return NextResponse.json({ leitores: data })
+}
+
 export async function POST(request: Request) {
   const auth = await exigirBibliotecaStaff()
   if (!auth.ok) return auth.res
