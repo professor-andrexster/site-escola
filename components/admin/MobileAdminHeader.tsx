@@ -1,11 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
-import { Menu, X, GraduationCap, LogOut, Globe } from 'lucide-react'
+import { Menu, X, LogOut, Globe } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 import { navByRole } from '@/lib/adminNav'
@@ -49,8 +50,8 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
         </button>
 
         <Link href="/admin/dashboard" className="flex items-center gap-2">
-          <div className="w-6 h-6 bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-3.5 h-3.5 text-white" />
+          <div className="relative w-7 h-7 rounded-full overflow-hidden bg-white flex-shrink-0">
+            <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="28px" className="object-cover" />
           </div>
           <span className="text-white font-playfair font-bold text-sm">João Beraldo</span>
         </Link>
@@ -74,8 +75,8 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
             {/* Topo */}
             <div className="px-5 py-5 border-b border-white/5 flex items-center justify-between">
               <Link href="/" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-                <div className="w-7 h-7 bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-                  <GraduationCap className="w-4 h-4 text-white" />
+                <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white flex-shrink-0">
+                  <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="36px" className="object-cover" />
                 </div>
                 <div>
                   <p className="text-white font-playfair font-bold text-sm leading-tight">Dr. João Beraldo</p>

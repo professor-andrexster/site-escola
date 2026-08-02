@@ -1,11 +1,12 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import {
-  LogOut, Globe, GraduationCap,
+  LogOut, Globe,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
@@ -40,8 +41,8 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
       {/* Logo */}
       <div className="px-5 py-5 border-b border-white/5">
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="w-7 h-7 bg-escola-vermelho flex items-center justify-center flex-shrink-0">
-            <GraduationCap className="w-4 h-4 text-white" />
+          <div className="relative w-9 h-9 rounded-full overflow-hidden bg-white ring-1 ring-white/20 flex-shrink-0">
+            <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="36px" className="object-cover" />
           </div>
           <div>
             <p className="text-white font-playfair font-bold text-sm leading-tight group-hover:text-white/80 transition-colors">
