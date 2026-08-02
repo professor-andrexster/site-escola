@@ -87,24 +87,24 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
               </button>
             </div>
 
-            {/* Usuário */}
+            {/* Usuário, em destaque logo abaixo da logo da escola */}
             <Link
               href="/admin/meu-perfil"
               onClick={() => setOpen(false)}
-              className="mx-3 mt-3 mb-1 px-3 py-3 rounded-xl bg-white/[0.03] active:bg-white/[0.06] border border-white/5 transition-colors"
+              className="flex flex-col items-center text-center px-fluid-xs pt-fluid-s pb-fluid-xs border-b border-white/5 active:bg-white/[0.03] transition-colors"
             >
-              <div className="flex items-center gap-3">
-                <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="md" />
-                <div className="flex-1 min-w-0">
-                  <p className="text-white text-sm font-semibold truncate leading-tight">{profile.nome_completo}</p>
-                  <p className="text-white/40 text-xs truncate">{userEmail}</p>
-                </div>
-              </div>
-              <div className="mt-2.5">
-                <span className={cn('text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
-                  {ROLE_LABELS[profile.role]}
-                </span>
-              </div>
+              <Avatar
+                nome={profile.nome_completo}
+                avatarUrl={profile.avatar_url}
+                role={profile.role}
+                tamanho="xl"
+                className="shadow-elevation-medium ring-2 ring-white/10"
+              />
+              <p className="text-white text-sm font-semibold mt-3 leading-tight truncate max-w-full">{profile.nome_completo}</p>
+              <p className="text-white/40 text-xs truncate max-w-full">{userEmail}</p>
+              <span className={cn('mt-2 text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
+                {ROLE_LABELS[profile.role]}
+              </span>
             </Link>
 
             {/* Navegação */}
