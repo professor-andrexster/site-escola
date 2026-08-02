@@ -57,7 +57,7 @@ export default async function CursosPendentesPage() {
       <p className="text-sm text-gray-400 mb-6">Professores criam cursos como rascunho. Você aprova aqui para publicar.</p>
 
       {(!cursos || cursos.length === 0) && (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
           <p className="text-gray-600 font-semibold">Todos os cursos foram aprovados!</p>
           <p className="text-sm text-gray-400 mt-1">Não há cursos pendentes no momento.</p>

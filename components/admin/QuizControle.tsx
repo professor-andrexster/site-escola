@@ -169,7 +169,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
       </div>
 
       {/* Pergunta */}
-      <div className="bg-white border border-gray-200 rounded-2xl p-6 mb-4">
+      <div className="panel p-6 mb-4">
         <p className="text-xs text-gray-400 font-mono mb-2">
           Pergunta {currentIndex + 1} de {perguntas.length}
         </p>

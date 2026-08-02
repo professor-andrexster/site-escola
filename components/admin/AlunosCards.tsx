@@ -69,7 +69,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
       </div>
 
       {filtrados.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-gray-400 text-sm">
             {alunos.length === 0 ? 'Nenhum aluno cadastrado ainda.' : 'Nenhum aluno encontrado com esses filtros.'}
           </p>
@@ -83,7 +83,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
             <Link
               key={a.id}
               href={`/admin/alunos/${a.id}`}
-              className="group bg-white border border-gray-200 rounded-xl p-5 hover:border-escola-azul/50 hover:shadow-md transition-all"
+              className="group panel p-5 hover:border-escola-azul/50 hover:shadow-md transition-all"
             >
               {/* Header */}
               <div className="flex items-start justify-between mb-3">

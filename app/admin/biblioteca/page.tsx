@@ -14,7 +14,7 @@ function StatCard({ label, value, icon: Icon, color }: {
   label: string; value: number; icon: React.ComponentType<{ className?: string }>; color: string
 }) {
   return (
-    <div className="bg-white rounded-xl border border-gray-100 p-5">
+    <div className="panel p-5">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">{label}</p>
@@ -91,7 +91,7 @@ export default async function BibliotecaPainelPage() {
       </div>
 
       {semAcervo ? (
-        <div className="bg-white border border-dashed border-gray-300 rounded-2xl p-10 text-center mb-8">
+        <div className="empty-state p-10 mb-8">
           <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium mb-1">O acervo ainda está vazio.</p>
           <p className="text-gray-400 text-sm mb-4">Comece cadastrando uma obra e seus exemplares.</p>
@@ -110,7 +110,7 @@ export default async function BibliotecaPainelPage() {
       )}
 
       {/* Atalhos */}
-      <div className="bg-white rounded-xl border border-gray-100 p-6 mb-8">
+      <div className="panel p-6 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Link href="/admin/biblioteca/acervo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
             <Search className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
@@ -137,7 +137,7 @@ export default async function BibliotecaPainelPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Atrasos */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="panel p-6">
           <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-escola-vermelho" />
             Atrasos
@@ -170,7 +170,7 @@ export default async function BibliotecaPainelPage() {
         </div>
 
         {/* Leitores assiduos */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6">
+        <div className="panel p-6">
           <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
             <Trophy className="w-4 h-4 text-yellow-500" />
             Leitores Mais Assíduos do Mês
@@ -192,7 +192,7 @@ export default async function BibliotecaPainelPage() {
         </div>
 
         {/* Devolucoes previstas */}
-        <div className="bg-white rounded-xl border border-gray-100 p-6 lg:col-span-2">
+        <div className="panel p-6 lg:col-span-2">
           <h2 className="font-bold text-gray-900 mb-1 flex items-center gap-2">
             <CalendarClock className="w-4 h-4 text-escola-azul" />
             Devoluções Previstas (Próximos 7 Dias)

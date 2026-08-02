@@ -152,7 +152,7 @@ export default function DevolucaoConsole() {
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{erro}</div>}
 
       {!item ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+        <div className="panel p-5 mb-6">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tombo ou código de barras</label>
           <form onSubmit={buscarExemplar} className="flex gap-2">
             <div className="relative flex-1">
@@ -169,7 +169,7 @@ export default function DevolucaoConsole() {
           {buscando && <p className="text-xs text-gray-400 mt-2">Buscando...</p>}
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+        <div className="panel p-5 mb-6">
           <p className="font-semibold text-gray-900">{item.obraTitulo}</p>
           <p className="text-xs text-gray-400 font-mono mt-0.5">{item.tombo}</p>
           <p className="text-sm text-gray-600 mt-2">Com: <strong>{item.leitorNome}</strong></p>
@@ -216,7 +216,7 @@ export default function DevolucaoConsole() {
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="panel p-5">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ou busque pelo leitor</label>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />

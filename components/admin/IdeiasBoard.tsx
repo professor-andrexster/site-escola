@@ -121,7 +121,7 @@ export default function IdeiasBoard({
       </div>
 
       {ideiasFiltradas.length === 0 ? (
-        <div className="bg-white border border-dashed border-gray-200 rounded-xl p-12 text-center">
+        <div className="empty-state p-12">
           <p className="text-gray-400 text-sm">Nenhuma ideia por aqui ainda. Que tal ser o primeiro?</p>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export default function IdeiasBoard({
             const trilha = one(ideia.trilha)
             const autor = one(ideia.autor)
             return (
-              <div key={ideia.id} className="bg-white border border-gray-200 rounded-xl p-4 flex flex-col gap-2.5">
+              <div key={ideia.id} className="panel p-4 flex flex-col gap-2.5">
                 <div className="flex items-start justify-between gap-2">
                   <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLASS[ideia.status]}`}>
                     {STATUS_LABEL[ideia.status]}
@@ -172,7 +172,7 @@ export default function IdeiasBoard({
 
       {modalAberto && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
+          <div className="bg-white rounded-xl shadow-elevation-high max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-playfair text-lg font-bold text-gray-900">Nova Ideia</h2>
               <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-400 hover:text-gray-600">

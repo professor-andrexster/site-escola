@@ -78,7 +78,7 @@ export default function IdeiaDetail({
 
   return (
     <div className="space-y-5">
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex flex-wrap items-center gap-2">
             {podeModerar ? (
@@ -132,7 +132,7 @@ export default function IdeiaDetail({
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">Comentários ({comentarios.length})</h2>
         <div className="space-y-3 mb-4">
           {comentarios.length === 0 && <p className="text-sm text-gray-400">Nenhum comentário ainda.</p>}

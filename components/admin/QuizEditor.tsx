@@ -69,7 +69,7 @@ export default function QuizEditor({ quiz }: QuizEditorProps) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+    <div className="panel p-6 space-y-5">
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{error}</div>
       )}

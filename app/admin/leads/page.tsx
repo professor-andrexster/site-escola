@@ -37,7 +37,7 @@ export default async function LeadsPage() {
       </div>
 
       {!leads || leads.length === 0 ? (
-        <div className="bg-white rounded-xl border border-gray-200 p-12 text-center">
+        <div className="panel p-12 text-center">
           <p className="text-gray-500">Nenhuma mensagem recebida ainda.</p>
         </div>
       ) : (
@@ -45,7 +45,7 @@ export default async function LeadsPage() {
           {leads.map((lead: Lead) => (
             <div
               key={lead.id}
-              className={`bg-white rounded-xl border p-5 ${!lead.lido ? 'border-escola-azul border-l-4' : 'border-gray-200'}`}
+              className={`bg-white rounded-xl border shadow-elevation-low p-5 ${!lead.lido ? 'border-escola-azul border-l-4' : 'border-gray-200'}`}
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">

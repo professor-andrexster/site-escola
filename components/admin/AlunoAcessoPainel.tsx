@@ -53,7 +53,7 @@ export default function AlunoAcessoPainel({ perfil }: AlunoAcessoPainelProps) {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <div className="panel p-5 mb-6">
       <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
         <ShieldCheck className="w-4 h-4 text-escola-azul" />
         Acesso ao Sistema

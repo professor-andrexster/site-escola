@@ -190,7 +190,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
 
   if (quizzes.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-500">
+      <div className="panel p-12 text-center text-gray-500">
         Nenhum quiz criado ainda.{' '}
         <Link href="/admin/quiz/novo" className="text-escola-azul hover:underline">Criar primeiro quiz</Link>
       </div>
@@ -204,7 +204,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
         const isLoading = loadingId === quiz.id
 
         return (
-          <div key={quiz.id} className="bg-white border border-gray-200 rounded-xl p-5">
+          <div key={quiz.id} className="panel p-5">
             <div className="flex items-start justify-between gap-4">
               {/* Info */}
               <div className="flex-1 min-w-0">

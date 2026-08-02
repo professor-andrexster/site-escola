@@ -31,7 +31,7 @@ export default function PaginasEditor({ pagina, label, initialData }: PaginasEdi
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="panel overflow-hidden">
       <button
         onClick={() => setOpen(!open)}
         className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"

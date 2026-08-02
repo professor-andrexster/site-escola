@@ -158,7 +158,7 @@ export default function AlunoProjetosManager({
       </div>
 
       {projetos.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-gray-400 text-sm">Nenhum projeto cadastrado ainda.</p>
         </div>
       ) : (
@@ -166,7 +166,7 @@ export default function AlunoProjetosManager({
           {projetos.map(p => {
             const trilha = trilhaDe(p)
             return (
-              <div key={p.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-start justify-between gap-3">
+              <div key={p.id} className="panel p-4 flex items-start justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-semibold text-gray-900 text-sm">{p.titulo}</p>
@@ -203,7 +203,7 @@ export default function AlunoProjetosManager({
       {/* Modal */}
       {modalAberto && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
+          <div className="bg-white rounded-xl shadow-elevation-high max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-playfair text-lg font-bold text-gray-900">{form.id ? 'Editar Projeto' : 'Novo Projeto'}</h2>
               <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-400 hover:text-gray-600">

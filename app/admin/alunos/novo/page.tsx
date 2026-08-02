@@ -115,7 +115,7 @@ export default function NovoAlunoPage() {
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
+      <div className="panel p-5 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">
             Nome completo <span className="text-escola-vermelho">*</span>

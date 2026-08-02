@@ -39,7 +39,7 @@ export default async function DesafiosPage() {
       </div>
 
       {!desafios || desafios.length === 0 ? (
-        <div className="bg-white border border-dashed border-gray-200 rounded-xl p-12 text-center">
+        <div className="empty-state p-12">
           <Rocket className="w-8 h-8 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Nenhum desafio publicado ainda.</p>
         </div>
@@ -49,7 +49,7 @@ export default async function DesafiosPage() {
             <Link
               key={d.id}
               href={`/admin/desafios/${d.id}`}
-              className="bg-white border border-gray-200 rounded-xl p-5 hover:border-escola-azul transition-colors"
+              className="panel p-5 hover:border-escola-azul transition-colors"
             >
               <div className="flex items-center justify-between gap-2 mb-2">
                 {!d.publicado && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}

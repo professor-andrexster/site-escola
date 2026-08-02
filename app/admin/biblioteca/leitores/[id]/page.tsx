@@ -29,7 +29,7 @@ export default async function LeitorDetalhePage({ params }: { params: Promise<{ 
       </Link>
       <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-6">{leitor.nome_completo}</h1>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+      <div className="panel p-5 mb-6">
         <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
           <History className="w-4 h-4 text-escola-azul" />
           Histórico de Empréstimos

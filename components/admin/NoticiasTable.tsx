@@ -70,7 +70,7 @@ export default function NoticiasTable({
 
   if (noticias.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-500">
+      <div className="panel p-12 text-center text-gray-500">
         Nenhuma notícia cadastrada ainda.{' '}
         <Link href="/admin/noticias/nova" className="text-escola-azul hover:underline">Criar primeira notícia</Link>
       </div>
@@ -78,7 +78,7 @@ export default function NoticiasTable({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="panel overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

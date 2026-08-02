@@ -112,7 +112,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+      <div className="panel p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
           <input
@@ -201,7 +201,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <label className={`flex items-center gap-3 ${isDirecao ? 'cursor-pointer' : 'cursor-not-allowed opacity-60'}`}>
           <div
             onClick={() => isDirecao && setPublicado(!publicado)}

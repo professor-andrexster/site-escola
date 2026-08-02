@@ -55,7 +55,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <Link
           href={`/admin/alunos/${id}/projetos`}
-          className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 hover:border-escola-azul/30 transition-colors"
+          className="flex items-center justify-between panel p-4 hover:border-escola-azul/30 transition-colors"
         >
           <div>
             <p className="font-semibold text-gray-900 text-sm flex items-center gap-2">
@@ -69,7 +69,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
         <Link
           href={`/portfolio/${aluno.matricula}`}
           target="_blank"
-          className="flex items-center justify-between bg-white border border-gray-200 rounded-xl p-4 hover:border-escola-azul/30 transition-colors"
+          className="flex items-center justify-between panel p-4 hover:border-escola-azul/30 transition-colors"
         >
           <div>
             <p className="font-semibold text-gray-900 text-sm flex items-center gap-2">
@@ -82,7 +82,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
       </div>
 
       {perfis && perfis.length > 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+        <div className="panel p-5 mb-6">
           <h2 className="font-semibold text-gray-900 text-sm mb-3">Perfil Vocacional</h2>
           <div className="space-y-2">
             {perfis.map((p, i) => {

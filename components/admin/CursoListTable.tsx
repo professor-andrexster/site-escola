@@ -39,7 +39,7 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
 
   if (cursos.length === 0) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-500">
+      <div className="panel p-12 text-center text-gray-500">
         Nenhum curso criado ainda.{' '}
         <Link href="/admin/cursos/gerenciar/novo" className="text-escola-azul hover:underline">Criar primeiro curso</Link>
       </div>
@@ -51,7 +51,7 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
       {cursos.map((curso) => {
         const isLoading = loadingId === curso.id
         return (
-          <div key={curso.id} className="bg-white border border-gray-200 rounded-xl p-5 flex items-center gap-4">
+          <div key={curso.id} className="panel p-5 flex items-center gap-4">
             <div className="w-14 h-14 rounded-lg bg-gray-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
               {curso.capa_url ? (
                 <img src={curso.capa_url} alt="" className="w-full h-full object-cover" />

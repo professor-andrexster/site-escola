@@ -89,7 +89,7 @@ export default function DesafioWorkspace({
 
   return (
     <div className="space-y-6">
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-2">
           {!desafio.publicado && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}
           {desafio.turma_alvo && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">{desafio.turma_alvo}</span>}
@@ -103,7 +103,7 @@ export default function DesafioWorkspace({
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">{erro}</div>}
 
       {podeAvaliar && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+        <div className="panel p-6 space-y-4">
           <h2 className="text-sm font-semibold text-gray-700">Formar equipe</h2>
           <div className="grid sm:grid-cols-2 gap-3">
             <input type="text" value={nomeEmpresa} onChange={(e) => setNomeEmpresa(e.target.value)}
@@ -145,7 +145,7 @@ export default function DesafioWorkspace({
       )}
 
       {podeEntrarEquipe && !minhaEquipe && (
-        <div className="bg-white border border-gray-200 rounded-xl p-6">
+        <div className="panel p-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Entrar numa equipe</h2>
           {equipesIniciais.length === 0 ? (
             <p className="text-sm text-gray-400">O professor ainda não formou nenhuma equipe pra este desafio.</p>
@@ -167,7 +167,7 @@ export default function DesafioWorkspace({
 
       {minhaEquipe && (
         <>
-          <div className="bg-white border border-gray-200 rounded-xl p-6">
+          <div className="panel p-6">
             <h2 className="text-sm font-semibold text-gray-700 mb-3">{minhaEquipe.nome_empresa || 'Sua equipe'}</h2>
             <div className="space-y-2">
               {minhaEquipe.equipe_membros.map((m) => {
@@ -296,7 +296,7 @@ function FaseParticipante({
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="panel overflow-hidden">
       <button onClick={() => setAberta(!aberta)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
         <div className="flex items-center gap-3 min-w-0">
           <StatusIcon status={status} />
@@ -355,7 +355,7 @@ function EquipeAvaliacao({
   const nomes = equipe.equipe_membros.map((m) => one(m.profile)?.nome_completo).filter(Boolean).join(', ')
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+    <div className="panel overflow-hidden">
       <button onClick={() => setAberta(!aberta)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">{equipe.nome_empresa || 'Equipe sem nome'}</p>

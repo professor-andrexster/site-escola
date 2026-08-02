@@ -57,13 +57,13 @@ export default function ObrasTable({ obras, categorias }: ObrasTableProps) {
       </div>
 
       {filtradas.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-gray-400 text-sm">
             {obras.length === 0 ? 'Nenhuma obra cadastrada ainda.' : 'Nenhuma obra encontrada com esses filtros.'}
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+        <div className="panel divide-y divide-gray-100 overflow-hidden">
           {filtradas.map(o => (
             <Link
               key={o.id}

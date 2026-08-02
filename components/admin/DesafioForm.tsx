@@ -122,7 +122,7 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
         Usar modelo CTRL + ALT + CHAGAS
       </button>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
+      <div className="panel p-6 space-y-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
           <input type="text" value={titulo} onChange={(e) => setTitulo(e.target.value)}
@@ -155,7 +155,7 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Fases <span className="text-gray-400 font-normal">— total {pontosTotal} pts</span></h2>
           <button onClick={() => setFases((p) => [...p, { ...FASE_VAZIA }])} className="inline-flex items-center gap-1 text-xs font-semibold text-escola-azul hover:underline">
@@ -191,7 +191,7 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-gray-700">Papéis da equipe</h2>
           <button onClick={() => setPapeis((p) => [...p, { ...PAPEL_VAZIO }])} className="inline-flex items-center gap-1 text-xs font-semibold text-escola-azul hover:underline">
@@ -217,7 +217,7 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <label className="flex items-center gap-3 cursor-pointer">
           <div onClick={() => setPublicado(!publicado)}
             className={`w-11 h-6 rounded-full transition-colors relative cursor-pointer ${publicado ? 'bg-green-500' : 'bg-gray-300'}`}>

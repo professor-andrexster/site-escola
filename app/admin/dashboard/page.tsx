@@ -13,7 +13,7 @@ function StatCard({ label, value, icon: Icon, color, href }: {
   label: string; value: number; icon: React.ComponentType<{ className?: string }>; color: string; href?: string
 }) {
   const content = (
-    <div className="group bg-white rounded-xl border border-gray-100 p-fluid-xs shadow-elevation-low hover:shadow-elevation-medium hover:-translate-y-0.5 transition-all duration-200 ease-out">
+    <div className="group panel-interativo p-fluid-xs">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">{label}</p>
@@ -147,7 +147,7 @@ export default async function DashboardPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-100 shadow-elevation-low p-fluid-s">
+        <div className="panel p-fluid-s">
           <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
             <Trophy className="w-4 h-4 text-yellow-500" />
             Últimos Quizzes
@@ -248,7 +248,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Quick actions */}
-      <div className="bg-white rounded-xl border border-gray-100 shadow-elevation-low p-fluid-s">
+      <div className="panel p-fluid-s">
         <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
           <Star className="w-4 h-4 text-yellow-500" />
           Ações Rápidas

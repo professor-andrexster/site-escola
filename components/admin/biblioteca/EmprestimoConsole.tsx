@@ -169,7 +169,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm mb-4">{erro}</div>}
 
       {!leitorAtual ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-5">
+        <div className="panel p-5">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Leitor</label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -208,7 +208,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
         </div>
       ) : (
         <>
-          <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+          <div className="panel p-5 mb-4">
             <div className="flex items-start justify-between gap-3">
               <div className="flex items-center gap-3">
                 {TipoIcon && (
@@ -240,7 +240,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
             )}
           </div>
 
-          <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+          <div className="panel p-5 mb-4">
             <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Exemplar (tombo ou código de barras)</label>
             <form onSubmit={lerExemplar} className="flex gap-2">
               <input
@@ -270,7 +270,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
           </div>
 
           {carrinho.length > 0 && (
-            <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+            <div className="panel p-5 mb-4">
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Devolução prevista</label>
               {souGestao ? (
                 <input

@@ -55,7 +55,7 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
 
   if (aulas.length === 0) {
     return (
-      <div className="bg-white border border-dashed border-gray-200 rounded-xl p-8 text-center text-gray-400">
+      <div className="empty-state p-8">
         Nenhuma aula ainda.{' '}
         <Link href={`/admin/cursos/gerenciar/${cursoId}/aulas/nova`} className="text-escola-azul hover:underline">Adicionar primeira aula</Link>
       </div>
@@ -67,7 +67,7 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
       {aulas.map((aula, i) => {
         const isLoading = loadingId === aula.id
         return (
-          <div key={aula.id} className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-3">
+          <div key={aula.id} className="panel p-4 flex items-center gap-3">
             <div className="flex flex-col flex-shrink-0">
               <button onClick={() => move(i, -1)} disabled={i === 0 || isLoading} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20">
                 <ArrowUp className="w-3.5 h-3.5" />

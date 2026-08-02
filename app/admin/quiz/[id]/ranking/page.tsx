@@ -67,11 +67,11 @@ export default async function RankingPage({ params }: { params: Promise<{ id: st
       </div>
 
       {participantes.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-12 text-center text-gray-400">
+        <div className="panel p-12 text-center text-gray-400">
           Nenhum aluno respondeu este quiz ainda.
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="panel overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>

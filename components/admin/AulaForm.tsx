@@ -121,7 +121,7 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+      <div className="panel p-6 space-y-5">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Título *</label>
           <input
@@ -165,7 +165,7 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <label className="block text-sm font-medium text-gray-700 mb-2">Slides (imagens, em ordem)</label>
         <label className="inline-flex items-center gap-2 px-3 py-2 border-2 border-dashed border-gray-300 rounded-lg text-sm text-gray-500 hover:border-escola-azul hover:text-escola-azul cursor-pointer transition-colors">
           <Upload className="w-4 h-4" />
@@ -205,7 +205,7 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
         )}
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6">
+      <div className="panel p-6">
         <label className="flex items-center gap-3 cursor-pointer">
           <div
             onClick={() => setPublicado(!publicado)}

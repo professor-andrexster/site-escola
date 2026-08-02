@@ -60,7 +60,7 @@ export default function ResetarSenhaForm({ alunoId, alunoNome, userId }: Resetar
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 mb-4">
+    <div className="panel p-5 mb-4">
       <h3 className="font-semibold text-gray-900 flex items-center gap-2 mb-3">
         <Key className="w-4 h-4 text-amber-600" />
         Resetar Senha de {alunoNome}

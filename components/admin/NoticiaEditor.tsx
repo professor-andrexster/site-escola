@@ -131,7 +131,7 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
         </div>
       )}
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-5">
+      <div className="panel p-6 space-y-5">
         {/* Autor — travado */}
         {autorNome && (
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
@@ -214,7 +214,7 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
         </div>
       </div>
 
-      <div className="bg-white border border-gray-200 rounded-xl p-6 flex flex-wrap gap-6">
+      <div className="panel p-6 flex flex-wrap gap-6">
         <label className="flex items-center gap-3 cursor-pointer">
           <div
             onClick={() => setPublicado(!publicado)}

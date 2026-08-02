@@ -65,13 +65,13 @@ export default function LeitoresTable({ leitores }: { leitores: BibliotecaLeitor
       </div>
 
       {filtrados.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-gray-400 text-sm">
             {leitores.length === 0 ? 'Nenhum leitor cadastrado ainda.' : 'Nenhum leitor encontrado com esses filtros.'}
           </p>
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+        <div className="panel divide-y divide-gray-100 overflow-hidden">
           {filtrados.map(l => {
             const cfg = TIPO_CONFIG[l.tipo_leitor] ?? TIPO_CONFIG.comunidade
             const Icon = cfg.icon

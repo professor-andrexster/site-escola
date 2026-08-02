@@ -248,13 +248,13 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
   return (
     <div className="space-y-3">
       {perguntas.length === 0 && !adding && (
-        <div className="bg-white border border-dashed border-gray-300 rounded-xl p-8 text-center text-gray-400 text-sm">
+        <div className="empty-state p-8 text-sm">
           Nenhuma pergunta ainda. Adicione a primeira abaixo.
         </div>
       )}
 
       {perguntas.map((pergunta, i) => (
-        <div key={pergunta.id} className="bg-white border border-gray-200 rounded-xl p-4">
+        <div key={pergunta.id} className="panel p-4">
           {editingId === pergunta.id ? (
             <div className="space-y-4">
               <h3 className="font-semibold text-gray-800 text-sm">Editar Pergunta #{i + 1}</h3>

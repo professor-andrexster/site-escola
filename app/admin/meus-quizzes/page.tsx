@@ -28,22 +28,22 @@ export default async function MeusQuizzesPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+        <div className="panel p-4 text-center">
           <div className="text-2xl font-black text-escola-azul">{participacoes?.length ?? 0}</div>
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">quizzes</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+        <div className="panel p-4 text-center">
           <div className="text-2xl font-black text-purple-600">{totalPontos}</div>
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">pontos totais</div>
         </div>
-        <div className="bg-white rounded-xl border border-gray-100 p-4 text-center">
+        <div className="panel p-4 text-center">
           <div className="text-2xl font-black text-yellow-500">{melhorPontuacao}</div>
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">melhor score</div>
         </div>
       </div>
 
       {!participacoes || participacoes.length === 0 ? (
-        <div className="bg-white border border-dashed border-gray-200 rounded-xl p-12 text-center">
+        <div className="empty-state p-12">
           <Gamepad2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 mb-4">Você ainda não participou de nenhum quiz.</p>
           <Link href="/quiz" className="inline-flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
@@ -59,7 +59,7 @@ export default async function MeusQuizzesPage() {
             const pct = total > 0 ? Math.round((acertos / total) * 100) : 0
 
             return (
-              <div key={p.id} className="bg-white border border-gray-100 rounded-xl p-5 flex items-center gap-4">
+              <div key={p.id} className="panel p-5 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-escola-azul/10 flex items-center justify-center flex-shrink-0">
                   {i === 0 ? <Trophy className="w-5 h-5 text-yellow-500" /> : <Medal className="w-5 h-5 text-escola-azul" />}
                 </div>

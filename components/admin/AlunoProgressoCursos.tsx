@@ -5,7 +5,7 @@ export default function AlunoProgressoCursos({ progresso }: { progresso: Progres
   const comAulas = progresso.filter(p => p.totalAulas > 0)
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 mb-6">
+    <div className="panel p-5 mb-6">
       <h2 className="font-semibold text-gray-900 text-sm mb-3 flex items-center gap-2">
         <GraduationCap className="w-4 h-4 text-escola-azul" />
         Progresso em Cursos

@@ -68,7 +68,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
       </div>
 
       {filtrados.length === 0 && (
-        <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
+        <div className="panel p-10 text-center">
           <p className="text-gray-400 text-sm">
             {alunos.length === 0 ? 'Nenhum aluno cadastrado ainda.' : 'Nenhum aluno encontrado com esses filtros.'}
           </p>
@@ -82,7 +82,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
             <Link
               key={a.id}
               href={`/admin/alunos/${a.id}`}
-              className="block bg-white border border-gray-200 rounded-xl p-4 hover:border-escola-azul/30 transition-colors"
+              className="block panel p-4 hover:border-escola-azul/30 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div>
@@ -108,7 +108,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
 
       {/* Desktop: tabela */}
       {filtrados.length > 0 && (
-        <div className="hidden md:block bg-white border border-gray-200 rounded-xl overflow-hidden">
+        <div className="hidden md:block panel overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-gray-50 text-left text-xs text-gray-400 uppercase tracking-wider">

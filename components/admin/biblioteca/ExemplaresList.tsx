@@ -97,7 +97,7 @@ export default function ExemplaresList({ obraId, exemplaresIniciais }: { obraId:
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5">
+    <div className="panel p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-gray-900 text-sm flex items-center gap-2">
           <Barcode className="w-4 h-4 text-escola-azul" />

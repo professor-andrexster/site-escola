@@ -62,7 +62,7 @@ export default async function AdminNoticiasPage() {
             <Clock className="w-4 h-4 text-gray-400" />
             Log de Atividades
           </h2>
-          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden">
+          <div className="panel overflow-hidden">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-gray-100 bg-gray-50">

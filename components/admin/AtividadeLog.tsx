@@ -87,11 +87,11 @@ export default function AtividadeLog({ registros }: { registros: RegistroLog[] }
       </div>
 
       {visiveis.length === 0 ? (
-        <div className="bg-white border border-gray-200 rounded-xl p-8 text-center text-gray-400 text-sm">
+        <div className="panel p-8 text-center text-gray-400 text-sm">
           Nenhuma atividade registrada ainda.
         </div>
       ) : (
-        <div className="bg-white border border-gray-200 rounded-xl divide-y divide-gray-100 overflow-hidden">
+        <div className="panel divide-y divide-gray-100 overflow-hidden">
           {visiveis.map(r => {
             const cfg = ACAO_LABELS[r.acao] ?? { label: r.acao, cor: 'bg-gray-100 text-gray-600' }
             const detalhe = detalheLegivel(r.detalhes)
