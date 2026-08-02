@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react'
 import Link from 'next/link'
-import { Search, CheckCircle2, XCircle, UserCheck, AlertTriangle, Edit, Key } from 'lucide-react'
+import { Search, CheckCircle2, XCircle, UserCheck, AlertTriangle } from 'lucide-react'
 import type { Aluno } from '@/types/database'
 import { TURMAS } from '@/lib/turmas'
 
@@ -129,32 +129,6 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
                     <AlertTriangle className="w-3 h-3" />
                     Falta CPF
                   </span>
-                )}
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
-                <button
-                  onClick={(e) => {
-                    e.preventDefault()
-                    // Editar será feito pelo link
-                  }}
-                  className="flex-1 flex items-center justify-center gap-1 bg-escola-azul/10 text-escola-azul hover:bg-escola-azul/20 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
-                >
-                  <Edit className="w-3 h-3" />
-                  Editar
-                </button>
-                {a.user_id && (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault()
-                      // Resetar senha
-                    }}
-                    className="flex items-center justify-center gap-1 bg-amber-50 text-amber-600 hover:bg-amber-100 px-3 py-1.5 rounded text-xs font-semibold transition-colors"
-                    title="Resetar senha"
-                  >
-                    <Key className="w-3 h-3" />
-                  </button>
                 )}
               </div>
             </Link>

@@ -1,18 +1,42 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { GraduationCap, Lock, Eye, EyeOff } from 'lucide-react'
+import { GraduationCap, Lock, Eye, EyeOff, X } from 'lucide-react'
+
+// Guarda só o identificador (email, matrícula ou CPF), nunca a senha, e só
+// quando a própria pessoa marcou a caixa. Sem isso ligado por padrão: num
+// computador compartilhado (laboratório, biblioteca), o próximo aluno a
+// sentar não pode herdar o identificador de quem usou antes.
+const CHAVE_LEMBRAR = 'jb_login_identificador'
 
 export default function AdminLoginPage() {
   const [identificador, setIdentificador] = useState('')
   const [password, setPassword] = useState('')
   const [mostrarSenha, setMostrarSenha] = useState(false)
+  const [lembrar, setLembrar] = useState(false)
+  const [preenchidoSalvo, setPreenchidoSalvo] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
   const searchParams = useSearchParams()
+
+  useEffect(() => {
+    const salvo = window.localStorage.getItem(CHAVE_LEMBRAR)
+    if (salvo) {
+      setIdentificador(salvo)
+      setLembrar(true)
+      setPreenchidoSalvo(true)
+    }
+  }, [])
+
+  function esquecer() {
+    window.localStorage.removeItem(CHAVE_LEMBRAR)
+    setIdentificador('')
+    setLembrar(false)
+    setPreenchidoSalvo(false)
+  }
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
@@ -30,6 +54,12 @@ export default function AdminLoginPage() {
       setError(json.error ?? 'Erro ao entrar. Tente novamente.')
       setLoading(false)
       return
+    }
+
+    if (lembrar) {
+      window.localStorage.setItem(CHAVE_LEMBRAR, identificador)
+    } else {
+      window.localStorage.removeItem(CHAVE_LEMBRAR)
     }
 
     router.push(json.destino ?? '/admin/dashboard')
@@ -58,12 +88,7 @@ export default function AdminLoginPage() {
           <form onSubmit={handleLogin} className="p-6 space-y-4" autoComplete="on">
             {searchParams.get('pendente') && (
               <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-xl px-4 py-3 text-sm">
-                Cadastro enviado! Aguarde aprovação da direção.
-              </div>
-            )}
-            {searchParams.get('conta_criada') && (
-              <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">
-                Conta criada com sucesso! Faça seu primeiro acesso abaixo.
+                Cadastro enviado! Aguarde a aprovação de um professor ou da direção da escola.
               </div>
             )}
             {searchParams.get('senha_redefinida') && (
@@ -73,9 +98,21 @@ export default function AdminLoginPage() {
             )}
 
             <div>
-              <label htmlFor="login-identificador" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-                E-mail, matrícula ou CPF
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label htmlFor="login-identificador" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                  E-mail, matrícula ou CPF
+                </label>
+                {preenchidoSalvo && (
+                  <button
+                    type="button"
+                    onClick={esquecer}
+                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-escola-vermelho transition-colors"
+                  >
+                    <X className="w-3 h-3" />
+                    Não é você?
+                  </button>
+                )}
+              </div>
               <input
                 id="login-identificador"
                 name="email"
@@ -83,7 +120,7 @@ export default function AdminLoginPage() {
                 required
                 autoComplete="username"
                 value={identificador}
-                onChange={e => setIdentificador(e.target.value)}
+                onChange={e => { setIdentificador(e.target.value); setPreenchidoSalvo(false) }}
                 placeholder="seu@email.com, matrícula ou CPF"
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
               />
@@ -116,6 +153,21 @@ export default function AdminLoginPage() {
                   Esqueci minha senha
                 </Link>
               </div>
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={lembrar}
+                  onChange={e => setLembrar(e.target.checked)}
+                  className="w-4 h-4 accent-escola-azul"
+                />
+                <span className="text-sm text-gray-700">Lembrar meu acesso neste computador</span>
+              </label>
+              <p className="text-xs text-gray-400 mt-1 ml-6">
+                Só marque em computador pessoal. Nunca em computador compartilhado, como o do laboratório ou da biblioteca.
+              </p>
             </div>
 
             {error && (

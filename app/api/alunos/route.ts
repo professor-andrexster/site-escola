@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
-import { exigirDirecao } from '@/lib/apiDirecao'
+import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { registrarAtividade, ipDoRequest } from '@/lib/log'
 
 // Escrita na tabela alunos é só via service role (RLS fechada na migration 016).
 // Estas rotas são o único caminho, restritas à direção (CREATE/DELETE) ou próprio aluno (UPDATE self).
@@ -103,7 +104,7 @@ function erroBanco(error: { code?: string; message: string }, camposDuplicados?:
 }
 
 export async function POST(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const body = (await request.json()) as CamposAluno
@@ -138,7 +139,7 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const body = (await request.json()) as CamposAluno & { id?: string }
@@ -173,11 +174,32 @@ export async function PUT(request: Request) {
   const { error } = await admin.from('alunos').update(validacao.dados).eq('id', body.id)
   if (error) return erroBanco(error, ['matricula', 'cpf', 'email'])
 
-  return NextResponse.json({ ok: true })
+  // Desativar o cadastro academico tambem derruba o acesso de login, se
+  // houver conta vinculada. Reativar depois nao restaura sozinho: alguem da
+  // gestao precisa aprovar de novo em /admin/alunos/[id].
+  let loginRevogado = false
+  if (validacao.dados.ativo === false) {
+    const { data: alunoAtual } = await admin.from('alunos').select('user_id').eq('id', body.id).maybeSingle()
+    if (alunoAtual?.user_id) {
+      const { data: perfilAtual } = await admin.from('profiles').select('aprovado').eq('id', alunoAtual.user_id).maybeSingle()
+      if (perfilAtual?.aprovado) {
+        await admin.from('profiles').update({ aprovado: false }).eq('id', alunoAtual.user_id)
+        await registrarAtividade(admin, {
+          acao: 'aluno_bloqueado_por_inatividade',
+          userId: alunoAtual.user_id,
+          detalhes: { aluno_id: body.id, bloqueado_por: auth.userId },
+          ip: ipDoRequest(request),
+        })
+        loginRevogado = true
+      }
+    }
+  }
+
+  return NextResponse.json({ ok: true, loginRevogado })
 }
 
 export async function DELETE(request: Request) {
-  const auth = await exigirDirecao()
+  const auth = await exigirGestao()
   if (!auth.ok) return auth.res
 
   const { id } = (await request.json()) as { id?: string }

@@ -27,6 +27,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
   const [ativo, setAtivo] = useState(aluno.ativo)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
+  const [loginRevogadoAgora, setLoginRevogadoAgora] = useState(false)
   const [loading, setLoading] = useState(false)
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const router = useRouter()
@@ -82,6 +83,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
     }
 
     setLoading(true)
+    setLoginRevogadoAgora(false)
 
     const res = await fetch('/api/alunos', {
       method: 'PUT',
@@ -101,14 +103,16 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
       }),
     })
 
+    const json = await res.json()
+
     if (!res.ok) {
-      const json = await res.json()
       setErro(json.error ?? 'Erro ao salvar.')
       setLoading(false)
       return
     }
 
     setSucesso(true)
+    setLoginRevogadoAgora(!!json.loginRevogado)
     setLoading(false)
     // Aguardar um momento antes de fazer refresh para garantir propagação
     setTimeout(() => {
@@ -137,7 +141,23 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4">
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3">{erro}</div>}
-      {sucesso && <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">Alterações salvas!</div>}
+      {sucesso && (
+        <div className="bg-green-50 border border-green-200 text-green-700 text-sm rounded-lg px-4 py-3">
+          Alterações salvas!
+          {loginRevogadoAgora && ' O acesso ao painel deste aluno também foi bloqueado, porque o cadastro ficou inativo.'}
+        </div>
+      )}
+
+      <div className={`rounded-xl border p-4 ${ativo ? 'border-gray-200 bg-gray-50' : 'border-amber-200 bg-amber-50'}`}>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} disabled={somenteLeitura} className="w-4 h-4 accent-escola-azul disabled:opacity-50" />
+          <span className="text-sm font-semibold text-gray-700">Cadastro acadêmico ativo</span>
+        </label>
+        <p className="text-xs text-gray-500 mt-1.5">
+          Desmarque para alunos transferidos ou que deixaram a escola. Se o aluno tiver conta de login, o acesso ao painel
+          é bloqueado junto. Reativar aqui não devolve o acesso sozinho, é preciso aprovar de novo em Acesso ao Sistema, abaixo.
+        </p>
+      </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
@@ -268,11 +288,6 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
           </div>
         </div>
       </div>
-
-      <label className="flex items-center gap-2 cursor-pointer">
-        <input type="checkbox" checked={ativo} onChange={(e) => setAtivo(e.target.checked)} disabled={somenteLeitura} className="w-4 h-4 accent-escola-azul disabled:opacity-50" />
-        <span className="text-sm text-gray-700">Aluno ativo</span>
-      </label>
 
       <div className="flex items-center justify-between pt-2">
         <div

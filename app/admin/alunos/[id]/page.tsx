@@ -1,9 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ArrowLeft, FolderKanban, ExternalLink, Key } from 'lucide-react'
+import { ArrowLeft, FolderKanban, ExternalLink } from 'lucide-react'
 import AlunoEditForm from '@/components/admin/AlunoEditForm'
+import AlunoAcessoPainel from '@/components/admin/AlunoAcessoPainel'
+import AlunoProgressoCursos from '@/components/admin/AlunoProgressoCursos'
 import ResetarSenhaForm from '@/components/admin/ResetarSenhaForm'
 import type { Metadata } from 'next'
 
@@ -13,9 +16,10 @@ export const dynamic = 'force-dynamic'
 export default async function AlunoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
+  const admin = createAdminClient()
 
-  // Admin client para ler as colunas protegidas do aluno (cpf, user_id) — rota é só direção
-  const { data: aluno } = await createAdminClient()
+  // Admin client para ler as colunas protegidas do aluno (cpf, user_id) — rota é só gestão
+  const { data: aluno } = await admin
     .from('alunos')
     .select('*')
     .eq('id', id)
@@ -23,16 +27,18 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
 
   if (!aluno) notFound()
 
-  const { data: perfis } = await supabase
-    .from('perfis_vocacionais')
-    .select('pontuacao, trilhas(nome, icone, cor_tailwind)')
-    .eq('aluno_id', id)
-    .order('pontuacao', { ascending: false })
-
-  const { count: projetosCount } = await supabase
-    .from('projetos')
-    .select('id', { count: 'exact', head: true })
-    .eq('aluno_id', id)
+  const [{ data: perfis }, { count: projetosCount }, perfilAcesso, progressoCursos] = await Promise.all([
+    supabase
+      .from('perfis_vocacionais')
+      .select('pontuacao, trilhas(nome, icone, cor_tailwind)')
+      .eq('aluno_id', id)
+      .order('pontuacao', { ascending: false }),
+    supabase.from('projetos').select('id', { count: 'exact', head: true }).eq('aluno_id', id),
+    aluno.user_id
+      ? admin.from('profiles').select('id, role, aprovado').eq('id', aluno.user_id).maybeSingle().then(r => r.data)
+      : Promise.resolve(null),
+    aluno.user_id ? progressoCursosPorUsuario(admin, aluno.user_id) : Promise.resolve([]),
+  ])
 
   return (
     <div className="max-w-2xl">
@@ -43,6 +49,8 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
 
       <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-1">{aluno.nome}</h1>
       <p className="text-sm text-gray-400 mb-6">Matrícula {aluno.matricula} · {aluno.turma}</p>
+
+      <AlunoAcessoPainel perfil={perfilAcesso} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
         <Link
@@ -90,6 +98,8 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
           </div>
         </div>
       )}
+
+      {aluno.user_id && <AlunoProgressoCursos progresso={progressoCursos} />}
 
       {aluno.user_id && (
         <div className="mb-6">
