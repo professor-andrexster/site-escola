@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
 import CursoForm from '@/components/admin/CursoForm'
 import AulaManager from '@/components/admin/AulaManager'
+import CursoProvaEditor from '@/components/admin/CursoProvaEditor'
 import { isGestao } from '@/lib/roles'
 import type { Metadata } from 'next'
 
@@ -60,6 +61,10 @@ export default async function EditarCursoPage({ params }: Params) {
           </Link>
         </div>
         <AulaManager cursoId={id} aulas={aulas ?? []} />
+      </div>
+
+      <div className="max-w-3xl mt-10">
+        <CursoProvaEditor cursoId={id} />
       </div>
     </div>
   )

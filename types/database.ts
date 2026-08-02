@@ -458,6 +458,7 @@ export interface Database {
           autor_nome: string
           publicado: boolean
           ordem: number
+          carga_horaria: number | null
           criado_por: string | null
           criado_em: string
           updated_at: string
@@ -474,6 +475,7 @@ export interface Database {
           autor_nome?: string
           publicado?: boolean
           ordem?: number
+          carga_horaria?: number | null
           criado_por?: string | null
           criado_em?: string
           updated_at?: string
@@ -490,6 +492,7 @@ export interface Database {
           autor_nome?: string
           publicado?: boolean
           ordem?: number
+          carga_horaria?: number | null
           criado_por?: string | null
           criado_em?: string
           updated_at?: string
@@ -1510,6 +1513,36 @@ export interface Profile {
   avatar_url: string | null
   created_at: string
   updated_at: string
+}
+
+// Pergunta da prova final de um curso (resposta_correta só via service role;
+// o aluno recebe as perguntas pela rota de servidor, já sem o gabarito).
+export interface CursoProvaPergunta {
+  id: string
+  curso_id: string
+  enunciado: string
+  alternativa_a: string
+  alternativa_b: string
+  alternativa_c: string
+  alternativa_d: string
+  resposta_correta: 'a' | 'b' | 'c' | 'd'
+  ordem: number
+  created_at: string
+}
+
+// Certificado de conclusão de curso. Os campos de texto são um retrato do
+// momento da emissão: renomear o curso depois não muda certificados antigos.
+export interface Certificado {
+  id: string
+  codigo: string
+  user_id: string
+  curso_id: string
+  aluno_nome: string
+  curso_titulo: string
+  autor_nome: string | null
+  carga_horaria: number
+  nota: number
+  emitido_em: string
 }
 
 // Desafio de aula/curso do módulo Cursos (gabarito só via service role).

@@ -33,7 +33,7 @@ export default async function DashboardPage() {
   const { user, profile } = await getProfileOrRedirect()
 
   if (profile.role === 'aluno' || profile.role === 'monitor') {
-    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }] = await Promise.all([
+    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }, { count: cursosConcluidos }] = await Promise.all([
       supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
       supabase.from('quiz_participantes')
         .select('*, quizzes(titulo, codigo)')
@@ -46,6 +46,7 @@ export default async function DashboardPage() {
         .select('id, titulo, codigo, turma_alvo, lobby_aberto, ativo, tempo_por_pergunta, quiz_perguntas(id)')
         .eq('encerrado', false)
         .or('lobby_aberto.eq.true,ativo.eq.true'),
+      supabase.from('certificados').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
     ])
 
     // Filtra os quizzes que são para a turma do aluno
@@ -143,7 +144,7 @@ export default async function DashboardPage() {
         <div className="@container mb-fluid-s">
           <div className="grid grid-cols-1 @sm:grid-cols-2 gap-5">
             <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
-            <StatCard label="Minha Turma" value={0} icon={BookOpen} color="bg-green-50 text-green-600" />
+            <StatCard label="Cursos Concluídos" value={cursosConcluidos ?? 0} icon={BookOpen} color="bg-green-50 text-green-600" href="/admin/cursos" />
           </div>
         </div>
 

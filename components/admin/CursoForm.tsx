@@ -29,6 +29,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
   const [categoria, setCategoria] = useState(curso?.categoria ?? '')
   const [nivel, setNivel] = useState(curso?.nivel ?? 'Iniciante')
   const [capaUrl, setCapaUrl] = useState(curso?.capa_url ?? '')
+  const [cargaHoraria, setCargaHoraria] = useState(curso?.carga_horaria ? String(curso.carga_horaria) : '')
   const [publicado, setPublicado] = useState(curso?.publicado ?? isDirecao)
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -80,6 +81,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
       categoria: categoria || null,
       nivel,
       capa_url: capaUrl || null,
+      carga_horaria: cargaHoraria ? parseInt(cargaHoraria, 10) : null,
       publicado,
     }
 
@@ -180,6 +182,21 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
               <option value="Avançado">Avançado</option>
             </select>
           </div>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Carga horária (horas)</label>
+          <input
+            type="number"
+            min={1}
+            value={cargaHoraria}
+            onChange={(e) => setCargaHoraria(e.target.value)}
+            className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul"
+            placeholder="Ex: 20"
+          />
+          <p className="text-xs text-gray-400 mt-1">
+            Vai impressa no certificado. Se ficar vazia, o certificado usa a soma da duração das aulas.
+          </p>
         </div>
 
         <div>

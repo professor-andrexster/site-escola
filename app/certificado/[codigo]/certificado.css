@@ -1,0 +1,8 @@
+/* So vale nesta rota: o Next injeta este CSS apenas no segmento do
+   certificado, entao o A4 deitado nao vaza pra impressao de outras telas. */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm;
+  }
+}

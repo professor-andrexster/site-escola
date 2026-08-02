@@ -1,10 +1,12 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowLeft, Play, Trophy } from 'lucide-react'
+import { ArrowLeft, Award, Lock, Play, Trophy } from 'lucide-react'
 import AulaListItem, { type AulaStatus } from '@/components/cursos/AulaListItem'
+import ProvaFinal from '@/components/cursos/ProvaFinal'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -50,6 +52,14 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
     .eq('curso_id', curso.id)
     .is('aula_id', null)
     .order('ordem')
+
+  // Prova final e certificado: a contagem de perguntas vem pelo admin client
+  // porque a tabela nega leitura direta do aluno (o gabarito mora nela).
+  const admin = createAdminClient()
+  const [{ count: totalPerguntasProva }, { data: certificado }] = await Promise.all([
+    admin.from('curso_prova_perguntas').select('*', { count: 'exact', head: true }).eq('curso_id', curso.id),
+    admin.from('certificados').select('codigo, nota, carga_horaria').eq('curso_id', curso.id).eq('user_id', user.id).maybeSingle(),
+  ])
 
   const progressoMap = new Map((progresso ?? []).map((p) => [p.aula_id, p]))
 
@@ -122,6 +132,40 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
           />
         ))}
       </div>
+
+      {/* Prova final e certificado */}
+      {(totalPerguntasProva ?? 0) > 0 && (
+        <section className="mt-10">
+          <h2 className="text-white font-black text-lg font-geom flex items-center gap-2 mb-4">
+            <Award className="w-5 h-5 text-curso-ciano" />
+            Certificado do curso
+          </h2>
+          {certificado ? (
+            <div className="bg-white/5 border border-green-400/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="text-center sm:text-start">
+                <p className="text-white font-bold font-geom">Curso concluído com nota {certificado.nota}</p>
+                <p className="text-white/50 text-sm mt-0.5">Certificado de {certificado.carga_horaria}h emitido em seu nome.</p>
+              </div>
+              <Link
+                href={`/certificado/${certificado.codigo}`}
+                className="inline-flex items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 transition-colors flex-shrink-0"
+              >
+                <Award className="w-4 h-4" />
+                Ver Certificado
+              </Link>
+            </div>
+          ) : progressoPct === 100 ? (
+            <ProvaFinal cursoId={curso.id} totalPerguntas={totalPerguntasProva ?? 0} />
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center gap-3">
+              <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
+              <p className="text-white/50 text-sm">
+                Conclua as {listaAulas.length} aulas para liberar a prova final e ganhar o certificado do curso.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
 
       {(desafiosCurso ?? []).length > 0 && (
         <section className="mt-10">

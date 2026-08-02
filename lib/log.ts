@@ -19,6 +19,8 @@ export type AcaoLog =
   | 'convite_bibliotecario_criado'
   | 'convite_bibliotecario_aceito'
   | 'convite_bibliotecario_revogado'
+  | 'prova_final_reprovada'
+  | 'certificado_emitido'
 
 /** Extrai o IP do request (Vercel preenche x-forwarded-for). */
 export function ipDoRequest(request: Request): string | null {
