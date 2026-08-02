@@ -124,7 +124,22 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
       return
     }
     const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(fileName)
+
+    // Salva a foto assim que sobe, sem depender do clique em "Salvar" logo
+    // abaixo: assim ela nao se perde se a pessoa fechar a edicao sem salvar.
+    const res = await fetch('/api/usuarios/perfil', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: id, avatarUrl: publicUrl }),
+    })
+    if (!res.ok) {
+      const json = await res.json()
+      setError(json.error ?? 'Erro ao salvar a foto.')
+      setUploadandoAvatar(false)
+      return
+    }
     setEditAvatarUrl(publicUrl)
+    setProfiles(prev => prev.map(p => p.id === id ? { ...p, avatar_url: publicUrl } : p))
     setUploadandoAvatar(false)
   }
 
@@ -470,7 +485,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
           Usuários Ativos ({aprovados.length})
         </h2>
         {aprovados.length === 0 ? (
-          <div className="bg-white border border-dashed border-gray-300 rounded-xl p-10 text-center text-gray-400 text-sm">
+          <div className="empty-state p-10 text-sm">
             Nenhum usuário ativo ainda.
           </div>
         ) : (

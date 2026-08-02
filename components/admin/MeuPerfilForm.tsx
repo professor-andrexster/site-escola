@@ -54,13 +54,17 @@ export default function MeuPerfilForm() {
 
     setUploadandoFoto(true)
     setErro('')
+    setSucesso(false)
 
     try {
       const ext = file.name.split('.').pop()
-      const fileName = `alunos/${aluno.id}/foto-${Date.now()}.${ext}`
+      // Bucket "alunos" nunca existiu de verdade no Storage, todo envio
+      // falhava; a foto do aluno mora no mesmo bucket "imagens" das outras
+      // fotos de perfil, só que com prefixo proprio.
+      const fileName = `avatars/aluno-${aluno.id}-${Date.now()}.${ext}`
 
       const { error: uploadError } = await supabase.storage
-        .from('alunos')
+        .from('imagens')
         .upload(fileName, file, { upsert: true })
 
       if (uploadError) {
@@ -70,11 +74,26 @@ export default function MeuPerfilForm() {
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('alunos')
+        .from('imagens')
         .getPublicUrl(fileName)
 
+      // Salva a foto na hora, sem depender de um segundo clique em "Salvar".
+      const res = await fetch('/api/alunos/meu-perfil', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ foto_url: publicUrl }),
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        setErro(json.error ?? 'Erro ao salvar a foto.')
+        setUploadandoFoto(false)
+        return
+      }
+
       setFotoUrl(publicUrl)
+      setSucesso(true)
       setUploadandoFoto(false)
+      setTimeout(() => setSucesso(false), 3000)
     } catch (err) {
       setErro('Erro ao fazer upload da foto.')
       setUploadandoFoto(false)
@@ -120,7 +139,7 @@ export default function MeuPerfilForm() {
 
   if (loading) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-8 text-center">
+      <div className="panel p-8 text-center">
         <p className="text-gray-400">Carregando...</p>
       </div>
     )
@@ -128,7 +147,7 @@ export default function MeuPerfilForm() {
 
   if (!aluno) {
     return (
-      <div className="bg-white border border-gray-200 rounded-xl p-5">
+      <div className="panel p-5">
         <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
           <p className="text-sm">{erro || 'Não foi possível carregar seus dados.'}</p>
@@ -138,7 +157,7 @@ export default function MeuPerfilForm() {
   }
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-5 space-y-4 max-w-2xl">
+    <div className="panel p-5 space-y-4 max-w-2xl">
       {erro && (
         <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

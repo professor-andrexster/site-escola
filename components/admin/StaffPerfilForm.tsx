@@ -23,13 +23,32 @@ export default function StaffPerfilForm({ profile }: { profile: Profile }) {
   async function handleUploadFoto(file: File) {
     setUploadando(true)
     setErro('')
+    setSucesso(false)
     try {
       const ext = file.name.split('.').pop()
       const fileName = `avatars/${profile.id}-${Date.now()}.${ext}`
       const { error: uploadError } = await supabase.storage.from('imagens').upload(fileName, file, { upsert: true })
       if (uploadError) { setErro('Erro ao enviar a foto.'); setUploadando(false); return }
       const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(fileName)
+
+      // A foto salva na hora, sem depender de outro clique em "Salvar
+      // Alteracoes": era exatamente esse segundo passo esquecido que fazia
+      // a foto sumir depois do envio.
+      const res = await fetch('/api/usuarios/perfil', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ avatarUrl: publicUrl }),
+      })
+      if (!res.ok) {
+        const json = await res.json()
+        setErro(json.error ?? 'Erro ao salvar a foto.')
+        setUploadando(false)
+        return
+      }
       setAvatarUrl(publicUrl)
+      setSucesso(true)
+      router.refresh()
+      setTimeout(() => setSucesso(false), 3000)
     } catch {
       setErro('Erro ao enviar a foto.')
     }
@@ -61,7 +80,7 @@ export default function StaffPerfilForm({ profile }: { profile: Profile }) {
   }
 
   return (
-    <div className="flow bg-white rounded-xl shadow-elevation-low border border-gray-100 p-fluid-s max-w-2xl">
+    <div className="flow panel p-fluid-s max-w-2xl">
       {erro && (
         <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
           <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />

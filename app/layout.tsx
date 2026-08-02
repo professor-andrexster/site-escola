@@ -18,9 +18,6 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
   },
-  icons: {
-    shortcut: '/favicon.ico',
-  },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
