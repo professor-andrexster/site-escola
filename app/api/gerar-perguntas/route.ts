@@ -61,7 +61,9 @@ export async function POST(request: Request) {
   let res: Response
   try {
     res = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
+      // gemini-flash-latest e um apelido do Google que acompanha o modelo
+      // flash atual: nao fica preso a uma versao que o free tier abandona.
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
