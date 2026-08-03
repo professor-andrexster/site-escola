@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, GraduationCap, BookOpen, Crown, ShieldCheck, Cog, Star, KeyRound, Copy, Pencil, Upload } from 'lucide-react'
+import { Check, X, KeyRound, Copy, Pencil, Upload } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { formatarCPF } from '@/lib/cpf'
 import { createClient } from '@/lib/supabase/client'
@@ -23,77 +23,53 @@ const ORIGEM_LABELS: Record<string, string> = {
   convite_bibliotecario: 'Convite aceito (bibliotecária)',
 }
 
+// Cor aparece como um ponto pequeno, nunca como caixa inteira pintada:
+// e informacao de papel, nao decoracao (mesma cor forte do ROLE_COLORS
+// usado no avatar e nos selos do resto do sistema).
 const ROLE_CONFIG: Record<Profile['role'], {
   label: string
-  icon: React.ComponentType<{ className?: string }>
-  bg: string
-  text: string
-  border: string
+  dot: string
   desc: string
 }> = {
   aluno: {
     label: 'Aluno',
-    icon: GraduationCap,
-    bg: 'bg-green-50',
-    text: 'text-green-700',
-    border: 'border-green-200',
-    desc: 'Acessa quizzes da turma',
+    dot: 'bg-green-600',
+    desc: 'Quizzes da turma, cursos e certificados',
   },
   aluno_fundamental: {
     label: 'Aluno Fundamental',
-    icon: GraduationCap,
-    bg: 'bg-teal-50',
-    text: 'text-teal-700',
-    border: 'border-teal-200',
-    desc: 'Acessa só os cursos abertos',
+    dot: 'bg-teal-600',
+    desc: 'Somente os cursos abertos e o próprio perfil',
   },
   monitor: {
     label: 'Monitor',
-    icon: Star,
-    bg: 'bg-purple-50',
-    text: 'text-purple-700',
-    border: 'border-purple-200',
-    desc: 'Posta matérias + quizzes',
+    dot: 'bg-purple-600',
+    desc: 'Apoia o professor e publica quizzes',
   },
   professor: {
     label: 'Professor',
-    icon: BookOpen,
-    bg: 'bg-blue-50',
-    text: 'text-blue-700',
-    border: 'border-blue-200',
-    desc: 'Cria e controla quizzes',
+    dot: 'bg-blue-600',
+    desc: 'Cria quizzes e cursos, aprova cadastros de aluno',
   },
   bibliotecario: {
     label: 'Bibliotecário',
-    icon: BookOpen,
-    bg: 'bg-amber-50',
-    text: 'text-amber-700',
-    border: 'border-amber-200',
-    desc: 'Gerencia biblioteca e recursos',
+    dot: 'bg-amber-600',
+    desc: 'Acervo, empréstimos e leitores da biblioteca',
   },
   diretora: {
     label: 'Diretora',
-    icon: Crown,
-    bg: 'bg-red-50',
-    text: 'text-red-700',
-    border: 'border-red-200',
+    dot: 'bg-escola-vermelho',
     desc: 'Acesso total ao sistema',
   },
   vice_diretora: {
     label: 'Vice Diretora',
-    icon: ShieldCheck,
-    bg: 'bg-rose-50',
-    text: 'text-rose-700',
-    border: 'border-rose-200',
+    dot: 'bg-rose-600',
     desc: 'Acesso total ao sistema',
   },
   admin: {
     label: 'Administrador do Sistema',
-    icon: Cog,
-    bg: 'bg-slate-50',
-    text: 'text-slate-700',
-    border: 'border-slate-200',
-    desc: 'Acesso técnico total ao sistema',
+    dot: 'bg-slate-800',
+    desc: 'Acesso técnico total, inclusive configurações',
   },
 }
 
@@ -247,7 +223,6 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
 
   const renderCard = (p: UsuarioLinha) => {
     const cfg = ROLE_CONFIG[p.role]
-    const Icon = cfg.icon
     const isLoading = loadingId === p.id
     const isChanging = changingRoleId === p.id
 
@@ -333,35 +308,39 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
 
           {p.aprovado ? (
             isChanging ? (
-              // Seletor de nível expandido
-              <div className="grid grid-cols-2 gap-2">
+              // Seletor de nível: cada opcao mostra o que o papel faz,
+              // pra ninguem promover usuario no chute
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
-                  const RoleIcon = config.icon
                   const isActive = p.role === role
                   return (
                     <button
                       key={role}
                       onClick={() => mudarRole(p.id, role)}
                       disabled={isLoading}
-                      className={`flex flex-col items-center gap-1 p-2.5 rounded-lg border-2 text-xs font-semibold transition-all ${
+                      aria-pressed={isActive}
+                      className={`flex items-start gap-2.5 p-3 rounded-lg border text-start transition-colors disabled:opacity-50 ${
                         isActive
-                          ? `${config.bg} ${config.text} ${config.border} border-2`
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300 bg-white'
-                      } disabled:opacity-50`}
+                          ? 'border-escola-azul bg-escola-azul/5'
+                          : 'border-gray-200 bg-white hover:border-gray-300'
+                      }`}
                     >
-                      <RoleIcon className="w-4 h-4" />
-                      {config.label}
+                      <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+                      <span className="min-w-0">
+                        <span className="block text-xs font-bold text-gray-900">{config.label}</span>
+                        <span className="block text-[11px] text-gray-500 leading-snug mt-0.5">{config.desc}</span>
+                      </span>
                     </button>
                   )
                 })}
               </div>
             ) : (
-              // Badge do nível atual + botão para mudar
-              <div className="flex items-center justify-between gap-2">
-                <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cfg.bg} ${cfg.text} ${cfg.border}`}>
-                  <Icon className="w-3.5 h-3.5" />
-                  <span className="text-xs font-semibold">{cfg.label}</span>
-                  <span className="text-xs opacity-60">· {cfg.desc}</span>
+              // Nível atual: ponto de cor, nome e o que faz, sem caixa pintada
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 min-w-0">
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+                  <span className="text-sm font-semibold text-gray-800 flex-shrink-0">{cfg.label}</span>
+                  <span className="text-xs text-gray-400 truncate">{cfg.desc}</span>
                 </div>
                 <button
                   onClick={() => setChangingRoleId(p.id)}
@@ -372,9 +351,9 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
               </div>
             )
           ) : (
-            <div className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border ${cfg.bg} ${cfg.text} ${cfg.border} opacity-60`}>
-              <Icon className="w-3.5 h-3.5" />
-              <span className="text-xs font-semibold">{cfg.label}</span>
+            <div className="flex items-center gap-2 opacity-60">
+              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
+              <span className="text-sm font-semibold text-gray-700">{cfg.label}</span>
             </div>
           )}
         </div>
@@ -462,20 +441,22 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
         </div>
       )}
 
-      {/* Legenda dos níveis */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => {
-          const Icon = config.icon
-          return (
-            <div key={role} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${config.bg} ${config.border}`}>
-              <Icon className={`w-4 h-4 ${config.text}`} />
-              <div>
-                <p className={`text-xs font-bold ${config.text}`}>{config.label}</p>
-                <p className="text-xs text-gray-500">{config.desc}</p>
+      {/* Legenda dos níveis: um painel só, cor reduzida a um ponto por papel */}
+      <div className="@container">
+        <div className="panel p-fluid-xs">
+          <p className="text-xs text-gray-400 font-mono uppercase tracking-wider mb-4">O que cada nível de acesso faz</p>
+          <div className="grid grid-cols-1 @sm:grid-cols-2 @3xl:grid-cols-4 gap-x-8 gap-y-4">
+            {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => (
+              <div key={role} className="flex items-start gap-2.5">
+                <span className={`mt-1.5 w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-gray-900 leading-snug">{config.label}</p>
+                  <p className="text-xs text-gray-500 leading-relaxed mt-0.5">{config.desc}</p>
+                </div>
               </div>
-            </div>
-          )
-        })}
+            ))}
+          </div>
+        </div>
       </div>
 
       {pendentes.length > 0 && (
