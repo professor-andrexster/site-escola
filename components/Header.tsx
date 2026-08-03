@@ -19,9 +19,8 @@ const navItems = [
       { href: '/emti/protagonismo', label: 'Protagonismo Juvenil' },
     ],
   },
-  { href: '/noticias', label: 'JBInforma' },
-  { href: '/projetos', label: 'Projetos' },
   { href: '/cursos', label: 'Cursos' },
+  { href: '/projetos', label: 'Projetos' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/contato', label: 'Contato' },
 ]
