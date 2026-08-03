@@ -11,7 +11,7 @@ const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking
 const SITUACAO_LABELS: Record<string, { label: string; cor: string }> = {
   disponivel: { label: 'Disponível', cor: 'bg-green-50 text-green-700 border-green-200' },
   emprestado: { label: 'Emprestado', cor: 'bg-blue-50 text-blue-700 border-blue-200' },
-  reservado: { label: 'Reservado', cor: 'bg-purple-50 text-purple-700 border-purple-200' },
+  reservado: { label: 'Reservado', cor: 'bg-escola-azul/10 text-escola-azul border-escola-azul/20' },
   em_reparo: { label: 'Em reparo', cor: 'bg-amber-50 text-amber-700 border-amber-200' },
   extraviado: { label: 'Extraviado', cor: 'bg-red-50 text-red-700 border-red-200' },
   baixado: { label: 'Baixado', cor: 'bg-gray-100 text-gray-500 border-gray-200' },

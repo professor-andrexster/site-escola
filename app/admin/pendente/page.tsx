@@ -11,7 +11,7 @@ export default function PendentePage() {
         </div>
         <div className="bg-white border border-gray-100 rounded-2xl p-8 shadow-elevation-high">
           <div className="w-14 h-14 bg-yellow-50 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Clock className="w-7 h-7 text-yellow-500" />
+            <Clock className="w-7 h-7 text-amber-500" />
           </div>
           <h1 className="font-playfair text-gray-900 font-black text-2xl mb-2">Cadastro em Análise</h1>
           <p className="text-gray-500 text-sm leading-relaxed mb-6">

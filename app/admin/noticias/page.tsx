@@ -86,7 +86,7 @@ export default async function AdminNoticiasPage() {
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
                         log.acao.includes('deletou') ? 'bg-red-50 text-red-700' :
                         log.acao.includes('publicou') || log.acao.includes('criou e publicou') ? 'bg-green-50 text-green-700' :
-                        log.acao.includes('tirou') ? 'bg-orange-50 text-orange-700' :
+                        log.acao.includes('tirou') ? 'bg-amber-50 text-amber-700' :
                         log.acao.includes('destaque') ? 'bg-yellow-50 text-yellow-700' :
                         'bg-gray-100 text-gray-600'
                       }`}>

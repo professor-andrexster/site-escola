@@ -82,7 +82,7 @@ export default async function DashboardPage() {
         {quizzesDisponiveis.length > 0 && (
           <div className="mb-6">
             <h2 className="font-bold text-gray-900 mb-3 flex items-center gap-2">
-              <DoorOpen className="w-4 h-4 text-blue-500" />
+              <DoorOpen className="w-4 h-4 text-escola-azul" />
               Quiz da Sua Turma
             </h2>
             <div className="space-y-3">
@@ -143,8 +143,8 @@ export default async function DashboardPage() {
 
         <div className="@container mb-fluid-s">
           <div className="grid grid-cols-1 @sm:grid-cols-2 gap-5">
-            <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/meus-quizzes" />
-            <StatCard label="Cursos Concluídos" value={cursosConcluidos ?? 0} icon={BookOpen} color="bg-green-50 text-green-600" href="/admin/cursos" />
+            <StatCard label="Quizzes Feitos" value={quizzesFeitos ?? 0} icon={Gamepad2} color="bg-escola-azul/10 text-escola-azul" href="/admin/meus-quizzes" />
+            <StatCard label="Cursos Concluídos" value={cursosConcluidos ?? 0} icon={BookOpen} color="bg-escola-azul/10 text-escola-azul" href="/admin/cursos" />
           </div>
         </div>
 
@@ -234,16 +234,16 @@ export default async function DashboardPage() {
       {/* Stats */}
       <div className="@container mb-fluid-s">
         <div className="grid grid-cols-2 @lg:grid-cols-4 gap-4">
-          <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-purple-50 text-purple-600" href="/admin/quiz" />
-          <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-orange-50 text-orange-600" />
+          <StatCard label="Quizzes" value={totalQuizzes ?? 0} icon={Gamepad2} color="bg-escola-azul/10 text-escola-azul" href="/admin/quiz" />
+          <StatCard label="Participações" value={totalParticipantes ?? 0} icon={TrendingUp} color="bg-escola-azul/10 text-escola-azul" />
           {isGestao(profile.role) && (
             <>
-              <StatCard label="Leads" value={leadsNaoLidos ?? 0} icon={Inbox} color="bg-indigo-50 text-indigo-600" href="/admin/leads" />
-              <StatCard label="Usuários Pendentes" value={usuariosPendentes ?? 0} icon={Users} color="bg-yellow-50 text-yellow-600" href="/admin/usuarios" />
+              <StatCard label="Leads" value={leadsNaoLidos ?? 0} icon={Inbox} color="bg-escola-azul/10 text-escola-azul" href="/admin/leads" />
+              <StatCard label="Usuários Pendentes" value={usuariosPendentes ?? 0} icon={Users} color="bg-amber-50 text-amber-600" href="/admin/usuarios" />
             </>
           )}
           {!isGestao(profile.role) && podeAprovarAlunos && (
-            <StatCard label="Alunos Aguardando" value={alunosPendentes ?? 0} icon={UserCheck} color="bg-yellow-50 text-yellow-600" href="/admin/aprovacoes" />
+            <StatCard label="Alunos Aguardando" value={alunosPendentes ?? 0} icon={UserCheck} color="bg-amber-50 text-amber-600" href="/admin/aprovacoes" />
           )}
         </div>
       </div>
@@ -255,24 +255,24 @@ export default async function DashboardPage() {
           Ações Rápidas
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-purple-400 hover:bg-purple-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-            <Gamepad2 className="w-6 h-6 text-gray-400 group-hover:text-purple-600" />
-            <span className="text-xs font-semibold text-gray-500 group-hover:text-purple-600 text-center">Novo Quiz</span>
+          <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
+            <Gamepad2 className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Novo Quiz</span>
           </Link>
-          <Link href="/ranking" target="_blank" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-yellow-400 hover:bg-yellow-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-            <Trophy className="w-6 h-6 text-gray-400 group-hover:text-yellow-600" />
-            <span className="text-xs font-semibold text-gray-500 group-hover:text-yellow-600 text-center">Ver Ranking</span>
+          <Link href="/ranking" target="_blank" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
+            <Trophy className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Ver Ranking</span>
           </Link>
           {isGestao(profile.role) && (
-            <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-              <Users className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
-              <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Usuários</span>
+            <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
+              <Users className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+              <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Usuários</span>
             </Link>
           )}
           {podeAprovarAlunos && (
-            <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-green-400 hover:bg-green-50 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-              <UserCheck className="w-6 h-6 text-gray-400 group-hover:text-green-600" />
-              <span className="text-xs font-semibold text-gray-500 group-hover:text-green-600 text-center">Aprovações</span>
+            <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
+              <UserCheck className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+              <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Aprovações</span>
             </Link>
           )}
         </div>

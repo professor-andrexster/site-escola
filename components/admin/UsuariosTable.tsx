@@ -373,20 +373,20 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
 
         {/* Senha temporária gerada */}
         {senhaTemp?.id === p.id && (
-          <div className="mt-3 bg-purple-50 border border-purple-200 rounded-lg px-3 py-2.5">
-            <p className="text-xs text-purple-700 mb-1 font-semibold">Senha temporária gerada, anote e repasse com cuidado:</p>
+          <div className="mt-3 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2.5">
+            <p className="text-xs text-amber-700 mb-1 font-semibold">Senha temporária gerada, anote e repasse com cuidado:</p>
             <div className="flex items-center gap-2">
-              <code className="text-sm font-mono font-bold text-purple-900 bg-white px-2 py-1 rounded border border-purple-200">
+              <code className="text-sm font-mono font-bold text-amber-900 bg-white px-2 py-1 rounded border border-amber-200">
                 {senhaTemp.senha}
               </code>
               <button
                 onClick={() => navigator.clipboard.writeText(senhaTemp.senha)}
-                className="text-purple-500 hover:text-purple-700"
+                className="text-amber-500 hover:text-amber-700"
                 title="Copiar"
               >
                 <Copy className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setSenhaTemp(null)} className="text-xs text-purple-400 hover:text-purple-600 ml-auto">
+              <button onClick={() => setSenhaTemp(null)} className="text-xs text-amber-500 hover:text-amber-700 ms-auto">
                 Fechar
               </button>
             </div>
@@ -409,7 +409,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
             <button
               onClick={() => redefinirSenha(p.id, p.nome_completo)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-purple-600 bg-purple-50 rounded-lg text-xs font-semibold hover:bg-purple-100 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-gray-600 bg-gray-100 rounded-lg text-xs font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50"
             >
               <KeyRound className="w-3.5 h-3.5" />
               Redefinir Senha

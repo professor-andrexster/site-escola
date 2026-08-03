@@ -296,7 +296,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                     onClick={() => reabrirQuiz(quiz.id)}
                     disabled={isLoading}
                     title="Reabrir: apaga as respostas da rodada e abre a sala de novo"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 text-white rounded-lg text-xs font-semibold hover:bg-orange-600 transition-colors disabled:opacity-50"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-600 text-white rounded-lg text-xs font-semibold hover:bg-amber-700 transition-colors disabled:opacity-50"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     Reabrir

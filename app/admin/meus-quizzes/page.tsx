@@ -33,7 +33,7 @@ export default async function MeusQuizzesPage() {
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">quizzes</div>
         </div>
         <div className="panel p-4 text-center">
-          <div className="text-2xl font-black text-purple-600">{totalPontos}</div>
+          <div className="text-2xl font-black text-escola-azul">{totalPontos}</div>
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">pontos totais</div>
         </div>
         <div className="panel p-4 text-center">

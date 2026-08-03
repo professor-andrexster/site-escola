@@ -333,8 +333,8 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
       ))}
 
       {/* Geração de perguntas com IA */}
-      <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 space-y-3">
-        <div className="flex items-center gap-2 text-purple-800 font-semibold text-sm">
+      <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
+        <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
           <Sparkles className="w-4 h-4" />
           Gerar 10 perguntas com IA
         </div>
@@ -350,12 +350,12 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
           <button
             onClick={gerarComIA}
             disabled={gerando || !materiaIA.trim()}
-            className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm font-semibold hover:bg-purple-700 transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 whitespace-nowrap"
           >
             {gerando ? 'Gerando...' : 'Gerar perguntas'}
           </button>
         </div>
-        <p className="text-xs text-purple-700/70">
+        <p className="text-xs text-gray-400">
           As perguntas geradas são adicionadas à lista acima e podem ser editadas ou removidas livremente.
         </p>
       </div>

@@ -231,7 +231,7 @@ export default function DesafioWorkspace({
 
 function StatusIcon({ status }: { status: Entrega['status'] }) {
   if (status === 'avaliada') return <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />
-  if (status === 'entregue') return <Clock className="w-4 h-4 text-yellow-500 flex-shrink-0" />
+  if (status === 'entregue') return <Clock className="w-4 h-4 text-amber-500 flex-shrink-0" />
   return <Circle className="w-4 h-4 text-gray-300 flex-shrink-0" />
 }
 

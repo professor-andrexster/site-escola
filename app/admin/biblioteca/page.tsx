@@ -102,10 +102,10 @@ export default async function BibliotecaPainelPage() {
         </div>
       ) : (
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          <StatCard label="Obras" value={totalObras ?? 0} icon={BookOpen} color="bg-blue-50 text-blue-600" />
-          <StatCard label="Exemplares" value={totalExemplares ?? 0} icon={Library} color="bg-purple-50 text-purple-600" />
-          <StatCard label="Leitores Ativos" value={leitoresAtivos ?? 0} icon={Users} color="bg-green-50 text-green-600" />
-          <StatCard label="Empréstimos Abertos" value={emprestimosAndamento ?? 0} icon={ScanLine} color="bg-orange-50 text-orange-600" />
+          <StatCard label="Obras" value={totalObras ?? 0} icon={BookOpen} color="bg-escola-azul/10 text-escola-azul" />
+          <StatCard label="Exemplares" value={totalExemplares ?? 0} icon={Library} color="bg-escola-azul/10 text-escola-azul" />
+          <StatCard label="Leitores Ativos" value={leitoresAtivos ?? 0} icon={Users} color="bg-escola-azul/10 text-escola-azul" />
+          <StatCard label="Empréstimos Abertos" value={emprestimosAndamento ?? 0} icon={ScanLine} color="bg-escola-azul/10 text-escola-azul" />
         </div>
       )}
 

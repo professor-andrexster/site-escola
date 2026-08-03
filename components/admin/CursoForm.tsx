@@ -142,7 +142,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
 
         {!isDirecao && !publicado && (
           <div className="bg-amber-50 border border-amber-200 text-amber-700 rounded-lg px-4 py-3 text-sm">
-            <p className="font-semibold">📋 Rascunho - Aguardando Aprovação</p>
+            <p className="font-semibold">Rascunho, aguardando aprovação</p>
             <p className="text-xs mt-1">Este curso será publicado após aprovação da direção em &quot;Cursos Pendentes&quot;.</p>
           </div>
         )}

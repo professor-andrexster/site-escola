@@ -170,7 +170,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
       {(desafiosCurso ?? []).length > 0 && (
         <section className="mt-10">
           <h2 className="text-white font-black text-lg font-geom flex items-center gap-2 mb-4">
-            <Trophy className="w-5 h-5 text-yellow-400" />
+            <Trophy className="w-5 h-5 text-yellow-500" />
             Projeto do curso
           </h2>
           <div className="space-y-3">
