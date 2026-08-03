@@ -103,6 +103,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
   const [editForm, setEditForm] = useState(EMPTY_FORM)
   const [savingEdit, setSavingEdit] = useState(false)
   const [materiaIA, setMateriaIA] = useState('')
+  const [quantidadeIA, setQuantidadeIA] = useState(10)
   const [gerando, setGerando] = useState(false)
   const [erroIA, setErroIA] = useState('')
   const router = useRouter()
@@ -204,7 +205,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
       const res = await fetch('/api/gerar-perguntas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materia: materiaIA.trim(), quantidade: 10 }),
+        body: JSON.stringify({ materia: materiaIA.trim(), quantidade: quantidadeIA }),
       })
       const json = await res.json()
 
@@ -336,7 +337,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
         <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
           <Sparkles className="w-4 h-4" />
-          Gerar 10 perguntas com IA
+          Gerar perguntas com IA
         </div>
         {erroIA && <p className="text-red-600 text-xs bg-red-50 border border-red-200 rounded-lg px-3 py-2">{erroIA}</p>}
         <div className="flex flex-col sm:flex-row gap-2">
@@ -347,12 +348,23 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
             placeholder="Ex: Revolução Francesa, Funções do 2° grau, Ecossistemas..."
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul"
           />
+          <select
+            value={quantidadeIA}
+            onChange={e => setQuantidadeIA(Number(e.target.value))}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul"
+            aria-label="Quantidade de perguntas"
+          >
+            <option value={5}>5 perguntas</option>
+            <option value={10}>10 perguntas</option>
+            <option value={15}>15 perguntas</option>
+            <option value={20}>20 perguntas</option>
+          </select>
           <button
             onClick={gerarComIA}
             disabled={gerando || !materiaIA.trim()}
             className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 whitespace-nowrap"
           >
-            {gerando ? 'Gerando...' : 'Gerar perguntas'}
+            {gerando ? 'Gerando...' : 'Gerar'}
           </button>
         </div>
         <p className="text-xs text-gray-400">
