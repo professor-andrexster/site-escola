@@ -2,7 +2,7 @@ import PageLayout from '@/components/PageLayout'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { BookOpen, ChevronRight, Pencil, Target, Brain, Zap, Trophy, AlertTriangle, CheckCircle, Star } from 'lucide-react'
+import { BookOpen, ChevronRight, Pencil, Target, Brain, Zap, Trophy, AlertTriangle, CheckCircle, Star, PenLine, Search, Newspaper, RotateCcw, MessagesSquare } from 'lucide-react'
 
 export const metadata: Metadata = {
   title: 'Eletiva de Redação para o ENEM',
@@ -69,12 +69,12 @@ const competencias = [
 ]
 
 const oquePratica = [
-  { emoji: '✍️', item: 'Uma redação por semana — sim, toda semana' },
-  { emoji: '🔍', item: 'Correção coletiva: a gente aprende errando junto' },
-  { emoji: '📰', item: 'Leitura de repertório: textos, dados, filmes, músicas' },
-  { emoji: '🎯', item: 'Simulados com temas inusitados (já foi saúde dos povos indígenas, violência contra a mulher, falta de saneamento...)' },
-  { emoji: '🤝', item: 'Reescrita: porque ninguém acerta de primeira, e tudo bem' },
-  { emoji: '💬', item: 'Debates para montar argumentação na cabeça antes de por no papel' },
+  { Icon: PenLine, item: 'Uma redação por semana — sim, toda semana' },
+  { Icon: Search, item: 'Correção coletiva: a gente aprende errando junto' },
+  { Icon: Newspaper, item: 'Leitura de repertório: textos, dados, filmes, músicas' },
+  { Icon: Target, item: 'Simulados com temas inusitados (já foi saúde dos povos indígenas, violência contra a mulher, falta de saneamento...)' },
+  { Icon: RotateCcw, item: 'Reescrita: porque ninguém acerta de primeira, e tudo bem' },
+  { Icon: MessagesSquare, item: 'Debates para montar argumentação na cabeça antes de por no papel' },
 ]
 
 const temas = [
@@ -201,7 +201,7 @@ export default function EletivasPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {oquePratica.map((p, i) => (
                   <div key={i} className="flex items-start gap-3 bg-white border border-escola-cinza-claro p-4">
-                    <span className="text-xl flex-shrink-0">{p.emoji}</span>
+                    <p.Icon className="w-5 h-5 text-escola-vermelho flex-shrink-0 mt-0.5" />
                     <p className="font-serif text-escola-preto/80 text-sm leading-relaxed">{p.item}</p>
                   </div>
                 ))}

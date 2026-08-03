@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Trophy, Home, RotateCcw, Medal, TrendingUp } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Medal, TrendingUp, Star, ThumbsUp, BookOpen, Dumbbell } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -43,7 +43,7 @@ export default async function ResultadoPage({
   const acertos = respostas?.filter(r => r.correta).length ?? 0
   const percentual = totalPerguntas > 0 ? Math.round((acertos / totalPerguntas) * 100) : 0
 
-  const emoji = percentual === 100 ? '🏆' : percentual >= 80 ? '⭐' : percentual >= 60 ? '👍' : percentual >= 40 ? '📚' : '💪'
+  const IconeDesempenho = percentual === 100 ? Trophy : percentual >= 80 ? Star : percentual >= 60 ? ThumbsUp : percentual >= 40 ? BookOpen : Dumbbell
 
   // Ranking do dia (deste quiz)
   const ranking = rankingDia ?? []
@@ -70,7 +70,7 @@ export default async function ResultadoPage({
         <div className="bg-white rounded-2xl overflow-hidden shadow-2xl">
           {/* Top section */}
           <div className="bg-gradient-to-r from-escola-azul to-blue-700 px-6 py-8 text-center text-white">
-            <div className="text-5xl mb-3">{emoji}</div>
+            <IconeDesempenho className="w-12 h-12 mx-auto mb-3 text-white/90" />
             <h1 className="font-playfair text-2xl font-black mb-1">{participante.nome}</h1>
             <p className="text-white/60 text-sm">{participante.turma} · {quiz.titulo}</p>
           </div>

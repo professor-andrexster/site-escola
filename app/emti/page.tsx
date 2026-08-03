@@ -10,7 +10,7 @@ import {
   PenLine, FlaskConical, Calculator, Globe,
   Clock, ChevronRight, Cpu, Monitor, Network, Code,
   Stethoscope, Store, Landmark, School, Briefcase, Rocket,
-  ExternalLink, BadgeCheck,
+  ExternalLink, BadgeCheck, BarChart3, Settings, Palette,
 } from 'lucide-react'
 
 export const metadata: Metadata = {
@@ -80,11 +80,11 @@ const itModulos = [
 ]
 
 const trilhasTI = [
-  { nome: 'Excel & Dados', icone: '📊', cor: 'green-600', competencias: ['Planilhas avançadas', 'Fórmulas e automação', 'Análise de dados', 'Dashboards'] },
-  { nome: 'Hardware', icone: '🖥️', cor: 'orange-600', competencias: ['Montagem de PCs', 'Manutenção', 'Redes físicas', 'Eletrônica básica'] },
-  { nome: 'Software', icone: '⚙️', cor: 'gray-600', competencias: ['Instalação de SO', 'Suporte técnico', 'Configuração de sistemas', 'Diagnóstico de problemas'] },
-  { nome: 'Design Digital', icone: '🎨', cor: 'pink-600', competencias: ['Canva e Figma', 'Identidade visual', 'Criação de conteúdo', 'Edição de imagem/vídeo'] },
-  { nome: 'Programação', icone: '💻', cor: 'blue-600', competencias: ['Lógica de programação', 'HTML, CSS e JS', 'Python', 'Criação de sistemas'] },
+  { nome: 'Excel & Dados', Icone: BarChart3, cor: 'green-600', competencias: ['Planilhas avançadas', 'Fórmulas e automação', 'Análise de dados', 'Dashboards'] },
+  { nome: 'Hardware', Icone: Monitor, cor: 'orange-600', competencias: ['Montagem de PCs', 'Manutenção', 'Redes físicas', 'Eletrônica básica'] },
+  { nome: 'Software', Icone: Settings, cor: 'gray-600', competencias: ['Instalação de SO', 'Suporte técnico', 'Configuração de sistemas', 'Diagnóstico de problemas'] },
+  { nome: 'Design Digital', Icone: Palette, cor: 'pink-600', competencias: ['Canva e Figma', 'Identidade visual', 'Criação de conteúdo', 'Edição de imagem/vídeo'] },
+  { nome: 'Programação', Icone: Code, cor: 'blue-600', competencias: ['Lógica de programação', 'HTML, CSS e JS', 'Python', 'Criação de sistemas'] },
 ]
 
 const mercadoLocal = [
@@ -362,8 +362,8 @@ export default async function EmtiPage() {
             <AnimateOnScroll key={trilha.nome} delay={(i % 4) as 0|1|2|3}>
               <div className="bg-white border border-escola-cinza-claro rounded-xl p-5 h-full flex flex-col">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-xl ${trilhaBgLight(trilha.cor)}`}>
-                    {trilha.icone}
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${trilhaBgLight(trilha.cor)}`}>
+                    <trilha.Icone className="w-5 h-5" />
                   </div>
                   <h3 className="font-playfair font-bold text-escola-azul text-base">{trilha.nome}</h3>
                 </div>
