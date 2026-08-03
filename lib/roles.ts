@@ -8,6 +8,7 @@ export const ROLE_LABELS: Record<Profile['role'], string> = {
   monitor: 'Monitor',
   bibliotecario: 'Bibliotecário',
   aluno: 'Aluno',
+  aluno_fundamental: 'Aluno Fundamental',
 }
 
 export const ROLE_COLORS: Record<Profile['role'], string> = {
@@ -18,6 +19,7 @@ export const ROLE_COLORS: Record<Profile['role'], string> = {
   monitor: 'bg-purple-600 text-white',
   bibliotecario: 'bg-amber-600 text-white',
   aluno: 'bg-green-600 text-white',
+  aluno_fundamental: 'bg-teal-600 text-white',
 }
 
 /** Papeis com poder de gestao: acesso total ao sistema, aprovacao de qualquer

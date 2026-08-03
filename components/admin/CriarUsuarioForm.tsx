@@ -8,7 +8,7 @@ import { ROLE_LABELS } from '@/lib/roles'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Profile } from '@/types/database'
 
-const ROLES: Profile['role'][] = ['aluno', 'monitor', 'professor', 'diretora', 'vice_diretora', 'admin']
+const ROLES: Profile['role'][] = ['aluno', 'aluno_fundamental', 'monitor', 'professor', 'diretora', 'vice_diretora', 'admin']
 
 export default function CriarUsuarioForm() {
   const [open, setOpen] = useState(false)
@@ -170,6 +170,19 @@ export default function CriarUsuarioForm() {
               className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
             />
           </div>
+
+          {role === 'aluno_fundamental' && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ano e turma</label>
+              <input
+                type="text"
+                value={turma}
+                onChange={e => setTurma(e.target.value)}
+                placeholder="Ex: 6º ano A (opcional)"
+                className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors"
+              />
+            </div>
+          )}
 
           {(role === 'aluno' || role === 'monitor') && (
             <div>

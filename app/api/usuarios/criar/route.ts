@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     nome?: string
     email?: string
     password?: string
-    role?: 'aluno' | 'monitor' | 'professor' | 'diretora' | 'vice_diretora' | 'admin' | 'bibliotecario'
+    role?: 'aluno' | 'aluno_fundamental' | 'monitor' | 'professor' | 'diretora' | 'vice_diretora' | 'admin' | 'bibliotecario'
     turma?: string
     disciplina?: string
     cpf?: string
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     id: userId,
     nome_completo: nome.trim(),
     role,
-    turma: role === 'aluno' || role === 'monitor' ? turma || null : null,
+    turma: role === 'aluno' || role === 'aluno_fundamental' || role === 'monitor' ? turma || null : null,
     disciplina: role === 'professor' ? disciplina?.trim() || null : null,
     aprovado: true,
     email: email.trim().toLowerCase(),

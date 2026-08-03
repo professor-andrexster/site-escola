@@ -32,7 +32,7 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  if (profile.role === 'aluno' || profile.role === 'monitor') {
+  if (profile.role === 'aluno' || profile.role === 'aluno_fundamental' || profile.role === 'monitor') {
     const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }, { count: cursosConcluidos }] = await Promise.all([
       supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
       supabase.from('quiz_participantes')

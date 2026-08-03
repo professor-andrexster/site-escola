@@ -39,6 +39,14 @@ const ROLE_CONFIG: Record<Profile['role'], {
     border: 'border-green-200',
     desc: 'Acessa quizzes da turma',
   },
+  aluno_fundamental: {
+    label: 'Aluno Fundamental',
+    icon: GraduationCap,
+    bg: 'bg-teal-50',
+    text: 'text-teal-700',
+    border: 'border-teal-200',
+    desc: 'Acessa só os cursos abertos',
+  },
   monitor: {
     label: 'Monitor',
     icon: Star,

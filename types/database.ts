@@ -1505,7 +1505,7 @@ export type EntregaUpdate = Database['public']['Tables']['entregas']['Update']
 export interface Profile {
   id: string
   nome_completo: string
-  role: 'aluno' | 'monitor' | 'professor' | 'bibliotecario' | 'diretora' | 'vice_diretora' | 'admin'
+  role: 'aluno' | 'aluno_fundamental' | 'monitor' | 'professor' | 'bibliotecario' | 'diretora' | 'vice_diretora' | 'admin'
   turma: string | null
   disciplina: string | null
   aprovado: boolean

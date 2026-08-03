@@ -127,6 +127,18 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       ],
     },
   ],
+  // Fundamental so ve o que usa de verdade: cursos abertos e o proprio
+  // perfil. Livro ele pega na biblioteca, cadastrado la pela bibliotecaria.
+  aluno_fundamental: [
+    {
+      label: 'Minha Área',
+      items: [
+        { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
+        { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
+        { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+      ],
+    },
+  ],
   bibliotecario: [
     {
       label: 'Biblioteca',
