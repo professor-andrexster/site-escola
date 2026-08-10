@@ -29,3 +29,17 @@ export const GESTAO_ROLES: Profile['role'][] = ['diretora', 'vice_diretora', 'ad
 export function isGestao(role: Profile['role']): boolean {
   return (GESTAO_ROLES as string[]).includes(role)
 }
+
+/** Em qual tela do painel cada papel e listado. Usado para avisar a gestao
+ * quando uma conta criada ou promovida vai aparecer em OUTRA tela — sem o
+ * aviso, o usuario "some" e parece que a operacao falhou. */
+export const TELA_POR_ROLE: Record<Profile['role'], { tela: string; href: string }> = {
+  diretora: { tela: 'Administradores', href: '/admin/usuarios' },
+  vice_diretora: { tela: 'Administradores', href: '/admin/usuarios' },
+  admin: { tela: 'Administradores', href: '/admin/usuarios' },
+  professor: { tela: 'Funcionários', href: '/admin/funcionarios' },
+  monitor: { tela: 'Funcionários', href: '/admin/funcionarios' },
+  bibliotecario: { tela: 'Funcionários', href: '/admin/funcionarios' },
+  aluno_fundamental: { tela: 'Funcionários', href: '/admin/funcionarios' },
+  aluno: { tela: 'Alunos (ficha do aluno)', href: '/admin/alunos' },
+}

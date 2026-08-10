@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { normalizarMatricula } from '@/lib/matricula'
 
 /**
  * Resolve um identificador de login (email, CPF ou matrícula) para o email
@@ -24,7 +25,7 @@ export async function resolverEmail(admin: SupabaseClient, identificador: string
   }
 
   // Matrícula → alunos.user_id → email da conta
-  const { data: aluno } = await admin.from('alunos').select('user_id').eq('matricula', valor).maybeSingle()
+  const { data: aluno } = await admin.from('alunos').select('user_id').eq('matricula', normalizarMatricula(valor)).maybeSingle()
   if (aluno?.user_id) return emailDoUsuario(admin, aluno.user_id)
 
   return null

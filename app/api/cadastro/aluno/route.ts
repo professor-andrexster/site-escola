@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { normalizarMatricula } from '@/lib/matricula'
 import { registrarAtividade, contarRecentes, ipDoRequest } from '@/lib/log'
 
 const MSG_NAO_CONFERE = 'Os dados informados não conferem com a base da escola. Confira com a secretaria se seu cadastro está completo.'
@@ -30,7 +31,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'CPF inválido. Confira os números digitados.' }, { status: 400 })
   }
 
-  const mat = matricula.trim()
+  const mat = normalizarMatricula(matricula)
 
   // Rate limit: 5 tentativas recusadas em 15 min (por matrícula ou por IP)
   const [porMatricula, porIp] = await Promise.all([

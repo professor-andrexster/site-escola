@@ -14,15 +14,20 @@ export default async function FuncionariosPage() {
   const supabase = await createClient()
   const admin = createAdminClient()
 
-  const [{ data: profiles }, { data: identidades }, { data: log }] = await Promise.all([
+  const [{ data: profiles }, { data: identidades }, { data: log }, { data: todosNomes }] = await Promise.all([
     supabase
       .from('profiles')
       .select('*')
-      .in('role', ['professor', 'monitor', 'bibliotecario'])
+      // aluno_fundamental entra aqui: é conta criada e gerida pela equipe, e
+      // sem uma tela que a liste ela ficava invisível depois de criada.
+      .in('role', ['professor', 'monitor', 'bibliotecario', 'aluno_fundamental'])
       .order('aprovado', { ascending: true })
       .order('created_at', { ascending: false }),
     admin.from('identidades').select('user_id, cpf, email_alternativo, criado_via'),
     admin.from('log_atividades').select('*').order('criado_em', { ascending: false }).limit(100),
+    // Nomes de TODOS os perfis: o log referencia qualquer usuário do sistema,
+    // não só os desta tela.
+    admin.from('profiles').select('id, nome_completo'),
   ])
 
   const identidadeMap = new Map((identidades ?? []).map(i => [i.user_id, i]))
@@ -38,7 +43,7 @@ export default async function FuncionariosPage() {
     }
   })
 
-  const nomePorId = new Map((profiles ?? []).map(p => [p.id as string, p.nome_completo as string]))
+  const nomePorId = new Map((todosNomes ?? []).map(p => [p.id as string, p.nome_completo as string]))
   const pendentes = linhas.filter(p => !p.aprovado).length
 
   return (
@@ -49,7 +54,10 @@ export default async function FuncionariosPage() {
             <Users className="w-6 h-6 text-escola-azul" />
             Funcionários
           </h1>
-          <p className="text-sm text-gray-400 mt-1">Professores, monitores, bibliotecários e staff. Gerenciar aprovação e roles.</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Professores, monitores, bibliotecários e contas de aluno do fundamental.
+            Bibliotecária entra por convite; contas de aluno do médio, pelo autocadastro ou pela tela Alunos.
+          </p>
           {pendentes > 0 && (
             <p className="text-sm text-yellow-600 mt-2 font-medium flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4" />
@@ -59,11 +67,14 @@ export default async function FuncionariosPage() {
         </div>
         <div className="flex items-center gap-3 flex-wrap">
           <ConvidarBibliotecariaForm />
-          <CriarUsuarioForm />
+          <CriarUsuarioForm
+            rolesPermitidos={['professor', 'monitor', 'aluno', 'aluno_fundamental']}
+            rolesListados={['professor', 'monitor', 'bibliotecario', 'aluno_fundamental']}
+          />
         </div>
       </div>
 
-      <UsuariosTable profiles={linhas} />
+      <UsuariosTable profiles={linhas} rolesDaTela={['professor', 'monitor', 'bibliotecario', 'aluno_fundamental']} />
 
       <div className="mt-10">
         <h2 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">

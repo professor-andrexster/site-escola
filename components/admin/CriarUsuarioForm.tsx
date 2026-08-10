@@ -4,18 +4,30 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { UserPlus, X } from 'lucide-react'
 import { TURMAS } from '@/lib/turmas'
-import { ROLE_LABELS } from '@/lib/roles'
+import { ROLE_LABELS, TELA_POR_ROLE } from '@/lib/roles'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Profile } from '@/types/database'
 
-const ROLES: Profile['role'][] = ['aluno', 'aluno_fundamental', 'monitor', 'professor', 'diretora', 'vice_diretora', 'admin']
+const TODOS_ROLES: Profile['role'][] = ['aluno', 'aluno_fundamental', 'monitor', 'professor', 'diretora', 'vice_diretora', 'admin']
 
-export default function CriarUsuarioForm() {
+interface CriarUsuarioFormProps {
+  /** Papéis oferecidos no formulário; a tela passa os que fazem sentido nela.
+   * O primeiro da lista vira o papel pré-selecionado. */
+  rolesPermitidos?: Profile['role'][]
+  /** Papéis que a lista da tela atual exibe. Se a conta criada tiver papel
+   * fora deste conjunto, o aviso de sucesso aponta a tela onde ela aparece. */
+  rolesListados?: Profile['role'][]
+}
+
+export default function CriarUsuarioForm({ rolesPermitidos, rolesListados }: CriarUsuarioFormProps) {
+  const roles = rolesPermitidos?.length ? rolesPermitidos : TODOS_ROLES
+  const listados = rolesListados ?? roles
   const [open, setOpen] = useState(false)
   const [nome, setNome] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [role, setRole] = useState<Profile['role']>('aluno')
+  const [role, setRole] = useState<Profile['role']>(roles[0])
+  const [sucesso, setSucesso] = useState<{ nome: string; role: Profile['role'] } | null>(null)
   const [turma, setTurma] = useState('')
   const [disciplina, setDisciplina] = useState('')
   const [cpf, setCpf] = useState('')
@@ -26,8 +38,14 @@ export default function CriarUsuarioForm() {
   const router = useRouter()
 
   function reset() {
-    setNome(''); setEmail(''); setPassword(''); setRole('aluno'); setTurma(''); setDisciplina('')
+    setNome(''); setEmail(''); setPassword(''); setRole(roles[0]); setTurma(''); setDisciplina('')
     setCpf(''); setNascimento(''); setMatricula(''); setError('')
+  }
+
+  function fechar() {
+    setOpen(false)
+    setSucesso(null)
+    reset()
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -56,8 +74,11 @@ export default function CriarUsuarioForm() {
       return
     }
 
+    // Confirmação explícita no lugar de fechar em silêncio: quando o papel
+    // criado pertence a outra tela, a conta não aparece na lista daqui e,
+    // sem o aviso, parece que a criação falhou.
+    setSucesso({ nome, role })
     reset()
-    setOpen(false)
     setLoading(false)
     router.refresh()
   }
@@ -81,7 +102,7 @@ export default function CriarUsuarioForm() {
           <UserPlus className="w-4 h-4 text-escola-azul" />
           Criar Novo Usuário
         </h2>
-        <button onClick={() => { setOpen(false); reset() }} className="text-gray-400 hover:text-gray-600">
+        <button onClick={fechar} className="text-gray-400 hover:text-gray-600">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -90,11 +111,21 @@ export default function CriarUsuarioForm() {
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm mb-4">{error}</div>
       )}
 
+      {sucesso && (
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-lg px-4 py-3 text-sm mb-4">
+          Conta de <strong>{sucesso.nome}</strong> ({ROLE_LABELS[sucesso.role]}) criada.{' '}
+          {listados.includes(sucesso.role)
+            ? 'Ela já aparece na lista abaixo.'
+            : <>Ela aparece na tela <strong>{TELA_POR_ROLE[sucesso.role].tela}</strong>.</>}
+          <button onClick={() => setSucesso(null)} className="ms-2 underline text-green-700 hover:text-green-900">Fechar</button>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Nível de Acesso</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-            {ROLES.map(r => (
+            {roles.map(r => (
               <button
                 key={r}
                 type="button"
@@ -209,7 +240,7 @@ export default function CriarUsuarioForm() {
               <input
                 type="text"
                 value={matricula}
-                onChange={e => setMatricula(e.target.value)}
+                onChange={e => setMatricula(e.target.value.toUpperCase())}
                 placeholder="Opcional"
                 className="w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-escola-azul transition-colors"
               />

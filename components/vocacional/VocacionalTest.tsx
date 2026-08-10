@@ -71,7 +71,7 @@ export default function VocacionalTest() {
     const { data, error } = await supabase
       .from('alunos')
       .select('id, nome')
-      .eq('matricula', matricula.trim())
+      .eq('matricula', matricula.trim().toUpperCase())
       .maybeSingle()
 
     if (error || !data) {
@@ -170,7 +170,7 @@ export default function VocacionalTest() {
             <input
               type="text"
               value={matricula}
-              onChange={(e) => { setMatricula(e.target.value); setErro('') }}
+              onChange={(e) => { setMatricula(e.target.value.toUpperCase()); setErro('') }}
               onKeyDown={(e) => { if (e.key === 'Enter') buscarAluno() }}
               placeholder="Sua matrícula"
               className="w-full px-4 py-3 rounded-lg bg-gray-800 border border-white/10 text-white placeholder-white/30 text-sm focus:outline-none focus:ring-2 focus:ring-escola-vermelho/40 mb-3"

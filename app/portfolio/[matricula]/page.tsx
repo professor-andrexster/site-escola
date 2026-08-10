@@ -21,7 +21,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ matricula: string }> }): Promise<Metadata> {
-  const { matricula } = await params
+  const { matricula: matriculaParam } = await params
+  const matricula = decodeURIComponent(matriculaParam).trim().toUpperCase()
   const supabase = await createClient()
   const { data: aluno } = await supabase.from('alunos').select('nome, turma').eq('matricula', matricula).maybeSingle()
 
@@ -34,7 +35,8 @@ export async function generateMetadata({ params }: { params: Promise<{ matricula
 }
 
 export default async function PortfolioPage({ params }: { params: Promise<{ matricula: string }> }) {
-  const { matricula } = await params
+  const { matricula: matriculaParam } = await params
+  const matricula = decodeURIComponent(matriculaParam).trim().toUpperCase()
   const supabase = await createClient()
 
   // Colunas explícitas: as sensíveis (cpf, nascimento, contatos) são bloqueadas

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Check, X, KeyRound, Copy, Pencil, Upload } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { formatarCPF } from '@/lib/cpf'
+import { TELA_POR_ROLE } from '@/lib/roles'
 import { createClient } from '@/lib/supabase/client'
 import Avatar from '@/components/admin/ui/Avatar'
 
@@ -75,10 +76,15 @@ const ROLE_CONFIG: Record<Profile['role'], {
 
 interface UsuariosTableProps {
   profiles: UsuarioLinha[]
+  /** Papéis que esta tela lista. Quando um usuário muda para papel de outra
+   * tela, o card sai da lista com um aviso do novo destino, em vez de ficar
+   * um card órfão que some sozinho no próximo carregamento. */
+  rolesDaTela?: Profile['role'][]
 }
 
-export default function UsuariosTable({ profiles: initial }: UsuariosTableProps) {
+export default function UsuariosTable({ profiles: initial, rolesDaTela }: UsuariosTableProps) {
   const [profiles, setProfiles] = useState(initial)
+  const [aviso, setAviso] = useState('')
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [changingRoleId, setChangingRoleId] = useState<string | null>(null)
   const [editandoId, setEditandoId] = useState<string | null>(null)
@@ -203,6 +209,7 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
   async function mudarRole(id: string, role: Profile['role']) {
     setLoadingId(id)
     setError('')
+    setAviso('')
     const res = await fetch('/api/usuarios/papel', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -211,6 +218,12 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
     const json = await res.json()
     if (!res.ok) {
       setError(json.error ?? 'Erro ao mudar nível de acesso.')
+    } else if (rolesDaTela && !rolesDaTela.includes(role)) {
+      const quem = profiles.find(p => p.id === id)
+      setProfiles(prev => prev.filter(p => p.id !== id))
+      setChangingRoleId(null)
+      setAviso(`${quem?.nome_completo ?? 'O usuário'} agora é ${ROLE_CONFIG[role].label} e passa a aparecer na tela ${TELA_POR_ROLE[role].tela}.`)
+      router.refresh()
     } else {
       setProfiles(prev => prev.map(p => p.id === id ? { ...p, role } : p))
       setChangingRoleId(null)
@@ -438,6 +451,13 @@ export default function UsuariosTable({ profiles: initial }: UsuariosTableProps)
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
           {error}
+        </div>
+      )}
+
+      {aviso && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 rounded-lg px-4 py-3 text-sm flex items-start justify-between gap-3">
+          <span>{aviso}</span>
+          <button onClick={() => setAviso('')} className="underline text-blue-600 hover:text-blue-800 flex-shrink-0">Fechar</button>
         </div>
       )}
 

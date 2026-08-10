@@ -16,7 +16,7 @@ export default async function UsuariosPage() {
   const supabase = await createClient()
   const admin = createAdminClient()
 
-  const [{ data: profiles }, { data: identidades }, { data: log }] = await Promise.all([
+  const [{ data: profiles }, { data: identidades }, { data: log }, { data: todosNomes }] = await Promise.all([
     supabase
       .from('profiles')
       .select('*')
@@ -25,6 +25,9 @@ export default async function UsuariosPage() {
       .order('created_at', { ascending: false }),
     admin.from('identidades').select('user_id, cpf, email_alternativo, criado_via'),
     admin.from('log_atividades').select('*').order('criado_em', { ascending: false }).limit(100),
+    // Nomes de TODOS os perfis: o log referencia qualquer usuário do sistema,
+    // não só os desta tela.
+    admin.from('profiles').select('id, nome_completo'),
   ])
 
   const identidadeMap = new Map((identidades ?? []).map(i => [i.user_id, i]))
@@ -40,7 +43,7 @@ export default async function UsuariosPage() {
     }
   })
 
-  const nomePorId = new Map((profiles ?? []).map(p => [p.id as string, p.nome_completo as string]))
+  const nomePorId = new Map((todosNomes ?? []).map(p => [p.id as string, p.nome_completo as string]))
   const pendentes = linhas.filter(p => !p.aprovado).length
 
   return (
@@ -48,7 +51,10 @@ export default async function UsuariosPage() {
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Administradores</h1>
-          <p className="text-sm text-gray-400 mt-1">Diretora, vice diretora e admin. Acesso total ao sistema.</p>
+          <p className="text-sm text-gray-400 mt-1">
+            Diretora, vice diretora e admin. Acesso total ao sistema. Professores e monitores são
+            criados em Funcionários; contas de aluno, na tela Alunos ou pelo autocadastro.
+          </p>
           {pendentes > 0 && (
             <p className="text-sm text-yellow-600 mt-2 font-medium flex items-center gap-1.5">
               <AlertTriangle className="w-4 h-4" />
@@ -56,9 +62,9 @@ export default async function UsuariosPage() {
             </p>
           )}
         </div>
-        <CriarUsuarioForm />
+        <CriarUsuarioForm rolesPermitidos={GESTAO_ROLES} rolesListados={GESTAO_ROLES} />
       </div>
-      <UsuariosTable profiles={linhas} />
+      <UsuariosTable profiles={linhas} rolesDaTela={GESTAO_ROLES} />
 
       <div className="mt-10">
         <AtividadeLog

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { normalizarMatricula } from '@/lib/matricula'
 import { registrarAtividade, ipDoRequest } from '@/lib/log'
 
 export async function POST(request: Request) {
@@ -93,14 +94,15 @@ export async function POST(request: Request) {
   // Se for aluno com matrícula informada, vincula ao registro acadêmico
   let vinculo: string | null = null
   if (role === 'aluno' && matricula?.trim()) {
+    const mat = normalizarMatricula(matricula)
     const { data: alunoBase } = await admin
       .from('alunos')
       .select('id, user_id')
-      .eq('matricula', matricula.trim())
+      .eq('matricula', mat)
       .maybeSingle()
     if (alunoBase && !alunoBase.user_id) {
       await admin.from('alunos').update({ user_id: userId }).eq('id', alunoBase.id)
-      vinculo = matricula.trim()
+      vinculo = mat
     }
   }
 

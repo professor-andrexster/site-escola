@@ -41,10 +41,12 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
 
     try {
       const ext = file.name.split('.').pop()
-      const fileName = `alunos/${aluno.id}/foto-${Date.now()}.${ext}`
+      // A foto mora no bucket "imagens" (o bucket "alunos" nunca existiu no
+      // Storage), mesmo caminho usado pelo aluno em MeuPerfilForm.
+      const fileName = `avatars/aluno-${aluno.id}-${Date.now()}.${ext}`
 
       const { error: uploadError } = await supabase.storage
-        .from('alunos')
+        .from('imagens')
         .upload(fileName, file, { upsert: true })
 
       if (uploadError) {
@@ -54,7 +56,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
       }
 
       const { data: { publicUrl } } = supabase.storage
-        .from('alunos')
+        .from('imagens')
         .getPublicUrl(fileName)
 
       setFotoUrl(publicUrl)
@@ -176,7 +178,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
           <input
             type="text"
             value={matricula}
-            onChange={(e) => setMatricula(e.target.value)}
+            onChange={(e) => setMatricula(e.target.value.toUpperCase())}
             disabled={somenteLeitura}
             className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
           />

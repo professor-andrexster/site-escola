@@ -137,7 +137,7 @@ export default function NovoAlunoPage() {
             <input
               type="text"
               value={form.matricula}
-              onChange={(e) => setField('matricula', e.target.value)}
+              onChange={(e) => setField('matricula', e.target.value.toUpperCase())}
               className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 ${erros.matricula ? 'border-red-400' : 'border-gray-200'}`}
             />
             {erros.matricula && <p className="text-xs text-red-500 mt-1">{erros.matricula}</p>}

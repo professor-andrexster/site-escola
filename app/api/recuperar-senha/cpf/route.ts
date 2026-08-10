@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { normalizarMatricula } from '@/lib/matricula'
 import { registrarAtividade, contarRecentes, ipDoRequest } from '@/lib/log'
 
 const MSG_NAO_CONFERE = 'Os dados informados não conferem com a base da escola. Se o problema continuar, procure a direção.'
@@ -27,7 +28,7 @@ export async function POST(request: Request) {
 
   const ip = ipDoRequest(request)
   const admin = createAdminClient()
-  const mat = matricula.trim()
+  const mat = normalizarMatricula(matricula)
 
   // Rate limit rígido: redefinir senha é sensível — 3 falhas/h por matrícula, 10/h por IP
   const [porMatricula, porIp] = await Promise.all([

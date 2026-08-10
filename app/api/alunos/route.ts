@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { createClient } from '@/lib/supabase/server'
 import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
+import { normalizarMatricula } from '@/lib/matricula'
 import { registrarAtividade, ipDoRequest } from '@/lib/log'
 
 // Escrita na tabela alunos é só via service role (RLS fechada na migration 016).
@@ -35,7 +36,12 @@ async function verificarDuplicatas(
   if (!valor) return { existe: false }
 
   const admin = createAdminClient()
-  const query = admin.from('alunos').select('id, nome').eq(campo, valor)
+  // Matrícula compara sem diferenciar caixa (ilike) para pegar registros
+  // antigos gravados fora do padrão maiúsculo, tipo "Alu20260010".
+  const query =
+    campo === 'matricula'
+      ? admin.from('alunos').select('id, nome').ilike(campo, normalizarMatricula(valor).replace(/[%_]/g, '\\$&'))
+      : admin.from('alunos').select('id, nome').eq(campo, valor)
 
   if (alunoIdExcluindo) {
     query.neq('id', alunoIdExcluindo)
@@ -53,7 +59,7 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
   }
 
   if (body.nome !== undefined) dados.nome = body.nome.trim()
-  if (body.matricula !== undefined) dados.matricula = body.matricula.trim()
+  if (body.matricula !== undefined) dados.matricula = normalizarMatricula(body.matricula)
   if (body.turma !== undefined) {
     dados.turma = body.turma
     dados.serie = body.turma // padrão existente: serie espelha a turma

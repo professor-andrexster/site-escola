@@ -100,7 +100,7 @@ function FormAluno() {
         <label htmlFor="aluno-matricula" className={labelClass}>Matrícula *</label>
         <input
           id="aluno-matricula" type="text" required value={matricula}
-          onChange={e => setMatricula(e.target.value)}
+          onChange={e => setMatricula(e.target.value.toUpperCase())}
           placeholder="Sua matrícula da escola"
           className={inputClass}
         />
