@@ -1,13 +1,26 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
+import { contaDoCpf } from '@/lib/db/identidades'
+import { contaDaMatricula } from '@/lib/db/alunos'
+import { emailDaConta } from '@/lib/auth/sessao'
 
 /**
- * Resolve um identificador de login (email, CPF ou matrícula) para o email
- * da conta. Usar sempre com o admin client (service role) — consulta colunas
- * protegidas. Retorna null se não encontrar.
+ * Resolve um identificador de login (email, CPF ou matricula) para o email da
+ * conta. Retorna null se nao encontrar.
+ *
+ * ATENCAO ao primeiro caso: se o valor tem "@", ele e devolvido como esta, sem
+ * conferir se existe conta com aquele endereco. E proposital — a resposta ao
+ * usuario precisa ser generica, senao a tela vira um verificador de quais
+ * emails estao cadastrados.
+ *
+ * O custo disso apareceu em agosto de 2026: dois alunos nao conseguiam entrar
+ * porque digitavam um email parecido, mas nao igual, ao da conta ("lilian."
+ * com ponto contra "lilian" sem). O Supabase respondia "credenciais
+ * invalidas", igual a senha errada, e o log registrava como senha_incorreta.
+ * A rota de login agora grava o email resolvido (mascarado) junto do erro,
+ * para que a proxima vez seja diagnosticavel em minutos.
  */
-export async function resolverEmail(admin: SupabaseClient, identificador: string): Promise<string | null> {
+export async function resolverEmail(identificador: string): Promise<string | null> {
   const valor = identificador.trim()
   if (!valor) return null
 
@@ -15,32 +28,25 @@ export async function resolverEmail(admin: SupabaseClient, identificador: string
 
   const digitos = limparCPF(valor)
 
-  // CPF válido → identidades.cpf → email da conta
+  // CPF valido -> identidades.cpf -> email da conta
   if (digitos.length === 11 && validarCPF(digitos)) {
-    const { data } = await admin.from('identidades').select('user_id').eq('cpf', digitos).maybeSingle()
-    if (data?.user_id) {
-      const email = await emailDoUsuario(admin, data.user_id)
+    const userId = await contaDoCpf(digitos)
+    if (userId) {
+      const email = await emailDaConta(userId)
       if (email) return email
     }
   }
 
-  // Matrícula → alunos.user_id → email da conta
-  const { data: aluno } = await admin.from('alunos').select('user_id').eq('matricula', normalizarMatricula(valor)).maybeSingle()
-  if (aluno?.user_id) return emailDoUsuario(admin, aluno.user_id)
-
-  return null
+  // Matricula -> alunos.user_id -> email da conta
+  const userId = await contaDaMatricula(normalizarMatricula(valor))
+  return userId ? emailDaConta(userId) : null
 }
 
-/** Mascara um identificador sensível para registro em log (CPF nunca inteiro). */
+/** Mascara um identificador sensivel para registro em log (CPF nunca inteiro). */
 export function mascararIdentificador(identificador: string): string {
   const digitos = limparCPF(identificador)
   if (digitos.length === 11 && !identificador.includes('@')) {
     return `cpf ***${digitos.slice(-4)}`
   }
   return identificador.trim()
-}
-
-async function emailDoUsuario(admin: SupabaseClient, userId: string): Promise<string | null> {
-  const { data } = await admin.auth.admin.getUserById(userId)
-  return data.user?.email ?? null
 }

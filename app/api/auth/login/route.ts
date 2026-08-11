@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { papelEAprovacao } from '@/lib/db/perfis'
 import { resolverEmail, mascararIdentificador } from '@/lib/identidade'
-import { registrarAtividade, contarRecentes, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar, contarRecentes } from '@/lib/db/log'
 
 const MSG_ERRO = 'Dados de acesso incorretos. Verifique e tente novamente.'
 
@@ -15,19 +16,18 @@ export async function POST(request: Request) {
   }
 
   const ip = ipDoRequest(request)
-  const admin = createAdminClient()
 
   // Rate limit: 10 falhas em 15 min por IP
   if (ip) {
-    const falhas = await contarRecentes(admin, { acao: 'login_falha', janelaMin: 15, ip })
+    const falhas = await contarRecentes({ acao: 'login_falha', janelaMin: 15, ip })
     if (falhas >= 10) {
       return NextResponse.json({ error: 'Muitas tentativas. Aguarde alguns minutos.' }, { status: 429 })
     }
   }
 
-  const email = await resolverEmail(admin, identificador)
+  const email = await resolverEmail(identificador)
   if (!email) {
-    await registrarAtividade(admin, {
+    await registrar({
       acao: 'login_falha',
       detalhes: { identificador: mascararIdentificador(identificador), motivo: 'nao_encontrado' },
       ip,
@@ -48,7 +48,7 @@ export async function POST(request: Request) {
       status: authError?.status,
       mensagem: authError?.message,
     })
-    await registrarAtividade(admin, {
+    await registrar({
       acao: 'login_falha',
       detalhes: {
         identificador: mascararIdentificador(identificador),
@@ -63,18 +63,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: MSG_ERRO }, { status: 401 })
   }
 
-  const { data: profile } = await admin
-    .from('profiles')
-    .select('aprovado')
-    .eq('id', data.user.id)
-    .maybeSingle()
+  const profile = await papelEAprovacao(data.user.id)
 
   if (!profile) {
     await supabase.auth.signOut()
     return NextResponse.json({ error: 'Perfil não encontrado. Entre em contato com a direção.' }, { status: 403 })
   }
 
-  await registrarAtividade(admin, { acao: 'login_ok', userId: data.user.id, ip })
+  await registrar({ acao: 'login_ok', userId: data.user.id, ip })
 
   return NextResponse.json({ ok: true, destino: profile.aprovado ? '/admin/dashboard' : '/admin/pendente' })
 }
