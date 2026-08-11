@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { papelEAprovacao, remover as removerPerfil } from '@/lib/db/perfis'
+import { removerConta } from '@/lib/auth/sessao'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 
 // Remove a conta por completo (auth.users + profiles). Antes o "Rejeitar" da
@@ -19,20 +20,22 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Você não pode remover a própria conta.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-
   if (auth.role === 'professor') {
-    const { data: alvo } = await admin.from('profiles').select('role, aprovado').eq('id', userId).maybeSingle()
+    const alvo = await papelEAprovacao(userId)
     if (!alvo || alvo.role !== 'aluno' || alvo.aprovado) {
       return NextResponse.json({ error: 'Professor só pode rejeitar cadastro de aluno ainda pendente.' }, { status: 403 })
     }
   }
 
-  // identidades cai em cascata com o auth user; profiles removemos explicitamente
-  await admin.from('profiles').delete().eq('id', userId)
-  const { error } = await admin.auth.admin.deleteUser(userId)
-  if (error) {
-    return NextResponse.json({ error: 'Erro ao remover: ' + error.message }, { status: 400 })
+  // identidades cai em cascata com a conta; profiles removemos explicitamente.
+  // Conferido no MariaDB: identidades.user_id e profiles.id tem ON DELETE
+  // CASCADE para usuarios, entao o comportamento se mantem depois da virada.
+  try {
+    await removerPerfil(userId)
+    await removerConta(userId)
+  } catch (erro) {
+    console.error('[usuarios/remover] falha', erro)
+    return NextResponse.json({ error: 'Erro ao remover o usuário.' }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true })

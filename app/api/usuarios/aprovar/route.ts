@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { papelEAprovacao, aprovar as aprovarPerfil } from '@/lib/db/perfis'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 // Libera o acesso de um cadastro pendente. Professor so pode aprovar aluno,
 // nunca outro professor nem a si mesmo; gestao pode aprovar qualquer papel,
@@ -16,18 +17,21 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Você não pode aprovar a própria conta.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-  const { data: alvo } = await admin.from('profiles').select('role, aprovado').eq('id', userId).maybeSingle()
+  const alvo = await papelEAprovacao(userId)
   if (!alvo) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 })
 
   if (auth.role === 'professor' && alvo.role !== 'aluno') {
     return NextResponse.json({ error: 'Professor só pode aprovar cadastro de aluno.' }, { status: 403 })
   }
 
-  const { error } = await admin.from('profiles').update({ aprovado: true }).eq('id', userId)
-  if (error) return NextResponse.json({ error: 'Erro ao aprovar: ' + error.message }, { status: 400 })
+  try {
+    await aprovarPerfil(userId)
+  } catch (erro) {
+    console.error('[usuarios/aprovar] falha', erro)
+    return NextResponse.json({ error: 'Erro ao aprovar o usuário.' }, { status: 400 })
+  }
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: auth.role === 'professor' ? 'aluno_aprovado_professor' : 'usuario_aprovado_gestao',
     userId,
     detalhes: { aprovado_por: auth.userId, role: alvo.role },

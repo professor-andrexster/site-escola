@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { papelEAprovacao, alterarPapel } from '@/lib/db/perfis'
 import { exigirGestao } from '@/lib/apiGestao'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 import type { Profile } from '@/types/database'
 
 const ROLES_VALIDOS: Profile['role'][] = ['aluno', 'monitor', 'professor', 'bibliotecario', 'diretora', 'vice_diretora', 'admin']
@@ -15,14 +16,17 @@ export async function POST(request: Request) {
   if (!userId || !role) return NextResponse.json({ error: 'Preencha os dados necessários.' }, { status: 400 })
   if (!ROLES_VALIDOS.includes(role)) return NextResponse.json({ error: 'Nível de acesso inválido.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: alvo } = await admin.from('profiles').select('role').eq('id', userId).maybeSingle()
+  const alvo = await papelEAprovacao(userId)
   if (!alvo) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 })
 
-  const { error } = await admin.from('profiles').update({ role }).eq('id', userId)
-  if (error) return NextResponse.json({ error: 'Erro ao mudar nível de acesso: ' + error.message }, { status: 400 })
+  try {
+    await alterarPapel(userId, role)
+  } catch (erro) {
+    console.error('[usuarios/papel] falha', erro)
+    return NextResponse.json({ error: 'Erro ao alterar o papel.' }, { status: 400 })
+  }
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'papel_alterado',
     userId,
     detalhes: { alterado_por: auth.userId, de: alvo.role, para: role },

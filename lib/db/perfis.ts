@@ -215,6 +215,18 @@ export async function sincronizarTurma(id: string, turma: string) {
   return prisma.profiles.update({ where: { id }, data: { turma } })
 }
 
+/** Campos que a pessoa edita no proprio perfil, ou a gestao no de outra. */
+export async function atualizarPerfil(
+  id: string,
+  dados: { nome_completo?: string; avatar_url?: string | null; disciplina?: string | null; turma?: string | null }
+) {
+  const p = await prisma.profiles.update({
+    where: { id },
+    data: { ...dados, updated_at: new Date() },
+  })
+  return serializar(p)
+}
+
 export async function remover(id: string) {
   return prisma.profiles.delete({ where: { id } })
 }

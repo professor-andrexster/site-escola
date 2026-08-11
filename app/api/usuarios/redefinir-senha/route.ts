@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { definirSenha } from '@/lib/auth/sessao'
 import { exigirGestao } from '@/lib/apiGestao'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 // Senha temporária fácil de ditar e digitar (sem caracteres ambíguos como 0/O, 1/l)
 function gerarSenhaTemporaria(): string {
@@ -21,15 +22,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Usuário não informado.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
   const senha = gerarSenhaTemporaria()
-
-  const { error } = await admin.auth.admin.updateUserById(userId, { password: senha })
-  if (error) {
-    return NextResponse.json({ error: 'Erro ao redefinir a senha: ' + error.message }, { status: 400 })
+  try {
+    await definirSenha(userId, senha)
+  } catch (erro) {
+    console.error('[usuarios/redefinir-senha] falha', erro)
+    return NextResponse.json({ error: 'Erro ao redefinir a senha.' }, { status: 400 })
   }
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'senha_redefinida_admin',
     userId,
     detalhes: { redefinida_por: auth.userId },

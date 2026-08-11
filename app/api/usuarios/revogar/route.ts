@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { papelEAprovacao, revogar as revogarPerfil } from '@/lib/db/perfis'
 import { exigirGestao } from '@/lib/apiGestao'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 // Tira o acesso de alguem que ja estava aprovado, sem apagar a conta. So
 // gestao pode fazer isso, diferente de aprovar, que professor tambem pode
@@ -16,14 +17,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Você não pode revogar o próprio acesso.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-  const { data: alvo } = await admin.from('profiles').select('role, aprovado').eq('id', userId).maybeSingle()
+  const alvo = await papelEAprovacao(userId)
   if (!alvo) return NextResponse.json({ error: 'Usuário não encontrado.' }, { status: 404 })
 
-  const { error } = await admin.from('profiles').update({ aprovado: false }).eq('id', userId)
-  if (error) return NextResponse.json({ error: 'Erro ao revogar acesso: ' + error.message }, { status: 400 })
+  try {
+    await revogarPerfil(userId)
+  } catch (erro) {
+    console.error('[usuarios/revogar] falha', erro)
+    return NextResponse.json({ error: 'Erro ao revogar o acesso.' }, { status: 400 })
+  }
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'usuario_revogado_gestao',
     userId,
     detalhes: { revogado_por: auth.userId, role: alvo.role },
