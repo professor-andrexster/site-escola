@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId, contarAulas } from '@/lib/db/cursos'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -13,12 +13,10 @@ interface Params {
 
 export default async function NovaAulaPage({ params }: Params) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: curso } = await supabase.from('cursos').select('id, slug').eq('id', id).maybeSingle()
+  const curso = await buscarPorId(id)
   if (!curso) notFound()
 
-  const { count } = await supabase.from('aulas').select('*', { count: 'exact', head: true }).eq('curso_id', id)
+  const total = await contarAulas(id)
 
   return (
     <div>
@@ -27,7 +25,7 @@ export default async function NovaAulaPage({ params }: Params) {
         Voltar ao curso
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Nova Aula</h1>
-      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} proximaOrdem={(count ?? 0) + 1} />
+      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} proximaOrdem={total + 1} />
     </div>
   )
 }

@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarLeitor, emprestimosDoLeitor } from '@/lib/db/biblioteca'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, History } from 'lucide-react'
@@ -10,16 +10,10 @@ export const dynamic = 'force-dynamic'
 
 export default async function LeitorDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const admin = createAdminClient()
-
-  const { data: leitor } = await admin.from('biblioteca_leitores').select('*').eq('id', id).maybeSingle()
+  const leitor = await buscarLeitor(id)
   if (!leitor) notFound()
 
-  const { data: emprestimos } = await admin
-    .from('biblioteca_emprestimos')
-    .select('*, biblioteca_exemplares(tombo, biblioteca_obras(titulo))')
-    .eq('leitor_id', id)
-    .order('data_emprestimo', { ascending: false })
+  const emprestimos = await emprestimosDoLeitor(id)
 
   return (
     <div className="max-w-2xl">
@@ -34,13 +28,12 @@ export default async function LeitorDetalhePage({ params }: { params: Promise<{ 
           <History className="w-4 h-4 text-escola-azul" />
           Histórico de Empréstimos
         </h2>
-        {!emprestimos || emprestimos.length === 0 ? (
+        {emprestimos.length === 0 ? (
           <p className="text-sm text-gray-400">Nenhum empréstimo registrado ainda.</p>
         ) : (
           <div className="space-y-2">
             {emprestimos.map(e => {
-              const exemplar = Array.isArray(e.biblioteca_exemplares) ? e.biblioteca_exemplares[0] : e.biblioteca_exemplares
-              const obra = exemplar && (Array.isArray(exemplar.biblioteca_obras) ? exemplar.biblioteca_obras[0] : exemplar.biblioteca_obras)
+              const obra = e.biblioteca_exemplares?.biblioteca_obras
               return (
                 <div key={e.id} className="flex items-center justify-between text-sm border-b border-gray-50 last:border-0 py-2">
                   <span className="text-gray-700">{obra?.titulo ?? 'Obra'}</span>

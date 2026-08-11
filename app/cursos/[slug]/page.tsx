@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { cursoPublicoPorSlug } from '@/lib/db/cursos'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 
@@ -6,23 +6,9 @@ export const revalidate = 60
 
 export default async function CursoPublicoPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const supabase = await createClient()
-
-  const { data: curso } = await supabase
-    .from('cursos')
-    .select('id, titulo, descricao')
-    .eq('slug', slug)
-    .eq('publicado', true)
-    .maybeSingle()
-
-  if (!curso) notFound()
-
-  const { data: aulas } = await supabase
-    .from('aulas')
-    .select('id, titulo, ordem')
-    .eq('curso_id', curso.id)
-    .eq('publicado', true)
-    .order('ordem', { ascending: true })
+  const dados = await cursoPublicoPorSlug(slug)
+  if (!dados) notFound()
+  const { curso, aulas } = dados
 
   return (
     <div className="bg-escola-creme min-h-screen pb-20">
@@ -38,10 +24,10 @@ export default async function CursoPublicoPage({ params }: { params: Promise<{ s
 
         <div className="bg-white border border-escola-cinza-claro rounded-lg p-8">
           <h2 className="font-playfair text-2xl font-bold text-escola-azul mb-6">
-            Aulas ({aulas?.length || 0})
+            Aulas ({aulas.length})
           </h2>
 
-          {(!aulas || aulas.length === 0) ? (
+          {aulas.length === 0 ? (
             <p className="text-escola-cinza">Nenhuma aula disponível ainda.</p>
           ) : (
             <ol className="space-y-3">

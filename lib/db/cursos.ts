@@ -58,17 +58,30 @@ export type Certificado = certificados
 // -------------------------------------------------------------- catalogo
 
 /** Cursos publicados, na ordem definida pela gestao. */
-export async function listarPublicados(): Promise<Curso[]> {
-  return prisma.cursos.findMany({ where: { publicado: true }, orderBy: { ordem: 'asc' } })
-}
-
-/** Versao enxuta para menus e listagens. */
-export async function listarPublicadosResumo() {
-  return prisma.cursos.findMany({
+export async function catalogoDoPainel() {
+  const linhas = await prisma.cursos.findMany({
     where: { publicado: true },
-    select: { id: true, titulo: true, slug: true, categoria: true },
     orderBy: { ordem: 'asc' },
   })
+  return linhas.map(serializarCurso)
+}
+
+/**
+ * Pagina publica de um curso: so o que e publicado, curso e aulas. Um curso
+ * publicado pode ter aula em rascunho, e ela nao aparece aqui.
+ */
+export async function cursoPublicoPorSlug(slug: string) {
+  const curso = await prisma.cursos.findFirst({
+    where: { slug, publicado: true },
+    select: { id: true, titulo: true, descricao: true },
+  })
+  if (!curso) return null
+  const aulas = await prisma.aulas.findMany({
+    where: { curso_id: curso.id, publicado: true },
+    select: { id: true, titulo: true, ordem: true },
+    orderBy: { ordem: 'asc' },
+  })
+  return { curso, aulas }
 }
 
 /** Os primeiros cursos publicados, para a vitrine da home. */
@@ -189,10 +202,6 @@ export async function buscarAula(cursoId: string, aulaId: string): Promise<Aula 
   return prisma.aulas.findFirst({ where: { id: aulaId, curso_id: cursoId } })
 }
 
-export async function buscarAulaPorSlug(cursoId: string, slug: string): Promise<Aula | null> {
-  return prisma.aulas.findFirst({ where: { curso_id: cursoId, slug } })
-}
-
 /** Carga total das aulas publicadas, em minutos. */
 export async function duracaoTotal(cursoId: string): Promise<number> {
   const r = await prisma.aulas.aggregate({
@@ -262,7 +271,7 @@ export async function cursoComAulas(slug: string) {
     where: { curso_id: curso.id, publicado: true },
     orderBy: { ordem: 'asc' },
   })
-  return { curso, aulas: aulas.map(serializarAula) }
+  return { curso: serializarCurso(curso), aulas: aulas.map(serializarAula) }
 }
 
 /** Desafios de uma aula, sem gabarito — a coluna e bloqueada para alunos. */
@@ -494,7 +503,7 @@ export async function cursoParaGestao(id: string) {
     where: { curso_id: id },
     orderBy: { ordem: 'asc' },
   })
-  return { curso, aulas: aulas.map(serializarAula) }
+  return { curso: serializarCurso(curso), aulas: aulas.map(serializarAula) }
 }
 
 /** Uma aula pelo id, dentro de um curso. */
@@ -508,10 +517,6 @@ export async function contarAulas(cursoId: string): Promise<number> {
 }
 
 // ------------------------------------------------------------------ GESTAO
-
-export async function listarTodos(): Promise<Curso[]> {
-  return prisma.cursos.findMany({ orderBy: { ordem: 'asc' } })
-}
 
 /**
  * Cursos com a lista de ids das aulas — a tela de gestao so mostra a

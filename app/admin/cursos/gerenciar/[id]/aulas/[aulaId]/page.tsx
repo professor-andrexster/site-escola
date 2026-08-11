@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { aulaDoCurso, buscarPorId } from '@/lib/db/cursos'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -10,20 +10,17 @@ interface Params {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { aulaId } = await params
-  const supabase = await createClient()
-  const { data: aula } = await supabase.from('aulas').select('titulo').eq('id', aulaId).maybeSingle()
+  const { id, aulaId } = await params
+  const aula = await aulaDoCurso(id, aulaId)
   return { title: aula ? `Editar — ${aula.titulo}` : 'Aula' }
 }
 
 export default async function EditarAulaPage({ params }: Params) {
   const { id, aulaId } = await params
-  const supabase = await createClient()
-
-  const { data: curso } = await supabase.from('cursos').select('id, slug').eq('id', id).maybeSingle()
+  const curso = await buscarPorId(id)
   if (!curso) notFound()
 
-  const { data: aula } = await supabase.from('aulas').select('*').eq('id', aulaId).eq('curso_id', id).maybeSingle()
+  const aula = await aulaDoCurso(id, aulaId)
   if (!aula) notFound()
 
   return (

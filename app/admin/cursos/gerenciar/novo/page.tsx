@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { getProfileOrRedirect } from '@/lib/profile'
 import CursoForm from '@/components/admin/CursoForm'
 import { isGestao } from '@/lib/roles'
 import type { Metadata } from 'next'
@@ -7,15 +7,8 @@ export const metadata: Metadata = { title: 'Novo Curso' }
 export const dynamic = 'force-dynamic'
 
 export default async function NovoCursoPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
-
-  const isDirecao = isGestao(profile?.role ?? 'aluno')
+  const { profile } = await getProfileOrRedirect()
+  const isDirecao = isGestao(profile.role)
 
   return (
     <div>

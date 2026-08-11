@@ -67,8 +67,16 @@ export async function buscarDestaque(): Promise<Noticia | null> {
 // Chamar apenas de rota protegida — a checagem de papel e responsabilidade
 // do chamador, porque o MySQL nao tem RLS para barrar por baixo.
 
-export async function listarTodas(): Promise<Noticia[]> {
-  const linhas = await prisma.noticias.findMany({ orderBy: { created_at: 'desc' } })
+/**
+ * Todas as noticias. `autorId` restringe ao que aquela pessoa escreveu — e o
+ * que o monitor enxerga, que no Supabase era uma policy de RLS e aqui precisa
+ * ser dito pelo chamador.
+ */
+export async function listarTodas(autorId?: string): Promise<Noticia[]> {
+  const linhas = await prisma.noticias.findMany({
+    where: autorId ? { autor_id: autorId } : {},
+    orderBy: { created_at: 'desc' },
+  })
   return linhas.map(serializar)
 }
 
@@ -77,13 +85,13 @@ export async function buscarPorId(id: string): Promise<Noticia | null> {
   return n ? serializar(n) : null
 }
 
-/** Historico de alteracoes de uma noticia. */
-export async function historicoDaNoticia(noticiaId: string) {
+/** Log de atividades, o mais recente primeiro. So a gestao ve. */
+export async function logDeAtividades(limite = 30) {
   const linhas = await prisma.noticias_log.findMany({
-    where: { noticia_id: noticiaId },
     orderBy: { created_at: 'desc' },
+    take: limite,
   })
-  return linhas.map(l => ({ ...l, created_at: l.created_at?.toISOString() ?? null }))
+  return linhas.map(l => ({ ...l, created_at: l.created_at?.toISOString() ?? '' }))
 }
 
 export async function alternarPublicado(id: string, publicado: boolean) {

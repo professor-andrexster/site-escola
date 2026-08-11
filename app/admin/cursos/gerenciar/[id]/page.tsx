@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId, cursoParaGestao } from '@/lib/db/cursos'
+import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Plus } from 'lucide-react'
@@ -14,8 +15,7 @@ interface Params {
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data: curso } = await supabase.from('cursos').select('titulo').eq('id', id).maybeSingle()
+  const curso = await buscarPorId(id)
   return { title: curso ? `Editar — ${curso.titulo}` : 'Curso' }
 }
 
@@ -23,21 +23,13 @@ export const dynamic = 'force-dynamic'
 
 export default async function EditarCursoPage({ params }: Params) {
   const { id } = await params
-  const supabase = await createClient()
+  const { profile } = await getProfileOrRedirect()
 
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
+  const ficha = await cursoParaGestao(id)
+  if (!ficha) notFound()
+  const { curso, aulas } = ficha
 
-  const { data: curso } = await supabase.from('cursos').select('*').eq('id', id).maybeSingle()
-  if (!curso) notFound()
-
-  const { data: aulas } = await supabase.from('aulas').select('*').eq('curso_id', id).order('ordem')
-
-  const isDirecao = isGestao(profile?.role ?? 'aluno')
+  const isDirecao = isGestao(profile.role)
 
   return (
     <div>
@@ -60,7 +52,7 @@ export default async function EditarCursoPage({ params }: Params) {
             Nova Aula
           </Link>
         </div>
-        <AulaManager cursoId={id} aulas={aulas ?? []} />
+        <AulaManager cursoId={id} aulas={aulas} />
       </div>
 
       <div className="max-w-3xl mt-10">

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { catalogoDoPainel } from '@/lib/db/cursos'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
@@ -12,11 +12,10 @@ export const metadata: Metadata = { title: 'Cursos' }
 export const dynamic = 'force-dynamic'
 
 export default async function CursosPage() {
-  const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  const [{ data: cursos }, progressos] = await Promise.all([
-    supabase.from('cursos').select('*').eq('publicado', true).order('ordem'),
+  const [cursos, progressos] = await Promise.all([
+    catalogoDoPainel(),
     progressoCursosPorUsuario(user.id),
   ])
 
@@ -46,7 +45,7 @@ export default async function CursosPage() {
         )}
       </div>
 
-      {!cursos || cursos.length === 0 ? (
+      {cursos.length === 0 ? (
         <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center">
           <GraduationCap className="w-10 h-10 text-white/20 mx-auto mb-3" />
           <p className="text-white/40">Nenhum curso publicado ainda.</p>

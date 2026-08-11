@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId } from '@/lib/db/noticias'
 import { requireMonitorOrAbove } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import NoticiaEditor from '@/components/admin/NoticiaEditor'
@@ -9,15 +9,9 @@ interface Props {
 
 export default async function EditarNoticiaPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createClient()
   const { user, profile } = await requireMonitorOrAbove()
 
-  const { data: noticia } = await supabase
-    .from('noticias')
-    .select('*')
-    .eq('id', id)
-    .single()
-
+  const noticia = await buscarPorId(id)
   if (!noticia) notFound()
 
   // Monitor só pode editar suas próprias notícias

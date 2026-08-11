@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarTodas, logDeAtividades } from '@/lib/db/noticias'
 import { requireMonitorOrAbove } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import Link from 'next/link'
@@ -7,26 +7,15 @@ import { Plus, Clock, FileText } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 
 export default async function AdminNoticiasPage() {
-  const supabase = await createClient()
   const { user, profile } = await requireMonitorOrAbove()
 
   const isMonitor = profile.role === 'monitor'
   const isDirecao = isGestao(profile.role)
 
-  let query = supabase.from('noticias').select('*').order('created_at', { ascending: false })
-  if (isMonitor) {
-    query = query.eq('autor_id', user.id)
-  }
-  const { data: noticias } = await query
-
+  // Monitor so ve o que escreveu.
+  const noticias = await listarTodas(isMonitor ? user.id : undefined)
   // Log de atividades — só para direção
-  const { data: logs } = isDirecao
-    ? await supabase
-        .from('noticias_log')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(30)
-    : { data: null }
+  const logs = isDirecao ? await logDeAtividades() : null
 
   return (
     <div>
@@ -49,7 +38,7 @@ export default async function AdminNoticiasPage() {
       </div>
 
       <NoticiasTable
-        noticias={noticias ?? []}
+        noticias={noticias}
         canSetDestaque={!isMonitor}
         role={profile.role}
         autorNome={profile.nome_completo}
@@ -73,14 +62,7 @@ export default async function AdminNoticiasPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {logs.map((log: {
-                  id: string
-                  acao: string
-                  noticia_titulo: string | null
-                  noticia_id: string | null
-                  autor_nome: string | null
-                  created_at: string
-                }) => (
+                {logs.map(log => (
                   <tr key={log.id} className="hover:bg-gray-50">
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
