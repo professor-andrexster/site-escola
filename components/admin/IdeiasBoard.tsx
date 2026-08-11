@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Plus, X, Heart, MessageCircle } from 'lucide-react'
 import type { Ideia, Trilha } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
@@ -37,11 +36,10 @@ const STATUS_CLASS: Record<Ideia['status'], string> = {
 const FORM_VAZIO = { titulo: '', dor: '', lacuna: '', inovacao: '', trilha_id: '' }
 
 export default function IdeiasBoard({
-  ideiasIniciais, trilhas, profileId, podeModerar,
+  ideiasIniciais, trilhas, podeModerar,
 }: {
   ideiasIniciais: IdeiaComExtras[]
   trilhas: Trilha[]
-  profileId: string
   podeModerar: boolean
 }) {
   const [ideias, setIdeias] = useState(ideiasIniciais)
@@ -50,7 +48,6 @@ export default function IdeiasBoard({
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
   const [filtro, setFiltro] = useState<'todas' | Ideia['status']>('todas')
-  const supabase = createClient()
 
   const ideiasFiltradas = filtro === 'todas' ? ideias : ideias.filter((i) => i.status === filtro)
 
@@ -61,26 +58,25 @@ export default function IdeiasBoard({
     }
     setSaving(true)
     setErro('')
-    const payload = {
-      autor_id: profileId,
-      titulo: form.titulo.trim(),
-      dor: form.dor.trim() || null,
-      lacuna: form.lacuna.trim() || null,
-      inovacao: form.inovacao.trim() || null,
-      trilha_id: form.trilha_id || null,
-    }
-    const { data, error } = await supabase
-      .from('ideias')
-      .insert(payload)
-      .select('*, autor:profiles(nome_completo, turma), trilha:trilhas(nome, icone, cor_tailwind)')
-      .single()
-
-    if (error || !data) {
-      setErro('Erro ao publicar: ' + error?.message)
+    // O autor sai da sessao, no servidor.
+    const res = await fetch('/api/ideias', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titulo: form.titulo.trim(),
+        dor: form.dor.trim() || null,
+        lacuna: form.lacuna.trim() || null,
+        inovacao: form.inovacao.trim() || null,
+        trilha_id: form.trilha_id || null,
+      }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setErro(json.error ?? 'Erro ao publicar a ideia.')
       setSaving(false)
       return
     }
-    setIdeias((prev) => [{ ...(data as Ideia & { autor: PerfilResumo | null; trilha: TrilhaResumo | null }), votos: 0, votei: false }, ...prev])
+    setIdeias((prev) => [{ ...json.ideia, votos: 0, votei: false }, ...prev])
     setSaving(false)
     setModalAberto(false)
     setForm(FORM_VAZIO)
@@ -88,10 +84,10 @@ export default function IdeiasBoard({
 
   async function votar(ideiaId: string, votei: boolean) {
     setIdeias((prev) => prev.map((i) => i.id === ideiaId ? { ...i, votei: !votei, votos: i.votos + (votei ? -1 : 1) } : i))
-    if (votei) {
-      await supabase.from('ideia_votos').delete().eq('ideia_id', ideiaId).eq('profile_id', profileId)
-    } else {
-      await supabase.from('ideia_votos').insert({ ideia_id: ideiaId, profile_id: profileId })
+    const res = await fetch(`/api/ideias/${ideiaId}/votos`, { method: 'POST' })
+    // Desfaz o otimismo se o servidor recusou.
+    if (!res.ok) {
+      setIdeias((prev) => prev.map((i) => i.id === ideiaId ? { ...i, votei, votos: i.votos + (votei ? 1 : -1) } : i))
     }
   }
 

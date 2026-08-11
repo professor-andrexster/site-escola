@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Heart, Send } from 'lucide-react'
 import type { Ideia, IdeiaComentario } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
@@ -28,13 +27,12 @@ const STATUS_CLASS: Record<Ideia['status'], string> = {
 }
 
 export default function IdeiaDetail({
-  ideia, comentariosIniciais, votos, votei, profileId, podeModerar,
+  ideia, comentariosIniciais, votos, votei, podeModerar,
 }: {
   ideia: Ideia & { autor: PerfilResumo | PerfilResumo[] | null; trilha: TrilhaResumo | TrilhaResumo[] | null }
   comentariosIniciais: ComentarioComAutor[]
   votos: number
   votei: boolean
-  profileId: string
   podeModerar: boolean
 }) {
   const [status, setStatus] = useState(ideia.status)
@@ -42,42 +40,60 @@ export default function IdeiaDetail({
   const [comentarios, setComentarios] = useState(comentariosIniciais)
   const [texto, setTexto] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
 
   const autor = one(ideia.autor)
   const trilha = one(ideia.trilha)
 
   async function votar() {
+    const anterior = votoState
     setVotoState((s) => ({ votos: s.votos + (s.votei ? -1 : 1), votei: !s.votei }))
-    if (votoState.votei) {
-      await supabase.from('ideia_votos').delete().eq('ideia_id', ideia.id).eq('profile_id', profileId)
-    } else {
-      await supabase.from('ideia_votos').insert({ ideia_id: ideia.id, profile_id: profileId })
-    }
+    const res = await fetch(`/api/ideias/${ideia.id}/votos`, { method: 'POST' })
+    if (!res.ok) setVotoState(anterior)
   }
 
   async function mudarStatus(novo: Ideia['status']) {
+    const anterior = status
     setStatus(novo)
-    await supabase.from('ideias').update({ status: novo }).eq('id', ideia.id)
+    setErro('')
+    // Moderar e permissao conferida no servidor: a tela so escondia o seletor.
+    const res = await fetch(`/api/ideias/${ideia.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: novo }),
+    })
+    if (!res.ok) {
+      setStatus(anterior)
+      setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível mudar o status.')
+    }
   }
 
   async function comentar() {
     if (!texto.trim()) return
     setEnviando(true)
-    const { data, error } = await supabase
-      .from('ideia_comentarios')
-      .insert({ ideia_id: ideia.id, autor_id: profileId, corpo: texto.trim() })
-      .select('*, autor:profiles(nome_completo, role)')
-      .single()
-    if (!error && data) {
-      setComentarios((prev) => [...prev, data as ComentarioComAutor])
+    setErro('')
+    const res = await fetch(`/api/ideias/${ideia.id}/comentarios`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ corpo: texto.trim() }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (res.ok) {
+      setComentarios((prev) => [...prev, json.comentario as ComentarioComAutor])
       setTexto('')
+    } else {
+      setErro(json.error ?? 'Não foi possível comentar.')
     }
     setEnviando(false)
   }
 
   return (
     <div className="space-y-5">
+      {erro && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+          {erro}
+        </div>
+      )}
       <div className="panel p-6">
         <div className="flex items-start justify-between gap-3 mb-3">
           <div className="flex flex-wrap items-center gap-2">

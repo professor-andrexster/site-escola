@@ -253,6 +253,54 @@ export async function alternarVoto(ideiaId: string, profileId: string): Promise<
   return true
 }
 
+/** Publica a ideia. O autor sai da sessao, nunca do corpo do pedido. */
+export async function criarIdeia(dados: {
+  autorId: string
+  titulo: string
+  dor: string | null
+  lacuna: string | null
+  inovacao: string | null
+  trilhaId: string | null
+}) {
+  const i = await prisma.ideias.create({
+    data: {
+      autor_id: dados.autorId,
+      titulo: dados.titulo,
+      dor: dados.dor,
+      lacuna: dados.lacuna,
+      inovacao: dados.inovacao,
+      trilha_id: dados.trilhaId,
+    },
+    include: {
+      profiles: { select: { nome_completo: true, turma: true } },
+      trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+    },
+  })
+  const { profiles, trilhas, ...ideia } = i
+  return {
+    ...ideia,
+    status: (ideia.status ?? 'nova') as 'nova' | 'em_analise' | 'adotada' | 'arquivada',
+    created_at: ideia.created_at?.toISOString() ?? '',
+    updated_at: ideia.updated_at?.toISOString() ?? '',
+    autor: profiles,
+    trilha: trilhas,
+  }
+}
+
+export async function mudarStatusDaIdeia(id: string, status: string) {
+  return prisma.ideias.update({ where: { id }, data: { status, updated_at: new Date() } })
+}
+
+/** Comenta na ideia. Devolve o comentario ja com o nome de quem escreveu. */
+export async function comentarNaIdeia(ideiaId: string, autorId: string, corpo: string) {
+  const c = await prisma.ideia_comentarios.create({
+    data: { ideia_id: ideiaId, autor_id: autorId, corpo },
+    include: { profiles: { select: { nome_completo: true, role: true } } },
+  })
+  const { profiles, ...comentario } = c
+  return { ...comentario, created_at: comentario.created_at?.toISOString() ?? '', autor: profiles }
+}
+
 export async function comentariosDaIdeia(ideiaId: string) {
   return prisma.ideia_comentarios.findMany({
     where: { ideia_id: ideiaId },

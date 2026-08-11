@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Plus, Trash2, Sparkles } from 'lucide-react'
 import { TURMAS } from '@/lib/turmas'
 
@@ -32,7 +31,7 @@ const MODELO_CTRLALTCHAGAS = {
   ],
 }
 
-export default function DesafioForm({ professorId }: { professorId: string }) {
+export default function DesafioForm() {
   const [titulo, setTitulo] = useState('')
   const [subtitulo, setSubtitulo] = useState('')
   const [briefing, setBriefing] = useState('')
@@ -44,7 +43,6 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   const pontosTotal = fases.reduce((acc, f) => acc + (parseInt(f.pontos_max, 10) || 0), 0)
 
@@ -69,44 +67,35 @@ export default function DesafioForm({ professorId }: { professorId: string }) {
     setSaving(true)
     setErro('')
 
-    const { data: desafio, error: errDesafio } = await supabase
-      .from('desafios')
-      .insert({
+    // Desafio, fases e papeis numa transacao so. Eram tres inserts soltos, e
+    // a falha do segundo deixava um desafio sem fase nenhuma.
+    const res = await fetch('/api/desafios', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
         titulo: titulo.trim(),
         subtitulo: subtitulo.trim() || null,
         briefing: briefing.trim() || null,
-        professor_id: professorId,
         turma_alvo: turmaAlvo || null,
         ano_letivo: anoLetivo,
         pontos_total: pontosTotal || 100,
         publicado,
-      })
-      .select('id')
-      .single()
+        fases: fases.map((f) => ({
+          titulo: f.titulo.trim(),
+          descricao: f.descricao.trim() || null,
+          entregavel_instrucoes: f.entregavel_instrucoes.trim() || null,
+          pontos_max: parseInt(f.pontos_max, 10) || 0,
+          semana_sugerida: f.semana_sugerida ? parseInt(f.semana_sugerida, 10) : null,
+        })),
+        papeis: papeis
+          .filter((p) => p.nome.trim())
+          .map((p) => ({ nome: p.nome.trim(), descricao: p.descricao.trim() || null })),
+      }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { setErro(json.error ?? 'Erro ao criar o desafio.'); setSaving(false); return }
 
-    if (errDesafio || !desafio) { setErro('Erro ao criar desafio: ' + errDesafio?.message); setSaving(false); return }
-
-    const { error: errFases } = await supabase.from('desafio_fases').insert(
-      fases.map((f, i) => ({
-        desafio_id: desafio.id,
-        ordem: i + 1,
-        titulo: f.titulo.trim(),
-        descricao: f.descricao.trim() || null,
-        entregavel_instrucoes: f.entregavel_instrucoes.trim() || null,
-        pontos_max: parseInt(f.pontos_max, 10) || 0,
-        semana_sugerida: f.semana_sugerida ? parseInt(f.semana_sugerida, 10) : null,
-      }))
-    )
-    if (errFases) { setErro('Desafio criado, mas houve erro nas fases: ' + errFases.message); setSaving(false); return }
-
-    const papeisValidos = papeis.filter((p) => p.nome.trim())
-    if (papeisValidos.length > 0) {
-      await supabase.from('desafio_papeis').insert(
-        papeisValidos.map((p) => ({ desafio_id: desafio.id, nome: p.nome.trim(), descricao: p.descricao.trim() || null }))
-      )
-    }
-
-    router.push(`/admin/desafios/${desafio.id}`)
+    router.push(`/admin/desafios/${json.id}`)
     router.refresh()
   }
 

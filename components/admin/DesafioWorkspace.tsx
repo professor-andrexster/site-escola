@@ -36,7 +36,6 @@ export default function DesafioWorkspace({
   podeEntrarEquipe: boolean
 }) {
   const router = useRouter()
-  const supabase = createClient()
   const [nomeEmpresa, setNomeEmpresa] = useState('')
   const [ideiaId, setIdeiaId] = useState('')
   const [membrosSelecionados, setMembrosSelecionados] = useState<string[]>([])
@@ -56,17 +55,22 @@ export default function DesafioWorkspace({
   async function criarEquipe() {
     setCriando(true)
     setErro('')
-    const { data: equipe, error } = await supabase
-      .from('equipes')
-      .insert({ desafio_id: desafio.id, nome_empresa: nomeEmpresa.trim() || null, ideia_id: ideiaId || null, turma: desafio.turma_alvo })
-      .select('id')
-      .single()
-    if (error || !equipe) { setErro('Erro ao criar equipe: ' + error?.message); setCriando(false); return }
-    if (membrosSelecionados.length > 0) {
-      const { error: errMembros } = await supabase
-        .from('equipe_membros')
-        .insert(membrosSelecionados.map((alunoId) => ({ equipe_id: equipe.id, profile_id: alunoId })))
-      if (errMembros) { setErro('Equipe criada, mas houve erro ao adicionar integrantes: ' + errMembros.message); setCriando(false); return }
+    // Equipe e integrantes numa transacao — eram dois inserts soltos.
+    const res = await fetch('/api/desafios/equipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        desafioId: desafio.id,
+        nomeEmpresa: nomeEmpresa.trim() || null,
+        ideiaId: ideiaId || null,
+        turma: desafio.turma_alvo,
+        membros: membrosSelecionados,
+      }),
+    })
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Erro ao criar a equipe.')
+      setCriando(false)
+      return
     }
     setCriando(false)
     setNomeEmpresa('')
@@ -75,15 +79,33 @@ export default function DesafioWorkspace({
     router.refresh()
   }
 
+  // Quem entra e sempre a sessao: a tela mandava o profile_id, e mandar o de
+  // outro aluno o inscrevia na equipe.
   async function entrarEquipe(equipeId: string) {
     setErro('')
-    const { error } = await supabase.from('equipe_membros').insert({ equipe_id: equipeId, profile_id: profileId })
-    if (error) { setErro('Erro ao entrar na equipe: ' + error.message); return }
+    const res = await fetch('/api/desafios/equipes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ equipeId }),
+    })
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Erro ao entrar na equipe.')
+      return
+    }
     router.refresh()
   }
 
   async function escolherPapel(membroId: string, papelId: string) {
-    await supabase.from('equipe_membros').update({ papel_id: papelId || null }).eq('id', membroId)
+    setErro('')
+    const res = await fetch(`/api/desafios/membros/${membroId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ papelId: papelId || null }),
+    })
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Erro ao definir o papel.')
+      return
+    }
     router.refresh()
   }
 
@@ -207,7 +229,6 @@ export default function DesafioWorkspace({
                   entrega={entrega}
                   desbloqueada={!!desbloqueada}
                   equipeId={minhaEquipe.id}
-                  supabase={supabase}
                   onSaved={() => router.refresh()}
                 />
               )
@@ -221,7 +242,7 @@ export default function DesafioWorkspace({
           <h2 className="text-sm font-semibold text-gray-700">Avaliação — {equipesIniciais.length} equipe(s)</h2>
           {equipesIniciais.length === 0 && <p className="text-sm text-gray-400">Nenhuma equipe formada ainda.</p>}
           {equipesIniciais.map((eq) => (
-            <EquipeAvaliacao key={eq.id} equipe={eq} fases={fases} supabase={supabase} onSaved={() => router.refresh()} />
+            <EquipeAvaliacao key={eq.id} equipe={eq} fases={fases} onSaved={() => router.refresh()} />
           ))}
         </div>
       )}
@@ -236,15 +257,16 @@ function StatusIcon({ status }: { status: Entrega['status'] }) {
 }
 
 function FaseParticipante({
-  fase, entrega, desbloqueada, equipeId, supabase, onSaved,
+  fase, entrega, desbloqueada, equipeId, onSaved,
 }: {
   fase: DesafioFase
   entrega: Entrega | undefined
   desbloqueada: boolean
   equipeId: string
-  supabase: ReturnType<typeof createClient>
   onSaved: () => void
 }) {
+  // O cliente do Supabase fica so pelo upload de arquivo — e a fase 5.
+  const supabase = createClient()
   const [aberta, setAberta] = useState(false)
   const [conteudo, setConteudo] = useState(entrega?.conteudo ?? '')
   const [linkUrl, setLinkUrl] = useState(entrega?.link_url ?? '')
@@ -267,18 +289,17 @@ function FaseParticipante({
 
   async function enviar() {
     setSaving(true)
-    await supabase.from('entregas').upsert(
-      {
-        equipe_id: equipeId,
-        fase_id: fase.id,
+    await fetch('/api/desafios/entregas', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        equipeId,
+        faseId: fase.id,
         conteudo: conteudo.trim() || null,
-        link_url: linkUrl.trim() || null,
-        arquivo_url: arquivoUrl || null,
-        status: 'entregue',
-        enviado_em: new Date().toISOString(),
-      },
-      { onConflict: 'equipe_id,fase_id' }
-    )
+        linkUrl: linkUrl.trim() || null,
+        arquivoUrl: arquivoUrl || null,
+      }),
+    })
     setSaving(false)
     onSaved()
   }
@@ -343,11 +364,10 @@ function FaseParticipante({
 }
 
 function EquipeAvaliacao({
-  equipe, fases, supabase, onSaved,
+  equipe, fases, onSaved,
 }: {
   equipe: EquipeComTudo
   fases: DesafioFase[]
-  supabase: ReturnType<typeof createClient>
   onSaved: () => void
 }) {
   const [aberta, setAberta] = useState(false)
@@ -367,7 +387,7 @@ function EquipeAvaliacao({
         <div className="border-t border-gray-100 divide-y divide-gray-100">
           {fases.map((fase) => {
             const entrega = equipe.entregas.find((e) => e.fase_id === fase.id)
-            return <FaseAvaliacao key={fase.id} fase={fase} entrega={entrega} equipeId={equipe.id} supabase={supabase} onSaved={onSaved} />
+            return <FaseAvaliacao key={fase.id} fase={fase} entrega={entrega} equipeId={equipe.id} onSaved={onSaved} />
           })}
         </div>
       )}
@@ -376,12 +396,11 @@ function EquipeAvaliacao({
 }
 
 function FaseAvaliacao({
-  fase, entrega, equipeId, supabase, onSaved,
+  fase, entrega, equipeId, onSaved,
 }: {
   fase: DesafioFase
   entrega: Entrega | undefined
   equipeId: string
-  supabase: ReturnType<typeof createClient>
   onSaved: () => void
 }) {
   const [nota, setNota] = useState(entrega?.nota?.toString() ?? '')
@@ -390,17 +409,17 @@ function FaseAvaliacao({
 
   async function salvar() {
     setSaving(true)
-    await supabase.from('entregas').upsert(
-      {
-        equipe_id: equipeId,
-        fase_id: fase.id,
-        nota: nota ? parseFloat(nota) : null,
-        feedback_professor: feedback.trim() || null,
-        status: 'avaliada',
-        avaliado_em: new Date().toISOString(),
-      },
-      { onConflict: 'equipe_id,fase_id' }
-    )
+    // Rota separada da entrega: nota e feedback so passam por quem avalia.
+    await fetch('/api/desafios/avaliacoes', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        equipeId,
+        faseId: fase.id,
+        nota: nota || null,
+        feedback: feedback.trim() || null,
+      }),
+    })
     setSaving(false)
     onSaved()
   }

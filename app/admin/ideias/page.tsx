@@ -36,7 +36,6 @@ export default async function IdeiasPage() {
       <IdeiasBoard
         ideiasIniciais={ideiasComVotos}
         trilhas={trilhas ?? []}
-        profileId={user.id}
         podeModerar={podeModerar}
       />
     </div>

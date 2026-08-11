@@ -113,3 +113,166 @@ export async function listarDesafios(apenasPublicados = false) {
     },
   })
 }
+
+// ------------------------------------------------------------ escrita
+
+/** Cria desafio, fases e papeis numa transacao — eram tres inserts soltos. */
+export async function criarDesafio(dados: {
+  professorId: string
+  titulo: string
+  subtitulo: string | null
+  briefing: string | null
+  turmaAlvo: string | null
+  anoLetivo: string
+  pontosTotal: number
+  publicado: boolean
+  fases: Array<{
+    titulo: string
+    descricao: string | null
+    entregavel_instrucoes: string | null
+    pontos_max: number
+    semana_sugerida: number | null
+  }>
+  papeis: Array<{ nome: string; descricao: string | null }>
+}) {
+  return prisma.$transaction(async tx => {
+    const desafio = await tx.desafios.create({
+      data: {
+        titulo: dados.titulo,
+        subtitulo: dados.subtitulo,
+        briefing: dados.briefing,
+        professor_id: dados.professorId,
+        turma_alvo: dados.turmaAlvo,
+        ano_letivo: dados.anoLetivo,
+        pontos_total: dados.pontosTotal,
+        publicado: dados.publicado,
+      },
+      select: { id: true },
+    })
+
+    if (dados.fases.length) {
+      await tx.desafio_fases.createMany({
+        data: dados.fases.map((f, i) => ({ ...f, desafio_id: desafio.id, ordem: i + 1 })),
+      })
+    }
+    if (dados.papeis.length) {
+      await tx.desafio_papeis.createMany({
+        data: dados.papeis.map(p => ({ ...p, desafio_id: desafio.id })),
+      })
+    }
+    return desafio
+  })
+}
+
+/** Cria a equipe com os integrantes de uma vez. */
+export async function criarEquipe(dados: {
+  desafioId: string
+  nomeEmpresa: string | null
+  ideiaId: string | null
+  turma: string | null
+  membros: string[]
+}) {
+  return prisma.$transaction(async tx => {
+    const equipe = await tx.equipes.create({
+      data: {
+        desafio_id: dados.desafioId,
+        nome_empresa: dados.nomeEmpresa,
+        ideia_id: dados.ideiaId,
+        turma: dados.turma,
+      },
+      select: { id: true },
+    })
+    if (dados.membros.length) {
+      await tx.equipe_membros.createMany({
+        data: dados.membros.map(profileId => ({ equipe_id: equipe.id, profile_id: profileId })),
+      })
+    }
+    return equipe
+  })
+}
+
+export async function entrarNaEquipe(equipeId: string, profileId: string) {
+  return prisma.equipe_membros.create({ data: { equipe_id: equipeId, profile_id: profileId } })
+}
+
+export async function definirPapel(membroId: string, papelId: string | null) {
+  return prisma.equipe_membros.update({ where: { id: membroId }, data: { papel_id: papelId } })
+}
+
+/** De qual desafio e a equipe, e quem sao os integrantes. */
+export async function equipeComMembros(equipeId: string) {
+  return prisma.equipes.findUnique({
+    where: { id: equipeId },
+    select: {
+      id: true,
+      desafio_id: true,
+      equipe_membros: { select: { id: true, profile_id: true } },
+    },
+  })
+}
+
+/** A qual equipe um vinculo pertence — para conferir dono antes de gravar. */
+export async function equipeDoMembro(membroId: string) {
+  const m = await prisma.equipe_membros.findUnique({
+    where: { id: membroId },
+    select: { equipe_id: true, profile_id: true },
+  })
+  return m
+}
+
+export async function faseDoDesafio(faseId: string) {
+  return prisma.desafio_fases.findUnique({
+    where: { id: faseId },
+    select: { id: true, desafio_id: true, pontos_max: true },
+  })
+}
+
+export async function professorDoDesafio(desafioId: string) {
+  const d = await prisma.desafios.findUnique({
+    where: { id: desafioId },
+    select: { professor_id: true },
+  })
+  return d?.professor_id ?? null
+}
+
+/** Entrega da equipe. Nota e feedback nunca entram por aqui. */
+export async function enviarEntrega(dados: {
+  equipeId: string
+  faseId: string
+  conteudo: string | null
+  linkUrl: string | null
+  arquivoUrl: string | null
+}) {
+  const valores = {
+    conteudo: dados.conteudo,
+    link_url: dados.linkUrl,
+    arquivo_url: dados.arquivoUrl,
+    status: 'entregue',
+    enviado_em: new Date(),
+  }
+  return prisma.entregas.upsert({
+    where: { equipe_id_fase_id: { equipe_id: dados.equipeId, fase_id: dados.faseId } },
+    create: { equipe_id: dados.equipeId, fase_id: dados.faseId, ...valores },
+    update: valores,
+  })
+}
+
+/** Avaliacao da entrega. Conteudo e link nunca entram por aqui. */
+export async function avaliarEntrega(dados: {
+  equipeId: string
+  faseId: string
+  nota: number | null
+  feedback: string | null
+}) {
+  const valores = {
+    nota: dados.nota,
+    feedback_professor: dados.feedback,
+    status: 'avaliada',
+    avaliado_em: new Date(),
+  }
+  return prisma.entregas.upsert({
+    where: { equipe_id_fase_id: { equipe_id: dados.equipeId, fase_id: dados.faseId } },
+    create: { equipe_id: dados.equipeId, fase_id: dados.faseId, ...valores },
+    update: valores,
+  })
+}

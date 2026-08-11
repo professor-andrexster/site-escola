@@ -35,7 +35,6 @@ export default async function IdeiaPage({ params }: Props) {
         comentariosIniciais={comentarios}
         votos={votos.length}
         votei={votos.some(v => v.profile_id === user.id)}
-        profileId={user.id}
         podeModerar={podeModerar}
       />
     </div>
