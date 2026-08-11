@@ -136,15 +136,45 @@ export async function criarExemplar(dados: {
   })
 }
 
-/** Listas auxiliares de cadastro — so as ativas. */
-export async function autoresAtivos() {
-  return prisma.biblioteca_autores.findMany({ where: { ativo: true }, orderBy: { nome: 'asc' } })
+/**
+ * Listas auxiliares de cadastro — autores, editoras e categorias.
+ *
+ * As tres tem a mesma forma (id, nome, ativo) e dao vontade de parametrizar,
+ * mas os tipos genericos do Prisma nao unificam entre modelos: uma funcao que
+ * recebe "qual tabela" nao compila. Tres pares explicitos e mais honesto que
+ * lutar com o tipo.
+ *
+ * A busca usa `contains`, que no MariaDB ja ignora caixa pela collation
+ * utf8mb4_unicode_ci — o ilike do Postgres nao precisa de equivalente.
+ */
+export async function autoresAtivos(busca?: string | null) {
+  return prisma.biblioteca_autores.findMany({
+    where: { ativo: true, ...(busca ? { nome: { contains: busca } } : {}) },
+    orderBy: { nome: 'asc' },
+  })
 }
-export async function editorasAtivas() {
-  return prisma.biblioteca_editoras.findMany({ where: { ativo: true }, orderBy: { nome: 'asc' } })
+export async function criarAutor(nome: string, atualizadoPor: string) {
+  return prisma.biblioteca_autores.create({ data: { nome, atualizado_por: atualizadoPor } })
 }
-export async function categoriasAtivas() {
-  return prisma.biblioteca_categorias.findMany({ where: { ativo: true }, orderBy: { nome: 'asc' } })
+
+export async function editorasAtivas(busca?: string | null) {
+  return prisma.biblioteca_editoras.findMany({
+    where: { ativo: true, ...(busca ? { nome: { contains: busca } } : {}) },
+    orderBy: { nome: 'asc' },
+  })
+}
+export async function criarEditora(nome: string, atualizadoPor: string) {
+  return prisma.biblioteca_editoras.create({ data: { nome, atualizado_por: atualizadoPor } })
+}
+
+export async function categoriasAtivas(busca?: string | null) {
+  return prisma.biblioteca_categorias.findMany({
+    where: { ativo: true, ...(busca ? { nome: { contains: busca } } : {}) },
+    orderBy: { nome: 'asc' },
+  })
+}
+export async function criarCategoria(nome: string, atualizadoPor: string) {
+  return prisma.biblioteca_categorias.create({ data: { nome, atualizado_por: atualizadoPor } })
 }
 
 // -------------------------------------------------------------- leitores
@@ -195,6 +225,21 @@ export async function configuracao(): Promise<BibliotecaConfiguracoes | null> {
 export async function diasSemExpediente(): Promise<Date[]> {
   const linhas = await prisma.biblioteca_calendario.findMany({ select: { data: true } })
   return linhas.map(l => l.data)
+}
+
+/** Calendario completo, para a tela de configuracao. */
+export async function calendario() {
+  return prisma.biblioteca_calendario.findMany({ orderBy: { data: 'asc' } })
+}
+
+export async function adicionarDiaSemExpediente(dados: {
+  data: Date
+  motivo: string
+  criadoPor: string
+}) {
+  return prisma.biblioteca_calendario.create({
+    data: { data: dados.data, motivo: dados.motivo, criado_por: dados.criadoPor },
+  })
 }
 
 // ---------------------------------------------------------- circulacao

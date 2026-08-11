@@ -1,19 +1,18 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
+import { autoresAtivos, criarAutor } from '@/lib/db/biblioteca'
 
 export async function GET(request: Request) {
   const auth = await exigirBibliotecaStaff()
   if (!auth.ok) return auth.res
 
   const busca = new URL(request.url).searchParams.get('q')?.trim()
-  const admin = createAdminClient()
-  let query = admin.from('biblioteca_autores').select('*').eq('ativo', true).order('nome')
-  if (busca) query = query.ilike('nome', `%${busca}%`)
-
-  const { data, error } = await query
-  if (error) return NextResponse.json({ error: 'Erro ao buscar autores.' }, { status: 400 })
-  return NextResponse.json({ autores: data })
+  try {
+    return NextResponse.json({ autores: await autoresAtivos(busca) })
+  } catch (erro) {
+    console.error('[biblioteca/autores] falha ao listar', erro)
+    return NextResponse.json({ error: 'Erro ao buscar autores.' }, { status: 400 })
+  }
 }
 
 export async function POST(request: Request) {
@@ -21,15 +20,14 @@ export async function POST(request: Request) {
   if (!auth.ok) return auth.res
 
   const { nome } = (await request.json()) as { nome?: string }
-  if (!nome?.trim()) return NextResponse.json({ error: 'Informe o nome do autor.' }, { status: 400 })
+  if (!nome?.trim()) {
+    return NextResponse.json({ error: 'Informe o nome do autor.' }, { status: 400 })
+  }
 
-  const admin = createAdminClient()
-  const { data, error } = await admin
-    .from('biblioteca_autores')
-    .insert({ nome: nome.trim(), atualizado_por: auth.userId })
-    .select('*')
-    .single()
-
-  if (error) return NextResponse.json({ error: 'Erro ao criar autor.' }, { status: 400 })
-  return NextResponse.json({ autor: data })
+  try {
+    return NextResponse.json({ autor: await criarAutor(nome.trim(), auth.userId) })
+  } catch (erro) {
+    console.error('[biblioteca/autores] falha ao criar', erro)
+    return NextResponse.json({ error: 'Erro ao criar autor.' }, { status: 400 })
+  }
 }
