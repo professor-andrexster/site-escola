@@ -19,12 +19,27 @@ export type Participante = quiz_participantes
 
 // -------------------------------------------------------------- leitura
 
-export async function buscarPorCodigo(codigo: string): Promise<Quiz | null> {
-  return prisma.quizzes.findFirst({ where: { codigo } })
+/** Datas em string ISO, como as telas esperam. */
+function serializarQuiz(q: quizzes) {
+  return {
+    ...q,
+    created_at: q.created_at.toISOString(),
+    updated_at: q.updated_at.toISOString(),
+    quiz_iniciado_em: q.quiz_iniciado_em?.toISOString() ?? null,
+    pergunta_liberada_em: q.pergunta_liberada_em?.toISOString() ?? null,
+    pergunta_atual: q.pergunta_atual ?? 0,
+    resposta_revelada: q.resposta_revelada ?? false,
+  }
 }
 
-export async function buscarPorId(id: string): Promise<Quiz | null> {
-  return prisma.quizzes.findUnique({ where: { id } })
+export async function buscarPorCodigo(codigo: string) {
+  const q = await prisma.quizzes.findFirst({ where: { codigo } })
+  return q ? serializarQuiz(q) : null
+}
+
+export async function buscarPorId(id: string) {
+  const q = await prisma.quizzes.findUnique({ where: { id } })
+  return q ? serializarQuiz(q) : null
 }
 
 /**

@@ -53,16 +53,25 @@ export async function removerLead(id: string) {
 /** Ideias com votos e trilhas, para o quadro de triagem. */
 export async function quadroDeIdeias() {
   const [ideias, votos, trilhas] = await Promise.all([
-    prisma.ideias.findMany({ orderBy: { created_at: 'desc' } }),
+    prisma.ideias.findMany({
+      include: {
+        profiles: { select: { id: true, nome_completo: true, turma: true } },
+        trilhas: { select: { id: true, nome: true, icone: true, cor_tailwind: true } },
+      },
+      orderBy: { created_at: 'desc' },
+    }),
     prisma.ideia_votos.findMany({ select: { ideia_id: true, profile_id: true } }),
     prisma.trilhas.findMany({ orderBy: { nome: 'asc' } }),
   ])
   return {
     ideias: ideias.map(i => ({
       ...i,
-      status: i.status ?? 'nova',
-      created_at: i.created_at?.toISOString() ?? null,
-      updated_at: i.updated_at?.toISOString() ?? null,
+      status: (i.status ?? 'nova') as 'nova' | 'em_analise' | 'adotada' | 'arquivada',
+      created_at: i.created_at?.toISOString() ?? '',
+      updated_at: i.updated_at?.toISOString() ?? '',
+      // Nomes que o select do PostgREST dava ao join.
+      autor: i.profiles,
+      trilha: i.trilhas,
     })),
     votos,
     trilhas,

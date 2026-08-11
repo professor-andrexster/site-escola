@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId as buscarQuiz, perguntasDoQuiz, contarParticipantes } from '@/lib/db/quiz'
 import { notFound, redirect } from 'next/navigation'
 import QuizControle from '@/components/admin/QuizControle'
 import type { Metadata } from 'next'
@@ -8,12 +8,11 @@ export const metadata: Metadata = { title: 'Controle do Quiz — Admin' }
 
 export default async function QuizControlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  const [{ data: quiz }, { data: perguntas }, { count: participantes }] = await Promise.all([
-    supabase.from('quizzes').select('*').eq('id', id).single(),
-    supabase.from('quiz_perguntas').select('*').eq('quiz_id', id).order('ordem'),
-    supabase.from('quiz_participantes').select('id', { count: 'exact', head: true }).eq('quiz_id', id),
+  const [quiz, perguntas, totalParticipantes] = await Promise.all([
+    buscarQuiz(id),
+    perguntasDoQuiz(id),
+    contarParticipantes(id),
   ])
 
   if (!quiz) notFound()
@@ -23,8 +22,8 @@ export default async function QuizControlePage({ params }: { params: Promise<{ i
   return (
     <QuizControle
       quiz={quiz}
-      perguntas={perguntas ?? []}
-      totalParticipantes={participantes ?? 0}
+      perguntas={perguntas}
+      totalParticipantes={totalParticipantes}
     />
   )
 }

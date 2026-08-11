@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId as buscarQuiz, perguntasDoQuiz } from '@/lib/db/quiz'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Trophy } from 'lucide-react'
@@ -10,18 +10,16 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data } = await supabase.from('quizzes').select('titulo').eq('id', id).single()
+  const data = await buscarQuiz(id)
   return { title: data ? `${data.titulo} — Admin` : 'Quiz — Admin' }
 }
 
 export default async function EditQuizPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  const [{ data: quiz }, { data: perguntas }] = await Promise.all([
-    supabase.from('quizzes').select('*').eq('id', id).single(),
-    supabase.from('quiz_perguntas').select('*').eq('quiz_id', id).order('ordem'),
+  const [quiz, perguntas] = await Promise.all([
+    buscarQuiz(id),
+    perguntasDoQuiz(id),
   ])
 
   if (!quiz) notFound()

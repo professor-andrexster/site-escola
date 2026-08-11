@@ -68,9 +68,9 @@ export default async function QuizJogarPage({
         ativo: quiz.ativo,
         encerrado: quiz.encerrado,
         tempo_por_pergunta: quiz.tempo_por_pergunta,
-        quiz_iniciado_em: quiz.quiz_iniciado_em?.toISOString() ?? null,
+        quiz_iniciado_em: quiz.quiz_iniciado_em,
         pergunta_atual: quiz.pergunta_atual ?? 0,
-        pergunta_liberada_em: quiz.pergunta_liberada_em?.toISOString() ?? null,
+        pergunta_liberada_em: quiz.pergunta_liberada_em,
         resposta_revelada: quiz.resposta_revelada ?? false,
       }}
       participante={participante}

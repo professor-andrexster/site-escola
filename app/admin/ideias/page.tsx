@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { quadroDeIdeias } from '@/lib/db/comunidade'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import IdeiasBoard from '@/components/admin/IdeiasBoard'
@@ -8,17 +8,9 @@ export const metadata: Metadata = { title: 'Fábrica de Ideias' }
 export const dynamic = 'force-dynamic'
 
 export default async function IdeiasPage() {
-  const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  const [{ data: ideias }, { data: votos }, { data: trilhas }] = await Promise.all([
-    supabase
-      .from('ideias')
-      .select('*, autor:profiles(nome_completo, turma), trilha:trilhas(nome, icone, cor_tailwind)')
-      .order('created_at', { ascending: false }),
-    supabase.from('ideia_votos').select('ideia_id, profile_id'),
-    supabase.from('trilhas').select('*').order('nome'),
-  ])
+  const { ideias, votos, trilhas } = await quadroDeIdeias()
 
   const votosPorIdeia = new Map<string, number>()
   const minhasVotadas = new Set<string>()
