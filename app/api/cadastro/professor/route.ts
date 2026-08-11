@@ -53,6 +53,7 @@ export async function POST(request: Request) {
     email: email.trim().toLowerCase(),
   })
   if (profileError) {
+    console.error('[cadastro/professor] falha ao inserir profile', profileError)
     await admin.auth.admin.deleteUser(userId)
     return NextResponse.json({ error: 'Erro ao salvar o perfil. Tente novamente.' }, { status: 400 })
   }
@@ -64,6 +65,7 @@ export async function POST(request: Request) {
     criado_via: 'auto_professor',
   })
   if (identError) {
+    console.error('[cadastro/professor] falha ao inserir identidade', identError)
     await admin.from('profiles').delete().eq('id', userId)
     await admin.auth.admin.deleteUser(userId)
     if (identError.code === '23505') {

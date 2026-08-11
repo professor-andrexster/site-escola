@@ -100,7 +100,12 @@ export async function POST(request: Request) {
     aprovado: false,
     email: email.trim().toLowerCase(),
   })
-  if (profileError) return desfazer('Erro ao salvar o perfil. Tente novamente.')
+  if (profileError) {
+    // Sem isto o motivo real (coluna inexistente, constraint, RLS) some: o aluno
+    // vê "tente novamente", a conta é apagada e não sobra rastro de nada.
+    console.error('[cadastro/aluno] falha ao inserir profile', profileError)
+    return desfazer('Erro ao salvar o perfil. Tente novamente.')
+  }
 
   const { error: identError } = await admin.from('identidades').insert({
     user_id: userId,
@@ -110,6 +115,7 @@ export async function POST(request: Request) {
     criado_via: 'auto_aluno',
   })
   if (identError) {
+    console.error('[cadastro/aluno] falha ao inserir identidade', identError)
     await admin.from('profiles').delete().eq('id', userId)
     if (identError.code === '23505') {
       return desfazer('Esse CPF já está vinculado a outra conta. Procure a direção.')

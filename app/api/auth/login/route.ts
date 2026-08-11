@@ -40,9 +40,24 @@ export async function POST(request: Request) {
   const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password: senha })
 
   if (authError || !data.user) {
+    // O rótulo 'senha_incorreta' é enganoso: o Supabase devolve o mesmo
+    // "Invalid login credentials" para senha errada E para usuário inexistente.
+    // Sem a mensagem crua não dá para distinguir os dois — nem enxergar casos
+    // como e-mail não confirmado ou bloqueio por tentativas.
+    console.error('[login] recusado pelo Supabase', {
+      status: authError?.status,
+      mensagem: authError?.message,
+    })
     await registrarAtividade(admin, {
       acao: 'login_falha',
-      detalhes: { identificador: mascararIdentificador(identificador), motivo: 'senha_incorreta' },
+      detalhes: {
+        identificador: mascararIdentificador(identificador),
+        motivo: 'senha_incorreta',
+        erro_supabase: authError?.message ?? 'sem usuario retornado',
+        // e-mail que o identificador resolveu, mascarado: se não for o que o
+        // usuário espera, o problema está na resolução, não na senha
+        email_resolvido: email.replace(/^(.{2})[^@]*(@.*)$/, '$1***$2'),
+      },
       ip,
     })
     return NextResponse.json({ error: MSG_ERRO }, { status: 401 })
