@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { conteudoDaPagina } from '@/lib/db/comunidade'
 import PageLayout from '@/components/PageLayout'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Link from 'next/link'
@@ -19,9 +19,7 @@ const exemplos = [
 ]
 
 export default async function ProtagonismoPage() {
-  const supabase = await createClient()
-  const { data: pagina } = await supabase
-    .from('paginas_conteudo').select('*').eq('pagina', 'protagonismo').single()
+  const pagina = await conteudoDaPagina('protagonismo')
 
   return (
     <PageLayout>

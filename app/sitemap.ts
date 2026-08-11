@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
-import { createStaticClient } from '@/lib/supabase/static'
+import { slugsPublicados as cursosPublicados } from '@/lib/db/cursos'
+import { slugsPublicados as noticiasPublicadas } from '@/lib/db/noticias'
 
 const BASE = 'https://escolaestadualdrjoaoberaldo.com'
 
@@ -42,23 +43,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Se o Supabase estiver fora do ar na hora do build, o sitemap sai só com as
   // rotas fixas em vez de derrubar o deploy inteiro.
   try {
-    const supabase = createStaticClient()
-
-    const [{ data: cursos }, { data: noticias }] = await Promise.all([
-      supabase.from('cursos').select('slug').eq('publicado', true),
-      supabase.from('noticias').select('slug, updated_at').eq('publicado', true),
+    const [cursos, noticias] = await Promise.all([
+      cursosPublicados(),
+      noticiasPublicadas(),
     ])
 
-    const entradasCursos: MetadataRoute.Sitemap = (cursos ?? [])
-      .filter(c => c.slug)
-      .map(c => ({
-        url: `${BASE}/cursos/${c.slug}`,
+    const entradasCursos: MetadataRoute.Sitemap = cursos
+      .map(slug => ({
+        url: `${BASE}/cursos/${slug}`,
         lastModified: agora,
         changeFrequency: 'monthly',
         priority: 0.7,
       }))
 
-    const entradasNoticias: MetadataRoute.Sitemap = (noticias ?? [])
+    const entradasNoticias: MetadataRoute.Sitemap = noticias
       .filter(n => n.slug)
       .map(n => ({
         url: `${BASE}/noticias/${n.slug}`,

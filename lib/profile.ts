@@ -1,24 +1,19 @@
-import { createClient } from '@/lib/supabase/server'
+import { usuarioAtual } from '@/lib/auth/sessao'
+import { buscarPorId } from '@/lib/db/perfis'
 import { redirect } from 'next/navigation'
 import type { Profile } from '@/types/database'
 import { GESTAO_ROLES, isGestao } from '@/lib/roles'
 export { ROLE_LABELS, ROLE_COLORS } from '@/lib/roles'
 
 export async function getProfileOrRedirect(): Promise<{ user: { id: string; email?: string }, profile: Profile }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const user = await usuarioAtual()
   if (!user) redirect('/admin')
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .maybeSingle()
-
+  const profile = await buscarPorId(user.id)
   if (!profile) redirect('/admin')
   if (!profile.aprovado) redirect('/admin/pendente')
 
-  return { user: { id: user.id, email: user.email }, profile }
+  return { user: { id: user.id, email: user.email ?? undefined }, profile }
 }
 
 export async function requireGestao() {

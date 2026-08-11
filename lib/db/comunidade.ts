@@ -31,6 +31,18 @@ export async function leadsNaoLidos(): Promise<number> {
   return prisma.leads.count({ where: { lido: false } })
 }
 
+/**
+ * Conteudo editavel de uma pagina estatica (EMTI, projeto de vida etc).
+ * A gestao edita pelo painel; a pagina publica so le.
+ */
+export async function conteudoDaPagina(pagina: string) {
+  return prisma.paginas_conteudo.findFirst({ where: { pagina } })
+}
+
+export async function listarPaginasEditaveis() {
+  return prisma.paginas_conteudo.findMany({ orderBy: { pagina: 'asc' } })
+}
+
 // ------------------------------------------------------------- trilhas
 
 export async function listarTrilhas(): Promise<Trilha[]> {

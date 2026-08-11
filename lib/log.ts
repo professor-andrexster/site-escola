@@ -29,39 +29,10 @@ export function ipDoRequest(request: Request): string | null {
   return forwarded?.split(',')[0]?.trim() ?? null
 }
 
-/** Registra uma atividade no log de auditoria. Usar sempre o admin client (service role). */
-export async function registrarAtividade(
-  admin: SupabaseClient,
-  entrada: { acao: AcaoLog; userId?: string | null; detalhes?: Record<string, unknown>; ip?: string | null }
-) {
-  const { error } = await admin.from('log_atividades').insert({
-    acao: entrada.acao,
-    user_id: entrada.userId ?? null,
-    detalhes: entrada.detalhes ?? null,
-    ip: entrada.ip ?? null,
-  })
-  // Falha no log nunca deve derrubar o fluxo principal
-  if (error) console.error('[log_atividades]', error.message)
-}
-
 /**
- * Conta registros recentes de uma ação cujo campo `detalhes->chave` = valor
- * (ou por IP), para rate limit baseado no próprio log.
+ * A gravacao e a contagem do log vivem em lib/db/log.ts desde a migracao.
+ * Este arquivo mantem o tipo AcaoLog e o ipDoRequest, que sao dominio puro e
+ * nao dependem de banco — e por isso continuam sendo importados de dezenas de
+ * rotas sem trazer o cliente do banco junto.
  */
-export async function contarRecentes(
-  admin: SupabaseClient,
-  opts: { acao: AcaoLog; janelaMin: number; chave?: string; valor?: string; ip?: string | null }
-): Promise<number> {
-  const desde = new Date(Date.now() - opts.janelaMin * 60_000).toISOString()
-  let query = admin
-    .from('log_atividades')
-    .select('id', { count: 'exact', head: true })
-    .eq('acao', opts.acao)
-    .gte('criado_em', desde)
-
-  if (opts.chave && opts.valor) query = query.eq(`detalhes->>${opts.chave}`, opts.valor)
-  if (opts.ip) query = query.eq('ip', opts.ip)
-
-  const { count } = await query
-  return count ?? 0
-}
+export { registrar, contarRecentes } from '@/lib/db/log'
