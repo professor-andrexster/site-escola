@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 /**
  * Costura da sessao.
@@ -30,4 +31,48 @@ export async function usuarioAtual(): Promise<UsuarioSessao | null> {
 export async function encerrarSessao(): Promise<void> {
   const supabase = await createClient()
   await supabase.auth.signOut()
+}
+
+// ------------------------------------------------------------- contas
+// A criacao de conta tambem passa por aqui pelo mesmo motivo: na fase 4 ela
+// vira insert em `usuarios` com hash proprio, e as rotas de cadastro nao
+// precisam ser reescritas outra vez.
+
+export class EmailJaCadastrado extends Error {}
+
+/** Cria a conta de acesso. Devolve o id. */
+export async function criarConta(email: string, senha: string): Promise<string> {
+  const admin = createAdminClient()
+  const { data, error } = await admin.auth.admin.createUser({
+    email: email.trim().toLowerCase(),
+    password: senha,
+    email_confirm: true,
+  })
+  if (error || !data.user) {
+    if (error?.message?.toLowerCase().includes('already')) {
+      throw new EmailJaCadastrado('Já existe uma conta com esse email.')
+    }
+    throw new Error(error?.message ?? 'Erro ao criar a conta.')
+  }
+  return data.user.id
+}
+
+/** Apaga a conta. Usado no rollback de cadastro que falhou no meio. */
+export async function removerConta(userId: string): Promise<void> {
+  const admin = createAdminClient()
+  await admin.auth.admin.deleteUser(userId)
+}
+
+/** Troca a senha de uma conta. */
+export async function definirSenha(userId: string, senha: string): Promise<void> {
+  const admin = createAdminClient()
+  const { error } = await admin.auth.admin.updateUserById(userId, { password: senha })
+  if (error) throw new Error(error.message)
+}
+
+/** E-mail de uma conta, para resolver identificador em login. */
+export async function emailDaConta(userId: string): Promise<string | null> {
+  const admin = createAdminClient()
+  const { data } = await admin.auth.admin.getUserById(userId)
+  return data.user?.email ?? null
 }

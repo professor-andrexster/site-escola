@@ -1,8 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { criarConta, removerConta, EmailJaCadastrado } from '@/lib/auth/sessao'
+import { buscarPorMatricula } from '@/lib/db/alunos'
+import { vincularCadastroDeAluno, CpfJaVinculado } from '@/lib/db/cadastro'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
-import { registrarAtividade, contarRecentes, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar, contarRecentes } from '@/lib/db/log'
 
 const MSG_NAO_CONFERE = 'Os dados informados não conferem com a base da escola. Confira com a secretaria se seu cadastro está completo.'
 
@@ -18,7 +21,6 @@ export async function POST(request: Request) {
   }
 
   const ip = ipDoRequest(request)
-  const admin = createAdminClient()
 
   if (!matricula?.trim() || !cpf || !dataNascimento || !email?.trim() || !senha) {
     return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 })
@@ -35,34 +37,30 @@ export async function POST(request: Request) {
 
   // Rate limit: 5 tentativas recusadas em 15 min (por matrícula ou por IP)
   const [porMatricula, porIp] = await Promise.all([
-    contarRecentes(admin, { acao: 'cadastro_recusado', janelaMin: 15, chave: 'matricula', valor: mat }),
-    ip ? contarRecentes(admin, { acao: 'cadastro_recusado', janelaMin: 15, ip }) : Promise.resolve(0),
+    contarRecentes({ acao: 'cadastro_recusado', janelaMin: 15, chave: 'matricula', valor: mat }),
+    ip ? contarRecentes({ acao: 'cadastro_recusado', janelaMin: 15, ip }) : Promise.resolve(0),
   ])
   if (porMatricula >= 5 || porIp >= 8) {
     return NextResponse.json({ error: 'Muitas tentativas. Aguarde alguns minutos ou procure a secretaria.' }, { status: 429 })
   }
 
   async function recusar(motivo: string) {
-    await registrarAtividade(admin, { acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo }, ip })
+    await registrar({ acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo }, ip })
     return NextResponse.json({ error: MSG_NAO_CONFERE }, { status: 400 })
   }
 
-  const { data: aluno } = await admin
-    .from('alunos')
-    .select('id, nome, turma, cpf, data_nascimento, ativo, user_id')
-    .eq('matricula', mat)
-    .maybeSingle()
+  const aluno = await buscarPorMatricula(mat)
 
   if (!aluno || !aluno.ativo) return recusar('matricula_nao_encontrada_ou_inativa')
   if (aluno.user_id) {
-    await registrarAtividade(admin, { acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo: 'ja_reivindicada' }, ip })
+    await registrar({ acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo: 'ja_reivindicada' }, ip })
     return NextResponse.json(
       { error: 'Já existe uma conta criada para essa matrícula. Use "Esqueci minha senha" ou procure a direção.' },
       { status: 400 }
     )
   }
   if (!aluno.cpf) {
-    await registrarAtividade(admin, { acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo: 'cpf_ausente_na_base' }, ip })
+    await registrar({ acao: 'cadastro_recusado', detalhes: { matricula: mat, motivo: 'cpf_ausente_na_base' }, ip })
     return NextResponse.json(
       { error: 'Seu cadastro na secretaria ainda está incompleto (falta o CPF). Procure a direção para completar.' },
       { status: 400 }
@@ -72,59 +70,50 @@ export async function POST(request: Request) {
   if (aluno.data_nascimento && aluno.data_nascimento !== dataNascimento) return recusar('nascimento_nao_confere')
 
   // Cria a conta
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: email.trim().toLowerCase(),
-    password: senha,
-    email_confirm: true,
-  })
-  if (createError || !created.user) {
-    const duplicado = createError?.message?.toLowerCase().includes('already')
+  // A conta de acesso e externa ao banco, entao vem primeiro e sozinha.
+  let userId: string
+  try {
+    userId = await criarConta(email, senha)
+  } catch (erro) {
     return NextResponse.json(
-      { error: duplicado ? 'Já existe uma conta com esse email. Use "Esqueci minha senha".' : 'Erro ao criar a conta. Tente novamente.' },
+      {
+        error:
+          erro instanceof EmailJaCadastrado
+            ? 'Já existe uma conta com esse email. Use "Esqueci minha senha".'
+            : 'Erro ao criar a conta. Tente novamente.',
+      },
       { status: 400 }
     )
   }
 
-  const userId = created.user.id
-  async function desfazer(mensagem: string) {
-    await admin.auth.admin.deleteUser(userId)
-    return NextResponse.json({ error: mensagem }, { status: 400 })
+  // As tres tabelas entram juntas ou nao entram. Se a transacao falhar, a
+  // unica coisa a desfazer e a conta de acesso.
+  try {
+    await vincularCadastroDeAluno({
+      userId,
+      alunoId: aluno.id,
+      nome: aluno.nome,
+      turma: aluno.turma,
+      email: email.trim().toLowerCase(),
+      cpf: cpfLimpo,
+      dataNascimento: new Date(dataNascimento),
+      emailAlternativo: emailAlternativo?.trim() || null,
+      aprovado: false,
+    })
+  } catch (erro) {
+    console.error('[cadastro/aluno] falha ao vincular cadastro', erro)
+    await removerConta(userId)
+    return NextResponse.json(
+      {
+        error:
+          erro instanceof CpfJaVinculado
+            ? erro.message
+            : 'Erro ao salvar seus dados. Tente novamente.',
+      },
+      { status: 400 }
+    )
   }
-
-  const { error: profileError } = await admin.from('profiles').insert({
-    id: userId,
-    nome_completo: aluno.nome,
-    role: 'aluno',
-    turma: aluno.turma,
-    disciplina: null,
-    aprovado: false,
-    email: email.trim().toLowerCase(),
-  })
-  if (profileError) {
-    // Sem isto o motivo real (coluna inexistente, constraint, RLS) some: o aluno
-    // vê "tente novamente", a conta é apagada e não sobra rastro de nada.
-    console.error('[cadastro/aluno] falha ao inserir profile', profileError)
-    return desfazer('Erro ao salvar o perfil. Tente novamente.')
-  }
-
-  const { error: identError } = await admin.from('identidades').insert({
-    user_id: userId,
-    cpf: cpfLimpo,
-    data_nascimento: dataNascimento,
-    email_alternativo: emailAlternativo?.trim() || null,
-    criado_via: 'auto_aluno',
-  })
-  if (identError) {
-    console.error('[cadastro/aluno] falha ao inserir identidade', identError)
-    await admin.from('profiles').delete().eq('id', userId)
-    if (identError.code === '23505') {
-      return desfazer('Esse CPF já está vinculado a outra conta. Procure a direção.')
-    }
-    return desfazer('Erro ao salvar seus dados. Tente novamente.')
-  }
-
-  await admin.from('alunos').update({ user_id: userId }).eq('id', aluno.id)
-  await registrarAtividade(admin, { acao: 'cadastro_aluno', userId, detalhes: { matricula: mat, turma: aluno.turma }, ip })
+  await registrar({ acao: 'cadastro_aluno', userId, detalhes: { matricula: mat, turma: aluno.turma }, ip })
 
   return NextResponse.json({ ok: true })
 }
