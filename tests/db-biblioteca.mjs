@@ -100,6 +100,31 @@ try {
   } catch { /* esperado */ }
   ok('transacao que falha no meio nao grava nada',
      (await prisma.biblioteca_movimentacoes.count({ where: { exemplar_id: eid } })) === antes)
+  // --- devolucao com dano: exemplar vai para reparo, nao para a fila
+  const e2 = crypto.randomUUID(), emp2 = crypto.randomUUID()
+  await prisma.biblioteca_exemplares.create({ data: { id: e2, obra_id: oid, tombo: TOMBO + '-B', situacao: 'emprestado', data_entrada: new Date() } })
+  await prisma.biblioteca_emprestimos.create({ data: { id: emp2, exemplar_id: e2, leitor_id: l1,
+    data_emprestimo: new Date(), data_prevista: new Date(Date.now() - 3 * 86400000), situacao: 'em_andamento', renovacoes_feitas: 0 } })
+
+  await prisma.$transaction(async tx => {
+    await tx.biblioteca_emprestimos.update({ where: { id: emp2 }, data: { situacao: 'devolvido_com_atraso', data_devolucao: new Date() } })
+    await tx.biblioteca_exemplares.update({ where: { id: e2 }, data: { situacao: 'em_reparo', observacoes: 'capa rasgada' } })
+    await tx.biblioteca_leitores.update({ where: { id: l1 }, data: { situacao: 'bloqueado', motivo_bloqueio: 'atraso' } })
+    await tx.biblioteca_auditoria.create({ data: { acao: 'devolucao_registrada', tabela_afetada: 'biblioteca_emprestimos',
+      registro_afetado: emp2, valor_anterior: JSON.stringify({ situacao: 'em_andamento' }),
+      valor_novo: JSON.stringify({ situacao: 'devolvido_com_atraso', dias_atraso: 3 }) } })
+  })
+  const ex2 = await prisma.biblioteca_exemplares.findUnique({ where: { id: e2 } })
+  ok('devolucao com dano manda para reparo, ignorando a fila', ex2?.situacao === 'em_reparo', ex2?.situacao)
+  ok('observacao do dano fica no exemplar', ex2?.observacoes === 'capa rasgada')
+  const leitorBloq = await prisma.biblioteca_leitores.findUnique({ where: { id: l1 } })
+  ok('leitor suspenso por atraso', leitorBloq?.situacao === 'bloqueado')
+  const aud = await prisma.biblioteca_auditoria.findFirst({ where: { registro_afetado: emp2 } })
+  ok('auditoria grava JSON serializado', JSON.parse(aud?.valor_novo ?? '{}').dias_atraso === 3)
+
+  await prisma.biblioteca_auditoria.deleteMany({ where: { registro_afetado: emp2 } })
+  await prisma.biblioteca_emprestimos.deleteMany({ where: { exemplar_id: e2 } })
+  await prisma.biblioteca_exemplares.delete({ where: { id: e2 } })
 } finally {
   await limpar()
   ok('banco limpo ao final', (await prisma.biblioteca_exemplares.count()) === 0)

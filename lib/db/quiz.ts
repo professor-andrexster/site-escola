@@ -142,10 +142,56 @@ export async function reabrir(quizId: string) {
       await tx.quiz_respostas.deleteMany({ where: { participante_id: { in: ids } } })
       await tx.quiz_participantes.deleteMany({ where: { quiz_id: quizId } })
     }
+    // Todos os campos de estado da rodada voltam ao inicio. Deixar qualquer
+    // um para tras faz o quiz reabrir ja na pergunta em que travou.
     return tx.quizzes.update({
       where: { id: quizId },
-      data: { lobby_aberto: true, ativo: false },
+      data: {
+        encerrado: false,
+        ativo: false,
+        lobby_aberto: true,
+        quiz_iniciado_em: null,
+        pergunta_atual: 0,
+        pergunta_liberada_em: null,
+        resposta_revelada: false,
+        updated_at: new Date(),
+      },
     })
+  })
+}
+
+/**
+ * Encerra a rodada: marca o quiz como encerrado e consolida a pontuacao de
+ * cada participante. Marcar primeiro e proposital — quem ainda esta na tela
+ * para de responder antes de somarmos os pontos.
+ */
+export async function encerrar(quizId: string) {
+  return prisma.$transaction(async tx => {
+    await tx.quizzes.update({
+      where: { id: quizId },
+      data: { ativo: false, lobby_aberto: false, encerrado: true, updated_at: new Date() },
+    })
+
+    const participantes = await tx.quiz_participantes.findMany({
+      where: { quiz_id: quizId },
+      select: { id: true },
+    })
+    if (!participantes.length) return { participantes: 0 }
+
+    const somas = await tx.quiz_respostas.groupBy({
+      by: ['participante_id'],
+      where: { participante_id: { in: participantes.map(p => p.id) } },
+      _sum: { pontos_obtidos: true },
+    })
+    const total = new Map(somas.map(s => [s.participante_id, s._sum.pontos_obtidos ?? 0]))
+
+    for (const p of participantes) {
+      await tx.quiz_participantes.update({
+        where: { id: p.id },
+        data: { concluido: true, pontuacao_total: total.get(p.id) ?? 0 },
+      })
+    }
+    return { participantes: participantes.length }
   })
 }
 

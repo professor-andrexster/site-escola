@@ -109,6 +109,13 @@ export async function buscarLeitor(id: string): Promise<Leitor | null> {
   return prisma.biblioteca_leitores.findUnique({ where: { id } })
 }
 
+/** O emprestimo aberto de um exemplar, se houver. */
+export async function emprestimoAtivoDoExemplar(exemplarId: string) {
+  return prisma.biblioteca_emprestimos.findFirst({
+    where: { exemplar_id: exemplarId, situacao: { in: [...SITUACOES_ATIVAS] } },
+  })
+}
+
 export async function emprestimosAtivosDoLeitor(leitorId: string): Promise<number> {
   return prisma.biblioteca_emprestimos.count({
     where: { leitor_id: leitorId, situacao: { in: [...SITUACOES_ATIVAS] } },
@@ -186,71 +193,141 @@ export async function emprestar(dados: {
 }
 
 /**
- * Devolve um exemplar. Fecha o emprestimo, libera a proxima reserva da fila,
- * atualiza o exemplar e registra a movimentacao.
+ * Devolve um exemplar, com todo o fluxo do balcao numa transacao so:
  *
- * Se houver reserva aguardando, o exemplar vai para `reservado` em vez de
- * `disponivel` — senao a proxima pessoa da fila perde o livro para quem
- * chegou na frente no balcao.
+ *   1. fecha o emprestimo (marcando atraso, se houver)
+ *   2. decide o destino do exemplar — reparo se veio danificado, reservado se
+ *      alguem esta na fila, disponivel caso contrario
+ *   3. libera a proxima reserva, com validade
+ *   4. registra a movimentacao
+ *   5. suspende o leitor, se atrasou e a gestao configurou dias > 0
+ *   6. grava a auditoria
+ *
+ * A ordem importa: com reserva na fila o exemplar vai para `reservado`, nao
+ * `disponivel` — senao quem esperava perde o livro para quem chegou no balcao.
+ *
+ * Solto, esse fluxo eram sete escritas independentes. Falha na terceira
+ * deixava o emprestimo fechado e o exemplar ainda como emprestado.
  */
 export async function devolver(dados: {
-  emprestimoId: string
+  exemplarId: string
   devolvidoPor: string
+  diasAtraso: number
+  dano?: boolean
+  observacaoDano?: string | null
   prazoValidadeReservaDias: number
+  diasSuspensaoPorAtraso: number
 }) {
   return prisma.$transaction(async tx => {
-    const emprestimo = await tx.biblioteca_emprestimos.findUnique({
-      where: { id: dados.emprestimoId },
-      include: { biblioteca_exemplares: { select: { id: true, obra_id: true, situacao: true } } },
+    const emprestimo = await tx.biblioteca_emprestimos.findFirst({
+      where: { exemplar_id: dados.exemplarId, situacao: { in: [...SITUACOES_ATIVAS] } },
+      include: {
+        biblioteca_exemplares: {
+          select: {
+            id: true,
+            obra_id: true,
+            observacoes: true,
+            biblioteca_obras: { select: { id: true, titulo: true } },
+          },
+        },
+        biblioteca_leitores: { select: { id: true, nome_completo: true } },
+      },
     })
-    if (!emprestimo) throw new Error('Empréstimo não encontrado.')
-    if (!SITUACOES_ATIVAS.includes(emprestimo.situacao as (typeof SITUACOES_ATIVAS)[number])) {
-      throw new Error('Este empréstimo já foi encerrado.')
-    }
+    if (!emprestimo) throw new Error('Este exemplar não está emprestado no momento.')
 
     const agora = new Date()
-    const atrasado = !!emprestimo.data_prevista && agora > emprestimo.data_prevista
+    const atrasado = dados.diasAtraso > 0
+    const situacaoFinal = atrasado ? 'devolvido_com_atraso' : 'devolvido'
 
     await tx.biblioteca_emprestimos.update({
-      where: { id: dados.emprestimoId },
+      where: { id: emprestimo.id },
       data: {
-        situacao: atrasado ? 'devolvido_com_atraso' : 'devolvido',
+        situacao: situacaoFinal,
         data_devolucao: agora,
         devolvido_por: dados.devolvidoPor,
+        atualizado_em: agora,
       },
     })
 
-    const proxima = await tx.biblioteca_reservas.findFirst({
-      where: { obra_id: emprestimo.biblioteca_exemplares.obra_id, situacao: 'aguardando' },
-      orderBy: { posicao_fila: 'asc' },
-    })
-
-    if (proxima) {
-      const validade = new Date(agora)
-      validade.setDate(validade.getDate() + dados.prazoValidadeReservaDias)
-      await tx.biblioteca_reservas.update({
-        where: { id: proxima.id },
-        data: { situacao: 'disponivel', validade },
+    let novaSituacao = 'disponivel'
+    if (dados.dano) {
+      novaSituacao = 'em_reparo'
+    } else {
+      const proxima = await tx.biblioteca_reservas.findFirst({
+        where: { obra_id: emprestimo.biblioteca_exemplares.obra_id, situacao: 'aguardando' },
+        orderBy: { posicao_fila: 'asc' },
       })
+      if (proxima) {
+        novaSituacao = 'reservado'
+        const validade = new Date(agora)
+        validade.setDate(validade.getDate() + dados.prazoValidadeReservaDias)
+        await tx.biblioteca_reservas.update({
+          where: { id: proxima.id },
+          data: { situacao: 'disponivel', validade, atualizado_em: agora },
+        })
+      }
     }
 
-    const novaSituacao = proxima ? 'reservado' : 'disponivel'
     await tx.biblioteca_exemplares.update({
-      where: { id: emprestimo.exemplar_id },
-      data: { situacao: novaSituacao },
+      where: { id: dados.exemplarId },
+      data: {
+        situacao: novaSituacao,
+        observacoes:
+          dados.dano && dados.observacaoDano
+            ? dados.observacaoDano
+            : emprestimo.biblioteca_exemplares.observacoes,
+        atualizado_por: dados.devolvidoPor,
+        atualizado_em: agora,
+      },
     })
 
     await tx.biblioteca_movimentacoes.create({
       data: {
-        exemplar_id: emprestimo.exemplar_id,
+        exemplar_id: dados.exemplarId,
         situacao_anterior: 'emprestado',
         situacao_nova: novaSituacao,
-        motivo: atrasado ? 'devolucao_com_atraso' : 'devolucao',
+        motivo: dados.dano
+          ? `Devolução com dano: ${dados.observacaoDano ?? 'sem detalhe informado'}`
+          : 'Devolução registrada no balcão',
         responsavel_id: dados.devolvidoPor,
       },
     })
 
-    return { atrasado, reservaLiberada: !!proxima }
+    // Suspensao automatica so quando a gestao configurou dias > 0. Com zero,
+    // nada alem do registro acontece — e a regra que estava no codigo antigo.
+    let leitorSuspenso = false
+    if (atrasado && emprestimo.biblioteca_leitores && dados.diasSuspensaoPorAtraso > 0) {
+      await tx.biblioteca_leitores.update({
+        where: { id: emprestimo.biblioteca_leitores.id },
+        data: {
+          situacao: 'bloqueado',
+          motivo_bloqueio: `Suspensão automática por devolução com ${dados.diasAtraso} dia(s) de atraso.`,
+          atualizado_por: dados.devolvidoPor,
+          atualizado_em: agora,
+        },
+      })
+      leitorSuspenso = true
+    }
+
+    // valor_anterior e valor_novo sao colunas JSON: serializar na mao.
+    await tx.biblioteca_auditoria.create({
+      data: {
+        usuario_id: dados.devolvidoPor,
+        acao: 'devolucao_registrada',
+        tabela_afetada: 'biblioteca_emprestimos',
+        registro_afetado: emprestimo.id,
+        valor_anterior: JSON.stringify({ situacao: emprestimo.situacao }),
+        valor_novo: JSON.stringify({ situacao: situacaoFinal, dias_atraso: dados.diasAtraso }),
+      },
+    })
+
+    return {
+      atrasado,
+      novaSituacaoExemplar: novaSituacao,
+      leitorSuspenso,
+      obraTitulo: emprestimo.biblioteca_exemplares.biblioteca_obras?.titulo ?? null,
+      leitorNome: emprestimo.biblioteca_leitores?.nome_completo ?? null,
+    }
   })
 }
 

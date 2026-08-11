@@ -55,6 +55,11 @@ export async function exigirProfessorOuGestao(): Promise<Resultado> {
   return exigirAprovado(role => role === 'professor' || isGestao(role))
 }
 
+/** Quem conduz um quiz ao vivo: professor, monitor ou gestao. */
+export async function exigirQuizStaff(): Promise<Resultado> {
+  return exigirAprovado(role => role === 'professor' || role === 'monitor' || isGestao(role))
+}
+
 /** Escrita do modulo de biblioteca: acervo, exemplares, leitores. */
 export async function exigirBibliotecaStaff(): Promise<Resultado> {
   return exigirAprovado(role => role === 'bibliotecario' || isGestao(role))
