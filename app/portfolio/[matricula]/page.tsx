@@ -26,11 +26,15 @@ export async function generateMetadata({ params }: { params: Promise<{ matricula
   const supabase = await createClient()
   const { data: aluno } = await supabase.from('alunos').select('nome, turma').eq('matricula', matricula).maybeSingle()
 
-  if (!aluno) return { title: 'Portfólio não encontrado' }
+  if (!aluno) return { title: 'Portfólio não encontrado', robots: { index: false, follow: false } }
 
   return {
     title: `${aluno.nome} — Portfólio EMTI`,
     description: `Portfólio digital de ${aluno.nome}, aluno(a) do ${aluno.turma} do EMTI da E.E. Dr. João Beraldo.`,
+    // Página pessoal de aluno: fora da busca. O noindex é o que de fato tira do
+    // índice — /projetos linka para cá, então o buscador chega por link mesmo
+    // sem sitemap. O Disallow no robots.txt complementa, barrando o rastreio.
+    robots: { index: false, follow: false },
   }
 }
 

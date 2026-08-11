@@ -9,6 +9,12 @@ export const metadata: Metadata = {
   description: 'Site oficial da Escola Estadual Dr. João Beraldo — Ensino Médio em Tempo Integral (EMTI), Carlos Chagas, Minas Gerais. Formando protagonistas desde 1946.',
   keywords: ['E.E. Dr. João Beraldo', 'EMTI', 'Ensino Médio em Tempo Integral', 'Carlos Chagas', 'Minas Gerais', 'escola estadual'],
   metadataBase: new URL('https://escolaestadualdrjoaoberaldo.com'),
+  // O './' é resolvido contra o pathname da página atual, então cada rota sai
+  // com o seu próprio canônico sem precisar declarar um por página. Isso é o
+  // que diz ao buscador que o endereço oficial é o domínio sem www.
+  alternates: {
+    canonical: './',
+  },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
