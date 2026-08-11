@@ -12,26 +12,17 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
   }
 
-  // Buscar o aluno vinculado a este usuário
+  // Buscar o aluno vinculado a este usuário.
+  // O vínculo entre conta e registro acadêmico mora em alunos.user_id — é o que
+  // o cadastro grava (api/cadastro/aluno e api/usuarios/criar) e o que o login
+  // por matrícula consulta. A coluna identidades.aluno_id nunca é preenchida.
   const admin = createAdminClient()
 
-  // Procura na tabela identidades o aluno_id vinculado a este user_id
-  const { data: identidade } = await admin
-    .from('identidades')
-    .select('aluno_id')
-    .eq('user_id', user.id)
-    .single()
-
-  if (!identidade) {
-    return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
-  }
-
-  // Buscar dados do aluno
   const { data: aluno } = await admin
     .from('alunos')
     .select('id, nome, matricula, turma, email, telefone, responsavel, data_nascimento, foto_url')
-    .eq('id', identidade.aluno_id)
-    .single()
+    .eq('user_id', user.id)
+    .maybeSingle()
 
   if (!aluno) {
     return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
@@ -48,15 +39,15 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
   }
 
-  // Buscar o aluno_id vinculado a este usuário
+  // Mesmo vínculo do GET: alunos.user_id
   const admin = createAdminClient()
-  const { data: identidade } = await admin
-    .from('identidades')
-    .select('aluno_id')
+  const { data: aluno } = await admin
+    .from('alunos')
+    .select('id')
     .eq('user_id', user.id)
-    .single()
+    .maybeSingle()
 
-  if (!identidade) {
+  if (!aluno) {
     return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
   }
 
@@ -78,9 +69,9 @@ export async function PUT(request: Request) {
       .from('alunos')
       .select('id')
       .eq('email', body.email.trim())
-      .neq('id', identidade.aluno_id)
+      .neq('id', aluno.id)
       .limit(1)
-      .single()
+      .maybeSingle()
 
     if (existing) {
       return NextResponse.json({ error: 'Já existe outro aluno com esse e-mail.' }, { status: 400 })
@@ -97,7 +88,7 @@ export async function PUT(request: Request) {
   const { error } = await admin
     .from('alunos')
     .update(dados)
-    .eq('id', identidade.aluno_id)
+    .eq('id', aluno.id)
 
   if (error) {
     return NextResponse.json({ error: 'Erro ao atualizar: ' + error.message }, { status: 400 })

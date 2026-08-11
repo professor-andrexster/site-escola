@@ -184,9 +184,30 @@ export async function PUT(request: Request) {
   // houver conta vinculada. Reativar depois nao restaura sozinho: alguem da
   // gestao precisa aprovar de novo em /admin/alunos/[id].
   let loginRevogado = false
-  if (validacao.dados.ativo === false) {
+  const mudouTurma = validacao.dados.turma !== undefined
+  if (validacao.dados.ativo === false || mudouTurma) {
     const { data: alunoAtual } = await admin.from('alunos').select('user_id').eq('id', body.id).maybeSingle()
-    if (alunoAtual?.user_id) {
+
+    // A turma mora em dois lugares: alunos.turma (registro academico, editado
+    // aqui) e profiles.turma (conta de login, que e o que o quiz e o dashboard
+    // consultam para liberar conteudo por turma). Sem espelhar, mudar a turma
+    // no painel nao muda nada do lado do aluno.
+    if (mudouTurma && alunoAtual?.user_id) {
+      const { data: perfilTurma } = await admin
+        .from('profiles')
+        .select('role')
+        .eq('id', alunoAtual.user_id)
+        .maybeSingle()
+      // So papeis que carregam turma; professor/bibliotecario tem turma nula
+      if (perfilTurma && ['aluno', 'aluno_fundamental', 'monitor'].includes(perfilTurma.role)) {
+        await admin
+          .from('profiles')
+          .update({ turma: validacao.dados.turma as string })
+          .eq('id', alunoAtual.user_id)
+      }
+    }
+
+    if (validacao.dados.ativo === false && alunoAtual?.user_id) {
       const { data: perfilAtual } = await admin.from('profiles').select('aprovado').eq('id', alunoAtual.user_id).maybeSingle()
       if (perfilAtual?.aprovado) {
         await admin.from('profiles').update({ aprovado: false }).eq('id', alunoAtual.user_id)
