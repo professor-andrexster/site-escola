@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Save } from 'lucide-react'
 
 const CAMPOS = [
@@ -15,26 +14,30 @@ export default function ConfiguracoesPage() {
   const [valores, setValores] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
 
   useEffect(() => {
-    supabase.from('configuracoes_site').select('*').then(({ data }) => {
-      if (data) {
-        const map: Record<string, string> = {}
-        data.forEach((item) => { map[item.chave] = item.valor ?? '' })
-        setValores(map)
-      }
-    })
+    fetch('/api/configuracoes')
+      .then(res => (res.ok ? res.json() : null))
+      .then(json => { if (json?.valores) setValores(json.valores) })
+      .catch(() => {})
   }, [])
 
   async function handleSave() {
     setSaving(true)
-    const updates = CAMPOS.map(({ chave }) => ({
-      chave,
-      valor: valores[chave] ?? '',
-    }))
-    await supabase.from('configuracoes_site').upsert(updates, { onConflict: 'chave' })
+    setErro('')
+    const res = await fetch('/api/configuracoes', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        valores: Object.fromEntries(CAMPOS.map(({ chave }) => [chave, valores[chave] ?? ''])),
+      }),
+    })
     setSaving(false)
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível salvar.')
+      return
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
@@ -65,6 +68,7 @@ export default function ConfiguracoesPage() {
             {saving ? 'Salvando...' : 'Salvar Configurações'}
           </button>
           {saved && <span className="text-sm text-escola-verde font-medium">Configurações salvas!</span>}
+          {erro && <span className="text-sm text-red-600">{erro}</span>}
         </div>
       </div>
     </div>

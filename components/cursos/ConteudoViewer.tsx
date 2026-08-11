@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, CircleCheck, Clock, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -16,8 +15,6 @@ export interface DesafioAula {
 }
 
 interface ConteudoViewerProps {
-  userId: string
-  cursoId: string
   cursoSlug: string
   cursoTitulo: string
   aulaId: string
@@ -50,8 +47,6 @@ const proseClasses = [
 ].join(' ')
 
 export default function ConteudoViewer({
-  userId,
-  cursoId,
   cursoSlug,
   cursoTitulo,
   aulaId,
@@ -65,20 +60,14 @@ export default function ConteudoViewer({
   const [concluida, setConcluida] = useState(initialConcluida)
   const [saving, setSaving] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function concluirAula() {
     setSaving(true)
-    await supabase.from('progresso_aulas').upsert(
-      {
-        user_id: userId,
-        aula_id: aulaId,
-        curso_id: cursoId,
-        concluida: true,
-        concluida_em: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,aula_id' }
-    )
+    await fetch('/api/cursos/progresso', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aulaId, concluida: true }),
+    })
     setConcluida(true)
     setSaving(false)
     router.refresh()

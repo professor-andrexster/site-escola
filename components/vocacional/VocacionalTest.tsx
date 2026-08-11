@@ -2,34 +2,9 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { GraduationCap, ArrowRight, Sparkles } from 'lucide-react'
-import type { Trilha } from '@/types/database'
 import { trilhaBg } from '@/lib/trilhaColors'
-
-interface Pergunta {
-  id: number
-  texto: string
-  pesos: Record<string, number>
-}
-
-const PERGUNTAS: Pergunta[] = [
-  { id: 1, texto: 'Você gosta de organizar dados em tabelas e encontrar padrões?', pesos: { 'Excel & Dados': 3, 'Programação': 1 } },
-  { id: 2, texto: 'Prefere trabalhar com peças físicas, montar e desmontar equipamentos?', pesos: { 'Hardware': 3, 'Software': 1 } },
-  { id: 3, texto: 'Gosta de criar layouts, escolher cores e fazer coisas bonitas visualmente?', pesos: { 'Design Digital': 3 } },
-  { id: 4, texto: 'Fica curioso quando um programa trava — quer entender o porquê?', pesos: { 'Software': 3, 'Programação': 2 } },
-  { id: 5, texto: 'Já tentou criar um site, app ou script por conta própria?', pesos: { 'Programação': 3 } },
-  { id: 6, texto: 'Consegue explicar para outras pessoas como usar um computador?', pesos: { 'Software': 2, 'Hardware': 1 } },
-  { id: 7, texto: 'Usa planilhas para controlar gastos, notas ou qualquer coisa pessoal?', pesos: { 'Excel & Dados': 3 } },
-  { id: 8, texto: 'Já editou uma foto, vídeo ou fez um cartaz digital?', pesos: { 'Design Digital': 3, 'Software': 1 } },
-  { id: 9, texto: 'Se um computador der problema, você tenta resolver antes de pedir ajuda?', pesos: { 'Hardware': 2, 'Software': 2 } },
-  { id: 10, texto: 'Tem interesse em entender como a internet funciona por dentro?', pesos: { 'Programação': 2, 'Hardware': 2, 'Software': 1 } },
-  { id: 11, texto: 'Gosta de seguir instruções passo a passo com precisão?', pesos: { 'Excel & Dados': 2, 'Software': 2 } },
-  { id: 12, texto: 'Prefere criar algo do zero a consertar algo existente?', pesos: { 'Programação': 2, 'Design Digital': 2 } },
-  { id: 13, texto: 'Trabalha bem com números e lógica matemática?', pesos: { 'Programação': 2, 'Excel & Dados': 2 } },
-  { id: 14, texto: 'Você se importa com a aparência e usabilidade dos aplicativos que usa?', pesos: { 'Design Digital': 3, 'Programação': 1 } },
-  { id: 15, texto: 'Quer trabalhar consertando computadores de empresas ou pessoas?', pesos: { 'Hardware': 3, 'Software': 2 } },
-]
+import { PERGUNTAS } from '@/lib/vocacional/perguntas'
 
 const RESPOSTAS = [
   { label: 'Sim', valor: 1, classe: 'bg-green-600 hover:bg-green-500' },
@@ -58,8 +33,6 @@ export default function VocacionalTest() {
   const [respostas, setRespostas] = useState<{ pergunta_id: number; resposta: number }[]>([])
   const [resultado, setResultado] = useState<ResultadoTrilha[]>([])
 
-  const supabase = createClient()
-
   async function buscarAluno() {
     if (!matricula.trim()) {
       setErro('Informe sua matrícula.')
@@ -68,20 +41,20 @@ export default function VocacionalTest() {
     setLoading(true)
     setErro('')
 
-    const { data, error } = await supabase
-      .from('alunos')
-      .select('id, nome')
-      .eq('matricula', matricula.trim().toUpperCase())
-      .maybeSingle()
-
-    if (error || !data) {
-      setErro('Matrícula não encontrada. Verifique com a coordenação.')
+    const res = await fetch('/api/vocacional/aluno', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ matricula: matricula.trim() }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setErro(json.error ?? 'Matrícula não encontrada. Verifique com a coordenação.')
       setLoading(false)
       return
     }
 
-    setAlunoId(data.id)
-    setNomeAluno(data.nome)
+    setAlunoId(json.id)
+    setNomeAluno(json.nome)
     setLoading(false)
     setEtapa('perguntas')
   }
@@ -101,48 +74,22 @@ export default function VocacionalTest() {
   async function finalizar(respostasFinais: { pergunta_id: number; resposta: number }[]) {
     setEtapa('salvando')
 
-    // Soma pontuação por trilha e pontuação máxima possível
-    const soma: Record<string, number> = {}
-    const maximo: Record<string, number> = {}
-
-    PERGUNTAS.forEach((pergunta, i) => {
-      const valor = respostasFinais[i].resposta
-      Object.entries(pergunta.pesos).forEach(([trilha, peso]) => {
-        soma[trilha] = (soma[trilha] ?? 0) + peso * valor
-        maximo[trilha] = (maximo[trilha] ?? 0) + peso
-      })
+    // A apuração é do servidor: ele recalcula a pontuação a partir dos mesmos
+    // pesos e devolve o resultado já ordenado. Antes a conta era feita aqui e
+    // o número ia pronto para perfis_vocacionais.
+    const res = await fetch('/api/vocacional', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ alunoId, respostas: respostasFinais }),
     })
-
-    const { data: trilhas } = await supabase.from('trilhas').select('*')
-    const trilhasData = (trilhas ?? []) as Trilha[]
-
-    const pontuacoes: ResultadoTrilha[] = trilhasData.map(t => ({
-      nome: t.nome,
-      icone: t.icone,
-      cor: t.cor_tailwind,
-      pontuacao: maximo[t.nome] ? Math.round((soma[t.nome] / maximo[t.nome]) * 100) : 0,
-    }))
-
-    pontuacoes.sort((a, b) => b.pontuacao - a.pontuacao)
-    setResultado(pontuacoes)
-
-    if (alunoId) {
-      await supabase.from('testes_vocacionais').insert({
-        aluno_id: alunoId,
-        respostas: respostasFinais,
-      })
-
-      for (const trilha of trilhasData) {
-        const pontuacao = maximo[trilha.nome] ? Math.round((soma[trilha.nome] / maximo[trilha.nome]) * 100) : 0
-        await supabase.from('perfis_vocacionais').upsert({
-          aluno_id: alunoId,
-          trilha_id: trilha.id,
-          pontuacao,
-          atualizado_em: new Date().toISOString(),
-        }, { onConflict: 'aluno_id,trilha_id' })
-      }
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setErro(json.error ?? 'Erro ao salvar o resultado.')
+      setEtapa('perguntas')
+      return
     }
 
+    setResultado(json.resultado as ResultadoTrilha[])
     setEtapa('resultado')
   }
 

@@ -110,27 +110,29 @@ export default function AlunoProjetosManager({
     setErro('')
 
     const payload = {
-      aluno_id: alunoId,
+      alunoId,
       trilha_id: form.trilha_id || null,
       titulo: form.titulo.trim(),
       descricao: form.descricao.trim() || null,
       link_externo: form.link_externo.trim() || null,
-      tags: form.tags.length > 0 ? form.tags : null,
+      tags: form.tags,
       destaque: form.destaque,
       imagem_url: form.imagem_url || null,
       serie_na_epoca: serieAtual,
     }
 
+    const res = await fetch(form.id ? `/api/projetos/${form.id}` : '/api/projetos', {
+      method: form.id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { setErro(json.error ?? 'Erro ao salvar o projeto.'); setSaving(false); return }
+
     if (form.id) {
-      const { data, error } = await supabase.from('projetos').update(payload).eq('id', form.id)
-        .select('*, trilhas(id, nome, icone, cor_tailwind)').single()
-      if (error) { setErro('Erro ao salvar: ' + error.message); setSaving(false); return }
-      setProjetos(prev => prev.map(p => p.id === form.id ? data as ProjetoComTrilha : p))
+      setProjetos(prev => prev.map(p => p.id === form.id ? json.projeto as ProjetoComTrilha : p))
     } else {
-      const { data, error } = await supabase.from('projetos').insert(payload)
-        .select('*, trilhas(id, nome, icone, cor_tailwind)').single()
-      if (error) { setErro('Erro ao salvar: ' + error.message); setSaving(false); return }
-      setProjetos(prev => [data as ProjetoComTrilha, ...prev])
+      setProjetos(prev => [json.projeto as ProjetoComTrilha, ...prev])
     }
 
     setSaving(false)
@@ -139,8 +141,11 @@ export default function AlunoProjetosManager({
 
   async function excluir(id: string) {
     if (!confirm('Remover este projeto do portfólio?')) return
-    const { error } = await supabase.from('projetos').delete().eq('id', id)
-    if (error) { alert('Erro ao remover: ' + error.message); return }
+    const res = await fetch(`/api/projetos/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      alert((await res.json().catch(() => ({}))).error ?? 'Erro ao remover o projeto.')
+      return
+    }
     setProjetos(prev => prev.filter(p => p.id !== id))
   }
 

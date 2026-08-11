@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 import { ChevronLeft, ChevronRight, X, CircleCheck } from 'lucide-react'
 
 interface SlideViewerProps {
-  userId: string
-  cursoId: string
   cursoSlug: string
   cursoTitulo: string
   aulaId: string
@@ -21,8 +18,6 @@ interface SlideViewerProps {
 }
 
 export default function SlideViewer({
-  userId,
-  cursoId,
   cursoSlug,
   cursoTitulo,
   aulaId,
@@ -33,7 +28,6 @@ export default function SlideViewer({
   nextAulaSlug,
 }: SlideViewerProps) {
   const router = useRouter()
-  const supabase = createClient()
 
   const totalSlides = slidesUrls.length
   const [currentSlide, setCurrentSlide] = useState(() =>
@@ -64,10 +58,11 @@ export default function SlideViewer({
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     saveTimeoutRef.current = setTimeout(async () => {
       setSaving(true)
-      await supabase.from('progresso_aulas').upsert(
-        { user_id: userId, aula_id: aulaId, curso_id: cursoId, slide_atual: currentSlide },
-        { onConflict: 'user_id,aula_id' }
-      )
+      await fetch('/api/cursos/progresso', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aulaId, slideAtual: currentSlide }),
+      })
       setSaving(false)
     }, 600)
     return () => {
@@ -78,17 +73,11 @@ export default function SlideViewer({
 
   async function concluirAula() {
     setSaving(true)
-    await supabase.from('progresso_aulas').upsert(
-      {
-        user_id: userId,
-        aula_id: aulaId,
-        curso_id: cursoId,
-        slide_atual: currentSlide,
-        concluida: true,
-        concluida_em: new Date().toISOString(),
-      },
-      { onConflict: 'user_id,aula_id' }
-    )
+    await fetch('/api/cursos/progresso', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aulaId, slideAtual: currentSlide, concluida: true }),
+    })
     setConcluida(true)
     setSaving(false)
     if (nextAulaSlug) {

@@ -151,6 +151,48 @@ export async function projetosDoAlunoComTrilha(alunoId: string) {
   }))
 }
 
+export type CamposDeProjeto = {
+  trilha_id: string | null
+  titulo: string
+  descricao: string | null
+  link_externo: string | null
+  tags: string[]
+  destaque: boolean
+  imagem_url: string | null
+  serie_na_epoca: string | null
+}
+
+function serializarProjetoComTrilha(p: Projeto & { trilhas: Trilha | null }) {
+  return {
+    ...p,
+    aluno_id: p.aluno_id ?? '',
+    destaque: p.destaque ?? false,
+    tags: comoLista(p.tags),
+    criado_em: p.criado_em?.toISOString() ?? '',
+  }
+}
+
+export async function criarProjeto(alunoId: string, campos: CamposDeProjeto) {
+  const p = await prisma.projetos.create({
+    data: { ...campos, aluno_id: alunoId, tags: JSON.stringify(campos.tags) },
+    include: { trilhas: true },
+  })
+  return serializarProjetoComTrilha(p)
+}
+
+export async function atualizarProjeto(id: string, campos: CamposDeProjeto) {
+  const p = await prisma.projetos.update({
+    where: { id },
+    data: { ...campos, tags: JSON.stringify(campos.tags) },
+    include: { trilhas: true },
+  })
+  return serializarProjetoComTrilha(p)
+}
+
+export async function removerProjeto(id: string) {
+  return prisma.projetos.delete({ where: { id } })
+}
+
 export async function contarProjetosDoAluno(alunoId: string): Promise<number> {
   return prisma.projetos.count({ where: { aluno_id: alunoId } })
 }
@@ -320,6 +362,30 @@ export async function perfilVocacional(alunoId: string) {
 }
 
 /** Grava o resultado do teste. `respostas` e JSON serializado. */
+// ------------------------------------------------------- configuracoes
+
+/** Parametros globais do site, como mapa chave -> valor. */
+export async function configuracoesDoSite(): Promise<Record<string, string>> {
+  const linhas = await prisma.configuracoes_site.findMany()
+  return Object.fromEntries(linhas.map(l => [l.chave, l.valor ?? '']))
+}
+
+export async function salvarConfiguracoes(valores: Array<{ chave: string; valor: string }>) {
+  return prisma.$transaction(
+    valores.map(({ chave, valor }) =>
+      prisma.configuracoes_site.upsert({ where: { chave }, create: { chave, valor }, update: { valor } })
+    )
+  )
+}
+
+/** Nome e id do aluno pela matricula — a entrada do teste vocacional. */
+export async function alunoPelaMatricula(matricula: string) {
+  return prisma.alunos.findFirst({
+    where: { matricula },
+    select: { id: true, nome: true },
+  })
+}
+
 export async function registrarTesteVocacional(
   alunoId: string,
   respostas: unknown,

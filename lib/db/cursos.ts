@@ -314,22 +314,40 @@ export async function todasConcluidas(userId: string): Promise<string[]> {
 }
 
 /** Marca ou desmarca a conclusao de uma aula. */
-export async function registrarProgresso(
-  userId: string,
-  cursoId: string,
-  aulaId: string,
-  concluida: boolean
-) {
+/**
+ * Progresso do aluno numa aula. `slideAtual` marca onde ele parou; `concluida`
+ * so vira true, nunca volta — reabrir uma aula ja concluida nao a desconclui.
+ *
+ * O curso da aula e lido do banco, e nao aceito do chamador: assim o progresso
+ * nao pode ser lancado no curso errado.
+ */
+export async function registrarProgresso(dados: {
+  userId: string
+  aulaId: string
+  slideAtual?: number
+  concluida?: boolean
+}) {
+  const aula = await prisma.aulas.findUnique({
+    where: { id: dados.aulaId },
+    select: { curso_id: true },
+  })
+  if (!aula?.curso_id) throw new Error('Aula não encontrada.')
+
+  const marcarConcluida = dados.concluida === true
   return prisma.progresso_aulas.upsert({
-    where: { user_id_aula_id: { user_id: userId, aula_id: aulaId } },
+    where: { user_id_aula_id: { user_id: dados.userId, aula_id: dados.aulaId } },
     create: {
-      user_id: userId,
-      curso_id: cursoId,
-      aula_id: aulaId,
-      concluida,
-      concluida_em: concluida ? new Date() : null,
+      user_id: dados.userId,
+      curso_id: aula.curso_id,
+      aula_id: dados.aulaId,
+      slide_atual: dados.slideAtual ?? 0,
+      concluida: marcarConcluida,
+      concluida_em: marcarConcluida ? new Date() : null,
     },
-    update: { concluida, concluida_em: concluida ? new Date() : null },
+    update: {
+      ...(dados.slideAtual !== undefined ? { slide_atual: dados.slideAtual } : {}),
+      ...(marcarConcluida ? { concluida: true, concluida_em: new Date() } : {}),
+    },
   })
 }
 

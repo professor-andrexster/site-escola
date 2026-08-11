@@ -38,8 +38,6 @@ export default async function AulaPlayerPage({ params }: Params) {
   if (aula.slides_urls && aula.slides_urls.length > 0) {
     return (
       <SlideViewer
-        userId={user.id}
-        cursoId={curso.id}
         cursoSlug={curso.slug}
         cursoTitulo={curso.titulo}
         aulaId={aula.id}
@@ -57,8 +55,6 @@ export default async function AulaPlayerPage({ params }: Params) {
 
   return (
     <ConteudoViewer
-      userId={user.id}
-      cursoId={curso.id}
       cursoSlug={curso.slug}
       cursoTitulo={curso.titulo}
       aulaId={aula.id}
