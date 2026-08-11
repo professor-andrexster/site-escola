@@ -85,7 +85,7 @@ export async function POST(request: Request) {
 
   if (error) return NextResponse.json({ error: 'Erro ao cadastrar leitor: ' + error.message }, { status: 400 })
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'leitor_criado',
     tabelaAfetada: 'biblioteca_leitores',

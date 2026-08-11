@@ -67,7 +67,7 @@ export async function POST(request: Request) {
     if (errAutores) avisoAutores = 'A obra foi salva, mas houve erro ao vincular os autores. Edite a obra para tentar de novo.'
   }
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'obra_criada',
     tabelaAfetada: 'biblioteca_obras',

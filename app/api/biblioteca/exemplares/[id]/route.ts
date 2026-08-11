@@ -76,7 +76,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     })
   }
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'exemplar_editado',
     tabelaAfetada: 'biblioteca_exemplares',

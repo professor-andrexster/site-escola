@@ -73,7 +73,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     }
   }
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'obra_editada',
     tabelaAfetada: 'biblioteca_obras',
@@ -105,7 +105,7 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
 
   if (error) return NextResponse.json({ error: 'Erro ao inativar a obra: ' + error.message }, { status: 400 })
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'obra_inativada',
     tabelaAfetada: 'biblioteca_obras',

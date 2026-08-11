@@ -85,10 +85,54 @@ export async function buscarExemplarComObra(id: string) {
   })
 }
 
-export async function buscarExemplarPorTombo(tombo: string) {
+/** Busca por tombo OU codigo de barras — o balcao usa os dois no leitor. */
+export async function buscarExemplarPorCodigo(codigo: string) {
   return prisma.biblioteca_exemplares.findFirst({
-    where: { tombo },
-    include: { biblioteca_obras: { select: { titulo: true } } },
+    where: { OR: [{ tombo: codigo }, { codigo_barras: codigo }] },
+    include: { biblioteca_obras: { select: { id: true, titulo: true, capa_url: true } } },
+  })
+}
+
+/** Emprestimo aberto de um exemplar, com quem esta com ele. */
+export async function emprestimoAbertoComLeitor(exemplarId: string) {
+  return prisma.biblioteca_emprestimos.findFirst({
+    where: { exemplar_id: exemplarId, situacao: { in: [...SITUACOES_ATIVAS] } },
+    include: {
+      biblioteca_leitores: {
+        select: { id: true, nome_completo: true, turma: true, tipo_leitor: true },
+      },
+    },
+  })
+}
+
+export async function criarExemplar(dados: {
+  obraId: string
+  tombo: string
+  codigoBarras?: string | null
+  estante?: string | null
+  prateleira?: string | null
+  origemAquisicao?: string
+  valorReferencia?: number | null
+  consultaLocal?: boolean
+  estadoConservacao?: string
+  observacoes?: string | null
+  atualizadoPor: string
+}) {
+  return prisma.biblioteca_exemplares.create({
+    data: {
+      obra_id: dados.obraId,
+      tombo: dados.tombo,
+      codigo_barras: dados.codigoBarras ?? null,
+      estante: dados.estante ?? null,
+      prateleira: dados.prateleira ?? null,
+      origem_aquisicao: dados.origemAquisicao ?? 'compra',
+      valor_referencia: dados.valorReferencia ?? null,
+      consulta_local: dados.consultaLocal ?? false,
+      estado_conservacao: dados.estadoConservacao ?? 'bom',
+      observacoes: dados.observacoes ?? null,
+      data_entrada: new Date(),
+      atualizado_por: dados.atualizadoPor,
+    },
   })
 }
 
@@ -383,32 +427,79 @@ export async function devolver(dados: {
   })
 }
 
-/** Renova um emprestimo em andamento, empurrando a data prevista. */
+/** Emprestimo aberto com leitor e obra — o que a renovacao precisa avaliar. */
+export async function emprestimoParaRenovar(id: string) {
+  return prisma.biblioteca_emprestimos.findFirst({
+    where: { id, situacao: { in: [...SITUACOES_ATIVAS] } },
+    include: {
+      biblioteca_exemplares: { select: { obra_id: true } },
+      biblioteca_leitores: true,
+    },
+  })
+}
+
+/** Quantas reservas aguardam por uma obra. */
+export async function reservasNaFila(obraId: string): Promise<number> {
+  return prisma.biblioteca_reservas.count({
+    where: { obra_id: obraId, situacao: 'aguardando' },
+  })
+}
+
+/**
+ * Renova um emprestimo: registra a renovacao no historico e empurra a data
+ * prevista — junto. Eram duas escritas soltas, e falha na segunda deixava
+ * renovacao registrada sem a data ter mudado.
+ *
+ * As recusas de negocio (atraso, limite, fila de reserva) ficam na rota, que
+ * tem o calendario e as regras de prazo por tipo de leitor.
+ */
 export async function renovar(dados: {
   emprestimoId: string
+  dataPrevistaAnterior: Date
   novaDataPrevista: Date
-  maxRenovacoes: number
+  renovacoesFeitas: number
+  autorizadoPor: string
 }) {
   return prisma.$transaction(async tx => {
-    const emprestimo = await tx.biblioteca_emprestimos.findUnique({
-      where: { id: dados.emprestimoId },
+    await tx.biblioteca_renovacoes.create({
+      data: {
+        emprestimo_id: dados.emprestimoId,
+        autorizado_por: dados.autorizadoPor,
+        data_prevista_anterior: dados.dataPrevistaAnterior,
+        nova_data_prevista: dados.novaDataPrevista,
+      },
     })
-    if (!emprestimo) throw new Error('Empréstimo não encontrado.')
-    if (!SITUACOES_ATIVAS.includes(emprestimo.situacao as (typeof SITUACOES_ATIVAS)[number])) {
-      throw new Error('Este empréstimo já foi encerrado.')
-    }
-    if ((emprestimo.renovacoes_feitas ?? 0) >= dados.maxRenovacoes) {
-      throw new Error('Limite de renovações atingido.')
-    }
 
-    return tx.biblioteca_emprestimos.update({
+    const atualizado = await tx.biblioteca_emprestimos.update({
       where: { id: dados.emprestimoId },
       data: {
         situacao: 'renovado',
+        renovacoes_feitas: dados.renovacoesFeitas + 1,
         data_prevista: dados.novaDataPrevista,
-        renovacoes_feitas: (emprestimo.renovacoes_feitas ?? 0) + 1,
+        atualizado_em: new Date(),
       },
     })
+
+    // A auditoria entra na mesma transacao: renovacao sem rastro e pior que
+    // renovacao que falhou, porque ninguem descobre depois.
+    await tx.biblioteca_auditoria.create({
+      data: {
+        usuario_id: dados.autorizadoPor,
+        acao: 'emprestimo_renovado',
+        tabela_afetada: 'biblioteca_emprestimos',
+        registro_afetado: dados.emprestimoId,
+        valor_anterior: JSON.stringify({
+          data_prevista: dados.dataPrevistaAnterior.toISOString().slice(0, 10),
+          renovacoes_feitas: dados.renovacoesFeitas,
+        }),
+        valor_novo: JSON.stringify({
+          data_prevista: dados.novaDataPrevista.toISOString().slice(0, 10),
+          renovacoes_feitas: dados.renovacoesFeitas + 1,
+        }),
+      },
+    })
+
+    return atualizado
   })
 }
 

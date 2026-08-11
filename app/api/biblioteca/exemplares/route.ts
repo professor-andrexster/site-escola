@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarExemplarPorCodigo, emprestimoAbertoComLeitor, criarExemplar,
+         configuracao } from '@/lib/db/biblioteca'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
 import { registrarAuditoriaBiblioteca } from '@/lib/biblioteca/auditoria'
 import { gerarProximoTombo } from '@/lib/biblioteca/tombo'
@@ -28,25 +29,12 @@ export async function GET(request: Request) {
   const codigo = new URL(request.url).searchParams.get('codigo')?.trim()
   if (!codigo) return NextResponse.json({ error: 'Informe o tombo ou código de barras.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: exemplar } = await admin
-    .from('biblioteca_exemplares')
-    .select('*, biblioteca_obras(id, titulo, capa_url)')
-    .or(`tombo.eq.${codigo},codigo_barras.eq.${codigo}`)
-    .maybeSingle()
+  const exemplar = await buscarExemplarPorCodigo(codigo)
 
   if (!exemplar) return NextResponse.json({ error: 'Nenhum exemplar encontrado com esse tombo ou código de barras.' }, { status: 404 })
 
-  let emprestimo = null
-  if (exemplar.situacao === 'emprestado') {
-    const { data } = await admin
-      .from('biblioteca_emprestimos')
-      .select('*, biblioteca_leitores(id, nome_completo, turma, tipo_leitor)')
-      .eq('exemplar_id', exemplar.id)
-      .in('situacao', ['em_andamento', 'renovado'])
-      .maybeSingle()
-    emprestimo = data
-  }
+  const emprestimo =
+    exemplar.situacao === 'emprestado' ? await emprestimoAbertoComLeitor(exemplar.id) : null
 
   return NextResponse.json({ exemplar, emprestimo })
 }
@@ -63,9 +51,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Tombo digitado manualmente só serve para um exemplar por vez.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-
-  const { data: config } = await admin.from('biblioteca_configuracoes').select('gera_tombo_automatico, prefixo_tombo').eq('id', true).maybeSingle()
+  const config = await configuracao()
   const geraAutomatico = config?.gera_tombo_automatico ?? true
   const prefixo = config?.prefixo_tombo ?? 'BIB'
 
@@ -75,37 +61,37 @@ export async function POST(request: Request) {
 
   const criados = []
   for (let i = 0; i < quantidade; i++) {
-    const tombo = body.tombo?.trim() || (await gerarProximoTombo(admin, prefixo))
-    const { data: exemplar, error } = await admin
-      .from('biblioteca_exemplares')
-      .insert({
-        obra_id: body.obraId,
+    const tombo = body.tombo?.trim() || (await gerarProximoTombo(prefixo))
+    let exemplar
+    try {
+      exemplar = await criarExemplar({
+        obraId: body.obraId!,
         tombo,
-        codigo_barras: body.codigoBarras?.trim() || null,
+        codigoBarras: body.codigoBarras?.trim() || null,
         estante: body.estante?.trim() || null,
         prateleira: body.prateleira?.trim() || null,
-        origem_aquisicao: body.origemAquisicao || 'compra',
-        valor_referencia: body.valorReferencia ?? null,
-        consulta_local: body.consultaLocal ?? false,
-        estado_conservacao: body.estadoConservacao || 'bom',
+        origemAquisicao: body.origemAquisicao || 'compra',
+        valorReferencia: body.valorReferencia ?? null,
+        consultaLocal: body.consultaLocal ?? false,
+        estadoConservacao: body.estadoConservacao || 'bom',
         observacoes: body.observacoes?.trim() || null,
-        atualizado_por: auth.userId,
+        atualizadoPor: auth.userId,
       })
-      .select('*')
-      .single()
-
-    if (error) {
-      if (error.code === '23505') {
+    } catch (erro) {
+      const error = erro as { code?: string }
+      // P2002 no Prisma e o antigo 23505 do Postgres: tombo repetido.
+      if (error.code === 'P2002') {
         return NextResponse.json(
           { error: `Já existe um exemplar com o tombo ${tombo}. ${criados.length} exemplar(es) já foram criados antes deste erro.`, criados },
           { status: 400 }
         )
       }
-      return NextResponse.json({ error: 'Erro ao criar exemplar: ' + error.message, criados }, { status: 400 })
+      console.error('[biblioteca/exemplares] falha ao criar', erro)
+      return NextResponse.json({ error: 'Erro ao criar o exemplar.', criados }, { status: 400 })
     }
 
     criados.push(exemplar)
-    await registrarAuditoriaBiblioteca(admin, {
+    await registrarAuditoriaBiblioteca({
       usuarioId: auth.userId,
       acao: 'exemplar_criado',
       tabelaAfetada: 'biblioteca_exemplares',

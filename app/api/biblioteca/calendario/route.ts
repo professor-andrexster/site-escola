@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erro ao salvar: ' + error.message }, { status: 400 })
   }
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: 'calendario_dia_adicionado',
     tabelaAfetada: 'biblioteca_calendario',

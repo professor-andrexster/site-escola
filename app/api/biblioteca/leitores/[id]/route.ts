@@ -97,7 +97,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
   if (error) return NextResponse.json({ error: 'Erro ao salvar o leitor: ' + error.message }, { status: 400 })
 
-  await registrarAuditoriaBiblioteca(admin, {
+  await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,
     acao: situacao !== anterior.situacao ? 'leitor_situacao_alterada' : 'leitor_editado',
     tabelaAfetada: 'biblioteca_leitores',
