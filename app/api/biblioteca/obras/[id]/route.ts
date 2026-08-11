@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarObra, atualizarObra, substituirAutores } from '@/lib/db/biblioteca'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
 import { registrarAuditoriaBiblioteca } from '@/lib/biblioteca/auditoria'
 
@@ -33,13 +33,12 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Informe o título da obra.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-  const { data: anterior } = await admin.from('biblioteca_obras').select('*').eq('id', id).maybeSingle()
+  const anterior = await buscarObra(id)
   if (!anterior) return NextResponse.json({ error: 'Obra não encontrada.' }, { status: 404 })
 
-  const { data: obra, error } = await admin
-    .from('biblioteca_obras')
-    .update({
+  let obra
+  try {
+    obra = await atualizarObra(id, {
       titulo: body.titulo.trim(),
       subtitulo: body.subtitulo?.trim() || null,
       ano_publicacao: body.anoPublicacao ?? null,
@@ -48,7 +47,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       idioma: body.idioma?.trim() || 'Português',
       numero_paginas: body.numeroPaginas ?? null,
       sinopse: body.sinopse?.trim() || null,
-      palavras_chave: body.palavrasChave ?? [],
+      palavrasChave: body.palavrasChave ?? [],
       publico_indicado: body.publicoIndicado?.trim() || null,
       area_conhecimento: body.areaConhecimento?.trim() || null,
       classificacao_catalogacao: body.classificacaoCatalogacao?.trim() || null,
@@ -57,19 +56,19 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       editora_id: body.editoraId || null,
       categoria_id: body.categoriaId || null,
       atualizado_por: auth.userId,
-      atualizado_em: new Date().toISOString(),
     })
-    .eq('id', id)
-    .select('*')
-    .single()
+  } catch (erro) {
+    console.error('[biblioteca/obras] falha ao salvar', erro)
+    return NextResponse.json({ error: 'Erro ao salvar a obra.' }, { status: 400 })
+  }
 
-  if (error) return NextResponse.json({ error: 'Erro ao salvar a obra: ' + error.message }, { status: 400 })
-
+  // Trocar os autores era apagar tudo e reinserir, solto. Falha entre os dois
+  // deixava a obra sem autor nenhum. Agora e transacao.
   if (body.autorIds) {
-    await admin.from('biblioteca_obras_autores').delete().eq('obra_id', id)
-    if (body.autorIds.length > 0) {
-      const vinculos = body.autorIds.map((autorId) => ({ obra_id: id, autor_id: autorId }))
-      await admin.from('biblioteca_obras_autores').insert(vinculos)
+    try {
+      await substituirAutores(id, body.autorIds)
+    } catch (erro) {
+      console.error('[biblioteca/obras] falha ao trocar autores', erro)
     }
   }
 
@@ -93,17 +92,15 @@ export async function DELETE(request: Request, { params }: { params: Promise<{ i
   if (!auth.ok) return auth.res
 
   const { id } = await params
-  const admin = createAdminClient()
-
-  const { data: anterior } = await admin.from('biblioteca_obras').select('*').eq('id', id).maybeSingle()
+  const anterior = await buscarObra(id)
   if (!anterior) return NextResponse.json({ error: 'Obra não encontrada.' }, { status: 404 })
 
-  const { error } = await admin
-    .from('biblioteca_obras')
-    .update({ situacao: 'inativa', atualizado_por: auth.userId, atualizado_em: new Date().toISOString() })
-    .eq('id', id)
-
-  if (error) return NextResponse.json({ error: 'Erro ao inativar a obra: ' + error.message }, { status: 400 })
+  try {
+    await atualizarObra(id, { situacao: 'inativa', atualizado_por: auth.userId })
+  } catch (erro) {
+    console.error('[biblioteca/obras] falha ao inativar', erro)
+    return NextResponse.json({ error: 'Erro ao inativar a obra.' }, { status: 400 })
+  }
 
   await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,

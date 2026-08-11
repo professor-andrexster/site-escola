@@ -295,7 +295,20 @@ export async function atualizarLeitor(
   })
 }
 
-/** Historico de emprestimos de um leitor, com obra e tombo. */
+/** Emprestimos abertos de um leitor, com obra e tombo. */
+export async function emprestimosAbertosDoLeitor(leitorId: string) {
+  return prisma.biblioteca_emprestimos.findMany({
+    where: { leitor_id: leitorId, situacao: { in: [...SITUACOES_ATIVAS] } },
+    include: {
+      biblioteca_exemplares: {
+        select: { id: true, tombo: true, biblioteca_obras: { select: { titulo: true } } },
+      },
+    },
+    orderBy: { data_prevista: 'asc' },
+  })
+}
+
+/** Historico completo de emprestimos de um leitor. */
 export async function emprestimosDoLeitor(leitorId: string) {
   return prisma.biblioteca_emprestimos.findMany({
     where: { leitor_id: leitorId },

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarLeitor, atualizarLeitor, emprestimosAbertosDoLeitor } from '@/lib/db/biblioteca'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
 import { registrarAuditoriaBiblioteca } from '@/lib/biblioteca/auditoria'
 import { validarLeitor } from '@/lib/biblioteca/leitores'
@@ -29,19 +29,11 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   if (!auth.ok) return auth.res
 
   const { id } = await params
-  const admin = createAdminClient()
-
-  const { data: leitor } = await admin.from('biblioteca_leitores').select('*').eq('id', id).maybeSingle()
+  const leitor = await buscarLeitor(id)
   if (!leitor) return NextResponse.json({ error: 'Leitor não encontrado.' }, { status: 404 })
 
-  const { data: emprestimos } = await admin
-    .from('biblioteca_emprestimos')
-    .select('*, biblioteca_exemplares(id, tombo, biblioteca_obras(titulo))')
-    .eq('leitor_id', id)
-    .in('situacao', ['em_andamento', 'renovado'])
-    .order('data_prevista')
-
-  return NextResponse.json({ leitor, emprestimosAbertos: emprestimos ?? [] })
+  const emprestimosAbertos = await emprestimosAbertosDoLeitor(id)
+  return NextResponse.json({ leitor, emprestimosAbertos })
 }
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -61,8 +53,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   })
   if (!validacao.ok) return NextResponse.json({ error: validacao.erro }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: anterior } = await admin.from('biblioteca_leitores').select('*').eq('id', id).maybeSingle()
+  const anterior = await buscarLeitor(id)
   if (!anterior) return NextResponse.json({ error: 'Leitor não encontrado.' }, { status: 404 })
 
   const situacao = body.situacao ?? anterior.situacao
@@ -70,14 +61,14 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ error: 'Informe o motivo do bloqueio.' }, { status: 400 })
   }
 
-  const { data: leitor, error } = await admin
-    .from('biblioteca_leitores')
-    .update({
+  let leitor
+  try {
+    leitor = await atualizarLeitor(id, {
       nome_completo: body.nomeCompleto.trim(),
       nome_social: body.nomeSocial?.trim() || null,
       tipo_leitor: body.tipoLeitor,
       matricula: body.matricula?.trim() || null,
-      data_nascimento: body.dataNascimento || null,
+      data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : null,
       turma: body.turma?.trim() || null,
       turno: body.turno?.trim() || null,
       ano_escolar: body.anoEscolar?.trim() || null,
@@ -89,13 +80,11 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       situacao,
       motivo_bloqueio: situacao === 'bloqueado' ? body.motivoBloqueio?.trim() : null,
       atualizado_por: auth.userId,
-      atualizado_em: new Date().toISOString(),
     })
-    .eq('id', id)
-    .select('*')
-    .single()
-
-  if (error) return NextResponse.json({ error: 'Erro ao salvar o leitor: ' + error.message }, { status: 400 })
+  } catch (erro) {
+    console.error('[biblioteca/leitores] falha ao salvar', erro)
+    return NextResponse.json({ error: 'Erro ao salvar o leitor.' }, { status: 400 })
+  }
 
   await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarExemplar, atualizarExemplar } from '@/lib/db/biblioteca'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
 import { registrarAuditoriaBiblioteca } from '@/lib/biblioteca/auditoria'
 
@@ -29,8 +29,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params
   const body = (await request.json()) as CorpoExemplar
 
-  const admin = createAdminClient()
-  const { data: anterior } = await admin.from('biblioteca_exemplares').select('*').eq('id', id).maybeSingle()
+  const anterior = await buscarExemplar(id)
   if (!anterior) return NextResponse.json({ error: 'Exemplar não encontrado.' }, { status: 404 })
 
   if (body.situacao && body.situacao !== anterior.situacao) {
@@ -55,25 +54,37 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     estado_conservacao: body.estadoConservacao || anterior.estado_conservacao,
     observacoes: body.observacoes?.trim() || null,
     atualizado_por: auth.userId,
-    atualizado_em: new Date().toISOString(),
+
   }
   if (body.situacao) dados.situacao = body.situacao
 
-  const { data: exemplar, error } = await admin.from('biblioteca_exemplares').update(dados).eq('id', id).select('*').single()
+  // Mudanca de situacao e movimentacao vao na mesma transacao: exemplar que
+  // troca de estado sem entrada no historico quebra o inventario do acervo.
+  const mudouSituacao = !!body.situacao && body.situacao !== anterior.situacao
 
-  if (error) {
-    if (error.code === '23505') return NextResponse.json({ error: 'Já existe outro exemplar com esse código de barras.' }, { status: 400 })
-    return NextResponse.json({ error: 'Erro ao salvar o exemplar: ' + error.message }, { status: 400 })
-  }
-
-  if (body.situacao && body.situacao !== anterior.situacao) {
-    await admin.from('biblioteca_movimentacoes').insert({
-      exemplar_id: id,
-      situacao_anterior: anterior.situacao,
-      situacao_nova: body.situacao,
-      motivo: body.motivo,
-      responsavel_id: auth.userId,
-    })
+  let exemplar
+  try {
+    exemplar = await atualizarExemplar(
+      id,
+      dados,
+      mudouSituacao
+        ? {
+            situacaoAnterior: anterior.situacao,
+            situacaoNova: body.situacao!,
+            motivo: body.motivo!,
+            responsavelId: auth.userId,
+          }
+        : undefined
+    )
+  } catch (erro) {
+    if ((erro as { code?: string })?.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'Já existe outro exemplar com esse código de barras.' },
+        { status: 400 }
+      )
+    }
+    console.error('[biblioteca/exemplares] falha ao salvar', erro)
+    return NextResponse.json({ error: 'Erro ao salvar o exemplar.' }, { status: 400 })
   }
 
   await registrarAuditoriaBiblioteca({
