@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
-import { createClient } from '@/lib/supabase/server'
+import { jaExiste, criar, atualizar, buscarPorId, remover } from '@/lib/db/alunos'
+import { papelEAprovacao, sincronizarTurma, revogar } from '@/lib/db/perfis'
+import { registrar } from '@/lib/db/log'
 import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
 
 // Escrita na tabela alunos é só via service role (RLS fechada na migration 016).
 // Estas rotas são o único caminho, restritas à direção (CREATE/DELETE) ou próprio aluno (UPDATE self).
@@ -28,28 +29,9 @@ function validarEmail(email: string): boolean {
   return REGEX_EMAIL.test(email)
 }
 
-async function verificarDuplicatas(
-  campo: 'matricula' | 'cpf' | 'email',
-  valor: string | null | undefined,
-  alunoIdExcluindo?: string
-): Promise<{ existe: boolean; alunoNome?: string }> {
-  if (!valor) return { existe: false }
-
-  const admin = createAdminClient()
-  // Matrícula compara sem diferenciar caixa (ilike) para pegar registros
-  // antigos gravados fora do padrão maiúsculo, tipo "Alu20260010".
-  const query =
-    campo === 'matricula'
-      ? admin.from('alunos').select('id, nome').ilike(campo, normalizarMatricula(valor).replace(/[%_]/g, '\\$&'))
-      : admin.from('alunos').select('id, nome').eq(campo, valor)
-
-  if (alunoIdExcluindo) {
-    query.neq('id', alunoIdExcluindo)
-  }
-
-  const { data } = await query.limit(1).maybeSingle()
-  return { existe: !!data, alunoNome: data?.nome }
-}
+// verificarDuplicatas foi para lib/db/alunos.jaExiste. O ilike que existia
+// aqui para pegar matricula em caixa mista virou desnecessario: a collation
+// utf8mb4_unicode_ci do MariaDB ja compara sem diferenciar caixa.
 
 function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: true; dados: Record<string, unknown> } | { ok: false; erro: string } {
   const dados: Record<string, unknown> = {}
@@ -119,29 +101,29 @@ export async function POST(request: Request) {
 
   // Verificar duplicatas antes de inserir
   if (body.matricula) {
-    const dup = await verificarDuplicatas('matricula', body.matricula)
-    if (dup.existe) {
+    if (await jaExiste('matricula', body.matricula!)) {
       return NextResponse.json({ error: 'Já existe um aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
     }
   }
   if (body.cpf) {
-    const dup = await verificarDuplicatas('cpf', body.cpf)
-    if (dup.existe) {
+    if (await jaExiste('cpf', body.cpf!)) {
       return NextResponse.json({ error: 'Já existe um aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
     }
   }
   if (body.email) {
-    const dup = await verificarDuplicatas('email', body.email)
-    if (dup.existe) {
+    if (await jaExiste('email', body.email!)) {
       return NextResponse.json({ error: 'Já existe um aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
     }
   }
 
-  const admin = createAdminClient()
-  const { data, error } = await admin.from('alunos').insert(validacao.dados).select('id').single()
-  if (error) return erroBanco(error, ['matricula', 'cpf', 'email'])
+  let criado
+  try {
+    criado = await criar(validacao.dados as never)
+  } catch (erro) {
+    return erroBanco(erro as { code?: string; message: string }, ['matricula', 'cpf', 'email'])
+  }
 
-  return NextResponse.json({ ok: true, id: data.id })
+  return NextResponse.json({ ok: true, id: criado.id })
 }
 
 export async function PUT(request: Request) {
@@ -155,30 +137,29 @@ export async function PUT(request: Request) {
   if (!validacao.ok) return NextResponse.json({ error: validacao.erro }, { status: 400 })
   validacao.dados.atualizado_em = new Date().toISOString()
 
-  const admin = createAdminClient()
 
   // Se está atualizando matrícula, CPF ou email, verificar duplicatas (excluindo este aluno)
   if (body.matricula) {
-    const dup = await verificarDuplicatas('matricula', body.matricula, body.id)
-    if (dup.existe) {
+    if (await jaExiste('matricula', body.matricula!, body.id)) {
       return NextResponse.json({ error: 'Já existe outro aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
     }
   }
   if (body.cpf) {
-    const dup = await verificarDuplicatas('cpf', body.cpf, body.id)
-    if (dup.existe) {
+    if (await jaExiste('cpf', body.cpf!, body.id)) {
       return NextResponse.json({ error: 'Já existe outro aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
     }
   }
   if (body.email) {
-    const dup = await verificarDuplicatas('email', body.email, body.id)
-    if (dup.existe) {
+    if (await jaExiste('email', body.email!, body.id)) {
       return NextResponse.json({ error: 'Já existe outro aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
     }
   }
 
-  const { error } = await admin.from('alunos').update(validacao.dados).eq('id', body.id)
-  if (error) return erroBanco(error, ['matricula', 'cpf', 'email'])
+  try {
+    await atualizar(body.id, validacao.dados as never)
+  } catch (erro) {
+    return erroBanco(erro as { code?: string; message: string }, ['matricula', 'cpf', 'email'])
+  }
 
   // Desativar o cadastro academico tambem derruba o acesso de login, se
   // houver conta vinculada. Reativar depois nao restaura sozinho: alguem da
@@ -186,32 +167,24 @@ export async function PUT(request: Request) {
   let loginRevogado = false
   const mudouTurma = validacao.dados.turma !== undefined
   if (validacao.dados.ativo === false || mudouTurma) {
-    const { data: alunoAtual } = await admin.from('alunos').select('user_id').eq('id', body.id).maybeSingle()
+    const alunoAtual = await buscarPorId(body.id)
 
     // A turma mora em dois lugares: alunos.turma (registro academico, editado
     // aqui) e profiles.turma (conta de login, que e o que o quiz e o dashboard
     // consultam para liberar conteudo por turma). Sem espelhar, mudar a turma
     // no painel nao muda nada do lado do aluno.
+    // A turma mora em dois lugares: alunos.turma (registro academico, editado
+    // aqui) e profiles.turma (conta de login, que e o que o quiz e o dashboard
+    // consultam). sincronizarTurma so escreve nos papeis que carregam turma.
     if (mudouTurma && alunoAtual?.user_id) {
-      const { data: perfilTurma } = await admin
-        .from('profiles')
-        .select('role')
-        .eq('id', alunoAtual.user_id)
-        .maybeSingle()
-      // So papeis que carregam turma; professor/bibliotecario tem turma nula
-      if (perfilTurma && ['aluno', 'aluno_fundamental', 'monitor'].includes(perfilTurma.role)) {
-        await admin
-          .from('profiles')
-          .update({ turma: validacao.dados.turma as string })
-          .eq('id', alunoAtual.user_id)
-      }
+      await sincronizarTurma(alunoAtual.user_id, validacao.dados.turma as string)
     }
 
     if (validacao.dados.ativo === false && alunoAtual?.user_id) {
-      const { data: perfilAtual } = await admin.from('profiles').select('aprovado').eq('id', alunoAtual.user_id).maybeSingle()
+      const perfilAtual = await papelEAprovacao(alunoAtual.user_id)
       if (perfilAtual?.aprovado) {
-        await admin.from('profiles').update({ aprovado: false }).eq('id', alunoAtual.user_id)
-        await registrarAtividade(admin, {
+        await revogar(alunoAtual.user_id)
+        await registrar({
           acao: 'aluno_bloqueado_por_inatividade',
           userId: alunoAtual.user_id,
           detalhes: { aluno_id: body.id, bloqueado_por: auth.userId },
@@ -232,9 +205,12 @@ export async function DELETE(request: Request) {
   const { id } = (await request.json()) as { id?: string }
   if (!id) return NextResponse.json({ error: 'Aluno não informado.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { error } = await admin.from('alunos').delete().eq('id', id)
-  if (error) return NextResponse.json({ error: 'Erro ao remover: ' + error.message }, { status: 400 })
+  try {
+    await remover(id)
+  } catch (erro) {
+    console.error('[alunos] falha ao remover', erro)
+    return NextResponse.json({ error: 'Erro ao remover o aluno.' }, { status: 400 })
+  }
 
   return NextResponse.json({ ok: true })
 }

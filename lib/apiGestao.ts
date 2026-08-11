@@ -1,79 +1,61 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { usuarioAtual } from '@/lib/auth/sessao'
+import { papelEAprovacao } from '@/lib/db/perfis'
 import { isGestao } from '@/lib/roles'
+import type { Profile } from '@/types/database'
 
 /**
- * Garante que o chamador da rota e gestao aprovada (diretora, vice diretora
- * ou admin). Retorna o id do usuario ou uma NextResponse de erro pronta.
+ * Guardas de autorizacao das rotas de API. Vinte e seis rotas passam por aqui,
+ * o que faz deste o ponto de maior alavanca da migracao: trocar a consulta de
+ * perfil aqui migra a autorizacao de todas elas de uma vez.
+ *
+ * A identidade vem de lib/auth/sessao (que na fase 4 deixa de ser Supabase) e
+ * o papel vem de lib/db/perfis (que ja e MariaDB). As tres funcoes seguem o
+ * mesmo formato: nega sem sessao, nega sem aprovacao, nega sem o papel certo.
+ *
+ * Importante: com o fim do RLS, estas checagens deixam de ter rede embaixo.
+ * No Supabase, uma rota que esquecesse de chamar o guarda ainda esbarrava na
+ * policy. Aqui, esquecer o guarda significa rota aberta.
  */
-export async function exigirGestao(): Promise<{ ok: true; userId: string } | { ok: false; res: NextResponse }> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { ok: false, res: NextResponse.json({ error: 'Não autenticado.' }, { status: 401 }) }
+
+const SEM_SESSAO = () =>
+  NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+const SEM_PERMISSAO = () =>
+  NextResponse.json({ error: 'Sem permissão.' }, { status: 403 })
+
+type Resultado =
+  | { ok: true; userId: string; role: Profile['role'] }
+  | { ok: false; res: NextResponse }
+
+/** Base comum: exige sessao e perfil aprovado, e devolve o papel. */
+async function exigirAprovado(
+  permitido: (role: Profile['role']) => boolean
+): Promise<Resultado> {
+  const usuario = await usuarioAtual()
+  if (!usuario) return { ok: false, res: SEM_SESSAO() }
+
+  const perfil = await papelEAprovacao(usuario.id)
+  if (!perfil?.aprovado || !permitido(perfil.role)) {
+    return { ok: false, res: SEM_PERMISSAO() }
   }
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, aprovado')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.aprovado || !isGestao(profile.role)) {
-    return { ok: false, res: NextResponse.json({ error: 'Sem permissão.' }, { status: 403 }) }
-  }
-
-  return { ok: true, userId: user.id }
+  return { ok: true, userId: usuario.id, role: perfil.role }
 }
 
-/**
- * Garante que o chamador e professor aprovado ou gestao. Usado nas rotas
- * onde professor tambem pode agir, como a aprovacao de cadastro de aluno.
- */
-export async function exigirProfessorOuGestao(): Promise<
-  { ok: true; userId: string; role: string } | { ok: false; res: NextResponse }
+/** Diretora, vice-diretora ou admin. */
+export async function exigirGestao(): Promise<
+  { ok: true; userId: string } | { ok: false; res: NextResponse }
 > {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { ok: false, res: NextResponse.json({ error: 'Não autenticado.' }, { status: 401 }) }
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, aprovado')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.aprovado || (profile.role !== 'professor' && !isGestao(profile.role))) {
-    return { ok: false, res: NextResponse.json({ error: 'Sem permissão.' }, { status: 403 }) }
-  }
-
-  return { ok: true, userId: user.id, role: profile.role }
+  const r = await exigirAprovado(isGestao)
+  return r.ok ? { ok: true, userId: r.userId } : r
 }
 
-/**
- * Garante que o chamador e bibliotecario ou gestao. Usado nas rotas de
- * escrita do modulo de biblioteca (acervo, exemplares, leitores).
- */
-export async function exigirBibliotecaStaff(): Promise<
-  { ok: true; userId: string; role: string } | { ok: false; res: NextResponse }
-> {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return { ok: false, res: NextResponse.json({ error: 'Não autenticado.' }, { status: 401 }) }
-  }
+/** Professor tambem pode agir — aprovacao de cadastro de aluno, por exemplo. */
+export async function exigirProfessorOuGestao(): Promise<Resultado> {
+  return exigirAprovado(role => role === 'professor' || isGestao(role))
+}
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, aprovado')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.aprovado || (profile.role !== 'bibliotecario' && !isGestao(profile.role))) {
-    return { ok: false, res: NextResponse.json({ error: 'Sem permissão.' }, { status: 403 }) }
-  }
-
-  return { ok: true, userId: user.id, role: profile.role }
+/** Escrita do modulo de biblioteca: acervo, exemplares, leitores. */
+export async function exigirBibliotecaStaff(): Promise<Resultado> {
+  return exigirAprovado(role => role === 'bibliotecario' || isGestao(role))
 }

@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { usuarioAtual } from '@/lib/auth/sessao'
+import { buscarPorUsuario, jaExiste, atualizar } from '@/lib/db/alunos'
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 export async function GET(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  const usuario = await usuarioAtual()
+  if (!usuario) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
   }
 
@@ -16,36 +14,34 @@ export async function GET(request: Request) {
   // O vínculo entre conta e registro acadêmico mora em alunos.user_id — é o que
   // o cadastro grava (api/cadastro/aluno e api/usuarios/criar) e o que o login
   // por matrícula consulta. A coluna identidades.aluno_id nunca é preenchida.
-  const admin = createAdminClient()
-
-  const { data: aluno } = await admin
-    .from('alunos')
-    .select('id, nome, matricula, turma, email, telefone, responsavel, data_nascimento, foto_url')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const aluno = await buscarPorUsuario(usuario.id)
 
   if (!aluno) {
     return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
   }
 
-  return NextResponse.json(aluno)
+  // So os campos que a tela de perfil edita — nao devolvemos cpf nem
+  // nascimento, que a camada carrega mas a tela nao usa.
+  return NextResponse.json({
+    id: aluno.id,
+    nome: aluno.nome,
+    matricula: aluno.matricula,
+    turma: aluno.turma,
+    email: aluno.email,
+    telefone: aluno.telefone,
+    responsavel: aluno.responsavel,
+    foto_url: aluno.foto_url,
+  })
 }
 
 export async function PUT(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-
-  if (!user) {
+  const usuario = await usuarioAtual()
+  if (!usuario) {
     return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
   }
 
   // Mesmo vínculo do GET: alunos.user_id
-  const admin = createAdminClient()
-  const { data: aluno } = await admin
-    .from('alunos')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
+  const aluno = await buscarPorUsuario(usuario.id)
 
   if (!aluno) {
     return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
@@ -65,15 +61,7 @@ export async function PUT(request: Request) {
 
   // Verificar se o e-mail já existe para outro aluno
   if (body.email) {
-    const { data: existing } = await admin
-      .from('alunos')
-      .select('id')
-      .eq('email', body.email.trim())
-      .neq('id', aluno.id)
-      .limit(1)
-      .maybeSingle()
-
-    if (existing) {
+    if (await jaExiste('email', body.email, aluno.id)) {
       return NextResponse.json({ error: 'Já existe outro aluno com esse e-mail.' }, { status: 400 })
     }
   }
@@ -85,13 +73,11 @@ export async function PUT(request: Request) {
   if (body.responsavel !== undefined) dados.responsavel = body.responsavel?.trim() || null
   if (body.foto_url !== undefined) dados.foto_url = body.foto_url || null
 
-  const { error } = await admin
-    .from('alunos')
-    .update(dados)
-    .eq('id', aluno.id)
-
-  if (error) {
-    return NextResponse.json({ error: 'Erro ao atualizar: ' + error.message }, { status: 400 })
+  try {
+    await atualizar(aluno.id, dados)
+  } catch (erro) {
+    console.error('[meu-perfil] falha ao atualizar', erro)
+    return NextResponse.json({ error: 'Erro ao atualizar seus dados.' }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true })

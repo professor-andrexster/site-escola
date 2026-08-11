@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import type { profiles } from '@prisma/client'
+import type { Profile } from '@/types/database'
 
 /**
  * Perfis de acesso — a tabela `profiles`, que diz quem e cada conta e o que
@@ -41,14 +42,21 @@ export async function buscarPorEmail(email: string): Promise<Perfil | null> {
   return p ? serializar(p) : null
 }
 
-/** Papel e aprovacao — o par que o login consulta a cada entrada. */
+/**
+ * Papel e aprovacao — o par que o login consulta a cada entrada.
+ *
+ * O banco guarda `role` como varchar e o Prisma tipa como string; o dominio
+ * conhece o conjunto valido. Estreitar aqui e o papel da camada: quem chama
+ * recebe o tipo do dominio, nao o do banco.
+ */
 export async function papelEAprovacao(
   id: string
-): Promise<{ role: string; aprovado: boolean } | null> {
-  return prisma.profiles.findUnique({
+): Promise<{ role: Profile['role']; aprovado: boolean } | null> {
+  const p = await prisma.profiles.findUnique({
     where: { id },
     select: { role: true, aprovado: true },
   })
+  return p ? { role: p.role as Profile['role'], aprovado: p.aprovado } : null
 }
 
 export async function ehGestao(id: string): Promise<boolean> {
