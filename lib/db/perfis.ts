@@ -13,9 +13,14 @@ import type { Profile } from '@/types/database'
 
 // created_at/updated_at sao anulaveis no banco vivo, ainda que a migration 023
 // as declare NOT NULL — o schema real e a fonte da verdade aqui.
-export type Perfil = Omit<profiles, 'created_at' | 'updated_at'> & {
+//
+// `role` e varchar no banco e uniao fechada no dominio. Estreitar no
+// serializar faz todo consumidor receber o tipo do dominio, sem cast espalhado
+// pelas telas.
+export type Perfil = Omit<profiles, 'created_at' | 'updated_at' | 'role'> & {
   created_at: string | null
   updated_at: string | null
+  role: Profile['role']
 }
 
 /** Papeis que podem administrar. Espelha GESTAO_ROLES de lib/roles.ts. */
@@ -27,6 +32,7 @@ export const PAPEIS_COM_TURMA = ['aluno', 'aluno_fundamental', 'monitor'] as con
 function serializar(p: profiles): Perfil {
   return {
     ...p,
+    role: p.role as Profile['role'],
     created_at: p.created_at?.toISOString() ?? null,
     updated_at: p.updated_at?.toISOString() ?? null,
   }
@@ -115,6 +121,63 @@ export async function listarAprovadosPorPapeis(papeis: string[]) {
     select: { id: true, nome_completo: true, turma: true },
     orderBy: { nome_completo: 'asc' },
   })
+}
+
+/**
+ * Tudo que as telas de Administradores e Funcionarios precisam: os perfis dos
+ * papeis pedidos, os dados de identidade de cada um, e o log recente ja com o
+ * nome de quem agiu.
+ *
+ * As duas telas montavam isto igual, cada uma com quatro consultas e dois Maps
+ * repetidos. Aqui e uma funcao so — e o nome no log passa a sair resolvido,
+ * em vez de a tela cruzar com uma lista de todos os perfis do sistema.
+ */
+export async function painelDeUsuarios(papeis: string[]) {
+  const linhas = await prisma.profiles.findMany({
+    where: { role: { in: papeis } },
+    orderBy: [{ aprovado: 'asc' }, { created_at: 'desc' }],
+  })
+
+  const identidades = await prisma.identidades.findMany({
+    where: { user_id: { in: linhas.map(p => p.id) } },
+    select: { user_id: true, cpf: true, email_alternativo: true, criado_via: true },
+  })
+  const porConta = new Map(identidades.map(i => [i.user_id, i]))
+
+  const registros = await prisma.log_atividades.findMany({
+    orderBy: { criado_em: 'desc' },
+    take: 100,
+  })
+
+  // So os nomes que o log referencia, em vez de todos os perfis do sistema.
+  // Array.from em vez de spread do Set: o target do tsconfig e anterior a es2015.
+  const idsNoLog = Array.from(new Set(registros.map(r => r.user_id).filter(Boolean) as string[]))
+  const nomes = idsNoLog.length
+    ? await prisma.profiles.findMany({
+        where: { id: { in: idsNoLog } },
+        select: { id: true, nome_completo: true },
+      })
+    : []
+  const nomePorId = new Map(nomes.map(n => [n.id, n.nome_completo]))
+
+  return {
+    perfis: linhas.map(p => {
+      const ident = porConta.get(p.id)
+      return {
+        ...serializar(p),
+        email: p.email ?? '',
+        cpf: ident?.cpf ?? null,
+        email_alternativo: ident?.email_alternativo ?? null,
+        criado_via: ident?.criado_via ?? null,
+      }
+    }),
+    log: registros.map(r => ({
+      ...r,
+      criado_em: r.criado_em?.toISOString() ?? null,
+      detalhes: r.detalhes ? (JSON.parse(r.detalhes) as Record<string, unknown>) : null,
+      nome: r.user_id ? nomePorId.get(r.user_id) ?? null : null,
+    })),
+  }
 }
 
 export async function criar(dados: {

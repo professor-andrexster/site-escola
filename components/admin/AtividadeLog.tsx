@@ -10,7 +10,7 @@ export interface RegistroLog {
   acao: string
   detalhes: Record<string, unknown> | null
   ip: string | null
-  criado_em: string
+  criado_em: string | null
   nome: string | null
 }
 
@@ -106,7 +106,9 @@ export default function AtividadeLog({ registros }: { registros: RegistroLog[] }
                   <span className="text-gray-400">{detalhe}</span>
                 </span>
                 <span className="ml-auto flex-shrink-0 text-xs text-gray-400 font-mono">
-                  {new Date(r.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}
+                  {r.criado_em
+                    ? new Date(r.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
+                    : '—'}
                 </span>
               </div>
             )

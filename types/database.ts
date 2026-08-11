@@ -1511,8 +1511,8 @@ export interface Profile {
   aprovado: boolean
   email: string | null
   avatar_url: string | null
-  created_at: string
-  updated_at: string
+  created_at: string | null
+  updated_at: string | null
 }
 
 // Pergunta da prova final de um curso (resposta_correta só via service role;
