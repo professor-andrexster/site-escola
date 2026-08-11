@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { pendentesDeAprovacao } from '@/lib/db/perfis'
 import { getProfileOrRedirect } from '@/lib/profile'
 import AprovacaoAlunosTable, { type AlunoPendente } from '@/components/admin/AprovacaoAlunosTable'
 import type { Metadata } from 'next'
@@ -15,24 +15,7 @@ export const dynamic = 'force-dynamic'
 // o cadastro dele nunca aparecia em lugar nenhum (bug real, corrigido aqui).
 export default async function AprovacoesPage() {
   const { profile } = await getProfileOrRedirect()
-  const admin = createAdminClient()
-
-  const [{ data: profiles }, { data: alunosBase }] = await Promise.all([
-    admin
-      .from('profiles')
-      .select('*')
-      .in('role', ['aluno', 'professor'])
-      .eq('aprovado', false)
-      .order('created_at', { ascending: true }),
-    admin.from('alunos').select('user_id, matricula'),
-  ])
-
-  const matriculaPorUsuario = new Map((alunosBase ?? []).filter(a => a.user_id).map(a => [a.user_id as string, a.matricula]))
-
-  const pendentes: AlunoPendente[] = (profiles ?? []).map(p => ({
-    ...p,
-    matricula: matriculaPorUsuario.get(p.id) ?? null,
-  }))
+  const pendentes = (await pendentesDeAprovacao(['aluno', 'professor'])) as AlunoPendente[]
 
   return (
     <div>

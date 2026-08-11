@@ -72,6 +72,35 @@ export async function contarPendentes(papeis: string[]): Promise<number> {
 // ------------------------------------------------------------- GESTAO
 // So de rota que ja verificou o papel de quem chama.
 
+/**
+ * Quem aguarda aprovacao, ja com a matricula quando for aluno.
+ *
+ * Continuam duas consultas com um Map no meio, e nao um join: profiles.id e
+ * alunos.user_id apontam ambos para `usuarios`, mas nao um para o outro —
+ * nao existe relacao direta entre as duas tabelas. O que muda e o lugar: o
+ * emparelhamento sai da tela e vem para a camada.
+ */
+export async function pendentesDeAprovacao(papeis: string[]) {
+  const linhas = await prisma.profiles.findMany({
+    where: { role: { in: papeis }, aprovado: false },
+    orderBy: { created_at: 'asc' },
+  })
+  if (!linhas.length) return []
+
+  const fichas = await prisma.alunos.findMany({
+    where: { user_id: { in: linhas.map(p => p.id) } },
+    select: { user_id: true, matricula: true },
+  })
+  const matriculaPorConta = new Map(
+    fichas.filter(f => f.user_id).map(f => [f.user_id as string, f.matricula])
+  )
+
+  return linhas.map(p => ({
+    ...serializar(p),
+    matricula: matriculaPorConta.get(p.id) ?? null,
+  }))
+}
+
 export async function listarPorPapeis(papeis: string[]): Promise<Perfil[]> {
   const linhas = await prisma.profiles.findMany({
     where: { role: { in: papeis } },
