@@ -36,3 +36,33 @@ export async function enviarConviteBibliotecario(params: { nome: string; email: 
 
   if (error) throw new Error(error.message)
 }
+
+export async function enviarRedefinicaoDeSenhaPorEmail(params: { email: string; link: string }) {
+  const { email, link } = params
+
+  const { error } = await client().emails.send({
+    from: `E.E. Dr. João Beraldo <${REMETENTE}>`,
+    to: email,
+    subject: 'Redefinição de senha',
+    html: `
+      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; color: #1a1a1a;">
+        <h1 style="font-size: 20px;">Redefinir sua senha</h1>
+        <p style="font-size: 14px; line-height: 1.6;">
+          Alguém pediu a redefinição da senha desta conta no sistema da E.E. Dr. João
+          Beraldo. Se foi você, use o botão abaixo para escolher uma senha nova.
+        </p>
+        <p style="margin: 24px 0;">
+          <a href="${link}" style="background: #1a3a5c; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 600; font-size: 14px;">
+            Escolher nova senha
+          </a>
+        </p>
+        <p style="font-size: 12px; color: #666; line-height: 1.6;">
+          O link vale por duas horas e só pode ser usado uma vez. Se você não pediu isso,
+          ignore esta mensagem — sua senha atual continua valendo.
+        </p>
+      </div>
+    `,
+  })
+
+  if (error) throw new Error(error.message)
+}

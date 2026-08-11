@@ -6,6 +6,12 @@ export type AcaoLog =
   | 'cadastro_recusado'
   | 'login_ok'
   | 'login_falha'
+  | 'logout'
+  // Autenticacao propria (fase 4): a redefinicao por link de e-mail passou a
+  // ser nossa, entao ganhou acao propria — 'senha_redefinida_cpf' e o outro
+  // caminho, o do balcao com CPF e data de nascimento.
+  | 'senha_redefinida'
+  | 'redefinicao_falhou'
   | 'senha_redefinida_cpf'
   | 'senha_redefinida_admin'
   | 'recuperacao_recusada'

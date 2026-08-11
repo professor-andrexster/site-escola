@@ -4,6 +4,7 @@ import { criarContaInterna, CpfJaVinculado } from '@/lib/db/cadastro'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { ipDoRequest } from '@/lib/log'
 import { registrar } from '@/lib/db/log'
+import { senhaFraca } from '@/lib/auth/senha'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -19,9 +20,11 @@ export async function POST(request: Request) {
   if (!nome?.trim() || !email?.trim() || !cpf || !senha) {
     return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 })
   }
-  if (senha.length < 6) {
-    return NextResponse.json({ error: 'A senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
+  const fraca = senhaFraca(senha)
+  if (fraca) {
+    return NextResponse.json({ error: fraca }, { status: 400 })
   }
+
   const cpfLimpo = limparCPF(cpf)
   if (!validarCPF(cpfLimpo)) {
     return NextResponse.json({ error: 'CPF inválido. Confira os números digitados.' }, { status: 400 })

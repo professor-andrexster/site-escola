@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { LogOut, Globe } from 'lucide-react'
 import type { Profile } from '@/types/database'
@@ -19,11 +18,12 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
   const groups = navByRole[profile.role] ?? navByRole.aluno
 
   async function handleLogout() {
-    await supabase.auth.signOut()
+    // A rota revoga a sessão no banco e apaga o cookie — sair de um
+    // dispositivo não derruba os outros, que é o comportamento de antes.
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/admin')
     router.refresh()
   }

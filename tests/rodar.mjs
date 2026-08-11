@@ -3,6 +3,9 @@
  *   node tests/rodar.mjs
  * Carrega DATABASE_URL do .env.local — sem isso cada suite falha por falta
  * de conexao e parece bug de codigo (aconteceu).
+ *
+ * Registra tambem o resolvedor de `@/` (tests/alias.mjs): as suites que
+ * importam os modulos de lib/ precisam dele, o Node so entende caminho.
  */
 import { readFileSync, readdirSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
@@ -23,7 +26,11 @@ let falhas = 0
 for (const arquivo of readdirSync('tests').filter(f => f.startsWith('db-') && f.endsWith('.mjs')).sort()) {
   process.stdout.write(`\n── ${arquivo}\n`)
   try {
-    execFileSync(process.execPath, [`tests/${arquivo}`], { stdio: 'inherit', env: process.env })
+    execFileSync(
+      process.execPath,
+      ['--import', './tests/alias.mjs', `tests/${arquivo}`],
+      { stdio: 'inherit', env: process.env }
+    )
   } catch {
     falhas++
   }

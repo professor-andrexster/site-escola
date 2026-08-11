@@ -828,4 +828,32 @@ model usuarios {
   profiles                                                               profiles?
   progresso_aulas                                                        progresso_aulas[]
   quiz_participantes                                                     quiz_participantes[]
+  sessoes                                                                sessoes[]
+  tokens_senha                                                           tokens_senha[]
+}
+
+model sessoes {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  usuario_id  String    @db.Char(36)
+  token_hash  String    @unique @db.Char(64)
+  expira_em   DateTime
+  revogado_em DateTime?
+  ip          String?   @db.VarChar(64)
+  user_agent  String?   @db.VarChar(255)
+  criado_em   DateTime  @default(now())
+  usuarios    usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([usuario_id])
+}
+
+model tokens_senha {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  usuario_id String    @db.Char(36)
+  token_hash String    @unique @db.Char(64)
+  expira_em  DateTime
+  usado_em   DateTime?
+  criado_em  DateTime  @default(now())
+  usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([usuario_id])
 }

@@ -5,6 +5,7 @@ import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
 import { ipDoRequest } from '@/lib/log'
 import { registrar, contarRecentes } from '@/lib/db/log'
+import { senhaFraca } from '@/lib/auth/senha'
 
 const MSG_NAO_CONFERE = 'Os dados informados não conferem com a base da escola. Se o problema continuar, procure a direção.'
 
@@ -20,9 +21,11 @@ export async function POST(request: Request) {
   if (!matricula?.trim() || !cpf || !dataNascimento || !novaSenha) {
     return NextResponse.json({ error: 'Preencha todos os campos.' }, { status: 400 })
   }
-  if (novaSenha.length < 6) {
-    return NextResponse.json({ error: 'A nova senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
+  const fraca = senhaFraca(novaSenha)
+  if (fraca) {
+    return NextResponse.json({ error: fraca }, { status: 400 })
   }
+
   const cpfLimpo = limparCPF(cpf)
   if (!validarCPF(cpfLimpo)) {
     return NextResponse.json({ error: 'CPF inválido. Confira os números digitados.' }, { status: 400 })

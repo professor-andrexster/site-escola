@@ -6,6 +6,7 @@ import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
 import { ipDoRequest } from '@/lib/log'
 import { registrar } from '@/lib/db/log'
+import { senhaFraca } from '@/lib/auth/senha'
 
 export async function POST(request: Request) {
   const auth = await exigirGestao()
@@ -33,9 +34,11 @@ export async function POST(request: Request) {
       { status: 400 }
     )
   }
-  if (password.length < 6) {
-    return NextResponse.json({ error: 'A senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
+  const fraca = senhaFraca(password)
+  if (fraca) {
+    return NextResponse.json({ error: fraca }, { status: 400 })
   }
+
   if (role === 'aluno' && !turma) {
     return NextResponse.json({ error: 'Selecione a turma do aluno.' }, { status: 400 })
   }

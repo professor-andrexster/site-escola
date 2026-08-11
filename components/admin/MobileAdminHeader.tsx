@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 import { Menu, X, LogOut, Globe } from 'lucide-react'
 import type { Profile } from '@/types/database'
@@ -21,13 +20,12 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
   const [open, setOpen] = useState(false)
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
 
   const groups = navByRole[profile.role] ?? navByRole.aluno
 
   async function handleLogout() {
     setOpen(false)
-    await supabase.auth.signOut()
+    await fetch('/api/auth/logout', { method: 'POST' })
     router.push('/admin')
     router.refresh()
   }

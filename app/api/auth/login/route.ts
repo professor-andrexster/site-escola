@@ -39,11 +39,14 @@ export async function POST(request: Request) {
   const resultado = await entrarComSenha(email, senha)
 
   if ('erro' in resultado) {
-    // O rótulo 'senha_incorreta' é enganoso: o Supabase devolve o mesmo
-    // "Invalid login credentials" para senha errada E para usuário inexistente.
-    // Sem a mensagem crua não dá para distinguir os dois — nem enxergar casos
-    // como e-mail não confirmado ou bloqueio por tentativas.
-    console.error('[login] recusado pelo Supabase', {
+    // Desde a fase 4 o motivo é preciso. O Supabase devolvia o mesmo
+    // "Invalid login credentials" para senha errada, conta inexistente e
+    // conta sem senha — foi o que deixou dois alunos travados em agosto sem
+    // ninguém conseguir dizer por quê. Agora o log distingue os casos.
+    //
+    // Para quem está na tela a resposta continua sendo a mesma frase, para
+    // não revelar quais e-mails existem.
+    console.error('[login] recusado', {
       status: resultado.erro.status,
       mensagem: resultado.erro.mensagem,
     })
@@ -51,8 +54,7 @@ export async function POST(request: Request) {
       acao: 'login_falha',
       detalhes: {
         identificador: mascararIdentificador(identificador),
-        motivo: 'senha_incorreta',
-        erro_provedor: resultado.erro.mensagem,
+        motivo: resultado.erro.mensagem,
         // e-mail que o identificador resolveu, mascarado: se não for o que o
         // usuário espera, o problema está na resolução, não na senha
         email_resolvido: email.replace(/^(.{2})[^@]*(@.*)$/, '$1***$2'),

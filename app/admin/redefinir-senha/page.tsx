@@ -5,57 +5,48 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { Eye, EyeOff } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors'
 const labelClass = 'block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5'
 
 // Destino do link "esqueci minha senha" enviado por email.
-// O @supabase/ssr troca o código da URL por uma sessão de recuperação;
-// aqui o usuário define a senha nova.
+// O link traz ?token=, sorteado no servidor e guardado como hash. Ele não abre
+// sessão nenhuma: só a rota de redefinição o aceita, uma vez só, e a pessoa
+// entra de novo com a senha nova.
 export default function RedefinirSenhaPage() {
   const [pronto, setPronto] = useState(false)
-  const [sessaoValida, setSessaoValida] = useState(false)
+  const [token, setToken] = useState('')
   const [novaSenha, setNovaSenha] = useState('')
   const [confirmar, setConfirmar] = useState('')
   const [mostrar, setMostrar] = useState(false)
   const [loading, setLoading] = useState(false)
   const [erro, setErro] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
-    async function verificar() {
-      // O link pode vir com ?code= (PKCE): troca por sessão antes de conferir
-      const code = new URLSearchParams(window.location.search).get('code')
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
-      }
-      const { data: { session } } = await supabase.auth.getSession()
-      setSessaoValida(!!session)
-      setPronto(true)
-    }
-    verificar()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    setToken(new URLSearchParams(window.location.search).get('token') ?? '')
+    setPronto(true)
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (novaSenha !== confirmar) { setErro('As senhas não coincidem.'); return }
-    if (novaSenha.length < 6) { setErro('A nova senha deve ter pelo menos 6 caracteres.'); return }
 
     setLoading(true)
     setErro('')
 
-    const { error } = await supabase.auth.updateUser({ password: novaSenha })
-    if (error) {
-      setErro('Erro ao redefinir a senha. O link pode ter expirado — peça um novo.')
+    const res = await fetch('/api/auth/redefinir-senha', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, senha: novaSenha }),
+    })
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Erro ao redefinir a senha.')
       setLoading(false)
       return
     }
 
-    await supabase.auth.signOut()
     router.push('/admin?senha_redefinida=1')
   }
 
@@ -73,10 +64,10 @@ export default function RedefinirSenhaPage() {
         <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           {!pronto ? (
             <p className="p-6 text-sm text-gray-400 text-center">Verificando o link...</p>
-          ) : !sessaoValida ? (
+          ) : !token ? (
             <div className="p-6 text-center space-y-3">
               <p className="text-sm text-gray-600">
-                Este link expirou ou já foi usado.
+                Este link não está completo. Peça uma nova redefinição de senha.
               </p>
               <Link href="/admin/recuperar-senha" className="inline-block text-sm text-escola-azul font-semibold hover:underline">
                 Pedir um novo link

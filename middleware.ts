@@ -1,40 +1,39 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+/**
+ * Desvio de quem não tem sessão para a tela de entrada.
+ *
+ * Aqui só olhamos se o cookie existe. O middleware roda no runtime Edge, onde
+ * o Prisma não alcança o banco — então não dá para conferir se o token é
+ * válido, nem se expirou.
+ *
+ * Isso é suficiente porque este middleware nunca foi a autorização de nada:
+ * toda página do painel passa por `getProfileOrRedirect`, e toda rota de API
+ * por `lib/apiGestao`, que leem a sessão de verdade no banco. Um cookie
+ * inventado passa por aqui e é recusado uma camada abaixo — só não gasta um
+ * redirect no caminho.
+ */
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        setAll(cookiesToSet: { name: string; value: string; options?: any }[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+const COOKIE_DE_SESSAO = 'jb_sessao'
 
-  const { data: { user } } = await supabase.auth.getUser()
+const PUBLICAS = [
+  '/admin',
+  '/admin/cadastro',
+  '/admin/recuperar-senha',
+  '/admin/redefinir-senha',
+  '/admin/convite',
+]
 
-  const publicPaths = ['/admin', '/admin/cadastro', '/admin/recuperar-senha', '/admin/redefinir-senha', '/admin/convite']
+export function middleware(request: NextRequest) {
+  const temCookie = Boolean(request.cookies.get(COOKIE_DE_SESSAO)?.value)
 
-  if (!publicPaths.includes(request.nextUrl.pathname) && !user) {
+  if (!PUBLICAS.includes(request.nextUrl.pathname) && !temCookie) {
     const url = request.nextUrl.clone()
     url.pathname = '/admin'
     return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {

@@ -1,107 +1,184 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { cookies, headers } from 'next/headers'
+import { conferir, gastarTempoDeHash, gerarHash } from '@/lib/auth/senha'
+import {
+  abrirSessao,
+  criarTokenDeSenha,
+  duracaoDaSessaoEmSegundos,
+  revogarSessao,
+  revogarSessoesDoUsuario,
+  sessaoValida,
+  sortearToken,
+} from '@/lib/db/sessoes'
+import * as contas from '@/lib/db/usuarios'
+import { enviarRedefinicaoDeSenhaPorEmail } from '@/lib/email'
 
 /**
  * Costura da sessao.
  *
- * Hoje isto embrulha o Supabase Auth. Na fase 4 da migracao, a autenticacao
- * passa a ser propria (cookie assinado, hash bcrypt) e SO ESTE ARQUIVO muda —
- * as rotas que dependem de "quem esta logado" nao precisam ser tocadas de novo.
+ * Ate a fase 3 isto embrulhava o Supabase Auth. Agora a autenticacao e nossa:
+ * cookie com token opaco, sessao em `sessoes`, senha em bcrypt na coluna
+ * `usuarios.encrypted_password`.
  *
- * A costura existe porque a fase 2 (dados) e a fase 4 (autenticacao) andam
- * separadas: sem ela, cada rota teria que ser reescrita duas vezes.
+ * As assinaturas exportadas sao as mesmas de antes, de proposito — foi para
+ * isso que a costura existiu durante a fase 2. Nenhuma rota precisou mudar
+ * por causa da troca de provedor.
+ *
+ * O token vai no cookie em claro e no banco como SHA-256. O cookie e httpOnly,
+ * sameSite lax e secure em producao: JavaScript da pagina nao le, e ele nao
+ * viaja para outro site.
  */
+
+export const COOKIE_DE_SESSAO = 'jb_sessao'
 
 export type UsuarioSessao = {
   id: string
   email: string | null
 }
 
-/** Quem esta logado, ou null. */
-export async function usuarioAtual(): Promise<UsuarioSessao | null> {
-  const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-  if (!user) return null
-  return { id: user.id, email: user.email ?? null }
+function opcoesDoCookie(maxAge: number) {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    secure: process.env.NODE_ENV === 'production',
+    path: '/',
+    maxAge,
+  }
 }
 
-/** Encerra a sessao. Usado quando o perfil nao existe mais. */
+/** Quem esta logado, ou null. */
+export async function usuarioAtual(): Promise<UsuarioSessao | null> {
+  const token = (await cookies()).get(COOKIE_DE_SESSAO)?.value
+  if (!token) return null
+
+  const sessao = await sessaoValida(token)
+  if (!sessao) return null
+
+  return { id: sessao.usuario.id, email: sessao.usuario.email }
+}
+
+/** Encerra a sessao. Usado quando o perfil nao existe mais, e no logout. */
 export async function encerrarSessao(): Promise<void> {
-  const supabase = await createClient()
-  await supabase.auth.signOut()
+  const jar = await cookies()
+  const token = jar.get(COOKIE_DE_SESSAO)?.value
+  if (token) await revogarSessao(token)
+  jar.set(COOKIE_DE_SESSAO, '', opcoesDoCookie(0))
 }
 
 /**
- * Autentica e abre a sessao (grava os cookies). Devolve o usuario ou o erro
- * cru do provedor — a rota precisa do erro para registrar o motivo real, que
- * e o que faltava quando dois alunos ficaram travados em agosto.
+ * Autentica e abre a sessao (grava o cookie). Devolve o usuario ou o motivo da
+ * recusa — a rota precisa do motivo para registrar o que de fato aconteceu,
+ * que era o que faltava quando dois alunos ficaram travados em agosto.
+ *
+ * Ao contrario do Supabase, aqui os motivos sao distinguiveis: conta
+ * inexistente, senha errada, conta sem senha (migrada sem hash) e conta
+ * bloqueada dizem coisas diferentes no log. Para quem esta na tela, a rota
+ * continua respondendo a mesma frase generica.
  */
 export async function entrarComSenha(
   email: string,
   senha: string
 ): Promise<{ usuario: UsuarioSessao } | { erro: { mensagem: string; status?: number } }> {
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
-  if (error || !data.user) {
-    return {
-      erro: { mensagem: error?.message ?? 'sem usuario retornado', status: error?.status },
-    }
+  const conta = await contas.contaPorEmail(email)
+
+  if (!conta) {
+    // Gasta o tempo de um bcrypt mesmo sem conta: senao da para descobrir
+    // quais e-mails existem so cronometrando a resposta.
+    await gastarTempoDeHash()
+    return { erro: { mensagem: 'conta não encontrada', status: 401 } }
   }
-  return { usuario: { id: data.user.id, email: data.user.email ?? null } }
+  if (!conta.encrypted_password) {
+    await gastarTempoDeHash()
+    return { erro: { mensagem: 'conta sem senha definida', status: 401 } }
+  }
+  if (conta.banned_until && conta.banned_until > new Date()) {
+    await gastarTempoDeHash()
+    return { erro: { mensagem: 'conta bloqueada', status: 403 } }
+  }
+  if (!(await conferir(senha, conta.encrypted_password))) {
+    return { erro: { mensagem: 'senha incorreta', status: 401 } }
+  }
+
+  const cabecalhos = await headers()
+  const token = sortearToken()
+  await abrirSessao({
+    usuarioId: conta.id,
+    token,
+    ip: cabecalhos.get('x-forwarded-for')?.split(',')[0]?.trim() ?? null,
+    userAgent: cabecalhos.get('user-agent'),
+  })
+  await contas.registrarAcesso(conta.id)
+  ;(await cookies()).set(COOKIE_DE_SESSAO, token, opcoesDoCookie(duracaoDaSessaoEmSegundos()))
+
+  return { usuario: { id: conta.id, email: conta.email } }
 }
 
-/** Dispara o email de redefinicao de senha. */
+/**
+ * Dispara o e-mail de redefinicao. `redirectTo` e a pagina que recebe o token.
+ *
+ * Nao diz se o e-mail existe: quem chama ja responde a mesma frase generica
+ * nos dois casos, e aqui a ausencia da conta tambem nao vira erro.
+ */
 export async function enviarRedefinicaoDeSenha(
   email: string,
   redirectTo: string
 ): Promise<{ erro?: { mensagem: string; status?: number } }> {
-  const supabase = await createClient()
-  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
-  return error ? { erro: { mensagem: error.message, status: error.status } } : {}
+  const conta = await contas.contaPorEmail(email)
+  if (!conta) return {}
+
+  const token = sortearToken()
+  await criarTokenDeSenha(conta.id, token)
+
+  try {
+    await enviarRedefinicaoDeSenhaPorEmail({
+      email: conta.email,
+      link: `${redirectTo}?token=${token}`,
+    })
+    return {}
+  } catch (erro) {
+    return { erro: { mensagem: (erro as Error).message } }
+  }
 }
 
 // ------------------------------------------------------------- contas
-// A criacao de conta tambem passa por aqui pelo mesmo motivo: na fase 4 ela
-// vira insert em `usuarios` com hash proprio, e as rotas de cadastro nao
-// precisam ser reescritas outra vez.
 
 export class EmailJaCadastrado extends Error {}
 
 /** Cria a conta de acesso. Devolve o id. */
 export async function criarConta(email: string, senha: string): Promise<string> {
-  const admin = createAdminClient()
-  const { data, error } = await admin.auth.admin.createUser({
-    email: email.trim().toLowerCase(),
-    password: senha,
-    email_confirm: true,
-  })
-  if (error || !data.user) {
-    if (error?.message?.toLowerCase().includes('already')) {
+  const normalizado = email.trim().toLowerCase()
+  if (await contas.contaPorEmail(normalizado)) {
+    throw new EmailJaCadastrado('Já existe uma conta com esse email.')
+  }
+
+  try {
+    const conta = await contas.criarConta(normalizado, await gerarHash(senha))
+    return conta.id
+  } catch (erro) {
+    // Corrida entre duas criacoes com o mesmo e-mail: a unique decide.
+    if ((erro as { code?: string })?.code === 'P2002') {
       throw new EmailJaCadastrado('Já existe uma conta com esse email.')
     }
-    throw new Error(error?.message ?? 'Erro ao criar a conta.')
+    throw erro
   }
-  return data.user.id
 }
 
 /** Apaga a conta. Usado no rollback de cadastro que falhou no meio. */
 export async function removerConta(userId: string): Promise<void> {
-  const admin = createAdminClient()
-  await admin.auth.admin.deleteUser(userId)
+  await contas.removerConta(userId)
 }
 
-/** Troca a senha de uma conta. */
+/**
+ * Troca a senha de uma conta e derruba as sessoes abertas dela.
+ *
+ * Quem troca a senha porque desconfia de invasao precisa que o invasor caia
+ * junto — no Supabase, a sessao dele continuava valendo.
+ */
 export async function definirSenha(userId: string, senha: string): Promise<void> {
-  const admin = createAdminClient()
-  const { error } = await admin.auth.admin.updateUserById(userId, { password: senha })
-  if (error) throw new Error(error.message)
+  await contas.trocarSenha(userId, await gerarHash(senha))
+  await revogarSessoesDoUsuario(userId)
 }
 
 /** E-mail de uma conta, para resolver identificador em login. */
 export async function emailDaConta(userId: string): Promise<string | null> {
-  const admin = createAdminClient()
-  const { data } = await admin.auth.admin.getUserById(userId)
-  return data.user?.email ?? null
+  return contas.emailDeConta(userId)
 }

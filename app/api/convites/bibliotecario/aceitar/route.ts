@@ -4,6 +4,7 @@ import { criarConta, removerConta, EmailJaCadastrado } from '@/lib/auth/sessao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { ipDoRequest } from '@/lib/log'
 import { registrar } from '@/lib/db/log'
+import { senhaFraca } from '@/lib/auth/senha'
 
 const MSG_TOKEN_INVALIDO = 'Este link de convite não é válido ou já expirou. Peça um novo convite à direção da escola.'
 
@@ -27,8 +28,9 @@ export async function POST(request: Request) {
   if (!token || !senha) {
     return NextResponse.json({ error: 'Preencha todos os campos obrigatórios.' }, { status: 400 })
   }
-  if (senha.length < 6) {
-    return NextResponse.json({ error: 'A senha deve ter pelo menos 6 caracteres.' }, { status: 400 })
+  const fraca = senhaFraca(senha)
+  if (fraca) {
+    return NextResponse.json({ error: fraca }, { status: 400 })
   }
 
   let cpfLimpo: string | null = null
