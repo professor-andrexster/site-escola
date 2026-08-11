@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { listarLeitores, criarLeitor } from '@/lib/db/biblioteca'
 import { exigirBibliotecaStaff } from '@/lib/apiGestao'
 import { registrarAuditoriaBiblioteca } from '@/lib/biblioteca/auditoria'
 import { validarLeitor } from '@/lib/biblioteca/leitores'
@@ -27,21 +27,12 @@ export async function GET(request: Request) {
   if (!auth.ok) return auth.res
 
   const busca = new URL(request.url).searchParams.get('q')?.trim()
-  const admin = createAdminClient()
-
-  let query = admin
-    .from('biblioteca_leitores')
-    .select('id, nome_completo, nome_social, tipo_leitor, matricula, turma, turno, situacao, motivo_bloqueio')
-    .order('nome_completo')
-    .limit(20)
-
-  if (busca) {
-    query = query.or(`nome_completo.ilike.%${busca}%,matricula.ilike.%${busca}%,turma.ilike.%${busca}%`)
+  try {
+    return NextResponse.json({ leitores: await listarLeitores(busca) })
+  } catch (erro) {
+    console.error('[biblioteca/leitores] falha ao buscar', erro)
+    return NextResponse.json({ error: 'Erro ao buscar leitores.' }, { status: 400 })
   }
-
-  const { data, error } = await query
-  if (error) return NextResponse.json({ error: 'Erro ao buscar leitores.' }, { status: 400 })
-  return NextResponse.json({ leitores: data })
 }
 
 export async function POST(request: Request) {
@@ -60,16 +51,14 @@ export async function POST(request: Request) {
   })
   if (!validacao.ok) return NextResponse.json({ error: validacao.erro }, { status: 400 })
 
-  const admin = createAdminClient()
-
-  const { data: leitor, error } = await admin
-    .from('biblioteca_leitores')
-    .insert({
+  let leitor
+  try {
+    leitor = await criarLeitor({
       nome_completo: body.nomeCompleto.trim(),
       nome_social: body.nomeSocial?.trim() || null,
       tipo_leitor: body.tipoLeitor,
       matricula: body.matricula?.trim() || null,
-      data_nascimento: body.dataNascimento || null,
+      data_nascimento: body.dataNascimento ? new Date(body.dataNascimento) : null,
       turma: body.turma?.trim() || null,
       turno: body.turno?.trim() || null,
       ano_escolar: body.anoEscolar?.trim() || null,
@@ -80,10 +69,10 @@ export async function POST(request: Request) {
       observacoes: body.observacoes?.trim() || null,
       atualizado_por: auth.userId,
     })
-    .select('*')
-    .single()
-
-  if (error) return NextResponse.json({ error: 'Erro ao cadastrar leitor: ' + error.message }, { status: 400 })
+  } catch (erro) {
+    console.error('[biblioteca/leitores] falha ao cadastrar', erro)
+    return NextResponse.json({ error: 'Erro ao cadastrar o leitor.' }, { status: 400 })
+  }
 
   await registrarAuditoriaBiblioteca({
     usuarioId: auth.userId,

@@ -4,6 +4,7 @@ import type {
   biblioteca_exemplares,
   biblioteca_emprestimos,
 } from '@prisma/client'
+import type { Prisma } from '@prisma/client'
 import type { BibliotecaLeitor, BibliotecaConfiguracoes } from '@/types/database'
 
 /**
@@ -68,6 +69,68 @@ export async function listarObras(): Promise<Obra[]> {
 
 export async function buscarObra(id: string): Promise<Obra | null> {
   return prisma.biblioteca_obras.findUnique({ where: { id } })
+}
+
+/**
+ * Cria uma obra. `palavrasChave` chega como lista e vai serializada: a coluna
+ * e JSON (longtext com CHECK no MariaDB), e passar array direto estoura a
+ * validacao — o codigo antigo passava, porque no Postgres era text[] nativo.
+ */
+export async function criarObra(
+  // UncheckedCreateInput aceita as FKs cruas (editora_id, categoria_id); o
+  // CreateInput exigiria conectar a relacao, que nao e como as rotas montam.
+  dados: Omit<Prisma.biblioteca_obrasUncheckedCreateInput, 'palavras_chave'> & { palavrasChave?: string[] }
+) {
+  const { palavrasChave, ...resto } = dados
+  return prisma.biblioteca_obras.create({
+    data: { ...resto, palavras_chave: JSON.stringify(palavrasChave ?? []) },
+  })
+}
+
+export async function atualizarObra(
+  id: string,
+  dados: Omit<Prisma.biblioteca_obrasUncheckedUpdateInput, 'palavras_chave'> & { palavrasChave?: string[] }
+) {
+  const { palavrasChave, ...resto } = dados
+  return prisma.biblioteca_obras.update({
+    where: { id },
+    data: {
+      ...resto,
+      ...(palavrasChave !== undefined ? { palavras_chave: JSON.stringify(palavrasChave) } : {}),
+      atualizado_em: new Date(),
+    },
+  })
+}
+
+/** Liga autores a uma obra. Chamado separado do create, ver a rota. */
+export async function vincularAutores(obraId: string, autorIds: string[]) {
+  if (!autorIds.length) return
+  return prisma.biblioteca_obras_autores.createMany({
+    data: autorIds.map(autorId => ({ obra_id: obraId, autor_id: autorId })),
+  })
+}
+
+export async function substituirAutores(obraId: string, autorIds: string[]) {
+  return prisma.$transaction(async tx => {
+    await tx.biblioteca_obras_autores.deleteMany({ where: { obra_id: obraId } })
+    if (autorIds.length) {
+      await tx.biblioteca_obras_autores.createMany({
+        data: autorIds.map(autorId => ({ obra_id: obraId, autor_id: autorId })),
+      })
+    }
+  })
+}
+
+/** Obra com autores, editora e categoria — a ficha completa do acervo. */
+export async function obraCompleta(id: string) {
+  return prisma.biblioteca_obras.findUnique({
+    where: { id },
+    include: {
+      biblioteca_obras_autores: { include: { biblioteca_autores: true } },
+      biblioteca_editoras: { select: { id: true, nome: true } },
+      biblioteca_categorias: { select: { id: true, nome: true } },
+    },
+  })
 }
 
 export async function exemplaresDaObra(obraId: string): Promise<Exemplar[]> {
@@ -194,6 +257,89 @@ export async function buscarLeitor(id: string): Promise<Leitor | null> {
     criado_em: l.criado_em?.toISOString() ?? null,
     atualizado_em: l.atualizado_em?.toISOString() ?? null,
   } as unknown as Leitor
+}
+
+/** Leitores, para a tela de busca do balcao. */
+export async function listarLeitores(busca?: string | null) {
+  return prisma.biblioteca_leitores.findMany({
+    // Busca por nome, matricula OU turma — os tres campos que o balcao digita.
+    where: busca
+      ? {
+          OR: [
+            { nome_completo: { contains: busca } },
+            { matricula: { contains: busca } },
+            { turma: { contains: busca } },
+          ],
+        }
+      : {},
+    select: {
+      id: true, nome_completo: true, nome_social: true, tipo_leitor: true,
+      matricula: true, turma: true, turno: true, situacao: true, motivo_bloqueio: true,
+    },
+    orderBy: { nome_completo: 'asc' },
+    take: 20,
+  })
+}
+
+export async function criarLeitor(dados: Prisma.biblioteca_leitoresUncheckedCreateInput) {
+  return prisma.biblioteca_leitores.create({ data: dados })
+}
+
+export async function atualizarLeitor(
+  id: string,
+  dados: Prisma.biblioteca_leitoresUncheckedUpdateInput
+) {
+  return prisma.biblioteca_leitores.update({
+    where: { id },
+    data: { ...dados, atualizado_em: new Date() },
+  })
+}
+
+/** Historico de emprestimos de um leitor, com obra e tombo. */
+export async function emprestimosDoLeitor(leitorId: string) {
+  return prisma.biblioteca_emprestimos.findMany({
+    where: { leitor_id: leitorId },
+    include: {
+      biblioteca_exemplares: {
+        select: { id: true, tombo: true, biblioteca_obras: { select: { titulo: true } } },
+      },
+    },
+    orderBy: { data_emprestimo: 'desc' },
+  })
+}
+
+export async function buscarExemplar(id: string) {
+  return prisma.biblioteca_exemplares.findUnique({ where: { id } })
+}
+
+/**
+ * Atualiza um exemplar e, quando a situacao muda, registra a movimentacao —
+ * junto. Solto, o exemplar mudava de estado sem rastro se a segunda escrita
+ * falhasse, e o historico de um acervo e o que sustenta inventario.
+ */
+export async function atualizarExemplar(
+  id: string,
+  dados: Prisma.biblioteca_exemplaresUncheckedUpdateInput,
+  movimentacao?: { situacaoAnterior: string; situacaoNova: string; motivo: string; responsavelId: string }
+) {
+  return prisma.$transaction(async tx => {
+    const exemplar = await tx.biblioteca_exemplares.update({
+      where: { id },
+      data: { ...dados, atualizado_em: new Date() },
+    })
+    if (movimentacao) {
+      await tx.biblioteca_movimentacoes.create({
+        data: {
+          exemplar_id: id,
+          situacao_anterior: movimentacao.situacaoAnterior,
+          situacao_nova: movimentacao.situacaoNova,
+          motivo: movimentacao.motivo,
+          responsavel_id: movimentacao.responsavelId,
+        },
+      })
+    }
+    return exemplar
+  })
 }
 
 /** O emprestimo aberto de um exemplar, se houver. */
