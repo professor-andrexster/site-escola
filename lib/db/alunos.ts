@@ -15,10 +15,13 @@ import { normalizarMatricula } from '@/lib/matricula'
  * por coluna da migration 016; aqui e responsabilidade de quem chama.
  */
 
-export type Aluno = Omit<alunos, 'criado_em' | 'atualizado_em' | 'data_nascimento'> & {
-  criado_em: string | null
-  atualizado_em: string | null
+export type Aluno = Omit<alunos, 'criado_em' | 'atualizado_em' | 'data_nascimento' | 'ativo'> & {
+  criado_em: string
+  atualizado_em: string
   data_nascimento: string | null
+  // `ativo` e anulavel no banco; nulo significa ativo, que e o default da
+  // coluna. Coagir aqui evita `?? true` espalhado pelas telas.
+  ativo: boolean
 }
 
 /** Campos publicos — o que pode aparecer em portfolio e vitrine. */
@@ -30,8 +33,9 @@ export const CAMPOS_PUBLICOS = {
 function serializar(a: alunos): Aluno {
   return {
     ...a,
-    criado_em: a.criado_em?.toISOString() ?? null,
-    atualizado_em: a.atualizado_em?.toISOString() ?? null,
+    ativo: a.ativo ?? true,
+    criado_em: a.criado_em?.toISOString() ?? '',
+    atualizado_em: a.atualizado_em?.toISOString() ?? '',
     data_nascimento: a.data_nascimento?.toISOString().slice(0, 10) ?? null,
   }
 }

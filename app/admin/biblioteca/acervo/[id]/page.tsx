@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { fichaDaObra } from '@/lib/db/biblioteca'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
@@ -11,21 +11,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function ObraDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const admin = createAdminClient()
-
-  const { data: obra } = await admin.from('biblioteca_obras').select('*').eq('id', id).maybeSingle()
-  if (!obra) notFound()
-
-  const [{ data: vinculos }, { data: exemplares }, { data: editora }, { data: categoria }] = await Promise.all([
-    admin.from('biblioteca_obras_autores').select('biblioteca_autores(id, nome)').eq('obra_id', id),
-    admin.from('biblioteca_exemplares').select('*').eq('obra_id', id).order('tombo'),
-    obra.editora_id ? admin.from('biblioteca_editoras').select('nome').eq('id', obra.editora_id).maybeSingle() : Promise.resolve({ data: null }),
-    obra.categoria_id ? admin.from('biblioteca_categorias').select('nome').eq('id', obra.categoria_id).maybeSingle() : Promise.resolve({ data: null }),
-  ])
-
-  const autoresIniciais = (vinculos ?? [])
-    .map(v => (Array.isArray(v.biblioteca_autores) ? v.biblioteca_autores[0] : v.biblioteca_autores))
-    .filter((a): a is { id: string; nome: string } => !!a)
+  // Cinco consultas condicionais viraram uma: editora e categoria vem pelo
+  // join, sem o ternario que devolvia Promise.resolve({ data: null }).
+  const ficha = await fichaDaObra(id)
+  if (!ficha) notFound()
+  const { exemplares, editora, categoria, autores: autoresIniciais, ...obra } = ficha
 
   return (
     <div className="max-w-2xl">

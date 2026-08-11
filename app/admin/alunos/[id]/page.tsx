@@ -1,5 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarPorId as buscarAluno } from '@/lib/db/alunos'
+import { papelEAprovacao } from '@/lib/db/perfis'
+import { perfilVocacional, contarProjetosDoAluno } from '@/lib/db/comunidade'
 import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -15,27 +16,17 @@ export const dynamic = 'force-dynamic'
 
 export default async function AlunoDetalhePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-  const admin = createAdminClient()
-
-  // Admin client para ler as colunas protegidas do aluno (cpf, user_id) — rota é só gestão
-  const { data: aluno } = await admin
-    .from('alunos')
-    .select('*')
-    .eq('id', id)
-    .maybeSingle()
+  // A ficha inteira, com as colunas sensiveis: a rota e so gestao, e a
+  // funcao esta marcada GESTAO em lib/db/alunos.
+  const aluno = await buscarAluno(id)
 
   if (!aluno) notFound()
 
-  const [{ data: perfis }, { count: projetosCount }, perfilAcesso, progressoCursos] = await Promise.all([
-    supabase
-      .from('perfis_vocacionais')
-      .select('pontuacao, trilhas(nome, icone, cor_tailwind)')
-      .eq('aluno_id', id)
-      .order('pontuacao', { ascending: false }),
-    supabase.from('projetos').select('id', { count: 'exact', head: true }).eq('aluno_id', id),
+  const [perfis, projetosCount, perfilAcesso, progressoCursos] = await Promise.all([
+    perfilVocacional(id),
+    contarProjetosDoAluno(id),
     aluno.user_id
-      ? admin.from('profiles').select('id, role, aprovado').eq('id', aluno.user_id).maybeSingle().then(r => r.data)
+      ? papelEAprovacao(aluno.user_id).then(p => (p ? { id: aluno.user_id!, ...p } : null))
       : Promise.resolve(null),
     aluno.user_id ? progressoCursosPorUsuario(aluno.user_id) : Promise.resolve([]),
   ])

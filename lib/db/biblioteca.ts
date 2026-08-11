@@ -67,6 +67,93 @@ export async function listarObras(): Promise<Obra[]> {
   return prisma.biblioteca_obras.findMany({ orderBy: { titulo: 'asc' } })
 }
 
+/**
+ * Acervo completo para a tela de listagem: obras ativas com autores,
+ * categorias e a contagem de exemplares por situacao.
+ *
+ * Eram quatro consultas e tres Maps na tela — inclusive uma que trazia TODOS
+ * os exemplares do acervo so para conta-los por obra.
+ */
+export async function acervoCompleto() {
+  const [obras, categorias] = await Promise.all([
+    prisma.biblioteca_obras.findMany({
+      where: { situacao: 'ativa' },
+      orderBy: { titulo: 'asc' },
+      include: {
+        biblioteca_obras_autores: {
+          include: { biblioteca_autores: { select: { id: true, nome: true } } },
+        },
+        biblioteca_exemplares: { select: { id: true, situacao: true } },
+      },
+    }),
+    prisma.biblioteca_categorias.findMany({
+      where: { ativo: true },
+      select: { id: true, nome: true },
+      orderBy: { nome: 'asc' },
+    }),
+  ])
+
+  return {
+    // `situacao` e `idioma` sao varchar no banco e uniao fechada no dominio.
+    obras: obras.map(o => ({
+      ...o,
+      situacao: (o.situacao ?? 'ativa') as 'ativa' | 'inativa',
+      idioma: o.idioma ?? 'Português',
+      criado_em: o.criado_em?.toISOString() ?? null,
+      atualizado_em: o.atualizado_em?.toISOString() ?? null,
+      palavras_chave: comoLista(o.palavras_chave),
+      autores: o.biblioteca_obras_autores.map(oa => oa.biblioteca_autores),
+      totalExemplares: o.biblioteca_exemplares.length,
+      disponiveis: o.biblioteca_exemplares.filter(e => e.situacao === 'disponivel').length,
+    })),
+    categorias,
+  }
+}
+
+/** Ficha de uma obra: autores, exemplares, editora e categoria. */
+export async function fichaDaObra(id: string) {
+  const obra = await prisma.biblioteca_obras.findUnique({
+    where: { id },
+    include: {
+      biblioteca_obras_autores: {
+        include: { biblioteca_autores: { select: { id: true, nome: true } } },
+      },
+      biblioteca_exemplares: { orderBy: { tombo: 'asc' } },
+      biblioteca_editoras: { select: { nome: true } },
+      biblioteca_categorias: { select: { nome: true } },
+    },
+  })
+  if (!obra) return null
+  return {
+    ...obra,
+    situacao: (obra.situacao ?? 'ativa') as 'ativa' | 'inativa',
+    idioma: obra.idioma ?? 'Português',
+    criado_em: obra.criado_em?.toISOString() ?? null,
+    atualizado_em: obra.atualizado_em?.toISOString() ?? null,
+    palavras_chave: comoLista(obra.palavras_chave),
+    autores: obra.biblioteca_obras_autores.map(oa => oa.biblioteca_autores),
+    // Uniao fechada no dominio, varchar no banco — mesmo tratamento das
+    // demais colunas de estado.
+    exemplares: obra.biblioteca_exemplares.map(e => ({
+      ...e,
+      situacao: e.situacao as
+        | 'disponivel' | 'emprestado' | 'reservado' | 'em_reparo' | 'extraviado' | 'baixado',
+      estado_conservacao: e.estado_conservacao as 'novo' | 'bom' | 'regular' | 'ruim',
+      origem_aquisicao: e.origem_aquisicao as
+        | 'compra' | 'doacao' | 'programa_governo' | 'transferencia',
+      // Decimal do Prisma nao renderiza no React: vira number, como a nota
+      // das entregas em lib/db/desafios.
+      valor_referencia: e.valor_referencia === null ? null : Number(e.valor_referencia),
+      data_entrada: e.data_entrada.toISOString().slice(0, 10),
+      criado_em: e.criado_em?.toISOString() ?? null,
+      atualizado_em: e.atualizado_em?.toISOString() ?? null,
+    })),
+    // A tela espera o objeto com `nome`, como o join do PostgREST devolvia.
+    editora: obra.biblioteca_editoras,
+    categoria: obra.biblioteca_categorias,
+  }
+}
+
 export async function buscarObra(id: string): Promise<Obra | null> {
   return prisma.biblioteca_obras.findUnique({ where: { id } })
 }

@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { acervoCompleto } from '@/lib/db/biblioteca'
 import Link from 'next/link'
 import { Plus, Library } from 'lucide-react'
 import ObrasTable, { type ObraLinha } from '@/components/admin/biblioteca/ObrasTable'
@@ -8,40 +8,17 @@ export const metadata: Metadata = { title: 'Acervo, Biblioteca' }
 export const dynamic = 'force-dynamic'
 
 export default async function AcervoPage() {
-  const admin = createAdminClient()
+  // Quatro consultas e tres Maps viraram uma: a antiga trazia TODOS os
+  // exemplares do acervo so para conta-los por obra.
+  const { obras, categorias } = await acervoCompleto()
+  const categoriaPorId = new Map(categorias.map(c => [c.id, c.nome]))
 
-  const [{ data: obras }, { data: categorias }, { data: vinculos }, { data: exemplares }] = await Promise.all([
-    admin.from('biblioteca_obras').select('*').eq('situacao', 'ativa').order('titulo'),
-    admin.from('biblioteca_categorias').select('id, nome').eq('ativo', true).order('nome'),
-    admin.from('biblioteca_obras_autores').select('obra_id, biblioteca_autores(id, nome)'),
-    admin.from('biblioteca_exemplares').select('id, obra_id, situacao'),
-  ])
-
-  const categoriaPorId = new Map((categorias ?? []).map(c => [c.id, c.nome]))
-
-  const autoresPorObra = new Map<string, string[]>()
-  for (const v of vinculos ?? []) {
-    const autor = Array.isArray(v.biblioteca_autores) ? v.biblioteca_autores[0] : v.biblioteca_autores
-    if (!autor) continue
-    const lista = autoresPorObra.get(v.obra_id) ?? []
-    lista.push(autor.nome)
-    autoresPorObra.set(v.obra_id, lista)
-  }
-
-  const exemplaresPorObra = new Map<string, { total: number; disponiveis: number }>()
-  for (const e of exemplares ?? []) {
-    const atual = exemplaresPorObra.get(e.obra_id) ?? { total: 0, disponiveis: 0 }
-    atual.total++
-    if (e.situacao === 'disponivel') atual.disponiveis++
-    exemplaresPorObra.set(e.obra_id, atual)
-  }
-
-  const linhas: ObraLinha[] = (obras ?? []).map(o => ({
+  const linhas: ObraLinha[] = obras.map(o => ({
     ...o,
-    autores: autoresPorObra.get(o.id) ?? [],
+    autores: o.autores.map(a => a.nome),
     categoriaNome: o.categoria_id ? categoriaPorId.get(o.categoria_id) ?? null : null,
-    totalExemplares: exemplaresPorObra.get(o.id)?.total ?? 0,
-    exemplaresDisponiveis: exemplaresPorObra.get(o.id)?.disponiveis ?? 0,
+    totalExemplares: o.totalExemplares,
+    exemplaresDisponiveis: o.disponiveis,
   }))
 
   return (
