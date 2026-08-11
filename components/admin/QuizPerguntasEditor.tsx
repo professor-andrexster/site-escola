@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import type { QuizPergunta } from '@/types/database'
 import { Plus, Trash2, ChevronUp, ChevronDown, Check, Pencil, Sparkles } from 'lucide-react'
 
@@ -107,7 +106,6 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
   const [gerando, setGerando] = useState(false)
   const [erroIA, setErroIA] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   async function addPergunta() {
     if (!form.enunciado.trim() || !form.alternativa_a.trim() || !form.alternativa_b.trim() || !form.alternativa_c.trim() || !form.alternativa_d.trim()) {
@@ -116,16 +114,17 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
     }
     setSaving(true)
     setError('')
-    const ordem = perguntas.length
 
-    const { data, error } = await supabase
-      .from('quiz_perguntas')
-      .insert({ quiz_id: quizId, ordem, ...form })
-      .select()
-      .single()
+    // A ordem e decidida no servidor, a partir da ultima pergunta gravada.
+    const res = await fetch(`/api/quiz/${quizId}/perguntas`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(form),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { setError(json.error ?? 'Erro ao salvar a pergunta.'); setSaving(false); return }
 
-    if (error) { setError(error.message); setSaving(false); return }
-    setPerguntas(prev => [...prev, data])
+    setPerguntas(prev => [...prev, ...json.perguntas])
     setForm(EMPTY_FORM)
     setAdding(false)
     setSaving(false)
@@ -135,28 +134,42 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
   async function deletePergunta(id: string) {
     if (!confirm('Remover esta pergunta?')) return
     setDeletingId(id)
-    await supabase.from('quiz_perguntas').delete().eq('id', id)
-    const updated = perguntas.filter(p => p.id !== id)
-    // reorder remaining
-    await Promise.all(updated.map((p, i) => supabase.from('quiz_perguntas').update({ ordem: i }).eq('id', p.id)))
-    setPerguntas(updated.map((p, i) => ({ ...p, ordem: i })))
+    setError('')
+    // Remover e reenumerar viraram uma coisa so no servidor; eram N updates
+    // soltos, e uma falha no meio deixava a ordem furada.
+    const res = await fetch(`/api/quiz/perguntas/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setPerguntas(perguntas.filter(p => p.id !== id).map((p, i) => ({ ...p, ordem: i })))
+      router.refresh()
+    } else {
+      setError((await res.json().catch(() => ({}))).error ?? 'Erro ao remover a pergunta.')
+    }
     setDeletingId(null)
-    router.refresh()
   }
 
   async function movePergunta(index: number, direction: 'up' | 'down') {
     const targetIndex = direction === 'up' ? index - 1 : index + 1
     if (targetIndex < 0 || targetIndex >= perguntas.length) return
 
-    const updated = [...perguntas]
-    ;[updated[index], updated[targetIndex]] = [updated[targetIndex], updated[index]]
-    const reordered = updated.map((p, i) => ({ ...p, ordem: i }))
-    setPerguntas(reordered)
+    const a = perguntas[index]
+    const b = perguntas[targetIndex]
 
-    await Promise.all([
-      supabase.from('quiz_perguntas').update({ ordem: reordered[index].ordem }).eq('id', reordered[index].id),
-      supabase.from('quiz_perguntas').update({ ordem: reordered[targetIndex].ordem }).eq('id', reordered[targetIndex].id),
-    ])
+    const res = await fetch('/api/quiz/perguntas/ordem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ perguntaA: a.id, ordemA: b.ordem, perguntaB: b.id, ordemB: a.ordem }),
+    })
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? 'Erro ao reordenar as perguntas.')
+      return
+    }
+
+    const updated = [...perguntas]
+    ;[updated[index], updated[targetIndex]] = [
+      { ...updated[targetIndex], ordem: a.ordem },
+      { ...updated[index], ordem: b.ordem },
+    ]
+    setPerguntas(updated)
   }
 
   function startEdit(pergunta: QuizPergunta) {
@@ -181,15 +194,15 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
     setSavingEdit(true)
     setError('')
 
-    const { data, error } = await supabase
-      .from('quiz_perguntas')
-      .update(editForm)
-      .eq('id', id)
-      .select()
-      .single()
+    const res = await fetch(`/api/quiz/perguntas/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(editForm),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) { setError(json.error ?? 'Erro ao salvar a pergunta.'); setSavingEdit(false); return }
 
-    if (error) { setError(error.message); setSavingEdit(false); return }
-    setPerguntas(prev => prev.map(p => p.id === id ? data : p))
+    setPerguntas(prev => prev.map(p => p.id === id ? json.pergunta : p))
     setEditingId(null)
     setSavingEdit(false)
     router.refresh()
@@ -214,16 +227,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
         return
       }
 
-      const geradas = (json.perguntas as Array<{
-        enunciado: string
-        alternativa_a: string
-        alternativa_b: string
-        alternativa_c: string
-        alternativa_d: string
-        resposta_correta: 'a' | 'b' | 'c' | 'd'
-      }>).map((p, i) => ({
-        quiz_id: quizId,
-        ordem: perguntas.length + i,
+      const geradas = (json.perguntas as Array<Record<string, string>>).map(p => ({
         enunciado: p.enunciado,
         alternativa_a: p.alternativa_a,
         alternativa_b: p.alternativa_b,
@@ -233,10 +237,15 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
         pontos: 100,
       }))
 
-      const { data, error } = await supabase.from('quiz_perguntas').insert(geradas).select()
-      if (error) { setErroIA(error.message); return }
+      const salvas = await fetch(`/api/quiz/${quizId}/perguntas`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ perguntas: geradas }),
+      })
+      const salvasJson = await salvas.json().catch(() => ({}))
+      if (!salvas.ok) { setErroIA(salvasJson.error ?? 'Erro ao salvar as perguntas geradas.'); return }
 
-      setPerguntas(prev => [...prev, ...(data ?? [])])
+      setPerguntas(prev => [...prev, ...salvasJson.perguntas])
       setMateriaIA('')
       router.refresh()
     } catch {

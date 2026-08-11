@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, Trophy, Play, Square, Copy, DoorOpen, Users, MonitorPlay, CopyPlus, RotateCcw } from 'lucide-react'
 
 interface QuizRow {
@@ -53,32 +52,32 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const [copied, setCopied] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
 
-  async function update(id: string, updates: Partial<QuizRow>) {
+  // Estado da sala e comando nomeado: o servidor decide o que cada um muda.
+  async function comandar(id: string, acao: string, otimista: Partial<QuizRow>) {
     setLoadingId(id)
-    await supabase.from('quizzes').update(updates).eq('id', id)
-    setQuizzes(prev => prev.map(q => q.id === id ? { ...q, ...updates } : q))
+    const res = await fetch(`/api/quiz/${id}/estado`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao }),
+    })
+    if (res.ok) {
+      setQuizzes(prev => prev.map(q => q.id === id ? { ...q, ...otimista } : q))
+    } else {
+      alert((await res.json().catch(() => ({}))).error ?? 'Erro ao mudar o estado da sala.')
+    }
     setLoadingId(null)
+    return res.ok
   }
 
   async function abrirSala(id: string) {
-    await update(id, { lobby_aberto: true, ativo: false, encerrado: false })
+    await comandar(id, 'abrir-sala', { lobby_aberto: true, ativo: false, encerrado: false })
   }
 
   async function iniciarQuiz(id: string) {
-    const agora = new Date().toISOString()
-    await supabase.from('quizzes').update({
-      ativo: true,
-      lobby_aberto: true,
-      encerrado: false,
-      quiz_iniciado_em: agora,
-      pergunta_atual: 0,
-      pergunta_liberada_em: agora,
-      resposta_revelada: false,
-    }).eq('id', id)
+    const ok = await comandar(id, 'iniciar', { ativo: true, lobby_aberto: true, encerrado: false })
     // Professor vai direto para o telão de comando
-    router.push(`/admin/quiz/${id}/controle`)
+    if (ok) router.push(`/admin/quiz/${id}/controle`)
   }
 
   async function encerrarQuiz(id: string) {
@@ -100,56 +99,19 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   }
 
   async function fecharSala(id: string) {
-    await update(id, { lobby_aberto: false, ativo: false })
-  }
-
-  function generateCode(): string {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-    return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    await comandar(id, 'fechar-sala', { lobby_aberto: false, ativo: false })
   }
 
   async function duplicarQuiz(quiz: QuizRow) {
     setLoadingId(quiz.id)
-
-    const { data: original } = await supabase
-      .from('quizzes')
-      .select('descricao, tempo_por_pergunta, turma_alvo')
-      .eq('id', quiz.id)
-      .single()
-
-    const { data: novo, error: quizError } = await supabase
-      .from('quizzes')
-      .insert({
-        titulo: `${quiz.titulo} (cópia)`,
-        codigo: generateCode(),
-        descricao: original?.descricao ?? null,
-        tempo_por_pergunta: original?.tempo_por_pergunta ?? quiz.tempo_por_pergunta,
-        turma_alvo: original?.turma_alvo ?? quiz.turma_alvo,
-        lobby_aberto: false,
-        ativo: false,
-        encerrado: false,
-      })
-      .select('id')
-      .single()
-
-    if (quizError || !novo) {
-      alert('Erro ao duplicar: ' + (quizError?.message ?? 'tente novamente'))
-      setLoadingId(null)
-      return
+    // Copiar quiz e perguntas eram tres chamadas soltas; virou uma transacao.
+    const res = await fetch(`/api/quiz/${quiz.id}/duplicar`, { method: 'POST' })
+    if (!res.ok) {
+      alert((await res.json().catch(() => ({}))).error ?? 'Erro ao duplicar o quiz.')
+    } else {
+      router.refresh()
     }
-
-    const { data: perguntas } = await supabase
-      .from('quiz_perguntas')
-      .select('ordem, enunciado, alternativa_a, alternativa_b, alternativa_c, alternativa_d, resposta_correta, pontos')
-      .eq('quiz_id', quiz.id)
-      .order('ordem')
-
-    if (perguntas && perguntas.length > 0) {
-      await supabase.from('quiz_perguntas').insert(perguntas.map(p => ({ ...p, quiz_id: novo.id })))
-    }
-
     setLoadingId(null)
-    router.refresh()
   }
 
   async function reabrirQuiz(id: string) {
@@ -175,10 +137,14 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
   async function deleteQuiz(id: string) {
     if (!confirm('Deletar este quiz e todos os dados? Essa ação não pode ser desfeita.')) return
     setLoadingId(id)
-    await supabase.from('quizzes').delete().eq('id', id)
-    setQuizzes(prev => prev.filter(q => q.id !== id))
+    const res = await fetch(`/api/quiz/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setQuizzes(prev => prev.filter(q => q.id !== id))
+      router.refresh()
+    } else {
+      alert((await res.json().catch(() => ({}))).error ?? 'Erro ao remover o quiz.')
+    }
     setLoadingId(null)
-    router.refresh()
   }
 
   function copyLink(codigo: string) {

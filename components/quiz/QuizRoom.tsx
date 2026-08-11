@@ -54,12 +54,12 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
     if (!quiz.lobby_aberto && !quiz.ativo) return
 
     async function loadParticipantes() {
-      const { data } = await supabase
-        .from('quiz_participantes')
-        .select('id, nome, turma')
-        .eq('quiz_id', quiz.id)
-        .order('created_at', { ascending: true })
-      setParticipantes(data ?? [])
+      const res = await fetch(
+        `/api/quiz/${quiz.id}/participantes?participanteId=${participante.id}`
+      )
+      if (!res.ok) return
+      const { participantes } = await res.json()
+      setParticipantes(participantes)
     }
 
     loadParticipantes()
@@ -76,7 +76,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
       .subscribe()
 
     return () => { supabase.removeChannel(channel) }
-  }, [quiz.id, quiz.lobby_aberto, quiz.ativo])
+  }, [quiz.id, quiz.lobby_aberto, quiz.ativo, participante.id])
 
   // Quiz em andamento — mostra o player
   if (quiz.ativo) {

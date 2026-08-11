@@ -30,6 +30,16 @@ function serializar(n: noticias): Noticia {
   }
 }
 
+/** Publicadas com imagem, para a faixa de fotos da home. */
+export async function publicadasComImagem(limite = 6) {
+  return prisma.noticias.findMany({
+    where: { publicado: true, NOT: { imagem_url: null } },
+    select: { id: true, titulo: true, imagem_url: true, slug: true },
+    orderBy: { created_at: 'desc' },
+    take: limite,
+  })
+}
+
 /** Publicadas, mais recentes primeiro. Opcionalmente filtradas por categoria. */
 export async function listarPublicadas(categoria?: string | null): Promise<Noticia[]> {
   const linhas = await prisma.noticias.findMany({

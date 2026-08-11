@@ -1,5 +1,5 @@
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/server'
+import { publicadasComImagem } from '@/lib/db/noticias'
 
 const INSTAGRAM_URL = 'https://www.instagram.com/escolajoaoberaldo'
 const HANDLE = '@escolajoaoberaldo'
@@ -22,17 +22,7 @@ const placeholderColors = [
 ]
 
 export default async function InstagramSection() {
-  const supabase = await createClient()
-
-  const { data: noticias } = await supabase
-    .from('noticias')
-    .select('id, titulo, imagem_url, slug')
-    .eq('publicado', true)
-    .not('imagem_url', 'is', null)
-    .order('created_at', { ascending: false })
-    .limit(6)
-
-  const fotos = noticias ?? []
+  const fotos = await publicadasComImagem()
   const vagasRestantes = Math.max(0, 6 - fotos.length)
 
   return (

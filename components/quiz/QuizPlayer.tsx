@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Clock, Hourglass, CheckCircle2 } from 'lucide-react'
 import type { QuizPergunta } from '@/types/database'
 
@@ -46,7 +45,6 @@ export default function QuizPlayer({
   encerrado,
 }: QuizPlayerProps) {
   const router = useRouter()
-  const supabase = createClient()
 
   const currentIndex = Math.min(perguntaAtual, perguntas.length - 1)
   const pergunta = perguntas[currentIndex]
@@ -142,32 +140,28 @@ export default function QuizPlayer({
 
     const tempoResposta = Math.max(0, tempoPorPergunta - computeTimeLeft())
 
-    await supabase.from('quiz_respostas').upsert(
-      {
-        participante_id: participanteId,
-        pergunta_id: pergunta.id,
-        resposta: resposta as 'a' | 'b' | 'c' | 'd' | null,
-        correta,
-        tempo_resposta: tempoResposta,
-        pontos_obtidos: correta ? pergunta.pontos : 0,
-      },
-      { onConflict: 'participante_id,pergunta_id' }
-    )
+    // Quem corrige e pontua é o servidor. O `correta` acima é só para o
+    // feedback imediato na tela; o que vale é o que a rota grava.
+    await fetch('/api/quiz/responder', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        participanteId,
+        perguntaId: pergunta.id,
+        resposta,
+        tempoResposta,
+      }),
+    })
   }
 
   async function finishQuiz() {
     setFinishing(true)
-    const { data } = await supabase
-      .from('quiz_respostas')
-      .select('pontos_obtidos')
-      .eq('participante_id', participanteId)
-
-    const total = data?.reduce((sum, r) => sum + r.pontos_obtidos, 0) ?? 0
-
-    await supabase
-      .from('quiz_participantes')
-      .update({ concluido: true, pontuacao_total: total })
-      .eq('id', participanteId)
+    // A soma sai das respostas gravadas no banco, não de uma conta feita aqui.
+    await fetch('/api/quiz/concluir', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ participanteId }),
+    })
 
     router.push(`/quiz/${quizCodigo}/${participanteId}/resultado`)
   }

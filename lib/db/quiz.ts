@@ -54,11 +54,7 @@ export async function perguntasDoQuiz(quizId: string) {
     where: { quiz_id: quizId },
     orderBy: { ordem: 'asc' },
   })
-  return linhas.map(p => ({
-    ...p,
-    created_at: p.created_at.toISOString(),
-    resposta_correta: p.resposta_correta as 'a' | 'b' | 'c' | 'd',
-  }))
+  return linhas.map(serializarPergunta)
 }
 
 export async function participante(id: string) {
@@ -207,6 +203,23 @@ export async function rankingPublico() {
   }))
 }
 
+/** O quiz mais recente ao vivo ou encerrado, com o topo do ranking. */
+export async function ultimoRanking(limite = 10) {
+  const quiz = await prisma.quizzes.findFirst({
+    where: { OR: [{ ativo: true }, { encerrado: true }] },
+    select: { id: true, titulo: true, codigo: true, ativo: true, encerrado: true },
+    orderBy: { created_at: 'desc' },
+  })
+  if (!quiz) return null
+  const participantes = await prisma.quiz_participantes.findMany({
+    where: { quiz_id: quiz.id, concluido: true },
+    select: { id: true, nome: true, turma: true, pontuacao_total: true },
+    orderBy: { pontuacao_total: 'desc' },
+    take: limite,
+  })
+  return { quiz, participantes }
+}
+
 /** Historico completo de um aluno, com acertos por quiz. */
 export async function meusQuizzes(userId: string) {
   const linhas = await prisma.quiz_participantes.findMany({
@@ -278,13 +291,275 @@ export async function listarQuizzes() {
 
 // -------------------------------------------------------------- escrita
 
-export async function criarPerguntas(
-  quizId: string,
-  perguntas: Array<Omit<Pergunta, 'id' | 'quiz_id'>>
-) {
-  return prisma.quiz_perguntas.createMany({
-    data: perguntas.map(p => ({ ...p, quiz_id: quizId })),
+// ------------------------------------------------------------------ quizzes
+
+export type CamposDeQuiz = {
+  titulo: string
+  descricao: string | null
+  tempo_por_pergunta: number
+  turma_alvo: string
+}
+
+export async function criarQuiz(campos: CamposDeQuiz, codigo: string) {
+  return prisma.quizzes.create({
+    data: { ...campos, codigo, lobby_aberto: false, ativo: false, encerrado: false },
+    select: { id: true },
   })
+}
+
+export async function atualizarQuiz(id: string, campos: CamposDeQuiz) {
+  return prisma.quizzes.update({ where: { id }, data: { ...campos, updated_at: new Date() } })
+}
+
+/** Um codigo de sala livre. Colisao e rara, mas nao impossivel. */
+export async function codigoLivre(gerar: () => string, tentativas = 10): Promise<string> {
+  for (let i = 0; i < tentativas; i++) {
+    const codigo = gerar()
+    if (!(await prisma.quizzes.findFirst({ where: { codigo }, select: { id: true } }))) return codigo
+  }
+  throw new Error('Não foi possível gerar um código de sala livre.')
+}
+
+/**
+ * Estados da sala. Antes a tela mandava o objeto de colunas a atualizar
+ * (`update(updates)`), o que dava ao navegador poder de escrever qualquer
+ * coluna de `quizzes` — inclusive as de outro professor. Aqui existem cinco
+ * transicoes nomeadas, e nada fora delas.
+ */
+export type AcaoDeSala = 'abrir-sala' | 'fechar-sala' | 'iniciar' | 'revelar' | 'proxima'
+
+export async function aplicarAcaoDeSala(id: string, acao: AcaoDeSala, perguntaAtual?: number) {
+  const agora = new Date()
+  const data = {
+    'abrir-sala': { lobby_aberto: true, ativo: false, encerrado: false },
+    'fechar-sala': { lobby_aberto: false, ativo: false },
+    iniciar: {
+      ativo: true, lobby_aberto: true, encerrado: false,
+      quiz_iniciado_em: agora, pergunta_atual: 0,
+      pergunta_liberada_em: agora, resposta_revelada: false,
+    },
+    revelar: { resposta_revelada: true },
+    proxima: {
+      pergunta_atual: perguntaAtual ?? 0,
+      pergunta_liberada_em: agora,
+      resposta_revelada: false,
+    },
+  }[acao]
+
+  return prisma.quizzes.update({ where: { id }, data })
+}
+
+/** Copia quiz e perguntas numa transacao — antes eram tres chamadas soltas. */
+export async function duplicarQuiz(quizId: string, novoCodigo: string) {
+  return prisma.$transaction(async tx => {
+    const original = await tx.quizzes.findUnique({ where: { id: quizId } })
+    if (!original) throw new Error('Quiz não encontrado.')
+
+    const novo = await tx.quizzes.create({
+      data: {
+        titulo: `${original.titulo} (cópia)`,
+        codigo: novoCodigo,
+        descricao: original.descricao,
+        tempo_por_pergunta: original.tempo_por_pergunta,
+        turma_alvo: original.turma_alvo,
+        lobby_aberto: false, ativo: false, encerrado: false,
+      },
+      select: { id: true },
+    })
+
+    const perguntas = await tx.quiz_perguntas.findMany({
+      where: { quiz_id: quizId },
+      orderBy: { ordem: 'asc' },
+      select: {
+        ordem: true, enunciado: true, alternativa_a: true, alternativa_b: true,
+        alternativa_c: true, alternativa_d: true, resposta_correta: true, pontos: true,
+      },
+    })
+    if (perguntas.length) {
+      await tx.quiz_perguntas.createMany({
+        data: perguntas.map(p => ({ ...p, quiz_id: novo.id })),
+      })
+    }
+    return novo
+  })
+}
+
+// --------------------------------------------------------------- participar
+
+/**
+ * Entra na sala. Se a pessoa esta logada e ja participou deste quiz, devolve a
+ * participacao existente em vez de criar outra — era o que a tela fazia com
+ * duas consultas, e no meio delas dois cliques criavam dois participantes.
+ */
+export async function entrarNaSala(dados: {
+  quizId: string
+  nome: string
+  turma: string
+  userId: string | null
+}) {
+  if (dados.userId) {
+    const existente = await prisma.quiz_participantes.findFirst({
+      where: { quiz_id: dados.quizId, user_id: dados.userId },
+      select: { id: true, concluido: true },
+    })
+    if (existente) return { ...existente, novo: false }
+  }
+  const p = await prisma.quiz_participantes.create({
+    data: {
+      quiz_id: dados.quizId,
+      nome: dados.nome,
+      turma: dados.turma,
+      user_id: dados.userId,
+    },
+    select: { id: true, concluido: true },
+  })
+  return { ...p, novo: true }
+}
+
+/**
+ * Corrige e grava a resposta. A correcao e a pontuacao sao calculadas aqui, a
+ * partir da pergunta no banco.
+ *
+ * Antes o navegador mandava `correta` e `pontos_obtidos` ja decididos: bastava
+ * um POST forjado para o aluno se dar 9999 pontos, e nao havia nada do lado do
+ * servidor conferindo. Agora o cliente so informa a alternativa e o tempo.
+ */
+export async function responder(dados: {
+  participanteId: string
+  perguntaId: string
+  resposta: 'a' | 'b' | 'c' | 'd' | null
+  tempoResposta: number | null
+}) {
+  const pergunta = await prisma.quiz_perguntas.findUnique({
+    where: { id: dados.perguntaId },
+    select: { quiz_id: true, resposta_correta: true, pontos: true },
+  })
+  if (!pergunta) throw new Error('Pergunta não encontrada.')
+
+  const participante = await prisma.quiz_participantes.findUnique({
+    where: { id: dados.participanteId },
+    select: { quiz_id: true, concluido: true },
+  })
+  if (!participante) throw new Error('Participante não encontrado.')
+  // A pergunta tem que ser do mesmo quiz: sem isso daria para responder
+  // pergunta de outro quiz e somar os pontos dela na sua participacao.
+  if (participante.quiz_id !== pergunta.quiz_id) throw new Error('Pergunta de outro quiz.')
+  if (participante.concluido) throw new Error('Participação já encerrada.')
+
+  const correta = dados.resposta !== null && dados.resposta === pergunta.resposta_correta
+  const { participanteId, perguntaId } = dados
+  const valores = {
+    resposta: dados.resposta,
+    correta,
+    tempo_resposta: dados.tempoResposta,
+    pontos_obtidos: correta ? pergunta.pontos : 0,
+  }
+  await prisma.quiz_respostas.upsert({
+    where: { participante_id_pergunta_id: { participante_id: participanteId, pergunta_id: perguntaId } },
+    create: { participante_id: participanteId, pergunta_id: perguntaId, ...valores },
+    update: valores,
+  })
+  return { correta }
+}
+
+/** Fecha a participacao somando os pontos que estao gravados no banco. */
+export async function concluirParticipacao(participanteId: string) {
+  return prisma.$transaction(async tx => {
+    const soma = await tx.quiz_respostas.aggregate({
+      where: { participante_id: participanteId },
+      _sum: { pontos_obtidos: true },
+    })
+    const total = soma._sum.pontos_obtidos ?? 0
+    await tx.quiz_participantes.update({
+      where: { id: participanteId },
+      data: { concluido: true, pontuacao_total: total },
+    })
+    return { total }
+  })
+}
+
+/** Distribuicao das respostas de uma pergunta, para o telao do professor. */
+export async function contagemDeRespostas(perguntaId: string) {
+  const linhas = await prisma.quiz_respostas.groupBy({
+    by: ['resposta'],
+    where: { pergunta_id: perguntaId },
+    _count: { _all: true },
+  })
+  const contagem: Record<string, number> = { a: 0, b: 0, c: 0, d: 0 }
+  let total = 0
+  for (const l of linhas) {
+    total += l._count._all
+    if (l.resposta) contagem[l.resposta] = l._count._all
+  }
+  return { total, contagem }
+}
+
+// ---------------------------------------------------------------- perguntas
+
+export type CamposDePergunta = {
+  enunciado: string
+  alternativa_a: string
+  alternativa_b: string
+  alternativa_c: string
+  alternativa_d: string
+  resposta_correta: string
+  pontos: number
+}
+
+function serializarPergunta(p: quiz_perguntas) {
+  return {
+    ...p,
+    created_at: p.created_at.toISOString(),
+    resposta_correta: p.resposta_correta as 'a' | 'b' | 'c' | 'd',
+  }
+}
+
+/**
+ * Cria uma ou varias perguntas no fim da lista, numa transacao.
+ *
+ * A ordem sai da contagem no banco, nao do tamanho da lista que a tela tinha
+ * na memoria: com dois professores no mesmo quiz, a segunda pergunta nascia
+ * com a ordem da primeira. Devolve as linhas criadas porque a tela mantem a
+ * lista em estado local.
+ */
+export async function criarPerguntasEmSequencia(quizId: string, lote: CamposDePergunta[]) {
+  return prisma.$transaction(async tx => {
+    const ultima = await tx.quiz_perguntas.findFirst({
+      where: { quiz_id: quizId },
+      orderBy: { ordem: 'desc' },
+      select: { ordem: true },
+    })
+    let ordem = (ultima?.ordem ?? -1) + 1
+
+    const criadas = []
+    for (const campos of lote) {
+      criadas.push(await tx.quiz_perguntas.create({ data: { ...campos, quiz_id: quizId, ordem: ordem++ } }))
+    }
+    return criadas.map(serializarPergunta)
+  })
+}
+
+export async function atualizarPergunta(id: string, campos: CamposDePergunta) {
+  const p = await prisma.quiz_perguntas.update({ where: { id }, data: campos })
+  return serializarPergunta(p)
+}
+
+/** De qual quiz e a pergunta — usado para conferir dono antes de gravar. */
+export async function quizDaPergunta(id: string): Promise<string | null> {
+  const p = await prisma.quiz_perguntas.findUnique({ where: { id }, select: { quiz_id: true } })
+  return p?.quiz_id ?? null
+}
+
+/** Reenumera a partir de zero apos remover — evita buracos na ordem. */
+export async function renumerarPerguntas(quizId: string) {
+  const perguntas = await prisma.quiz_perguntas.findMany({
+    where: { quiz_id: quizId },
+    orderBy: { ordem: 'asc' },
+    select: { id: true },
+  })
+  return prisma.$transaction(
+    perguntas.map((p, i) => prisma.quiz_perguntas.update({ where: { id: p.id }, data: { ordem: i } }))
+  )
 }
 
 export async function removerPergunta(id: string) {

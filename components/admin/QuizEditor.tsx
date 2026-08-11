@@ -2,14 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { TURMAS_ALVO } from '@/lib/turmas'
 import type { Quiz } from '@/types/database'
-
-function generateCode(): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
-  return Array.from({ length: 6 }, () => chars[Math.floor(Math.random() * chars.length)]).join('')
-}
 
 interface QuizEditorProps {
   quiz?: Quiz
@@ -25,45 +19,36 @@ export default function QuizEditor({ quiz }: QuizEditorProps) {
   const [error, setError] = useState('')
   const [saved, setSaved] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleSubmit() {
     if (!titulo.trim()) return
     setSaving(true)
     setError('')
 
+    // O codigo da sala e sorteado no servidor, que confere se ja existe.
+    const res = await fetch(isEditing ? `/api/quiz/${quiz.id}` : '/api/quiz', {
+      method: isEditing ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        titulo,
+        descricao: descricao || null,
+        tempo_por_pergunta: tempo,
+        turma_alvo: turmaAlvo,
+      }),
+    })
+    const resposta = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(resposta.error ?? 'Erro ao salvar o quiz.')
+      setSaving(false)
+      return
+    }
+
     if (isEditing) {
-      const { error } = await supabase
-        .from('quizzes')
-        .update({
-          titulo,
-          descricao: descricao || null,
-          tempo_por_pergunta: tempo,
-          turma_alvo: turmaAlvo,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', quiz.id)
-      if (error) { setError(error.message); setSaving(false); return }
       setSaved(true)
       setTimeout(() => setSaved(false), 2000)
       router.refresh()
     } else {
-      const { data, error } = await supabase
-        .from('quizzes')
-        .insert({
-          titulo,
-          descricao: descricao || null,
-          tempo_por_pergunta: tempo,
-          turma_alvo: turmaAlvo,
-          codigo: generateCode(),
-          lobby_aberto: false,
-          ativo: false,
-          encerrado: false,
-        })
-        .select()
-        .single()
-      if (error) { setError(error.message); setSaving(false); return }
-      router.push(`/admin/quiz/${data.id}`)
+      router.push(`/admin/quiz/${resposta.id}`)
     }
     setSaving(false)
   }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { Gamepad2, ArrowRight, LogIn } from 'lucide-react'
 
@@ -14,32 +13,27 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
   const [codigo, setCodigo] = useState(codigoInicial?.toUpperCase() ?? '')
   const [nome, setNome] = useState('')
   const [turma, setTurma] = useState('')
-  const [userId, setUserId] = useState<string | null>(null)
+  const [logado, setLogado] = useState(false)
   const [loading, setLoading] = useState(false)
   const [loadingSession, setLoadingSession] = useState(true)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
-  // Verifica se há aluno logado e pré-preenche dados
+  // Pré-preenche com o perfil de quem está logado. O vínculo da participação
+  // com a conta é decidido no servidor, pela sessão — aqui isto é só o
+  // formulário já preenchido.
   useEffect(() => {
-    async function checkSession() {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('nome_completo, turma, role, aprovado')
-          .eq('id', user.id)
-          .maybeSingle()
-        if (profile?.aprovado) {
-          setNome(profile.nome_completo)
-          setTurma(profile.turma ?? '')
-          setUserId(user.id)
+    fetch('/api/usuarios/perfil')
+      .then(res => (res.ok ? res.json() : null))
+      .then(perfil => {
+        if (perfil?.nome_completo) {
+          setNome(perfil.nome_completo)
+          setTurma(perfil.turma ?? '')
+          setLogado(true)
         }
-      }
-      setLoadingSession(false)
-    }
-    checkSession()
+      })
+      .catch(() => {})
+      .finally(() => setLoadingSession(false))
   }, [])
 
   async function handleEntrar() {
@@ -50,67 +44,22 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
     setLoading(true)
     setError('')
 
-    const { data: quiz, error: quizError } = await supabase
-      .from('quizzes')
-      .select('id, titulo, lobby_aberto, ativo, encerrado')
-      .eq('codigo', codigo.trim().toUpperCase())
-      .single()
-
-    if (quizError || !quiz) {
-      setError('Quiz não encontrado. Verifique o código.')
+    // Uma chamada só: o servidor confere a sala, reaproveita a participação
+    // que a conta já tenha neste quiz e cria a nova quando não houver.
+    const res = await fetch('/api/quiz/entrar', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ codigo: codigo.trim(), nome: nome.trim(), turma: turma.trim() }),
+    })
+    const json = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(json.error ?? 'Erro ao entrar no quiz. Tente novamente.')
       setLoading(false)
       return
     }
 
-    if (quiz.encerrado) {
-      setError('Este quiz foi encerrado.')
-      setLoading(false)
-      return
-    }
-
-    if (!quiz.lobby_aberto && !quiz.ativo) {
-      setError('A sala ainda não foi aberta. Aguarde o professor.')
-      setLoading(false)
-      return
-    }
-
-    // Se o aluno já tem um participante neste quiz, redireciona
-    if (userId) {
-      const { data: existing } = await supabase
-        .from('quiz_participantes')
-        .select('id, concluido')
-        .eq('quiz_id', quiz.id)
-        .eq('user_id', userId)
-        .maybeSingle()
-
-      if (existing) {
-        if (existing.concluido) {
-          router.push(`/quiz/${codigo.trim().toUpperCase()}/${existing.id}/resultado`)
-        } else {
-          router.push(`/quiz/${codigo.trim().toUpperCase()}/${existing.id}`)
-        }
-        return
-      }
-    }
-
-    const { data: participante, error: partError } = await supabase
-      .from('quiz_participantes')
-      .insert({
-        quiz_id: quiz.id,
-        nome: nome.trim(),
-        turma: turma.trim(),
-        user_id: userId ?? null,
-      })
-      .select()
-      .single()
-
-    if (partError || !participante) {
-      setError('Erro ao entrar no quiz. Tente novamente.')
-      setLoading(false)
-      return
-    }
-
-    router.push(`/quiz/${codigo.trim().toUpperCase()}/${participante.id}`)
+    const destino = `/quiz/${json.codigo}/${json.participanteId}`
+    router.push(json.concluido ? `${destino}/resultado` : destino)
   }
 
   if (loadingSession) {
@@ -139,7 +88,7 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
             </div>
           )}
 
-          {userId && (
+          {logado && (
             <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-2.5 flex items-center gap-2 text-sm">
               <LogIn className="w-4 h-4 flex-shrink-0" />
               <span>Logado como <strong>{nome}</strong> · {turma}</span>
@@ -159,7 +108,7 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
             />
           </div>
 
-          {!userId && (
+          {!logado && (
             <>
               <div>
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Seu Nome</label>
@@ -205,7 +154,7 @@ export default function QuizEntrada({ codigoInicial }: QuizEntradaProps) {
           <Link href="/" className="text-white/50 hover:text-white text-sm transition-colors">
             ← Voltar ao site
           </Link>
-          {!userId && (
+          {!logado && (
             <Link href="/admin/cadastro" className="text-white/50 hover:text-white text-sm transition-colors">
               Criar conta →
             </Link>

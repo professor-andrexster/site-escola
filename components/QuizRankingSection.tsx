@@ -1,30 +1,14 @@
-import { createClient } from '@/lib/supabase/server'
+import { ultimoRanking } from '@/lib/db/quiz'
 import Link from 'next/link'
 import { Trophy, Medal, Gamepad2, ArrowRight } from 'lucide-react'
 
 export default async function QuizRankingSection() {
-  const supabase = await createClient()
-
   // Pega o quiz mais recente que está ativo ou encerrado
-  const { data: quiz } = await supabase
-    .from('quizzes')
-    .select('id, titulo, codigo, ativo, encerrado')
-    .or('ativo.eq.true,encerrado.eq.true')
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle()
+  const dados = await ultimoRanking()
+  if (!dados) return null
+  const { quiz, participantes } = dados
 
-  if (!quiz) return null
-
-  const { data: participantes } = await supabase
-    .from('quiz_participantes')
-    .select('id, nome, turma, pontuacao_total')
-    .eq('quiz_id', quiz.id)
-    .eq('concluido', true)
-    .order('pontuacao_total', { ascending: false })
-    .limit(10)
-
-  if (!participantes || participantes.length === 0) {
+  if (participantes.length === 0) {
     // Mostra convite para participar se o quiz está ativo mas sem participantes ainda
     if (!quiz.ativo) return null
     return (

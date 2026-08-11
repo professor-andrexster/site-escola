@@ -67,15 +67,13 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     if (!pergunta) return
 
     async function carregar() {
-      const { data } = await supabase
-        .from('quiz_respostas')
-        .select('resposta')
-        .eq('pergunta_id', pergunta.id)
-      if (perguntaIdRef.current !== pergunta.id || !data) return
-      setRespostasCount(data.length)
-      const cont: Record<string, number> = { a: 0, b: 0, c: 0, d: 0 }
-      for (const r of data) if (r.resposta) cont[r.resposta] = (cont[r.resposta] ?? 0) + 1
-      setContagem(cont)
+      const res = await fetch(`/api/quiz/${quiz.id}/respostas?perguntaId=${pergunta.id}`)
+      if (!res.ok) return
+      const { total, contagem } = await res.json()
+      // A pergunta pode ter virado enquanto a resposta vinha.
+      if (perguntaIdRef.current !== pergunta.id) return
+      setRespostasCount(total)
+      setContagem(contagem)
     }
 
     setRespostasCount(0)
@@ -99,23 +97,40 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pergunta?.id])
 
-  async function atualizar(updates: Record<string, unknown>) {
+  /**
+   * Comandos da sala. Antes isto mandava o objeto de colunas a atualizar, o
+   * que dava ao navegador poder de escrever qualquer coluna de `quizzes`.
+   */
+  async function comandar(acao: 'revelar' | 'proxima', perguntaAtual?: number) {
     setLoading(true)
-    await supabase.from('quizzes').update(updates).eq('id', quiz.id)
-    setQuiz(prev => ({ ...prev, ...updates } as Quiz))
+    const res = await fetch(`/api/quiz/${quiz.id}/estado`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ acao, perguntaAtual }),
+    })
+    if (res.ok) {
+      setQuiz(prev => ({
+        ...prev,
+        ...(acao === 'revelar'
+          ? { resposta_revelada: true }
+          : {
+              pergunta_atual: perguntaAtual ?? prev.pergunta_atual,
+              pergunta_liberada_em: new Date().toISOString(),
+              resposta_revelada: false,
+            }),
+      } as Quiz))
+    } else {
+      alert((await res.json().catch(() => ({}))).error ?? 'Erro ao comandar a sala.')
+    }
     setLoading(false)
   }
 
   async function revelar() {
-    await atualizar({ resposta_revelada: true })
+    await comandar('revelar')
   }
 
   async function proxima() {
-    await atualizar({
-      pergunta_atual: currentIndex + 1,
-      pergunta_liberada_em: new Date().toISOString(),
-      resposta_revelada: false,
-    })
+    await comandar('proxima', currentIndex + 1)
   }
 
   async function encerrar() {

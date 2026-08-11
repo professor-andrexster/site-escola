@@ -5,6 +5,28 @@ import { isGestao } from '@/lib/roles'
 import { ipDoRequest } from '@/lib/log'
 import { registrar } from '@/lib/db/log'
 
+/**
+ * Resumo do proprio perfil. Serve as telas que so precisam pre-preencher um
+ * formulario — a de entrada do quiz, por exemplo. Nunca devolve o perfil de
+ * outra pessoa: o id sai da sessao.
+ */
+export async function GET() {
+  const user = await usuarioAtual()
+  if (!user) return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
+
+  const perfil = await buscarPorId(user.id)
+  if (!perfil?.aprovado) {
+    return NextResponse.json({ error: 'Perfil não aprovado.' }, { status: 403 })
+  }
+
+  return NextResponse.json({
+    id: perfil.id,
+    nome_completo: perfil.nome_completo,
+    turma: perfil.turma,
+    role: perfil.role,
+  })
+}
+
 type CorpoPerfil = {
   userId?: string
   nomeCompleto?: string
