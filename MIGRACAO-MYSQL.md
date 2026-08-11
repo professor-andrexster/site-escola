@@ -50,20 +50,43 @@ de Storage (fase 5). O total real de banco é **358**, distribuído assim:
 | Onde | Arquivos | Chamadas | Situação |
 |---|---|---|---|
 | Server-side (rotas, páginas) | 87 | 265 | **concluído** |
-| **Componentes de cliente** | **33** | **93** | **virar rota de API** |
+| Componentes de cliente | 33 | 93 | **concluído** |
 
-**O lado servidor está fechado.** Nenhuma rota de API e nenhuma página de
-servidor fala com o Supabase para ler ou gravar dado — tudo passa por
-`lib/db/` (11 módulos). `npx tsc --noEmit` limpo, `npx next build` gera as 91
-páginas, e as 5 suítes de `tests/` passam contra o MariaDB local.
+**A fase 2 está fechada.** Não existe mais um `.from()` de tabela em página,
+componente ou rota deste repositório: tudo passa por `lib/db/` (11 módulos) e,
+do lado do navegador, por rotas de API com autorização explícita.
+`npx tsc --noEmit` limpo, `npx next build` gera as 109 páginas, e as 5 suítes
+de `tests/` passam contra o MariaDB local.
 
-Duas coisas ainda dependem do Supabase no servidor, de propósito:
-`lib/auth/sessao.ts` (a costura da sessão, que é a fase 4) e o upload de
-arquivos (fase 5).
+O que ainda usa o Supabase, e em qual fase cai:
 
-O único ponto do build que ainda exige as chaves públicas do Supabase é o
-prerender de `/vocacional` — porque o componente de cliente daquela página
-ainda fala com o PostgREST. Ele cai junto com os 93.
+| O quê | Arquivos | Fase |
+|---|---|---|
+| Upload de imagem e arquivo (Storage) | 10 componentes | 5 |
+| Sessão, login e senha (Auth) | `lib/auth/sessao.ts` + 3 telas | 4 |
+| Quiz ao vivo (Realtime) | `QuizControle`, `QuizRoom` | 6 |
+
+### O que a fase 2 corrigiu de autorização
+
+Migrar as 93 chamadas do navegador não foi conversão mecânica: cada uma
+precisou de uma regra que antes ou era só aparência da tela, ou não existia.
+As que mudam comportamento:
+
+| Onde | O que dava para fazer |
+|---|---|
+| `QuizPlayer` | o aluno mandava `correta` e `pontos_obtidos` prontos, e a própria `pontuacao_total` no fim — nota livre |
+| `DesafioWorkspace` | entregar e dar nota eram o mesmo upsert: bastava juntar `nota` ao envio para se autoavaliar |
+| `SlideViewer` / `ConteudoViewer` | `user_id` no corpo: dava para concluir aula no progresso de outro aluno (é o que libera o certificado) |
+| `QuizControle` | mandava o objeto de colunas de `quizzes` — escrita livre em qualquer coluna, de qualquer quiz |
+| `QuizEntrada` | `user_id` no corpo: participação e pontuação lançadas no nome de outra pessoa |
+| `NoticiasTable` | o log de auditoria era escrito pelo cliente, com ação e autor à escolha de quem estava sendo auditado |
+| `CursoForm` | `publicado: true` num POST direto, sem passar pela aprovação da direção |
+| `IdeiasBoard` / `IdeiaDetail` | `autor_id` e `profile_id` no corpo: publicar, votar e comentar como outra pessoa |
+| `DesafioWorkspace` | inscrever qualquer aluno em qualquer equipe |
+| `VocacionalTest` | a pontuação por trilha ia pronta do navegador para o perfil vocacional |
+
+Nenhuma dessas dependia de RLS para ser barrada — as policies cobriam leitura,
+não a coerência do que era gravado.
 
 **Os 93 do cliente são o custo escondido da migração.** Hoje o navegador fala
 direto com o Postgres via PostgREST, e quem impede um aluno de ler dado alheio
