@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { fichaDaIdeia } from '@/lib/db/comunidade'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { notFound } from 'next/navigation'
@@ -16,24 +16,11 @@ export const dynamic = 'force-dynamic'
 
 export default async function IdeiaPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  const { data: ideia } = await supabase
-    .from('ideias')
-    .select('*, autor:profiles(nome_completo, turma), trilha:trilhas(nome, icone, cor_tailwind)')
-    .eq('id', id)
-    .maybeSingle()
-  if (!ideia) notFound()
-
-  const [{ data: comentarios }, { data: votos }] = await Promise.all([
-    supabase
-      .from('ideia_comentarios')
-      .select('*, autor:profiles(nome_completo, role)')
-      .eq('ideia_id', id)
-      .order('created_at', { ascending: true }),
-    supabase.from('ideia_votos').select('ideia_id, profile_id').eq('ideia_id', id),
-  ])
+  const ficha = await fichaDaIdeia(id)
+  if (!ficha) notFound()
+  const { ideia, comentarios, votos } = ficha
 
   const podeModerar = profile.role === 'professor' || profile.role === 'monitor' || isGestao(profile.role)
 
@@ -45,9 +32,9 @@ export default async function IdeiaPage({ params }: Props) {
       </Link>
       <IdeiaDetail
         ideia={ideia}
-        comentariosIniciais={comentarios ?? []}
-        votos={votos?.length ?? 0}
-        votei={(votos ?? []).some((v) => v.profile_id === user.id)}
+        comentariosIniciais={comentarios}
+        votos={votos.length}
+        votei={votos.some(v => v.profile_id === user.id)}
         profileId={user.id}
         podeModerar={podeModerar}
       />

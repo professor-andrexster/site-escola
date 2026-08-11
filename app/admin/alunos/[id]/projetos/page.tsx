@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId } from '@/lib/db/alunos'
+import { listarTrilhas, projetosDoAlunoComTrilha } from '@/lib/db/comunidade'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -10,23 +11,13 @@ export const dynamic = 'force-dynamic'
 
 export default async function AlunoProjetosPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
-
-  const { data: aluno } = await supabase
-    .from('alunos')
-    .select('id, nome, matricula, serie')
-    .eq('id', id)
-    .maybeSingle()
-
+  const aluno = await buscarPorId(id)
   if (!aluno) notFound()
 
-  const { data: projetos } = await supabase
-    .from('projetos')
-    .select('*, trilhas(id, nome, icone, cor_tailwind)')
-    .eq('aluno_id', id)
-    .order('criado_em', { ascending: false })
-
-  const { data: trilhas } = await supabase.from('trilhas').select('*').order('nome')
+  const [projetos, trilhas] = await Promise.all([
+    projetosDoAlunoComTrilha(id),
+    listarTrilhas(),
+  ])
 
   return (
     <div className="max-w-3xl">
@@ -41,8 +32,8 @@ export default async function AlunoProjetosPage({ params }: { params: Promise<{ 
       <AlunoProjetosManager
         alunoId={id}
         serieAtual={aluno.serie}
-        trilhas={trilhas ?? []}
-        projetosIniciais={projetos ?? []}
+        trilhas={trilhas}
+        projetosIniciais={projetos}
       />
     </div>
   )

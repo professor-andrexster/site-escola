@@ -71,6 +71,19 @@ export async function listarPublicadosResumo() {
   })
 }
 
+/** Os primeiros cursos publicados, para a vitrine da home. */
+export async function cursosDaHome(limite = 3) {
+  return prisma.cursos.findMany({
+    where: { publicado: true },
+    select: {
+      id: true, titulo: true, slug: true, descricao: true,
+      capa_url: true, categoria: true, nivel: true,
+    },
+    orderBy: { ordem: 'asc' },
+    take: limite,
+  })
+}
+
 /** Slugs publicados — usado pelo sitemap. */
 export async function slugsPublicados(): Promise<string[]> {
   const linhas = await prisma.cursos.findMany({

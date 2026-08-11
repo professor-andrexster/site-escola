@@ -2,7 +2,7 @@ import PageLayout from '@/components/PageLayout'
 import CursosEmtiBanner from '@/components/CursosEmtiBanner'
 import ContatoForm from '@/components/ContatoForm'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
-import { createClient } from '@/lib/supabase/server'
+import { cursosDaHome } from '@/lib/db/cursos'
 import Image from 'next/image'
 import Link from 'next/link'
 import { BookOpen, Cpu, Users, Award, MessageCircle, ChevronRight } from 'lucide-react'
@@ -24,13 +24,7 @@ const tecnologia = [
 ]
 
 export default async function HomePage() {
-  const supabase = await createClient()
-  const { data: cursosDestaque } = await supabase
-    .from('cursos')
-    .select('id, titulo, slug, descricao, capa_url, categoria, nivel')
-    .eq('publicado', true)
-    .order('ordem')
-    .limit(3)
+  const cursosDestaque = await cursosDaHome()
 
   return (
     <PageLayout>
@@ -86,7 +80,7 @@ export default async function HomePage() {
       <CursosEmtiBanner />
 
       {/* Vitrine de cursos reais */}
-      {(cursosDestaque ?? []).length > 0 && (
+      {cursosDestaque.length > 0 && (
         <section className="bg-escola-creme py-14 border-t border-escola-cinza-claro">
           <div className="container mx-auto px-4">
             <AnimateOnScroll>
@@ -105,7 +99,7 @@ export default async function HomePage() {
             </AnimateOnScroll>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-              {(cursosDestaque ?? []).map((curso, i) => (
+              {cursosDestaque.map((curso, i) => (
                 <AnimateOnScroll key={curso.id} delay={(i + 1) as 1|2|3}>
                   <Link href="/cursos" className="group bg-white border border-escola-cinza-claro flex flex-col card-lift overflow-hidden h-full">
                     <div className="relative aspect-[16/9] bg-escola-azul overflow-hidden">

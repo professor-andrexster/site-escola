@@ -116,22 +116,6 @@ function serializarProjeto(p: Projeto): ProjetoComTags {
   return { ...p, tags: comoLista(p.tags), criado_em: p.criado_em?.toISOString() ?? null }
 }
 
-/** Vitrine publica: projetos em destaque, com aluno e trilha. */
-export async function projetosEmDestaque() {
-  const linhas = await prisma.projetos.findMany({
-    where: { destaque: true },
-    include: {
-      alunos: { select: { nome: true, matricula: true, turma: true, foto_url: true, ativo: true } },
-      trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
-    },
-    orderBy: { criado_em: 'desc' },
-  })
-  // Projeto de aluno inativo nao aparece na vitrine publica.
-  return linhas
-    .filter(p => p.alunos?.ativo !== false)
-    .map(p => ({ ...p, tags: comoLista(p.tags) }))
-}
-
 export async function projetosDoAluno(alunoId: string): Promise<ProjetoComTags[]> {
   const linhas = await prisma.projetos.findMany({
     where: { aluno_id: alunoId },
@@ -140,27 +124,51 @@ export async function projetosDoAluno(alunoId: string): Promise<ProjetoComTags[]
   return linhas.map(serializarProjeto)
 }
 
+/** Projetos de um aluno com a trilha inteira — a tela de gestao do portfolio. */
+export async function projetosDoAlunoComTrilha(alunoId: string) {
+  const linhas = await prisma.projetos.findMany({
+    where: { aluno_id: alunoId },
+    include: { trilhas: true },
+    orderBy: { criado_em: 'desc' },
+  })
+  return linhas.map(p => ({
+    ...p,
+    // aluno_id e destaque sao anulaveis no banco mas nao no dominio: o filtro
+    // acima ja garante o primeiro, e projeto sem destaque e destaque false.
+    aluno_id: alunoId,
+    destaque: p.destaque ?? false,
+    tags: comoLista(p.tags),
+    criado_em: p.criado_em?.toISOString() ?? '',
+  }))
+}
+
 export async function contarProjetosDoAluno(alunoId: string): Promise<number> {
   return prisma.projetos.count({ where: { aluno_id: alunoId } })
 }
 
 /** Projetos em destaque para a home e a vitrine publica. */
-export async function projetosPublicos(apenasDestaque = false) {
+export async function projetosPublicos(opcoes: { apenasDestaque?: boolean; limite?: number } = {}) {
   const linhas = await prisma.projetos.findMany({
-    where: apenasDestaque ? { destaque: true } : {},
+    where: opcoes.apenasDestaque ? { destaque: true } : {},
     include: {
-      alunos: { select: { nome: true, matricula: true, turma: true, foto_url: true, ativo: true } },
+      alunos: { select: { nome: true, matricula: true, serie: true, turma: true, foto_url: true, ativo: true } },
       trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
     },
-    orderBy: { criado_em: 'desc' },
+    // Destaque primeiro, e dentro dele o mais recente — a mesma ordem dupla
+    // que a vitrine usava no PostgREST.
+    orderBy: [{ destaque: 'desc' }, { criado_em: 'desc' }],
+    ...(opcoes.limite ? { take: opcoes.limite } : {}),
   })
+  // Projeto sem aluno ativo sai da vitrine publica — inclusive o que nao tem
+  // ficha vinculada, que era o que o filtro antigo (`aluno?.ativo`) fazia.
   return linhas
-    .filter(p => p.alunos?.ativo !== false)
+    .filter((p): p is typeof p & { alunos: NonNullable<typeof p.alunos> } => p.alunos?.ativo === true)
     .map(p => ({
       ...p,
+      alunos: { ...p.alunos, ativo: true },
       tags: comoLista(p.tags),
       destaque: p.destaque ?? false,
-      criado_em: p.criado_em?.toISOString() ?? null,
+      criado_em: p.criado_em?.toISOString() ?? '',
     }))
 }
 

@@ -3,7 +3,7 @@ import AnimateOnScroll from '@/components/AnimateOnScroll'
 import Image from 'next/image'
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { createClient } from '@/lib/supabase/server'
+import { projetosPublicos } from '@/lib/db/comunidade'
 import { trilhaBg, trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 import {
   Target, BookOpen, Award, Users,
@@ -97,18 +97,7 @@ const mercadoLocal = [
 ]
 
 export default async function EmtiPage() {
-  const supabase = await createClient()
-  const { data: projetosDestaque } = await supabase
-    .from('projetos')
-    .select('id, titulo, descricao, imagem_url, trilhas(nome, icone, cor_tailwind), alunos(nome, matricula, ativo)')
-    .eq('destaque', true)
-    .order('criado_em', { ascending: false })
-    .limit(3)
-
-  const destaques = (projetosDestaque ?? []).filter(p => {
-    const aluno = Array.isArray(p.alunos) ? p.alunos[0] : p.alunos
-    return aluno?.ativo
-  })
+  const destaques = await projetosPublicos({ apenasDestaque: true, limite: 3 })
 
   return (
     <PageLayout>
