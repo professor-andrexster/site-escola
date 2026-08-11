@@ -63,7 +63,7 @@ O que ainda usa o Supabase, e em qual fase cai:
 | O quê | Arquivos | Fase |
 |---|---|---|
 | Upload de imagem e arquivo (Storage) | 10 componentes | 5 |
-| Sessão, login e senha (Auth) | `lib/auth/sessao.ts` + 3 telas | 4 |
+| ~~Sessão, login e senha (Auth)~~ | — | ~~4~~ **feito** |
 | Quiz ao vivo (Realtime) | `QuizControle`, `QuizRoom` | 6 |
 
 ### O que a fase 2 corrigiu de autorização
@@ -100,9 +100,59 @@ mecânica — é desenho de API, e é onde a fase 2 encosta na fase 3.
 ### Fase 3 — Autorização em código
 As 83 policies viram checagem explícita, com teste por regra. **Fase mais longa e mais perigosa.** Enquanto o Postgres estiver ativo, qualquer regra esquecida ainda é barrada pelo banco — é a única janela em que o erro é visível antes de virar vazamento.
 
-### Fase 4 — Autenticação própria
-Substituir Supabase Auth: sessão assinada em cookie, hash de senha com bcrypt/argon2, recuperação por token. O `porto-sistema` já faz exatamente isso (`AUTH_SECRET`, `AUTH_SESSION_DAYS`) — o padrão é reaproveitável.
-**Detalhe crítico:** as senhas em `auth.users` são hashes bcrypt do Supabase. Se forem exportadas junto, ninguém precisa trocar de senha. Se não, todo mundo troca.
+### Fase 4 — Autenticação própria — **concluída**
+
+O Supabase Auth saiu. No lugar: token opaco de 32 bytes no cookie `jb_sessao`,
+sessão na tabela `sessoes`, senha em bcrypt em `usuarios.encrypted_password`.
+
+Nenhuma rota mudou: `lib/auth/sessao.ts` manteve as mesmas assinaturas, que era
+exatamente o motivo de a costura existir desde a fase 2.
+
+**Duas tabelas novas** (já criadas no MariaDB e no `schema.prisma`):
+
+| Tabela | Para quê |
+|---|---|
+| `sessoes` | uma linha por dispositivo logado; guarda o **SHA-256** do token, nunca o token |
+| `tokens_senha` | link de redefinição: vale 2h, serve uma vez, e pedir outro invalida o anterior |
+
+**bcrypt, e não argon2**, de propósito: o Supabase guardava bcrypt. Os hashes
+exportados de `auth.users` entram direto na coluna e continuam validando — é o
+que permite ninguém trocar de senha na virada. Custo 10, o mesmo de lá.
+
+**Se os hashes não vierem**, o sistema não quebra: `encrypted_password` fica
+nulo, o login recusa com o motivo `conta sem senha definida` no log, e a pessoa
+entra pelo fluxo de "esqueci minha senha". A decisão continua sendo do André —
+depende da query em `auth.users`, que ainda não foi rodada.
+
+**O que a fase 4 apertou em relação ao Supabase:**
+
+- trocar a senha derruba as sessões abertas daquela conta. Lá, a sessão do
+  invasor continuava valendo depois de a vítima trocar a senha;
+- `banned_until` derruba a sessão em curso, não só o próximo login;
+- login em conta inexistente gasta o tempo de um bcrypt — sem isso dá para
+  descobrir quais e-mails existem só cronometrando a resposta;
+- o motivo da recusa virou preciso no log (conta inexistente / senha errada /
+  conta sem senha / conta bloqueada). O Supabase devolvia
+  `Invalid login credentials` para os quatro, e foi isso que deixou dois alunos
+  travados em agosto sem ninguém conseguir dizer por quê. Para quem está na
+  tela, a mensagem continua sendo a mesma frase genérica.
+
+**O middleware** agora só verifica se o cookie existe: ele roda no runtime Edge,
+onde o Prisma não alcança o banco. Isso não afrouxa nada — ele nunca foi a
+autorização de coisa alguma. Toda página passa por `getProfileOrRedirect` e toda
+rota por `lib/apiGestao`, que leem a sessão de verdade; um cookie inventado
+passa pelo middleware e é recusado uma camada abaixo (verificado no smoke test).
+
+**E-mail de redefinição** sai pelo Resend, que já mandava o convite de
+bibliotecária. Exige `RESEND_API_KEY` no `.env` de produção.
+
+**Variáveis novas:** `AUTH_SESSION_DAYS` (opcional, padrão 7).
+Não há `AUTH_SECRET`: o token é sorteado, não assinado — não há o que assinar.
+
+**A regra de senha** estava repetida em seis rotas, todas com "mínimo 6".
+Agora está só em `lib/auth/senha.ts` (`MINIMO_DE_SENHA`). Continua 6:
+endurecer é decisão da direção, não efeito colateral de trocar de provedor —
+mas agora é uma linha.
 
 ### Fase 5 — Arquivos
 Baixar os buckets, servir de `/var/www/escola/data/uploads` pelo nginx, reescrever as 20 chamadas de upload.
