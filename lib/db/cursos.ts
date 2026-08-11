@@ -16,6 +16,27 @@ import type { cursos, aulas, certificados } from '@prisma/client'
  */
 
 export type Curso = cursos
+
+/**
+ * Aula no formato que as telas esperam: datas em string, slides_urls como
+ * lista e as flags sem nulo.
+ *
+ * slides_urls era text[] no Postgres e virou JSON (longtext) no MariaDB —
+ * mesma armadilha das outras sete colunas estruturadas. Aqui ela e desfeita
+ * uma vez, na camada, em vez de em cada tela.
+ */
+function serializarAula(a: aulas) {
+  return {
+    ...a,
+    curso_id: a.curso_id ?? '',
+    ordem: a.ordem ?? 0,
+    publicado: a.publicado ?? false,
+    revisado: a.revisado ?? false,
+    slides_urls: a.slides_urls ? (JSON.parse(a.slides_urls) as string[]) : [],
+    created_at: a.created_at?.toISOString() ?? '',
+    updated_at: a.updated_at?.toISOString() ?? '',
+  }
+}
 export type Aula = aulas
 export type Certificado = certificados
 
@@ -163,6 +184,76 @@ export async function trocarOrdemAulas(idA: string, ordemA: number, idB: string,
     prisma.aulas.update({ where: { id: idA }, data: { ordem: ordemA } }),
     prisma.aulas.update({ where: { id: idB }, data: { ordem: ordemB } }),
   ])
+}
+
+/**
+ * Tudo que a tela de um curso precisa: o curso publicado, as aulas, o
+ * progresso do aluno, os desafios do curso e o estado da prova final.
+ *
+ * A contagem de perguntas da prova vinha pelo admin client porque a tabela
+ * negava leitura direta ao aluno — o gabarito mora nela. Aqui a protecao e
+ * outra: a funcao devolve so o NUMERO de perguntas, nunca as perguntas.
+ */
+export async function cursoParaAluno(slug: string, userId: string) {
+  const curso = await prisma.cursos.findFirst({ where: { slug, publicado: true } })
+  if (!curso) return null
+
+  const aulasBrutas = await prisma.aulas.findMany({
+    where: { curso_id: curso.id, publicado: true },
+    orderBy: { ordem: 'asc' },
+  })
+  const aulas = aulasBrutas.map(serializarAula)
+
+  const [progresso, desafios, totalPerguntasProva, certificado] = await Promise.all([
+    prisma.progresso_aulas.findMany({
+      where: { user_id: userId, aula_id: { in: aulas.map(a => a.id) } },
+      select: { aula_id: true, slide_atual: true, concluida: true },
+    }),
+    prisma.curso_desafios
+      .findMany({
+        where: { curso_id: curso.id, aula_id: null },
+        select: { id: true, titulo: true, enunciado: true, tipo: true, ordem: true },
+        orderBy: { ordem: 'asc' },
+      })
+      .then(ds => ds.map(d => ({ ...d, ordem: d.ordem ?? 0 }))),
+    prisma.curso_prova_perguntas.count({ where: { curso_id: curso.id } }),
+    prisma.certificados.findFirst({
+      where: { curso_id: curso.id, user_id: userId },
+      select: { codigo: true, nota: true, carga_horaria: true },
+    }),
+  ])
+
+  return { curso, aulas, progresso, desafios, totalPerguntasProva, certificado }
+}
+
+/** Curso publicado com as aulas publicadas, para o player. */
+export async function cursoComAulas(slug: string) {
+  const curso = await prisma.cursos.findFirst({ where: { slug, publicado: true } })
+  if (!curso) return null
+  const aulas = await prisma.aulas.findMany({
+    where: { curso_id: curso.id, publicado: true },
+    orderBy: { ordem: 'asc' },
+  })
+  return { curso, aulas: aulas.map(serializarAula) }
+}
+
+/** Desafios de uma aula, sem gabarito — a coluna e bloqueada para alunos. */
+export async function desafiosDaAula(aulaId: string) {
+  const linhas = await prisma.curso_desafios.findMany({
+    where: { aula_id: aulaId },
+    select: { id: true, titulo: true, enunciado: true, tipo: true, ordem: true },
+    orderBy: { ordem: 'asc' },
+  })
+  // `ordem` e anulavel no banco; a tela usa para ordenar e numerar.
+  return linhas.map(d => ({ ...d, ordem: d.ordem ?? 0 }))
+}
+
+/** Progresso do aluno numa aula especifica. */
+export async function progressoDaAula(userId: string, aulaId: string) {
+  return prisma.progresso_aulas.findFirst({
+    where: { user_id: userId, aula_id: aulaId },
+    select: { slide_atual: true, concluida: true },
+  })
 }
 
 // -------------------------------------------------------------- progresso

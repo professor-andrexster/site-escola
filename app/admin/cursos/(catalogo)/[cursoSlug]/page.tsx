@@ -1,5 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarPorSlug, cursoParaAluno } from '@/lib/db/cursos'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
@@ -13,55 +12,21 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ cursoSlug: string }> }): Promise<Metadata> {
   const { cursoSlug } = await params
-  const supabase = await createClient()
-  const { data: curso } = await supabase.from('cursos').select('titulo').eq('slug', cursoSlug).maybeSingle()
+  const curso = await buscarPorSlug(cursoSlug)
   return { title: curso?.titulo ?? 'Curso' }
 }
 
 export default async function CursoDetalhePage({ params }: { params: Promise<{ cursoSlug: string }> }) {
   const { cursoSlug } = await params
-  const supabase = await createClient()
   const { user } = await getProfileOrRedirect()
 
-  const { data: curso } = await supabase
-    .from('cursos')
-    .select('*')
-    .eq('slug', cursoSlug)
-    .eq('publicado', true)
-    .maybeSingle()
+  // Uma funcao de camada em vez de cinco consultas. A contagem de perguntas
+  // da prova vem so como numero: o gabarito nunca sai daqui.
+  const dados = await cursoParaAluno(cursoSlug, user.id)
+  if (!dados) notFound()
+  const { curso, aulas, progresso, desafios: desafiosCurso, totalPerguntasProva, certificado } = dados
 
-  if (!curso) notFound()
-
-  const { data: aulas } = await supabase
-    .from('aulas')
-    .select('*')
-    .eq('curso_id', curso.id)
-    .eq('publicado', true)
-    .order('ordem')
-
-  const { data: progresso } = await supabase
-    .from('progresso_aulas')
-    .select('aula_id, slide_atual, concluida')
-    .eq('user_id', user.id)
-    .in('aula_id', (aulas ?? []).map((a) => a.id))
-
-  // Desafios do curso inteiro (projeto integrador etc. — sem gabarito, bloqueado p/ aluno)
-  const { data: desafiosCurso } = await supabase
-    .from('curso_desafios')
-    .select('id, titulo, enunciado, tipo, ordem')
-    .eq('curso_id', curso.id)
-    .is('aula_id', null)
-    .order('ordem')
-
-  // Prova final e certificado: a contagem de perguntas vem pelo admin client
-  // porque a tabela nega leitura direta do aluno (o gabarito mora nela).
-  const admin = createAdminClient()
-  const [{ count: totalPerguntasProva }, { data: certificado }] = await Promise.all([
-    admin.from('curso_prova_perguntas').select('*', { count: 'exact', head: true }).eq('curso_id', curso.id),
-    admin.from('certificados').select('codigo, nota, carga_horaria').eq('curso_id', curso.id).eq('user_id', user.id).maybeSingle(),
-  ])
-
-  const progressoMap = new Map((progresso ?? []).map((p) => [p.aula_id, p]))
+  const progressoMap = new Map(progresso.map(p => [p.aula_id, p]))
 
   function statusDe(aulaId: string): AulaStatus {
     const p = progressoMap.get(aulaId)
@@ -70,7 +35,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
     return 'em_andamento'
   }
 
-  const listaAulas = aulas ?? []
+  const listaAulas = aulas
   const primeiraNaoConcluida = listaAulas.find((a) => statusDe(a.id) !== 'concluida') ?? listaAulas[0]
   const totalConcluidas = listaAulas.filter((a) => statusDe(a.id) === 'concluida').length
   const progressoPct = listaAulas.length > 0 ? Math.round((totalConcluidas / listaAulas.length) * 100) : 0

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { cursoComAulas, progressoDaAula, desafiosDaAula } from '@/lib/db/cursos'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { notFound } from 'next/navigation'
 import SlideViewer from '@/components/cursos/SlideViewer'
@@ -12,34 +12,19 @@ interface Params {
 }
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
-  const { aulaSlug } = await params
-  const supabase = await createClient()
-  const { data: aula } = await supabase.from('aulas').select('titulo').eq('slug', aulaSlug).maybeSingle()
+  const { cursoSlug, aulaSlug } = await params
+  const dados = await cursoComAulas(cursoSlug)
+  const aula = dados?.aulas.find(a => a.slug === aulaSlug) ?? null
   return { title: aula?.titulo ?? 'Aula' }
 }
 
 export default async function AulaPlayerPage({ params }: Params) {
   const { cursoSlug, aulaSlug } = await params
-  const supabase = await createClient()
   const { user } = await getProfileOrRedirect()
 
-  const { data: curso } = await supabase
-    .from('cursos')
-    .select('*')
-    .eq('slug', cursoSlug)
-    .eq('publicado', true)
-    .maybeSingle()
-
-  if (!curso) notFound()
-
-  const { data: aulas } = await supabase
-    .from('aulas')
-    .select('*')
-    .eq('curso_id', curso.id)
-    .eq('publicado', true)
-    .order('ordem')
-
-  const listaAulas = aulas ?? []
+  const dados = await cursoComAulas(cursoSlug)
+  if (!dados) notFound()
+  const { curso, aulas: listaAulas } = dados
   const indiceAtual = listaAulas.findIndex((a) => a.slug === aulaSlug)
   const aula = listaAulas[indiceAtual]
 
@@ -47,12 +32,7 @@ export default async function AulaPlayerPage({ params }: Params) {
 
   const proximaAula = listaAulas[indiceAtual + 1] ?? null
 
-  const { data: progresso } = await supabase
-    .from('progresso_aulas')
-    .select('slide_atual, concluida')
-    .eq('user_id', user.id)
-    .eq('aula_id', aula.id)
-    .maybeSingle()
+  const progresso = await progressoDaAula(user.id, aula.id)
 
   // Aula em slides (cursos importados de pptx) usa o SlideViewer
   if (aula.slides_urls && aula.slides_urls.length > 0) {
@@ -73,11 +53,7 @@ export default async function AulaPlayerPage({ params }: Params) {
   }
 
   // Aula em texto: busca os desafios (sem gabarito, coluna bloqueada para alunos)
-  const { data: desafios } = await supabase
-    .from('curso_desafios')
-    .select('id, titulo, enunciado, tipo, ordem')
-    .eq('aula_id', aula.id)
-    .order('ordem')
+  const desafios = await desafiosDaAula(aula.id)
 
   return (
     <ConteudoViewer
