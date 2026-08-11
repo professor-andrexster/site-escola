@@ -33,6 +33,35 @@ export async function encerrarSessao(): Promise<void> {
   await supabase.auth.signOut()
 }
 
+/**
+ * Autentica e abre a sessao (grava os cookies). Devolve o usuario ou o erro
+ * cru do provedor — a rota precisa do erro para registrar o motivo real, que
+ * e o que faltava quando dois alunos ficaram travados em agosto.
+ */
+export async function entrarComSenha(
+  email: string,
+  senha: string
+): Promise<{ usuario: UsuarioSessao } | { erro: { mensagem: string; status?: number } }> {
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
+  if (error || !data.user) {
+    return {
+      erro: { mensagem: error?.message ?? 'sem usuario retornado', status: error?.status },
+    }
+  }
+  return { usuario: { id: data.user.id, email: data.user.email ?? null } }
+}
+
+/** Dispara o email de redefinicao de senha. */
+export async function enviarRedefinicaoDeSenha(
+  email: string,
+  redirectTo: string
+): Promise<{ erro?: { mensagem: string; status?: number } }> {
+  const supabase = await createClient()
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo })
+  return error ? { erro: { mensagem: error.message, status: error.status } } : {}
+}
+
 // ------------------------------------------------------------- contas
 // A criacao de conta tambem passa por aqui pelo mesmo motivo: na fase 4 ela
 // vira insert em `usuarios` com hash proprio, e as rotas de cadastro nao

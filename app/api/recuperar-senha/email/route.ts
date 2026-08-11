@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { enviarRedefinicaoDeSenha } from '@/lib/auth/sessao'
 
 import { resolverEmail } from '@/lib/identidade'
 import { ipDoRequest } from '@/lib/log'
@@ -29,10 +29,10 @@ export async function POST(request: Request) {
 
   if (email) {
     const origin = request.headers.get('origin') ?? new URL(request.url).origin
-    const supabase = await createClient()
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${origin}/admin/redefinir-senha`,
-    })
+    const { erro: error } = await enviarRedefinicaoDeSenha(
+      email,
+      `${origin}/admin/redefinir-senha`
+    )
 
     // O aluno continua vendo a mensagem genérica — não revelamos se o cadastro
     // existe. Mas o motivo real da falha precisa ficar registrado: sem isto,
@@ -41,11 +41,11 @@ export async function POST(request: Request) {
     if (error) {
       console.error('[recuperar-senha] falha ao enviar', {
         status: error.status,
-        mensagem: error.message,
+        mensagem: error.mensagem,
       })
       await registrar({
         acao: 'recuperacao_falhou',
-        detalhes: { motivo: 'envio_falhou', erro: error.message, status: error.status ?? null },
+        detalhes: { motivo: 'envio_falhou', erro: error.mensagem, status: error.status ?? null },
         ip,
       })
     }

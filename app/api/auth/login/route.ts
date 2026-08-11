@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { entrarComSenha, encerrarSessao } from '@/lib/auth/sessao'
 import { papelEAprovacao } from '@/lib/db/perfis'
 import { resolverEmail, mascararIdentificador } from '@/lib/identidade'
 import { ipDoRequest } from '@/lib/log'
@@ -35,25 +35,24 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: MSG_ERRO }, { status: 401 })
   }
 
-  // Login server-side: o client de lib/supabase/server grava os cookies de sessão
-  const supabase = await createClient()
-  const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password: senha })
+  // A costura grava os cookies de sessão e devolve o erro cru do provedor.
+  const resultado = await entrarComSenha(email, senha)
 
-  if (authError || !data.user) {
+  if ('erro' in resultado) {
     // O rótulo 'senha_incorreta' é enganoso: o Supabase devolve o mesmo
     // "Invalid login credentials" para senha errada E para usuário inexistente.
     // Sem a mensagem crua não dá para distinguir os dois — nem enxergar casos
     // como e-mail não confirmado ou bloqueio por tentativas.
     console.error('[login] recusado pelo Supabase', {
-      status: authError?.status,
-      mensagem: authError?.message,
+      status: resultado.erro.status,
+      mensagem: resultado.erro.mensagem,
     })
     await registrar({
       acao: 'login_falha',
       detalhes: {
         identificador: mascararIdentificador(identificador),
         motivo: 'senha_incorreta',
-        erro_supabase: authError?.message ?? 'sem usuario retornado',
+        erro_provedor: resultado.erro.mensagem,
         // e-mail que o identificador resolveu, mascarado: se não for o que o
         // usuário espera, o problema está na resolução, não na senha
         email_resolvido: email.replace(/^(.{2})[^@]*(@.*)$/, '$1***$2'),
@@ -63,14 +62,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: MSG_ERRO }, { status: 401 })
   }
 
-  const profile = await papelEAprovacao(data.user.id)
+  const profile = await papelEAprovacao(resultado.usuario.id)
 
   if (!profile) {
-    await supabase.auth.signOut()
+    await encerrarSessao()
     return NextResponse.json({ error: 'Perfil não encontrado. Entre em contato com a direção.' }, { status: 403 })
   }
 
-  await registrar({ acao: 'login_ok', userId: data.user.id, ip })
+  await registrar({ acao: 'login_ok', userId: resultado.usuario.id, ip })
 
   return NextResponse.json({ ok: true, destino: profile.aprovado ? '/admin/dashboard' : '/admin/pendente' })
 }

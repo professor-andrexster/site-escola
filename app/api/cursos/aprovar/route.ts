@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { alternarPublicado } from '@/lib/db/cursos'
 import { exigirGestao } from '@/lib/apiGestao'
 
 export async function POST(request: Request) {
@@ -12,15 +12,11 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Curso não informado.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-
-  const { error } = await admin
-    .from('cursos')
-    .update({ publicado: true, atualizado_em: new Date().toISOString() })
-    .eq('id', cursoId)
-
-  if (error) {
-    return NextResponse.json({ error: 'Erro ao aprovar: ' + error.message }, { status: 400 })
+  try {
+    await alternarPublicado(cursoId, true)
+  } catch (erro) {
+    console.error('[cursos/aprovar] falha', erro)
+    return NextResponse.json({ error: 'Erro ao aprovar o curso.' }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true })

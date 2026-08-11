@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { remover } from '@/lib/db/cursos'
 import { exigirGestao } from '@/lib/apiGestao'
 
 export async function POST(request: Request) {
@@ -12,16 +12,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Curso não informado.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-
-  // Deletar curso e todas as aulas/desafios associados (via cascade)
-  const { error } = await admin
-    .from('cursos')
-    .delete()
-    .eq('id', cursoId)
-
-  if (error) {
-    return NextResponse.json({ error: 'Erro ao rejeitar: ' + error.message }, { status: 400 })
+  // Apaga curso, aulas, progresso, desafios e perguntas de prova. No Supabase
+  // isso dependia do ON DELETE CASCADE do banco; agora e transacao explicita
+  // na camada, o que torna visivel o que esta sendo apagado junto.
+  try {
+    await remover(cursoId)
+  } catch (erro) {
+    console.error('[cursos/rejeitar] falha', erro)
+    return NextResponse.json({ error: 'Erro ao rejeitar o curso.' }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true })
