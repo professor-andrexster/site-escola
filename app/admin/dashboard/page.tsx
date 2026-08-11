@@ -1,4 +1,8 @@
-import { createClient } from '@/lib/supabase/server'
+import { contarConcluidosDoUsuario, disponiveisParaEntrar, historicoDoUsuario,
+         participacoesDoUsuario, totaisDoPainel } from '@/lib/db/quiz'
+import { contarCertificados } from '@/lib/db/cursos'
+import { contarPendentes } from '@/lib/db/perfis'
+import { leadsNaoLidos as contarLeadsNaoLidos } from '@/lib/db/comunidade'
 import { getProfileOrRedirect, ROLE_LABELS, ROLE_COLORS } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { quizMatchesTurma } from '@/lib/turmas'
@@ -29,24 +33,14 @@ function StatCard({ label, value, icon: Icon, color, href }: {
 }
 
 export default async function DashboardPage() {
-  const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
   if (profile.role === 'aluno' || profile.role === 'aluno_fundamental' || profile.role === 'monitor') {
-    const [{ count: quizzesFeitos }, { data: ultimasRespostas }, { data: allQuizzes }, { count: cursosConcluidos }] = await Promise.all([
-      supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('concluido', true),
-      supabase.from('quiz_participantes')
-        .select('*, quizzes(titulo, codigo)')
-        .eq('user_id', user.id)
-        .eq('concluido', true)
-        .order('created_at', { ascending: false })
-        .limit(5),
-      // Quizzes disponíveis (lobby aberto ou em andamento)
-      supabase.from('quizzes')
-        .select('id, titulo, codigo, turma_alvo, lobby_aberto, ativo, tempo_por_pergunta, quiz_perguntas(id)')
-        .eq('encerrado', false)
-        .or('lobby_aberto.eq.true,ativo.eq.true'),
-      supabase.from('certificados').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
+    const [quizzesFeitos, ultimasRespostas, allQuizzes, cursosConcluidos] = await Promise.all([
+      contarConcluidosDoUsuario(user.id),
+      historicoDoUsuario(user.id),
+      disponiveisParaEntrar(),
+      contarCertificados(user.id),
     ])
 
     // Filtra os quizzes que são para a turma do aluno
@@ -56,11 +50,11 @@ export default async function DashboardPage() {
 
     // Verifica em quais o aluno já está inscrito
     const quizIds = quizzesDisponiveis.map(q => q.id)
-    const { data: participacoes } = quizIds.length > 0
-      ? await supabase.from('quiz_participantes').select('id, quiz_id, concluido').eq('user_id', user.id).in('quiz_id', quizIds)
-      : { data: [] }
+    const participacoes = quizIds.length > 0
+      ? await participacoesDoUsuario(user.id, quizIds)
+      : []
 
-    const participacaoMap = Object.fromEntries((participacoes ?? []).map(p => [p.quiz_id, p]))
+    const participacaoMap = Object.fromEntries(participacoes.map(p => [p.quiz_id, p]))
 
     return (
       <div>
@@ -180,25 +174,18 @@ export default async function DashboardPage() {
 
   // Professor e gestão
   const podeAprovarAlunos = profile.role === 'professor' || isGestao(profile.role)
-  const [
-    { count: totalQuizzes },
-    { count: totalParticipantes },
-    { count: leadsNaoLidos },
-    { count: usuariosPendentes },
-    { count: alunosPendentes },
-  ] = await Promise.all([
-    supabase.from('quizzes').select('*', { count: 'exact', head: true }),
-    supabase.from('quiz_participantes').select('*', { count: 'exact', head: true }).eq('concluido', true),
+  const [totais, leadsNaoLidos, usuariosPendentes, alunosPendentes] = await Promise.all([
+    totaisDoPainel(),
+    isGestao(profile.role) ? contarLeadsNaoLidos() : Promise.resolve(0),
+    // Pendentes de TODOS os papeis, nao so os desta tela: o contador serve
+    // para a gestao saber que ha fila, venha de onde vier.
     isGestao(profile.role)
-      ? supabase.from('leads').select('*', { count: 'exact', head: true }).eq('lido', false)
-      : Promise.resolve({ count: 0 }),
-    isGestao(profile.role)
-      ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('aprovado', false)
-      : Promise.resolve({ count: 0 }),
-    podeAprovarAlunos
-      ? supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'aluno').eq('aprovado', false)
-      : Promise.resolve({ count: 0 }),
+      ? contarPendentes(['aluno', 'aluno_fundamental', 'monitor', 'professor', 'bibliotecario', 'diretora', 'vice_diretora', 'admin'])
+      : Promise.resolve(0),
+    podeAprovarAlunos ? contarPendentes(['aluno']) : Promise.resolve(0),
   ])
+  const totalQuizzes = totais.quizzes
+  const totalParticipantes = totais.participantesConcluidos
 
   return (
     <div>

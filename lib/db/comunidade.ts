@@ -26,6 +26,11 @@ function comoLista(valor: string | null): string[] {
   }
 }
 
+/** Leads de contato ainda nao lidos — contador do painel da gestao. */
+export async function leadsNaoLidos(): Promise<number> {
+  return prisma.leads.count({ where: { lido: false } })
+}
+
 // ------------------------------------------------------------- trilhas
 
 export async function listarTrilhas(): Promise<Trilha[]> {

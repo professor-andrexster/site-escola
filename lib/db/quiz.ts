@@ -72,6 +72,48 @@ export async function perguntasRespondidas(participanteId: string): Promise<stri
   return linhas.map(l => l.pergunta_id)
 }
 
+/**
+ * Quizzes que um aluno pode entrar: nao encerrados, com sala aberta ou em
+ * andamento. O filtro por turma fica na tela, que conhece quizMatchesTurma —
+ * a regra de "1° Ano" casar com "1° Ano A" e de apresentacao, nao de banco.
+ */
+export async function disponiveisParaEntrar() {
+  const linhas = await prisma.quizzes.findMany({
+    where: { encerrado: false, OR: [{ lobby_aberto: true }, { ativo: true }] },
+    select: {
+      id: true, titulo: true, codigo: true, turma_alvo: true,
+      lobby_aberto: true, ativo: true, tempo_por_pergunta: true,
+      _count: { select: { quiz_perguntas: true } },
+    },
+  })
+  // A tela conta perguntas pelo tamanho do array, herdado do formato do
+  // Supabase. Manter o mesmo formato evita mexer no JSX.
+  return linhas.map(q => ({
+    ...q,
+    quiz_perguntas: Array.from({ length: q._count.quiz_perguntas }, () => ({ id: '' })),
+  }))
+}
+
+/** Ultimas participacoes concluidas de um aluno, com o titulo do quiz. */
+export async function historicoDoUsuario(userId: string, limite = 5) {
+  const linhas = await prisma.quiz_participantes.findMany({
+    where: { user_id: userId, concluido: true },
+    include: { quizzes: { select: { titulo: true, codigo: true } } },
+    orderBy: { created_at: 'desc' },
+    take: limite,
+  })
+  return linhas.map(p => ({ ...p, created_at: p.created_at.toISOString() }))
+}
+
+/** Numeros do painel de professor e gestao. */
+export async function totaisDoPainel() {
+  const [quizzes, participantesConcluidos] = await Promise.all([
+    prisma.quizzes.count(),
+    prisma.quiz_participantes.count({ where: { concluido: true } }),
+  ])
+  return { quizzes, participantesConcluidos }
+}
+
 // -------------------------------------------------------------- escrita
 
 export async function criarPerguntas(
