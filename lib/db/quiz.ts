@@ -198,6 +198,28 @@ export async function contarPerguntas(quizId: string): Promise<number> {
   return prisma.quiz_perguntas.count({ where: { quiz_id: quizId } })
 }
 
+/** Todos os quizzes, para a tela de gestao. */
+export async function listarQuizzes() {
+  const linhas = await prisma.quizzes.findMany({
+    include: { _count: { select: { quiz_perguntas: true, quiz_participantes: true } } },
+    orderBy: { created_at: 'desc' },
+  })
+  return linhas.map(q => ({
+    ...q,
+    created_at: q.created_at.toISOString(),
+    updated_at: q.updated_at.toISOString(),
+    quiz_iniciado_em: q.quiz_iniciado_em?.toISOString() ?? null,
+    pergunta_liberada_em: q.pergunta_liberada_em?.toISOString() ?? null,
+    totalPerguntas: q._count.quiz_perguntas,
+    totalParticipantes: q._count.quiz_participantes,
+    // A tela conta pelo tamanho do array, formato herdado do join do
+    // PostgREST. Mesma concessao feita no dashboard: trocar por _count e
+    // limpeza de tela, nao migracao de banco.
+    quiz_perguntas: Array.from({ length: q._count.quiz_perguntas }, () => ({ id: '' })),
+    quiz_participantes: Array.from({ length: q._count.quiz_participantes }, () => ({ id: '' })),
+  }))
+}
+
 // -------------------------------------------------------------- escrita
 
 export async function criarPerguntas(

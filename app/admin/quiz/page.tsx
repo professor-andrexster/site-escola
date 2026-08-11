@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarQuizzes } from '@/lib/db/quiz'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import QuizListTable from '@/components/admin/QuizListTable'
@@ -8,11 +8,7 @@ export const metadata: Metadata = { title: 'JBQuiz — Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function QuizAdminPage() {
-  const supabase = await createClient()
-  const { data: quizzes } = await supabase
-    .from('quizzes')
-    .select('*, quiz_perguntas(id), quiz_participantes(id)')
-    .order('created_at', { ascending: false })
+  const quizzes = await listarQuizzes()
 
   return (
     <div>

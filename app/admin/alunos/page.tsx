@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { listarTodos } from '@/lib/db/alunos'
 import Link from 'next/link'
 import { Plus, GraduationCap } from 'lucide-react'
 import AlunosView from '@/components/admin/AlunosView'
@@ -8,14 +8,10 @@ export const metadata: Metadata = { title: 'Alunos — Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function AlunosPage({ searchParams }: { searchParams: Promise<{ criado?: string }> }) {
-  // Layout já exige direção; admin client lê as colunas protegidas (cpf, user_id)
-  const supabase = createAdminClient()
+  // Layout ja exige direcao. listarTodos e funcao GESTAO: devolve as colunas
+  // sensiveis (cpf, user_id), que no Supabase vinham pelo admin client.
   const { criado } = await searchParams
-
-  const { data: alunos } = await supabase
-    .from('alunos')
-    .select('*')
-    .order('nome', { ascending: true })
+  const alunos = await listarTodos()
 
   return (
     <div>

@@ -1,29 +1,28 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarLeads, marcarLeadLido, removerLead } from '@/lib/db/comunidade'
+import { requireGestao } from '@/lib/profile'
 import { revalidatePath } from 'next/cache'
 import type { Lead } from '@/types/database'
 
+// Server actions sao endpoints publicos: quem tiver o id da action pode
+// chama-la. No Supabase o RLS barrava por baixo; aqui a checagem precisa ser
+// explicita, e requireGestao redireciona quem nao for gestao.
 async function marcarLido(id: string) {
   'use server'
-  const supabase = await createClient()
-  await supabase.from('leads').update({ lido: true }).eq('id', id)
+  await requireGestao()
+  await marcarLeadLido(id)
   revalidatePath('/admin/leads')
 }
 
 async function deletarLead(id: string) {
   'use server'
-  const supabase = await createClient()
-  await supabase.from('leads').delete().eq('id', id)
+  await requireGestao()
+  await removerLead(id)
   revalidatePath('/admin/leads')
 }
 
 export default async function LeadsPage() {
-  const supabase = await createClient()
-  const { data: leads } = await supabase
-    .from('leads')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  const naoLidos = leads?.filter((l: Lead) => !l.lido).length ?? 0
+  const leads = await listarLeads()
+  const naoLidos = leads.filter(l => !l.lido).length
 
   return (
     <div>

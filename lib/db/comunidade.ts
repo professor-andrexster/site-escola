@@ -26,6 +26,49 @@ function comoLista(valor: string | null): string[] {
   }
 }
 
+/** Registra um contato do formulario publico. */
+export async function criarLead(dados: {
+  nome: string
+  email: string
+  telefone?: string | null
+  mensagem?: string | null
+}) {
+  return prisma.leads.create({ data: dados })
+}
+
+/** Leads de contato, mais recentes primeiro. */
+export async function listarLeads() {
+  const linhas = await prisma.leads.findMany({ orderBy: { created_at: 'desc' } })
+  return linhas.map(l => ({ ...l, created_at: l.created_at?.toISOString() ?? null }))
+}
+
+export async function marcarLeadLido(id: string) {
+  return prisma.leads.update({ where: { id }, data: { lido: true } })
+}
+
+export async function removerLead(id: string) {
+  return prisma.leads.delete({ where: { id } })
+}
+
+/** Ideias com votos e trilhas, para o quadro de triagem. */
+export async function quadroDeIdeias() {
+  const [ideias, votos, trilhas] = await Promise.all([
+    prisma.ideias.findMany({ orderBy: { created_at: 'desc' } }),
+    prisma.ideia_votos.findMany({ select: { ideia_id: true, profile_id: true } }),
+    prisma.trilhas.findMany({ orderBy: { nome: 'asc' } }),
+  ])
+  return {
+    ideias: ideias.map(i => ({
+      ...i,
+      status: i.status ?? 'nova',
+      created_at: i.created_at?.toISOString() ?? null,
+      updated_at: i.updated_at?.toISOString() ?? null,
+    })),
+    votos,
+    trilhas,
+  }
+}
+
 /** Leads de contato ainda nao lidos — contador do painel da gestao. */
 export async function leadsNaoLidos(): Promise<number> {
   return prisma.leads.count({ where: { lido: false } })
