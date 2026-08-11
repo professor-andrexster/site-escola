@@ -17,7 +17,7 @@ export default async function CursosPage() {
 
   const [{ data: cursos }, progressos] = await Promise.all([
     supabase.from('cursos').select('*').eq('publicado', true).order('ordem'),
-    progressoCursosPorUsuario(supabase, user.id),
+    progressoCursosPorUsuario(user.id),
   ])
 
   const aulasPorCurso = new Map(progressos.map(p => [p.id, p.totalAulas]))

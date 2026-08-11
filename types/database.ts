@@ -454,15 +454,15 @@ export interface Database {
           descricao: string | null
           capa_url: string | null
           categoria: string | null
-          nivel: string
-          autor_nome: string
-          publicado: boolean
-          ordem: number
+          nivel: string | null
+          autor_nome: string | null
+          publicado: boolean | null
+          ordem: number | null
           carga_horaria: number | null
           criado_por: string | null
-          criado_em: string
-          updated_at: string
-          created_at: string
+          criado_em: string | null
+          updated_at: string | null
+          created_at: string | null
         }
         Insert: {
           id?: string

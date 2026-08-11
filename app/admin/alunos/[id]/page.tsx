@@ -37,7 +37,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
     aluno.user_id
       ? admin.from('profiles').select('id, role, aprovado').eq('id', aluno.user_id).maybeSingle().then(r => r.data)
       : Promise.resolve(null),
-    aluno.user_id ? progressoCursosPorUsuario(admin, aluno.user_id) : Promise.resolve([]),
+    aluno.user_id ? progressoCursosPorUsuario(aluno.user_id) : Promise.resolve([]),
   ])
 
   return (

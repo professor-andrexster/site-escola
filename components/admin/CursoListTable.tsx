@@ -72,7 +72,7 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
-                onClick={() => togglePublicado(curso.id, curso.publicado)}
+                onClick={() => togglePublicado(curso.id, curso.publicado ?? false)}
                 disabled={isLoading}
                 title={curso.publicado ? 'Despublicar' : 'Publicar'}
                 className="p-1.5 rounded-lg text-gray-500 hover:bg-gray-100 transition-colors disabled:opacity-50"

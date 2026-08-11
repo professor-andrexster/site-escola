@@ -52,6 +52,75 @@ export async function buscarPorId(id: string): Promise<Curso | null> {
   return prisma.cursos.findUnique({ where: { id } })
 }
 
+/**
+ * Catalogo publico: cursos publicados, com as aulas publicadas e a contagem de
+ * desafios por aula. Eram tres consultas e tres Maps montados na tela.
+ */
+export async function catalogoPublico() {
+  const cursos = await prisma.cursos.findMany({
+    where: { publicado: true },
+    orderBy: { ordem: 'asc' },
+    include: {
+      aulas: {
+        where: { publicado: true },
+        select: {
+          id: true, titulo: true, ordem: true, curso_id: true, duracao_estimada_min: true,
+          _count: { select: { curso_desafios: true } },
+        },
+        orderBy: { ordem: 'asc' },
+      },
+    },
+  })
+  // Datas viram string ISO como nas demais camadas: os componentes esperam
+  // string, herdado do formato JSON do Supabase.
+  return cursos.map(c => ({
+    ...c,
+    criado_em: c.criado_em?.toISOString() ?? null,
+    atualizado_em: c.atualizado_em?.toISOString() ?? null,
+    created_at: c.created_at?.toISOString() ?? null,
+    updated_at: c.updated_at?.toISOString() ?? null,
+    aulas: c.aulas.map(a => ({ ...a, desafios: a._count.curso_desafios })),
+    totalAulas: c.aulas.length,
+  }))
+}
+
+/**
+ * Progresso do aluno em cada curso publicado. Vinha de lib/cursosProgresso.ts,
+ * que recebia o client do Supabase por parametro.
+ */
+export async function progressoPorUsuario(userId: string) {
+  const [cursos, aulas, concluidas] = await Promise.all([
+    prisma.cursos.findMany({
+      where: { publicado: true },
+      select: { id: true, titulo: true, slug: true, categoria: true },
+      orderBy: { ordem: 'asc' },
+    }),
+    prisma.aulas.findMany({ where: { publicado: true }, select: { id: true, curso_id: true } }),
+    prisma.progresso_aulas.findMany({
+      where: { user_id: userId, concluida: true },
+      select: { aula_id: true },
+    }),
+  ])
+
+  const feitas = new Set(concluidas.map(c => c.aula_id))
+  return cursos.map(curso => {
+    const doCurso = aulas.filter(a => a.curso_id === curso.id)
+    const total = doCurso.length
+    const completas = doCurso.filter(a => feitas.has(a.id)).length
+    return {
+      // `id` e nao `cursoId`: e o nome que as tres telas consumidoras usam.
+      // Renomear aqui seria mudanca de contrato disfarcada de migracao.
+      id: curso.id,
+      titulo: curso.titulo,
+      slug: curso.slug,
+      categoria: curso.categoria,
+      totalAulas: total,
+      aulasConcluidas: completas,
+      percentual: total > 0 ? Math.round((completas / total) * 100) : 0,
+    }
+  })
+}
+
 // ----------------------------------------------------------------- aulas
 
 /** Aulas publicadas de um curso, na ordem. */
