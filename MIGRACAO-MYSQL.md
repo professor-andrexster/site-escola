@@ -47,10 +47,23 @@ módulo, com o Supabase ainda ativo — nada quebra enquanto não terminar.
 **Números corrigidos durante a execução.** As 371 iniciais incluíam 10 chamadas
 de Storage (fase 5). O total real de banco é **358**, distribuído assim:
 
-| Onde | Arquivos | Chamadas | O que precisa |
+| Onde | Arquivos | Chamadas | Situação |
 |---|---|---|---|
-| Server-side (rotas, páginas) | 87 | 265 | trocar pela camada — mecânico |
-| **Componentes de cliente** | **28** | **93** | **virar rota de API** |
+| Server-side (rotas, páginas) | 87 | 265 | **concluído** |
+| **Componentes de cliente** | **33** | **93** | **virar rota de API** |
+
+**O lado servidor está fechado.** Nenhuma rota de API e nenhuma página de
+servidor fala com o Supabase para ler ou gravar dado — tudo passa por
+`lib/db/` (11 módulos). `npx tsc --noEmit` limpo, `npx next build` gera as 91
+páginas, e as 5 suítes de `tests/` passam contra o MariaDB local.
+
+Duas coisas ainda dependem do Supabase no servidor, de propósito:
+`lib/auth/sessao.ts` (a costura da sessão, que é a fase 4) e o upload de
+arquivos (fase 5).
+
+O único ponto do build que ainda exige as chaves públicas do Supabase é o
+prerender de `/vocacional` — porque o componente de cliente daquela página
+ainda fala com o PostgREST. Ele cai junto com os 93.
 
 **Os 93 do cliente são o custo escondido da migração.** Hoje o navegador fala
 direto com o Postgres via PostgREST, e quem impede um aluno de ler dado alheio
