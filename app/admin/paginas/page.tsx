@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarPaginasEditaveis } from '@/lib/db/comunidade'
 import PaginasEditor from '@/components/admin/PaginasEditor'
 
 const PAGINAS = [
@@ -10,15 +10,8 @@ const PAGINAS = [
 ]
 
 export default async function AdminPaginasPage() {
-  const supabase = await createClient()
-  const { data: paginas } = await supabase
-    .from('paginas_conteudo')
-    .select('*')
-    .in('pagina', PAGINAS.map((p) => p.chave))
-
-  const paginasMap = Object.fromEntries(
-    (paginas ?? []).map((p) => [p.pagina, p])
-  )
+  const paginas = await listarPaginasEditaveis(PAGINAS.map(p => p.chave))
+  const paginasMap = Object.fromEntries(paginas.map(p => [p.pagina, p]))
 
   return (
     <div>

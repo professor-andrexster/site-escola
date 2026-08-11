@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarDesafios } from '@/lib/db/desafios'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import Link from 'next/link'
@@ -9,16 +9,10 @@ export const metadata: Metadata = { title: 'Desafios' }
 export const dynamic = 'force-dynamic'
 
 export default async function DesafiosPage() {
-  const supabase = await createClient()
   const { profile } = await getProfileOrRedirect()
   const podeCriar = profile.role === 'professor' || isGestao(profile.role)
 
-  const query = supabase
-    .from('desafios')
-    .select('*, desafio_fases(id), equipes(id)')
-    .order('created_at', { ascending: false })
-
-  const { data: desafios } = podeCriar ? await query : await query.eq('publicado', true)
+  const desafios = await listarDesafios(!podeCriar)
 
   return (
     <div className="max-w-5xl mx-auto">

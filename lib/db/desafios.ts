@@ -99,6 +99,17 @@ export async function ideiasEmTriagem() {
   return linhas.map(i => ({ ...i, status: i.status ?? 'nova' }))
 }
 
-export async function listarDesafios() {
-  return prisma.desafios.findMany({ orderBy: { created_at: 'desc' } })
+/**
+ * Lista para a vitrine de desafios. Quem nao pode criar so enxerga os
+ * publicados — o rascunho de um professor nao aparece para o aluno.
+ */
+export async function listarDesafios(apenasPublicados = false) {
+  return prisma.desafios.findMany({
+    where: apenasPublicados ? { publicado: true } : {},
+    orderBy: { created_at: 'desc' },
+    include: {
+      desafio_fases: { select: { id: true } },
+      equipes: { select: { id: true } },
+    },
+  })
 }

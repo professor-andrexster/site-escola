@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { cursosComAulas } from '@/lib/db/cursos'
 import Link from 'next/link'
 import { Plus } from 'lucide-react'
 import CursoListTable from '@/components/admin/CursoListTable'
@@ -8,12 +8,7 @@ export const metadata: Metadata = { title: 'Gerenciar Cursos' }
 export const dynamic = 'force-dynamic'
 
 export default async function GerenciarCursosPage() {
-  const supabase = await createClient()
-  const { data: cursos } = await supabase
-    .from('cursos')
-    .select('*, aulas(id)')
-    .order('ordem')
-    .order('created_at', { ascending: false })
+  const cursos = await cursosComAulas()
 
   return (
     <div>
@@ -31,7 +26,7 @@ export default async function GerenciarCursosPage() {
         </Link>
       </div>
 
-      <CursoListTable cursos={cursos ?? []} />
+      <CursoListTable cursos={cursos} />
     </div>
   )
 }

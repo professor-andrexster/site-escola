@@ -18,6 +18,21 @@ import type { cursos, aulas, certificados } from '@prisma/client'
 export type Curso = cursos
 
 /**
+ * Curso no formato das telas: as quatro datas viram string. A tabela tem
+ * created_at/updated_at E criado_em/atualizado_em — as duas convencoes que se
+ * encontraram — entao as quatro precisam ser convertidas.
+ */
+function serializarCurso(c: cursos) {
+  return {
+    ...c,
+    criado_em: c.criado_em?.toISOString() ?? null,
+    atualizado_em: c.atualizado_em?.toISOString() ?? null,
+    created_at: c.created_at?.toISOString() ?? null,
+    updated_at: c.updated_at?.toISOString() ?? null,
+  }
+}
+
+/**
  * Aula no formato que as telas esperam: datas em string, slides_urls como
  * lista e as flags sem nulo.
  *
@@ -439,10 +454,62 @@ export async function concluidasEntre(userId: string, aulaIds: string[]): Promis
   return linhas.map(l => l.aula_id)
 }
 
+/** Cursos aguardando aprovacao da gestao. */
+export async function cursosPendentes() {
+  const linhas = await prisma.cursos.findMany({
+    where: { publicado: false },
+    orderBy: { criado_em: 'desc' },
+  })
+  // cursos.criado_por aponta para a conta (usuarios), nao para profiles — o
+  // nome do autor vem de uma segunda consulta, pelo mesmo id.
+  const autores = await prisma.profiles.findMany({
+    where: { id: { in: linhas.map(c => c.criado_por).filter((x): x is string => !!x) } },
+    select: { id: true, nome_completo: true },
+  })
+  const nomePorId = new Map(autores.map(a => [a.id, a.nome_completo]))
+  return linhas.map(c => ({
+    ...serializarCurso(c),
+    profiles: c.criado_por ? { nome_completo: nomePorId.get(c.criado_por) ?? '' } : undefined,
+  }))
+}
+
+/** Curso com as aulas, para a tela de gestao (inclui rascunho). */
+export async function cursoParaGestao(id: string) {
+  const curso = await prisma.cursos.findUnique({ where: { id } })
+  if (!curso) return null
+  const aulas = await prisma.aulas.findMany({
+    where: { curso_id: id },
+    orderBy: { ordem: 'asc' },
+  })
+  return { curso, aulas: aulas.map(serializarAula) }
+}
+
+/** Uma aula pelo id, dentro de um curso. */
+export async function aulaDoCurso(cursoId: string, aulaId: string) {
+  const a = await prisma.aulas.findFirst({ where: { id: aulaId, curso_id: cursoId } })
+  return a ? serializarAula(a) : null
+}
+
+export async function contarAulas(cursoId: string): Promise<number> {
+  return prisma.aulas.count({ where: { curso_id: cursoId } })
+}
+
 // ------------------------------------------------------------------ GESTAO
 
 export async function listarTodos(): Promise<Curso[]> {
   return prisma.cursos.findMany({ orderBy: { ordem: 'asc' } })
+}
+
+/**
+ * Cursos com a lista de ids das aulas — a tela de gestao so mostra a
+ * contagem, mas o componente recebe o array e conta do lado dele.
+ */
+export async function cursosComAulas() {
+  const linhas = await prisma.cursos.findMany({
+    orderBy: [{ ordem: 'asc' }, { created_at: 'desc' }],
+    include: { aulas: { select: { id: true } } },
+  })
+  return linhas.map(({ aulas, ...c }) => ({ ...serializarCurso(c), aulas }))
 }
 
 export async function alternarPublicado(id: string, publicado: boolean) {

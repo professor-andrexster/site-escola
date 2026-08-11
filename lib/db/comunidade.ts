@@ -91,8 +91,12 @@ export async function conteudoDaPagina(pagina: string) {
   return prisma.paginas_conteudo.findFirst({ where: { pagina } })
 }
 
-export async function listarPaginasEditaveis() {
-  return prisma.paginas_conteudo.findMany({ orderBy: { pagina: 'asc' } })
+export async function listarPaginasEditaveis(chaves?: string[]) {
+  const linhas = await prisma.paginas_conteudo.findMany({
+    where: chaves ? { pagina: { in: chaves } } : {},
+    orderBy: { pagina: 'asc' },
+  })
+  return linhas.map(l => ({ ...l, updated_at: l.updated_at?.toISOString() ?? '' }))
 }
 
 // ------------------------------------------------------------- trilhas
@@ -138,6 +142,62 @@ export async function projetosDoAluno(alunoId: string): Promise<ProjetoComTags[]
 
 export async function contarProjetosDoAluno(alunoId: string): Promise<number> {
   return prisma.projetos.count({ where: { aluno_id: alunoId } })
+}
+
+/** Projetos em destaque para a home e a vitrine publica. */
+export async function projetosPublicos(apenasDestaque = false) {
+  const linhas = await prisma.projetos.findMany({
+    where: apenasDestaque ? { destaque: true } : {},
+    include: {
+      alunos: { select: { nome: true, matricula: true, turma: true, foto_url: true, ativo: true } },
+      trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+    },
+    orderBy: { criado_em: 'desc' },
+  })
+  return linhas
+    .filter(p => p.alunos?.ativo !== false)
+    .map(p => ({
+      ...p,
+      tags: comoLista(p.tags),
+      destaque: p.destaque ?? false,
+      criado_em: p.criado_em?.toISOString() ?? null,
+    }))
+}
+
+/** Ficha completa de uma ideia: comentarios e votos. */
+export async function fichaDaIdeia(id: string) {
+  const [ideia, comentarios, votos] = await Promise.all([
+    prisma.ideias.findUnique({
+      where: { id },
+      include: {
+        profiles: { select: { id: true, nome_completo: true, turma: true } },
+        trilhas: { select: { id: true, nome: true, icone: true, cor_tailwind: true } },
+      },
+    }),
+    prisma.ideia_comentarios.findMany({
+      where: { ideia_id: id },
+      include: { profiles: { select: { nome_completo: true } } },
+      orderBy: { created_at: 'asc' },
+    }),
+    prisma.ideia_votos.findMany({ where: { ideia_id: id }, select: { ideia_id: true, profile_id: true } }),
+  ])
+  if (!ideia) return null
+  return {
+    ideia: {
+      ...ideia,
+      status: (ideia.status ?? 'nova') as 'nova' | 'em_analise' | 'adotada' | 'arquivada',
+      created_at: ideia.created_at?.toISOString() ?? '',
+      updated_at: ideia.updated_at?.toISOString() ?? '',
+      autor: ideia.profiles,
+      trilha: ideia.trilhas,
+    },
+    comentarios: comentarios.map(c => ({
+      ...c,
+      created_at: c.created_at?.toISOString() ?? '',
+      autor: c.profiles,
+    })),
+    votos,
+  }
 }
 
 // -------------------------------------------------------------- ideias

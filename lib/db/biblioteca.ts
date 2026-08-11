@@ -1,5 +1,6 @@
 import { prisma } from '@/lib/db'
 import type {
+  biblioteca_leitores,
   biblioteca_obras,
   biblioteca_exemplares,
   biblioteca_emprestimos,
@@ -334,9 +335,7 @@ export async function criarCategoria(nome: string, atualizadoPor: string) {
  * conjunto valido, e as regras de emprestimo (limite por tipo, motivo de
  * bloqueio) dependem dele. Estreitar aqui e o mesmo padrao usado em perfis.
  */
-export async function buscarLeitor(id: string): Promise<Leitor | null> {
-  const l = await prisma.biblioteca_leitores.findUnique({ where: { id } })
-  if (!l) return null
+function serializarLeitor(l: biblioteca_leitores): Leitor {
   return {
     ...l,
     data_nascimento: l.data_nascimento?.toISOString().slice(0, 10) ?? null,
@@ -344,6 +343,11 @@ export async function buscarLeitor(id: string): Promise<Leitor | null> {
     criado_em: l.criado_em?.toISOString() ?? null,
     atualizado_em: l.atualizado_em?.toISOString() ?? null,
   } as unknown as Leitor
+}
+
+export async function buscarLeitor(id: string): Promise<Leitor | null> {
+  const l = await prisma.biblioteca_leitores.findUnique({ where: { id } })
+  return l ? serializarLeitor(l) : null
 }
 
 /** Leitores, para a tela de busca do balcao. */
@@ -366,6 +370,12 @@ export async function listarLeitores(busca?: string | null) {
     orderBy: { nome_completo: 'asc' },
     take: 20,
   })
+}
+
+/** Todos os leitores, para a tela de gestao. */
+export async function todosOsLeitores(): Promise<Leitor[]> {
+  const linhas = await prisma.biblioteca_leitores.findMany({ orderBy: { nome_completo: 'asc' } })
+  return linhas.map(serializarLeitor)
 }
 
 export async function criarLeitor(dados: Prisma.biblioteca_leitoresUncheckedCreateInput) {

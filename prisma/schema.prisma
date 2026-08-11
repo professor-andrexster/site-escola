@@ -178,7 +178,7 @@ model biblioteca_exemplares {
   estado_conservacao       String                     @default("bom") @db.VarChar(15)
   estante                  String?                    @db.VarChar(20)
   prateleira               String?                    @db.VarChar(20)
-  data_entrada             DateTime                   @db.Date
+  data_entrada             DateTime                   @default(dbgenerated("(curdate())")) @db.Date
   origem_aquisicao         String                     @default("compra") @db.VarChar(20)
   valor_referencia         Decimal?                   @db.Decimal(10, 2)
   consulta_local           Boolean                    @default(false)
@@ -345,7 +345,7 @@ model convites_usuario {
   token                                          String    @unique @db.VarChar(64)
   criado_por                                     String?   @db.Char(36)
   criado_em                                      DateTime  @default(now())
-  expira_em                                      DateTime
+  expira_em                                      DateTime  @default(dbgenerated("(current_timestamp() + interval 7 day)"))
   aceito_em                                      DateTime?
   usuario_id                                     String?   @db.Char(36)
   revogado_em                                    DateTime?

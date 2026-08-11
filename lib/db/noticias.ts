@@ -77,6 +77,15 @@ export async function buscarPorId(id: string): Promise<Noticia | null> {
   return n ? serializar(n) : null
 }
 
+/** Historico de alteracoes de uma noticia. */
+export async function historicoDaNoticia(noticiaId: string) {
+  const linhas = await prisma.noticias_log.findMany({
+    where: { noticia_id: noticiaId },
+    orderBy: { created_at: 'desc' },
+  })
+  return linhas.map(l => ({ ...l, created_at: l.created_at?.toISOString() ?? null }))
+}
+
 export async function alternarPublicado(id: string, publicado: boolean) {
   return prisma.noticias.update({ where: { id }, data: { publicado } })
 }

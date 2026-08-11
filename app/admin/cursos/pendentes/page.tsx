@@ -1,5 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { cursosPendentes } from '@/lib/db/cursos'
+import { getProfileOrRedirect } from '@/lib/profile'
 import Link from 'next/link'
 import { CheckCircle2, XCircle, Clock, ArrowLeft } from 'lucide-react'
 import CursoPendenteForm from '@/components/admin/CursoPendenteForm'
@@ -10,18 +10,10 @@ export const metadata: Metadata = { title: 'Cursos Pendentes — Admin' }
 export const dynamic = 'force-dynamic'
 
 export default async function CursosPendentesPage() {
-  const supabase = await createClient()
-  const admin = createAdminClient()
-
-  const { data: { user } } = await supabase.auth.getUser()
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user?.id || '')
-    .single()
+  const { profile } = await getProfileOrRedirect()
 
   // Apenas direção pode aprovar
-  if (!isGestao(profile?.role ?? 'aluno')) {
+  if (!isGestao(profile.role)) {
     return (
       <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 p-6">
         <p className="font-semibold">Acesso Negado</p>
@@ -31,14 +23,7 @@ export default async function CursosPendentesPage() {
   }
 
   // Buscar cursos não publicados (rascunhos)
-  const { data: cursos } = await admin
-    .from('cursos')
-    .select(`
-      *,
-      profiles!cursos_criado_por_fkey(nome_completo, role)
-    `)
-    .eq('publicado', false)
-    .order('criado_em', { ascending: false })
+  const cursos = await cursosPendentes()
 
   return (
     <div>
@@ -56,7 +41,7 @@ export default async function CursosPendentesPage() {
       </h1>
       <p className="text-sm text-gray-400 mb-6">Professores criam cursos como rascunho. Você aprova aqui para publicar.</p>
 
-      {(!cursos || cursos.length === 0) && (
+      {cursos.length === 0 && (
         <div className="panel p-10 text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
           <p className="text-gray-600 font-semibold">Todos os cursos foram aprovados!</p>
@@ -64,9 +49,9 @@ export default async function CursosPendentesPage() {
         </div>
       )}
 
-      {cursos && cursos.length > 0 && (
+      {cursos.length > 0 && (
         <div className="space-y-4">
-          {cursos.map((curso: any) => (
+          {cursos.map(curso => (
             <CursoPendenteForm
               key={curso.id}
               curso={curso}

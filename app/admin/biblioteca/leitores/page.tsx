@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { todosOsLeitores } from '@/lib/db/biblioteca'
 import Link from 'next/link'
 import { Plus, Users } from 'lucide-react'
 import LeitoresTable from '@/components/admin/biblioteca/LeitoresTable'
@@ -8,8 +8,7 @@ export const metadata: Metadata = { title: 'Leitores, Biblioteca' }
 export const dynamic = 'force-dynamic'
 
 export default async function LeitoresPage() {
-  const admin = createAdminClient()
-  const { data: leitores } = await admin.from('biblioteca_leitores').select('*').order('nome_completo')
+  const leitores = await todosOsLeitores()
 
   return (
     <div>
