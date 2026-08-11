@@ -179,6 +179,47 @@ export async function rankingGeral() {
     .sort((a, b) => b.pontuacao_total - a.pontuacao_total)
 }
 
+/**
+ * Ranking publico: quizzes ao vivo ou encerrados, cada um com os dez
+ * primeiros de quem concluiu.
+ *
+ * O `include` com `take` resolve os onze SELECTs que a pagina fazia em
+ * sequencia (um por quiz, dentro de um Promise.all) numa consulta so.
+ */
+export async function rankingPublico() {
+  const linhas = await prisma.quizzes.findMany({
+    where: { OR: [{ ativo: true }, { encerrado: true }] },
+    select: {
+      id: true, titulo: true, codigo: true, ativo: true, encerrado: true, created_at: true,
+      quiz_participantes: {
+        where: { concluido: true },
+        select: { id: true, nome: true, turma: true, pontuacao_total: true },
+        orderBy: { pontuacao_total: 'desc' },
+        take: 10,
+      },
+    },
+    orderBy: { created_at: 'desc' },
+  })
+  return linhas.map(({ quiz_participantes, ...q }) => ({
+    ...q,
+    created_at: q.created_at.toISOString(),
+    participantes: quiz_participantes,
+  }))
+}
+
+/** Historico completo de um aluno, com acertos por quiz. */
+export async function meusQuizzes(userId: string) {
+  const linhas = await prisma.quiz_participantes.findMany({
+    where: { user_id: userId, concluido: true },
+    include: {
+      quizzes: { select: { titulo: true, codigo: true, encerrado: true } },
+      quiz_respostas: { select: { correta: true } },
+    },
+    orderBy: { created_at: 'desc' },
+  })
+  return linhas.map(p => ({ ...p, created_at: p.created_at.toISOString() }))
+}
+
 /** Participantes com as respostas, para o ranking detalhado do professor. */
 export async function participantesComRespostas(quizId: string) {
   const linhas = await prisma.quiz_participantes.findMany({

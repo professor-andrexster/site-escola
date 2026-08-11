@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { meusQuizzes } from '@/lib/db/quiz'
 import { getProfileOrRedirect } from '@/lib/profile'
 import Link from 'next/link'
 import { Trophy, Gamepad2, Medal } from 'lucide-react'
@@ -8,18 +8,11 @@ export const metadata: Metadata = { title: 'Meus Quizzes' }
 export const dynamic = 'force-dynamic'
 
 export default async function MeusQuizzesPage() {
-  const supabase = await createClient()
-  const { user, profile } = await getProfileOrRedirect()
+  const { user } = await getProfileOrRedirect()
 
-  const { data: participacoes } = await supabase
-    .from('quiz_participantes')
-    .select('*, quizzes(titulo, codigo, encerrado), quiz_respostas(correta)')
-    .eq('user_id', user.id)
-    .eq('concluido', true)
-    .order('created_at', { ascending: false })
-
-  const totalPontos = participacoes?.reduce((s, p) => s + p.pontuacao_total, 0) ?? 0
-  const melhorPontuacao = participacoes?.reduce((max, p) => Math.max(max, p.pontuacao_total), 0) ?? 0
+  const participacoes = await meusQuizzes(user.id)
+  const totalPontos = participacoes.reduce((s, p) => s + p.pontuacao_total, 0)
+  const melhorPontuacao = participacoes.reduce((max, p) => Math.max(max, p.pontuacao_total), 0)
 
   return (
     <div>
@@ -29,7 +22,7 @@ export default async function MeusQuizzesPage() {
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4 mb-8">
         <div className="panel p-4 text-center">
-          <div className="text-2xl font-black text-escola-azul">{participacoes?.length ?? 0}</div>
+          <div className="text-2xl font-black text-escola-azul">{participacoes.length}</div>
           <div className="text-xs text-gray-400 font-mono uppercase mt-1">quizzes</div>
         </div>
         <div className="panel p-4 text-center">
@@ -42,7 +35,7 @@ export default async function MeusQuizzesPage() {
         </div>
       </div>
 
-      {!participacoes || participacoes.length === 0 ? (
+      {participacoes.length === 0 ? (
         <div className="empty-state p-12">
           <Gamepad2 className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-400 mb-4">Você ainda não participou de nenhum quiz.</p>
@@ -54,8 +47,8 @@ export default async function MeusQuizzesPage() {
       ) : (
         <div className="space-y-3">
           {participacoes.map((p, i) => {
-            const acertos = (p.quiz_respostas as { correta: boolean }[])?.filter(r => r.correta).length ?? 0
-            const total = (p.quiz_respostas as { correta: boolean }[])?.length ?? 0
+            const acertos = p.quiz_respostas.filter(r => r.correta).length
+            const total = p.quiz_respostas.length
             const pct = total > 0 ? Math.round((acertos / total) * 100) : 0
 
             return (
@@ -64,7 +57,7 @@ export default async function MeusQuizzesPage() {
                   {i === 0 ? <Trophy className="w-5 h-5 text-yellow-500" /> : <Medal className="w-5 h-5 text-escola-azul" />}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{(p.quizzes as { titulo: string } | null)?.titulo ?? 'Quiz'}</p>
+                  <p className="font-semibold text-gray-900 truncate">{p.quizzes?.titulo ?? 'Quiz'}</p>
                   <p className="text-gray-400 text-xs mt-0.5">
                     {new Date(p.created_at).toLocaleDateString('pt-BR')} · {acertos}/{total} acertos ({pct}%)
                   </p>

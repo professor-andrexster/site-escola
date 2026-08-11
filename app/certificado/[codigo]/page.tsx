@@ -1,5 +1,5 @@
 import './certificado.css'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { certificadoPorCodigo } from '@/lib/db/cursos'
 import Image from 'next/image'
 import Link from 'next/link'
 import { SearchX } from 'lucide-react'
@@ -21,13 +21,7 @@ export async function generateMetadata({ params }: { params: Promise<{ codigo: s
 // mesmos dados gravados na emissão.
 export default async function CertificadoPage({ params }: { params: Promise<{ codigo: string }> }) {
   const { codigo } = await params
-  const admin = createAdminClient()
-
-  const { data: cert } = await admin
-    .from('certificados')
-    .select('*')
-    .eq('codigo', codigo.toUpperCase())
-    .maybeSingle()
+  const cert = await certificadoPorCodigo(codigo.toUpperCase())
 
   if (!cert) {
     return (
@@ -47,7 +41,7 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
     )
   }
 
-  const dataEmissao = new Date(cert.emitido_em).toLocaleDateString('pt-BR', {
+  const dataEmissao = (cert.emitido_em ?? new Date()).toLocaleDateString('pt-BR', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
 

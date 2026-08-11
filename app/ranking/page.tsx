@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { rankingPublico } from '@/lib/db/quiz'
 import PageLayout from '@/components/PageLayout'
 import Link from 'next/link'
 import { Trophy, Medal, Gamepad2, ArrowRight } from 'lucide-react'
@@ -11,15 +11,9 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function RankingPublicoPage() {
-  const supabase = await createClient()
+  const quizzesComRanking = await rankingPublico()
 
-  const { data: quizzes } = await supabase
-    .from('quizzes')
-    .select('id, titulo, codigo, ativo, encerrado, created_at')
-    .or('ativo.eq.true,encerrado.eq.true')
-    .order('created_at', { ascending: false })
-
-  if (!quizzes || quizzes.length === 0) {
+  if (quizzesComRanking.length === 0) {
     return (
       <PageLayout>
         <div className="bg-escola-azul text-white py-12 border-b-2 border-escola-vermelho">
@@ -43,20 +37,6 @@ export default async function RankingPublicoPage() {
       </PageLayout>
     )
   }
-
-  // Para cada quiz, busca os top 10 participantes
-  const quizzesComRanking = await Promise.all(
-    quizzes.map(async (quiz) => {
-      const { data: participantes } = await supabase
-        .from('quiz_participantes')
-        .select('id, nome, turma, pontuacao_total, created_at')
-        .eq('quiz_id', quiz.id)
-        .eq('concluido', true)
-        .order('pontuacao_total', { ascending: false })
-        .limit(10)
-      return { ...quiz, participantes: participantes ?? [] }
-    })
-  )
 
   const medalColors = [
     { icon: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200', num: 'text-yellow-600' },
