@@ -67,6 +67,64 @@ export async function perfilPublico(matricula: string) {
   })
 }
 
+/**
+ * Portfolio publico completo: dados do aluno, perfil vocacional e projetos.
+ *
+ * So campos publicos. CPF, nascimento e contatos ficam de fora — no Supabase
+ * quem barrava era o grant por coluna da migration 016; aqui e a lista
+ * explicita de CAMPOS_PUBLICOS.
+ */
+export async function portfolioPublico(matricula: string) {
+  const aluno = await prisma.alunos.findFirst({
+    where: { matricula: normalizarMatricula(matricula), ativo: true },
+    select: {
+      ...CAMPOS_PUBLICOS,
+      perfis_vocacionais: {
+        select: {
+          pontuacao: true,
+          trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+        },
+      },
+    },
+  })
+  if (!aluno) return null
+
+  const projetos = await prisma.projetos.findMany({
+    where: { aluno_id: aluno.id },
+    include: { trilhas: { select: { nome: true, icone: true, cor_tailwind: true } } },
+    orderBy: { criado_em: 'desc' },
+  })
+
+  return {
+    aluno,
+    // `destaque` e anulavel no banco, e nulo aqui significa "nao destacado".
+    // Coagir na camada evita espalhar `?? false` por cada tela que le projeto.
+    projetos: projetos.map(p => ({
+      ...p,
+      tags: p.tags ? (JSON.parse(p.tags) as string[]) : [],
+      destaque: p.destaque ?? false,
+      criado_em: p.criado_em?.toISOString() ?? null,
+    })),
+  }
+}
+
+/** Matriculas dos alunos ativos — usado pelo generateStaticParams. */
+export async function matriculasAtivas(): Promise<string[]> {
+  const linhas = await prisma.alunos.findMany({
+    where: { ativo: true },
+    select: { matricula: true },
+  })
+  return linhas.map(a => a.matricula)
+}
+
+/** Nome e turma, para o titulo da pagina publica. */
+export async function nomeETurma(matricula: string) {
+  return prisma.alunos.findFirst({
+    where: { matricula: normalizarMatricula(matricula) },
+    select: { nome: true, turma: true },
+  })
+}
+
 /** Alunos ativos, campos publicos — para listagens abertas. */
 export async function listarAtivosPublico() {
   return prisma.alunos.findMany({

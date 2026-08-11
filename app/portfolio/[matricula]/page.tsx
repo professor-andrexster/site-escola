@@ -1,5 +1,3 @@
-import { createClient } from '@/lib/supabase/server'
-import { createStaticClient } from '@/lib/supabase/static'
 import { notFound } from 'next/navigation'
 import PageLayout from '@/components/PageLayout'
 import PortfolioProjetos from '@/components/portfolio/PortfolioProjetos'
@@ -7,24 +5,18 @@ import Image from 'next/image'
 import { GraduationCap } from 'lucide-react'
 import type { Metadata } from 'next'
 import { trilhaBg } from '@/lib/trilhaColors'
+import { matriculasAtivas, nomeETurma, portfolioPublico } from '@/lib/db/alunos'
 
 export const revalidate = 60
 
 export async function generateStaticParams() {
-  const supabase = createStaticClient()
-  const { data: alunos } = await supabase
-    .from('alunos')
-    .select('matricula')
-    .eq('ativo', true)
-
-  return (alunos ?? []).map(a => ({ matricula: a.matricula }))
+  return (await matriculasAtivas()).map(matricula => ({ matricula }))
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ matricula: string }> }): Promise<Metadata> {
   const { matricula: matriculaParam } = await params
   const matricula = decodeURIComponent(matriculaParam).trim().toUpperCase()
-  const supabase = await createClient()
-  const { data: aluno } = await supabase.from('alunos').select('nome, turma').eq('matricula', matricula).maybeSingle()
+  const aluno = await nomeETurma(matricula)
 
   if (!aluno) return { title: 'Portfólio não encontrado', robots: { index: false, follow: false } }
 
@@ -41,25 +33,11 @@ export async function generateMetadata({ params }: { params: Promise<{ matricula
 export default async function PortfolioPage({ params }: { params: Promise<{ matricula: string }> }) {
   const { matricula: matriculaParam } = await params
   const matricula = decodeURIComponent(matriculaParam).trim().toUpperCase()
-  const supabase = await createClient()
-
-  // Colunas explícitas: as sensíveis (cpf, nascimento, contatos) são bloqueadas
-  // para leitura pública desde a migration 016 — select('*') falharia aqui
-  const { data: aluno } = await supabase
-    .from('alunos')
-    .select('id, nome, matricula, turma, serie, turno, foto_url, ativo, perfis_vocacionais(pontuacao, trilhas(nome, icone, cor_tailwind))')
-    .eq('matricula', matricula)
-    .eq('ativo', true)
-    .maybeSingle()
-
-  if (!aluno) notFound()
-
-  const { data: projetos } = await supabase
-    .from('projetos')
-    .select('*, trilhas(nome, icone, cor_tailwind)')
-    .eq('aluno_id', aluno.id)
-    .order('destaque', { ascending: false })
-    .order('criado_em', { ascending: false })
+  // A camada devolve so os campos publicos: CPF, nascimento e contatos ficam
+  // de fora. No Supabase quem barrava era o grant por coluna da migration 016.
+  const dados = await portfolioPublico(matricula)
+  if (!dados) notFound()
+  const { aluno, projetos } = dados
 
   type PerfilJoin = { pontuacao: number; trilhas: { nome: string; icone: string | null; cor_tailwind: string | null } | { nome: string; icone: string | null; cor_tailwind: string | null }[] | null }
 

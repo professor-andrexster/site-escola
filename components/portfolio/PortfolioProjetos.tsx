@@ -13,7 +13,7 @@ interface ProjetoComTrilha {
   link_externo: string | null
   tags: string[] | null
   destaque: boolean
-  criado_em: string
+  criado_em: string | null
   trilhas: { nome: string; icone: string | null; cor_tailwind: string | null } | { nome: string; icone: string | null; cor_tailwind: string | null }[] | null
 }
 
@@ -85,7 +85,7 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                   </div>
                 )}
                 <div className="flex items-center justify-between text-xs text-gray-400">
-                  <span>{formatDate(p.criado_em)}</span>
+                  <span>{p.criado_em ? formatDate(p.criado_em) : ''}</span>
                   {p.link_externo && (
                     <a href={p.link_externo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">
                       Ver projeto <ExternalLink className="w-3 h-3" />
