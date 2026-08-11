@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { criarConta, removerConta, EmailJaCadastrado } from '@/lib/auth/sessao'
+import { criarContaInterna, CpfJaVinculado } from '@/lib/db/cadastro'
 import { limparCPF, validarCPF } from '@/lib/cpf'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 export async function POST(request: Request) {
   const body = await request.json()
@@ -26,55 +28,49 @@ export async function POST(request: Request) {
   }
 
   const ip = ipDoRequest(request)
-  const admin = createAdminClient()
 
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: email.trim().toLowerCase(),
-    password: senha,
-    email_confirm: true,
-  })
-  if (createError || !created.user) {
-    const duplicado = createError?.message?.toLowerCase().includes('already')
+  let userId: string
+  try {
+    userId = await criarConta(email, senha)
+  } catch (erro) {
     return NextResponse.json(
-      { error: duplicado ? 'Já existe uma conta com esse email.' : 'Erro ao criar a conta. Tente novamente.' },
+      {
+        error:
+          erro instanceof EmailJaCadastrado
+            ? 'Já existe uma conta com esse email.'
+            : 'Erro ao criar a conta. Tente novamente.',
+      },
       { status: 400 }
     )
   }
 
-  const userId = created.user.id
-
-  const { error: profileError } = await admin.from('profiles').insert({
-    id: userId,
-    nome_completo: nome.trim(),
-    role: 'professor',
-    turma: null,
-    disciplina: disciplina?.trim() || null,
-    aprovado: false,
-    email: email.trim().toLowerCase(),
-  })
-  if (profileError) {
-    console.error('[cadastro/professor] falha ao inserir profile', profileError)
-    await admin.auth.admin.deleteUser(userId)
-    return NextResponse.json({ error: 'Erro ao salvar o perfil. Tente novamente.' }, { status: 400 })
+  // Professor entra pendente: quem aprova e a gestao, em /admin/aprovacoes.
+  try {
+    await criarContaInterna({
+      userId,
+      nome: nome.trim(),
+      role: 'professor',
+      turma: null,
+      disciplina: disciplina?.trim() || null,
+      email: email.trim().toLowerCase(),
+      cpf: cpfLimpo,
+      dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
+      criadoVia: 'auto_professor',
+      aprovado: false,
+    })
+  } catch (erro) {
+    console.error('[cadastro/professor] falha ao criar conta', erro)
+    await removerConta(userId)
+    return NextResponse.json(
+      {
+        error:
+          erro instanceof CpfJaVinculado ? erro.message : 'Erro ao salvar seus dados. Tente novamente.',
+      },
+      { status: 400 }
+    )
   }
 
-  const { error: identError } = await admin.from('identidades').insert({
-    user_id: userId,
-    cpf: cpfLimpo,
-    data_nascimento: dataNascimento || null,
-    criado_via: 'auto_professor',
-  })
-  if (identError) {
-    console.error('[cadastro/professor] falha ao inserir identidade', identError)
-    await admin.from('profiles').delete().eq('id', userId)
-    await admin.auth.admin.deleteUser(userId)
-    if (identError.code === '23505') {
-      return NextResponse.json({ error: 'Esse CPF já está vinculado a outra conta.' }, { status: 400 })
-    }
-    return NextResponse.json({ error: 'Erro ao salvar seus dados. Tente novamente.' }, { status: 400 })
-  }
-
-  await registrarAtividade(admin, { acao: 'cadastro_professor', userId, detalhes: { nome: nome.trim() }, ip })
+  await registrar({ acao: 'cadastro_professor', userId, detalhes: { nome: nome.trim() }, ip })
 
   return NextResponse.json({ ok: true })
 }

@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { criarConta, removerConta, EmailJaCadastrado } from '@/lib/auth/sessao'
+import { criarContaInterna, CpfJaVinculado } from '@/lib/db/cadastro'
 import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
 import { normalizarMatricula } from '@/lib/matricula'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 export async function POST(request: Request) {
   const auth = await exigirGestao()
@@ -45,68 +47,52 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'CPF inválido. Confira os números digitados.' }, { status: 400 })
   }
 
-  const admin = createAdminClient()
-
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: email.trim().toLowerCase(),
-    password,
-    email_confirm: true,
-  })
-
-  if (createError || !created.user) {
-    return NextResponse.json({ error: createError?.message ?? 'Erro ao criar usuário.' }, { status: 400 })
+  let userId: string
+  try {
+    userId = await criarConta(email, password)
+  } catch (erro) {
+    return NextResponse.json(
+      {
+        error:
+          erro instanceof EmailJaCadastrado
+            ? 'Já existe uma conta com esse email.'
+            : 'Erro ao criar usuário.',
+      },
+      { status: 400 }
+    )
   }
 
-  const userId = created.user.id
-  async function desfazer(mensagem: string, status = 400) {
-    await admin.from('profiles').delete().eq('id', userId)
-    await admin.auth.admin.deleteUser(userId)
-    return NextResponse.json({ error: mensagem }, { status })
-  }
-
-  const { error: profileError } = await admin.from('profiles').insert({
-    id: userId,
-    nome_completo: nome.trim(),
-    role,
-    turma: role === 'aluno' || role === 'aluno_fundamental' || role === 'monitor' ? turma || null : null,
-    disciplina: role === 'professor' ? disciplina?.trim() || null : null,
-    aprovado: true,
-    email: email.trim().toLowerCase(),
-  })
-  if (profileError) {
-    await admin.auth.admin.deleteUser(userId)
-    return NextResponse.json({ error: 'Erro ao salvar perfil: ' + profileError.message }, { status: 400 })
-  }
-
-  const { error: identError } = await admin.from('identidades').insert({
-    user_id: userId,
-    cpf: cpfLimpo,
-    data_nascimento: dataNascimento || null,
-    criado_via: 'gestao',
-  })
-  if (identError) {
-    if (identError.code === '23505') {
-      return desfazer('Esse CPF já está vinculado a outra conta.')
-    }
-    return desfazer('Erro ao salvar identidade: ' + identError.message)
-  }
-
-  // Se for aluno com matrícula informada, vincula ao registro acadêmico
+  // Perfil, identidade e o vinculo com a ficha academica numa transacao. Se
+  // falhar, so a conta de acesso precisa ser desfeita.
   let vinculo: string | null = null
-  if (role === 'aluno' && matricula?.trim()) {
-    const mat = normalizarMatricula(matricula)
-    const { data: alunoBase } = await admin
-      .from('alunos')
-      .select('id, user_id')
-      .eq('matricula', mat)
-      .maybeSingle()
-    if (alunoBase && !alunoBase.user_id) {
-      await admin.from('alunos').update({ user_id: userId }).eq('id', alunoBase.id)
-      vinculo = mat
-    }
+  try {
+    const r = await criarContaInterna({
+      userId,
+      nome: nome.trim(),
+      role,
+      turma: role === 'aluno' || role === 'aluno_fundamental' || role === 'monitor' ? turma || null : null,
+      disciplina: role === 'professor' ? disciplina?.trim() || null : null,
+      email: email.trim().toLowerCase(),
+      cpf: cpfLimpo,
+      dataNascimento: dataNascimento ? new Date(dataNascimento) : null,
+      matricula: role === 'aluno' && matricula?.trim() ? normalizarMatricula(matricula) : null,
+      criadoVia: 'gestao',
+      aprovado: true,
+    })
+    vinculo = r.vinculo
+  } catch (erro) {
+    console.error('[usuarios/criar] falha ao criar conta interna', erro)
+    await removerConta(userId)
+    return NextResponse.json(
+      {
+        error:
+          erro instanceof CpfJaVinculado ? erro.message : 'Erro ao salvar os dados do usuário.',
+      },
+      { status: 400 }
+    )
   }
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'usuario_criado_direcao',
     userId,
     detalhes: { role, criado_por: auth.userId, matricula_vinculada: vinculo },

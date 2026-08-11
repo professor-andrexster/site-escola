@@ -68,7 +68,14 @@ export async function vincularCadastroDeAluno(dados: {
   }
 }
 
-/** Mesma ideia para conta criada pela gestao, que pode nao ser de aluno. */
+/**
+ * Mesma ideia para conta criada por quem administra — pode nao ser de aluno.
+ *
+ * `criadoVia` e parametro e nao constante porque o sistema usa cinco valores
+ * diferentes, e no banco de producao ja existem tres deles: 'direcao',
+ * 'gestao' e 'auto_professor'. Fixar um so aqui reescreveria a origem de
+ * cadastros futuros e estragaria o rastro de quem criou o que.
+ */
 export async function criarContaInterna(dados: {
   userId: string
   nome: string
@@ -79,6 +86,9 @@ export async function criarContaInterna(dados: {
   cpf: string
   dataNascimento?: Date | null
   matricula?: string | null
+  criadoVia: string
+  /** Conta criada pela gestao nasce aprovada; autocadastro nao. */
+  aprovado: boolean
 }) {
   try {
     return await prisma.$transaction(async tx => {
@@ -89,7 +99,7 @@ export async function criarContaInterna(dados: {
           role: dados.role,
           turma: dados.turma ?? null,
           disciplina: dados.disciplina ?? null,
-          aprovado: true,
+          aprovado: dados.aprovado,
           email: dados.email,
         },
       })
@@ -99,7 +109,7 @@ export async function criarContaInterna(dados: {
           user_id: dados.userId,
           cpf: dados.cpf,
           data_nascimento: dados.dataNascimento ?? null,
-          criado_via: 'direcao',
+          criado_via: dados.criadoVia,
         },
       })
 
@@ -109,11 +119,11 @@ export async function criarContaInterna(dados: {
       if (dados.matricula) {
         const ficha = await tx.alunos.findFirst({
           where: { matricula: dados.matricula, user_id: null },
-          select: { id: true },
+          select: { id: true, matricula: true },
         })
         if (ficha) {
           await tx.alunos.update({ where: { id: ficha.id }, data: { user_id: dados.userId } })
-          vinculo = ficha.id
+          vinculo = ficha.matricula
         }
       }
       return { vinculo }
