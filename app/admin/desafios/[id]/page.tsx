@@ -1,4 +1,6 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarDesafio, fasesDoDesafio, papeisDoDesafio, equipesDoDesafio,
+         ideiasEmTriagem } from '@/lib/db/desafios'
+import { listarAprovadosPorPapeis } from '@/lib/db/perfis'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { notFound } from 'next/navigation'
@@ -16,20 +18,15 @@ export const dynamic = 'force-dynamic'
 
 export default async function DesafioPage({ params }: Props) {
   const { id } = await params
-  const supabase = await createClient()
   const { user, profile } = await getProfileOrRedirect()
 
-  const [{ data: desafio }, { data: fases }, { data: papeis }, { data: equipes }, { data: ideias }, { data: alunos }] = await Promise.all([
-    supabase.from('desafios').select('*').eq('id', id).maybeSingle(),
-    supabase.from('desafio_fases').select('*').eq('desafio_id', id).order('ordem'),
-    supabase.from('desafio_papeis').select('*').eq('desafio_id', id),
-    supabase
-      .from('equipes')
-      .select('*, equipe_membros(*, profile:profiles(nome_completo), papel:desafio_papeis(nome)), entregas(*)')
-      .eq('desafio_id', id)
-      .order('created_at'),
-    supabase.from('ideias').select('id, titulo, status').in('status', ['nova', 'em_analise']).order('created_at', { ascending: false }),
-    supabase.from('profiles').select('id, nome_completo, turma').in('role', ['aluno', 'monitor']).eq('aprovado', true).order('nome_completo'),
+  const [desafio, fases, papeis, equipes, ideias, alunos] = await Promise.all([
+    buscarDesafio(id),
+    fasesDoDesafio(id),
+    papeisDoDesafio(id),
+    equipesDoDesafio(id),
+    ideiasEmTriagem(),
+    listarAprovadosPorPapeis(['aluno', 'monitor']),
   ])
   if (!desafio) notFound()
 
