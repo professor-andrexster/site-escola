@@ -41,7 +41,25 @@ Portar as 36 migrations para DDL de MySQL: `uuid` → `char(36)` ou `binary(16)`
 **Entrega:** um `schema.sql` que cria o banco vazio e roda limpo.
 
 ### Fase 2 — Camada de acesso a dados
-Trocar as 371 chamadas `.from(...)` por um repositório em `lib/db/`. Feito por módulo, com o Supabase ainda ativo — nada quebra enquanto não terminar.
+Trocar as chamadas `.from(...)` por um repositório em `lib/db/`. Feito por
+módulo, com o Supabase ainda ativo — nada quebra enquanto não terminar.
+
+**Números corrigidos durante a execução.** As 371 iniciais incluíam 10 chamadas
+de Storage (fase 5). O total real de banco é **358**, distribuído assim:
+
+| Onde | Arquivos | Chamadas | O que precisa |
+|---|---|---|---|
+| Server-side (rotas, páginas) | 87 | 265 | trocar pela camada — mecânico |
+| **Componentes de cliente** | **28** | **93** | **virar rota de API** |
+
+**Os 93 do cliente são o custo escondido da migração.** Hoje o navegador fala
+direto com o Postgres via PostgREST, e quem impede um aluno de ler dado alheio
+é o RLS. Sem Supabase esse caminho deixa de existir: o navegador não alcança o
+MariaDB.
+
+Cada uma dessas chamadas precisa virar endpoint no servidor, e cada endpoint
+precisa da checagem de permissão que o RLS fazia. Isso não é conversão
+mecânica — é desenho de API, e é onde a fase 2 encosta na fase 3.
 
 ### Fase 3 — Autorização em código
 As 83 policies viram checagem explícita, com teste por regra. **Fase mais longa e mais perigosa.** Enquanto o Postgres estiver ativo, qualquer regra esquecida ainda é barrada pelo banco — é a única janela em que o erro é visível antes de virar vazamento.

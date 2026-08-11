@@ -2,9 +2,9 @@ import { prisma } from '@/lib/db'
 import type {
   biblioteca_obras,
   biblioteca_exemplares,
-  biblioteca_leitores,
   biblioteca_emprestimos,
 } from '@prisma/client'
+import type { BibliotecaLeitor, BibliotecaConfiguracoes } from '@/types/database'
 
 /**
  * Biblioteca — catalogo, leitores e circulacao.
@@ -23,7 +23,7 @@ import type {
 
 export type Obra = biblioteca_obras
 export type Exemplar = biblioteca_exemplares
-export type Leitor = biblioteca_leitores
+export type Leitor = BibliotecaLeitor
 export type Emprestimo = biblioteca_emprestimos
 
 export const SITUACOES_ATIVAS = ['em_andamento', 'renovado'] as const
@@ -105,8 +105,21 @@ export async function categoriasAtivas() {
 
 // -------------------------------------------------------------- leitores
 
+/**
+ * O banco guarda `situacao` e `tipo_leitor` como varchar; o dominio conhece o
+ * conjunto valido, e as regras de emprestimo (limite por tipo, motivo de
+ * bloqueio) dependem dele. Estreitar aqui e o mesmo padrao usado em perfis.
+ */
 export async function buscarLeitor(id: string): Promise<Leitor | null> {
-  return prisma.biblioteca_leitores.findUnique({ where: { id } })
+  const l = await prisma.biblioteca_leitores.findUnique({ where: { id } })
+  if (!l) return null
+  return {
+    ...l,
+    data_nascimento: l.data_nascimento?.toISOString().slice(0, 10) ?? null,
+    data_cadastro: l.data_cadastro?.toISOString().slice(0, 10) ?? null,
+    criado_em: l.criado_em?.toISOString() ?? null,
+    atualizado_em: l.atualizado_em?.toISOString() ?? null,
+  } as unknown as Leitor
 }
 
 /** O emprestimo aberto de um exemplar, se houver. */
@@ -124,9 +137,14 @@ export async function emprestimosAtivosDoLeitor(leitorId: string): Promise<numbe
 
 // ---------------------------------------------------------- configuracao
 
-/** Linha unica de configuracao (id = true no schema original). */
-export async function configuracao() {
-  return prisma.biblioteca_configuracoes.findFirst()
+/**
+ * Linha unica de configuracao. A coluna `id` e um boolean fixado em true — e
+ * como o schema original garante linha unica. O dominio tipa como `true`
+ * literal, entao a conversao acontece aqui.
+ */
+export async function configuracao(): Promise<BibliotecaConfiguracoes | null> {
+  const c = await prisma.biblioteca_configuracoes.findFirst()
+  return c ? ({ ...c, id: true } as unknown as BibliotecaConfiguracoes) : null
 }
 
 /** Datas nao letivas, para calcular a devolucao prevista. */
@@ -139,9 +157,16 @@ export async function diasSemExpediente(): Promise<Date[]> {
 // Cada operacao abaixo e uma transacao: mexe em varias tabelas e nao pode
 // terminar pela metade.
 
+/** Erro de negocio da circulacao — a rota devolve a mensagem ao balcao. */
+export class ErroCirculacao extends Error {}
+
 /**
- * Empresta um exemplar. Muda a situacao do exemplar, cria o emprestimo e
- * registra a movimentacao — junto.
+ * Empresta um exemplar: valida, cria o emprestimo, muda a situacao do
+ * exemplar, registra a movimentacao e grava a auditoria — numa transacao.
+ *
+ * As duas recusas sao regra de acervo, nao detalhe tecnico: exemplar de
+ * consulta local nunca sai, e exemplar que nao esta disponivel nao pode ser
+ * emprestado por cima.
  */
 export async function emprestar(dados: {
   exemplarId: string
@@ -153,11 +178,20 @@ export async function emprestar(dados: {
   return prisma.$transaction(async tx => {
     const exemplar = await tx.biblioteca_exemplares.findUnique({
       where: { id: dados.exemplarId },
-      select: { id: true, situacao: true },
+      include: { biblioteca_obras: { select: { titulo: true } } },
     })
-    if (!exemplar) throw new Error('Exemplar não encontrado.')
+    if (!exemplar) throw new ErroCirculacao(`Exemplar não encontrado (${dados.exemplarId}).`)
+
+    const titulo = exemplar.biblioteca_obras?.titulo ?? 'Obra'
+    if (exemplar.consulta_local) {
+      throw new ErroCirculacao(
+        `${titulo}, tombo ${exemplar.tombo}: é só para consulta local, não sai por empréstimo.`
+      )
+    }
     if (exemplar.situacao !== 'disponivel') {
-      throw new Error(`Exemplar não está disponível (${exemplar.situacao}).`)
+      throw new ErroCirculacao(
+        `${titulo}, tombo ${exemplar.tombo}: não está disponível (${exemplar.situacao}).`
+      )
     }
 
     const emprestimo = await tx.biblioteca_emprestimos.create({
@@ -175,7 +209,11 @@ export async function emprestar(dados: {
 
     await tx.biblioteca_exemplares.update({
       where: { id: dados.exemplarId },
-      data: { situacao: 'emprestado' },
+      data: {
+        situacao: 'emprestado',
+        atualizado_por: dados.registradoPor,
+        atualizado_em: new Date(),
+      },
     })
 
     await tx.biblioteca_movimentacoes.create({
@@ -183,12 +221,26 @@ export async function emprestar(dados: {
         exemplar_id: dados.exemplarId,
         situacao_anterior: exemplar.situacao,
         situacao_nova: 'emprestado',
-        motivo: 'emprestimo',
+        motivo: 'Empréstimo registrado no balcão',
         responsavel_id: dados.registradoPor,
       },
     })
 
-    return emprestimo
+    await tx.biblioteca_auditoria.create({
+      data: {
+        usuario_id: dados.registradoPor,
+        acao: 'emprestimo_registrado',
+        tabela_afetada: 'biblioteca_emprestimos',
+        registro_afetado: emprestimo.id,
+        valor_novo: JSON.stringify({
+          exemplar_id: dados.exemplarId,
+          leitor_id: dados.leitorId,
+          data_prevista: dados.dataPrevista.toISOString().slice(0, 10),
+        }),
+      },
+    })
+
+    return { emprestimo, titulo, tombo: exemplar.tombo }
   })
 }
 
