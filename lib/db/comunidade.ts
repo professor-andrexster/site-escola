@@ -91,6 +91,15 @@ export async function conteudoDaPagina(pagina: string) {
   return prisma.paginas_conteudo.findFirst({ where: { pagina } })
 }
 
+/** Grava o conteudo de uma pagina institucional. Uma linha por pagina. */
+export async function salvarPagina(pagina: string, titulo: string, conteudo: string) {
+  return prisma.paginas_conteudo.upsert({
+    where: { pagina },
+    create: { pagina, titulo, conteudo },
+    update: { titulo, conteudo, updated_at: new Date() },
+  })
+}
+
 export async function listarPaginasEditaveis(chaves?: string[]) {
   const linhas = await prisma.paginas_conteudo.findMany({
     where: chaves ? { pagina: { in: chaves } } : {},

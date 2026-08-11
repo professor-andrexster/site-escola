@@ -81,42 +81,17 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
       categoria: categoria || null,
     }
 
-    let noticiaId: string | null = isEditing ? noticia.id : null
-    let result
-
-    if (isEditing) {
-      result = await supabase.from('noticias').update(payload).eq('id', noticia.id)
-    } else {
-      const { data: { user } } = await supabase.auth.getUser()
-      const { data: inserted, error: insertError } = await supabase
-        .from('noticias')
-        .insert({
-          ...payload,
-          autor_id: user?.id ?? null,
-          autor_nome: autorNome ?? user?.email ?? null,
-        })
-        .select('id')
-        .single()
-      result = { error: insertError }
-      if (inserted) noticiaId = inserted.id
-    }
-
-    if (result.error) {
-      setError(result.error.message)
+    // Autoria e log ficam com o servidor: ele sabe quem esta na sessao, e a
+    // acao registrada nao pode ser escolhida por quem esta sendo auditado.
+    const res = await fetch(isEditing ? `/api/noticias/${noticia.id}` : '/api/noticias', {
+      method: isEditing ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? 'Erro ao salvar a notícia.')
       setSaving(false)
       return
-    }
-
-    // Registra no log
-    if (noticiaId) {
-      const { data: { user } } = await supabase.auth.getUser()
-      await supabase.from('noticias_log').insert({
-        noticia_id: noticiaId,
-        noticia_titulo: titulo,
-        user_id: user?.id ?? null,
-        autor_nome: autorNome ?? user?.email ?? null,
-        acao: isEditing ? (publish ? 'publicou' : 'editou') : (publish ? 'criou e publicou' : 'criou rascunho'),
-      })
     }
 
     router.push('/admin/noticias')

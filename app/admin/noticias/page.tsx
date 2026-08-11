@@ -41,7 +41,6 @@ export default async function AdminNoticiasPage() {
         noticias={noticias}
         canSetDestaque={!isMonitor}
         role={profile.role}
-        autorNome={profile.nome_completo}
       />
 
       {/* Log de atividades — visível só para direção */}

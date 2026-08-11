@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import type { PaginaConteudo } from '@/types/database'
 import TipTapEditor from './TipTapEditor'
 import { ChevronDown, ChevronUp, Save } from 'lucide-react'
@@ -18,14 +17,21 @@ export default function PaginasEditor({ pagina, label, initialData }: PaginasEdi
   const [conteudo, setConteudo] = useState(initialData?.conteudo ?? '')
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
 
   async function handleSave() {
     setSaving(true)
-    await supabase
-      .from('paginas_conteudo')
-      .upsert({ pagina, titulo, conteudo }, { onConflict: 'pagina' })
+    setErro('')
+    const res = await fetch(`/api/paginas/${pagina}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ titulo, conteudo }),
+    })
     setSaving(false)
+    if (!res.ok) {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível salvar a página.')
+      return
+    }
     setSaved(true)
     setTimeout(() => setSaved(false), 3000)
   }
@@ -64,6 +70,7 @@ export default function PaginasEditor({ pagina, label, initialData }: PaginasEdi
               {saving ? 'Salvando...' : 'Salvar'}
             </button>
             {saved && <span className="text-sm text-escola-verde font-medium">Salvo!</span>}
+            {erro && <span className="text-sm text-red-600">{erro}</span>}
           </div>
         </div>
       )}

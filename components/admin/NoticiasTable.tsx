@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { formatDate } from '@/lib/utils'
 import type { Noticia, Profile } from '@/types/database'
 import { Pencil, Trash2, Eye, EyeOff, Star } from 'lucide-react'
@@ -14,58 +13,61 @@ interface NoticiasTableProps {
   noticias: Noticia[]
   canSetDestaque?: boolean
   role?: Profile['role']
-  autorNome?: string
 }
 
 export default function NoticiasTable({
   noticias: initial,
   canSetDestaque = true,
   role = 'diretora',
-  autorNome,
 }: NoticiasTableProps) {
   const [noticias, setNoticias] = useState(initial)
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
   const canDelete = isGestao(role)
 
-  async function log(noticiaId: string, noticiaTitulo: string, acao: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    await supabase.from('noticias_log').insert({
-      noticia_id: noticiaId,
-      noticia_titulo: noticiaTitulo,
-      user_id: user?.id ?? null,
-      autor_nome: autorNome ?? user?.email ?? null,
-      acao,
+  // O log de quem mexeu no que e escrito pelo servidor, a partir da sessao.
+  // Antes vinha daqui, com a acao e o nome do autor escolhidos pelo navegador.
+  async function pedir(id: string, init: RequestInit) {
+    setErro('')
+    const res = await fetch(`/api/noticias/${id}`, init)
+    if (res.ok) return true
+    setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível concluir a ação.')
+    return false
+  }
+
+  async function togglePublicado(id: string, _titulo: string, current: boolean) {
+    const ok = await pedir(id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicado: !current }),
     })
+    if (ok) setNoticias((prev) => prev.map((n) => n.id === id ? { ...n, publicado: !current } : n))
   }
 
-  async function togglePublicado(id: string, titulo: string, current: boolean) {
-    await supabase.from('noticias').update({ publicado: !current }).eq('id', id)
-    await log(id, titulo, current ? 'tirou do ar' : 'publicou')
-    setNoticias((prev) => prev.map((n) => n.id === id ? { ...n, publicado: !current } : n))
-  }
-
-  async function toggleDestaque(id: string, titulo: string, current: boolean) {
-    if (!current) {
-      await supabase.from('noticias').update({ destaque_home: false }).neq('id', id)
+  async function toggleDestaque(id: string, _titulo: string, current: boolean) {
+    const ok = await pedir(id, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ destaque_home: !current }),
+    })
+    if (ok) {
+      setNoticias((prev) => prev.map((n) => ({
+        ...n,
+        destaque_home: n.id === id ? !current : (current ? false : n.destaque_home),
+      })))
     }
-    await supabase.from('noticias').update({ destaque_home: !current }).eq('id', id)
-    await log(id, titulo, current ? 'removeu destaque' : 'colocou em destaque')
-    setNoticias((prev) => prev.map((n) => ({
-      ...n,
-      destaque_home: n.id === id ? !current : (current ? false : n.destaque_home),
-    })))
   }
 
-  async function deleteNoticia(id: string, titulo: string) {
+  async function deleteNoticia(id: string, _titulo: string) {
     if (!confirm('Tem certeza que deseja deletar esta notícia?')) return
     setDeletingId(id)
-    await log(id, titulo, 'deletou')
-    await supabase.from('noticias').delete().eq('id', id)
-    setNoticias((prev) => prev.filter((n) => n.id !== id))
+    const ok = await pedir(id, { method: 'DELETE' })
+    if (ok) {
+      setNoticias((prev) => prev.filter((n) => n.id !== id))
+      router.refresh()
+    }
     setDeletingId(null)
-    router.refresh()
   }
 
   if (noticias.length === 0) {
@@ -79,6 +81,11 @@ export default function NoticiasTable({
 
   return (
     <div className="panel overflow-hidden">
+      {erro && (
+        <div className="bg-red-50 border-b border-red-200 text-red-700 px-4 py-3 text-sm">
+          {erro}
+        </div>
+      )}
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>

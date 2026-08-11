@@ -94,6 +94,90 @@ export async function logDeAtividades(limite = 30) {
   return linhas.map(l => ({ ...l, created_at: l.created_at?.toISOString() ?? '' }))
 }
 
+export type CamposDeNoticia = {
+  titulo: string
+  slug: string
+  resumo: string | null
+  conteudo: string | null
+  imagem_url: string | null
+  publicado: boolean
+  destaque_home: boolean
+  categoria: string | null
+}
+
+/**
+ * Cria a noticia e registra o log na mesma transacao. autor_id e autor_nome
+ * vem da sessao: antes o navegador escolhia os dois, e o log — que existe para
+ * a direcao saber quem mexeu no que — podia ser assinado com qualquer nome.
+ */
+export async function criar(campos: CamposDeNoticia, autor: { id: string; nome: string }, acao: string) {
+  return prisma.$transaction(async tx => {
+    if (campos.destaque_home) {
+      await tx.noticias.updateMany({ where: { destaque_home: true }, data: { destaque_home: false } })
+    }
+    const n = await tx.noticias.create({
+      data: { ...campos, autor_id: autor.id, autor_nome: autor.nome },
+      select: { id: true },
+    })
+    await tx.noticias_log.create({
+      data: {
+        noticia_id: n.id, noticia_titulo: campos.titulo,
+        user_id: autor.id, autor_nome: autor.nome, acao,
+      },
+    })
+    return n
+  })
+}
+
+export async function atualizar(
+  id: string,
+  campos: CamposDeNoticia,
+  autor: { id: string; nome: string },
+  acao: string
+) {
+  return prisma.$transaction(async tx => {
+    if (campos.destaque_home) {
+      await tx.noticias.updateMany({
+        where: { destaque_home: true, NOT: { id } },
+        data: { destaque_home: false },
+      })
+    }
+    await tx.noticias.update({ where: { id }, data: { ...campos, updated_at: new Date() } })
+    await tx.noticias_log.create({
+      data: {
+        noticia_id: id, noticia_titulo: campos.titulo,
+        user_id: autor.id, autor_nome: autor.nome, acao,
+      },
+    })
+  })
+}
+
+/** Quem escreveu — usado para o monitor so mexer no que e dele. */
+export async function autorDaNoticia(id: string) {
+  return prisma.noticias.findUnique({
+    where: { id },
+    select: { autor_id: true, titulo: true },
+  })
+}
+
+/** Uma linha do log. Sempre chamada pelo servidor, com o autor da sessao. */
+export async function registrarLog(dados: {
+  noticiaId: string | null
+  titulo: string
+  autor: { id: string; nome: string }
+  acao: string
+}) {
+  return prisma.noticias_log.create({
+    data: {
+      noticia_id: dados.noticiaId,
+      noticia_titulo: dados.titulo,
+      user_id: dados.autor.id,
+      autor_nome: dados.autor.nome,
+      acao: dados.acao,
+    },
+  })
+}
+
 export async function alternarPublicado(id: string, publicado: boolean) {
   return prisma.noticias.update({ where: { id }, data: { publicado } })
 }
