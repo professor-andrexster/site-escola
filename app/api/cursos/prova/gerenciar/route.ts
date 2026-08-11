@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { perguntasDaProva, substituirPerguntasDaProva } from '@/lib/db/cursos'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 
 type PerguntaEntrada = {
@@ -20,15 +20,12 @@ export async function GET(request: Request) {
   const cursoId = new URL(request.url).searchParams.get('cursoId')
   if (!cursoId) return NextResponse.json({ error: 'Curso não informado.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: perguntas, error } = await admin
-    .from('curso_prova_perguntas')
-    .select('*')
-    .eq('curso_id', cursoId)
-    .order('ordem')
-
-  if (error) return NextResponse.json({ error: 'Erro ao carregar a prova.' }, { status: 400 })
-  return NextResponse.json({ perguntas: perguntas ?? [] })
+  try {
+    return NextResponse.json({ perguntas: await perguntasDaProva(cursoId) })
+  } catch (erro) {
+    console.error('[cursos/prova/gerenciar] falha ao carregar', erro)
+    return NextResponse.json({ error: 'Erro ao carregar as perguntas.' }, { status: 400 })
+  }
 }
 
 // Salva a prova inteira de uma vez (apaga e regrava, na ordem enviada).
@@ -51,24 +48,21 @@ export async function POST(request: Request) {
     }
   }
 
-  const admin = createAdminClient()
-  const { error: delError } = await admin.from('curso_prova_perguntas').delete().eq('curso_id', cursoId)
-  if (delError) return NextResponse.json({ error: 'Erro ao salvar: ' + delError.message }, { status: 400 })
-
-  if (perguntas.length > 0) {
-    const { error } = await admin.from('curso_prova_perguntas').insert(
-      perguntas.map((p, i) => ({
-        curso_id: cursoId,
+  try {
+    await substituirPerguntasDaProva(
+      cursoId,
+      perguntas.map(p => ({
         enunciado: p.enunciado!.trim(),
         alternativa_a: p.alternativa_a!.trim(),
         alternativa_b: p.alternativa_b!.trim(),
         alternativa_c: p.alternativa_c!.trim(),
         alternativa_d: p.alternativa_d!.trim(),
-        resposta_correta: p.resposta_correta,
-        ordem: i,
+        resposta_correta: p.resposta_correta!,
       }))
     )
-    if (error) return NextResponse.json({ error: 'Erro ao salvar: ' + error.message }, { status: 400 })
+  } catch (erro) {
+    console.error('[cursos/prova/gerenciar] falha ao salvar', erro)
+    return NextResponse.json({ error: 'Erro ao salvar as perguntas.' }, { status: 400 })
   }
 
   return NextResponse.json({ ok: true, total: perguntas.length })

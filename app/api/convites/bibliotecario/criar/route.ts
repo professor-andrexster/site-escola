@@ -1,9 +1,11 @@
 import { NextResponse } from 'next/server'
 import { randomBytes } from 'crypto'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { buscarPorEmail } from '@/lib/db/perfis'
+import { conviteAtivoDoEmail, criarConvite } from '@/lib/db/convites'
 import { exigirGestao } from '@/lib/apiGestao'
 import { enviarConviteBibliotecario } from '@/lib/email'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 export async function POST(request: Request) {
   const auth = await exigirGestao()
@@ -15,42 +17,35 @@ export async function POST(request: Request) {
   }
 
   const emailLimpo = email.trim().toLowerCase()
-  const admin = createAdminClient()
-
-  const { data: perfilExistente } = await admin.from('profiles').select('id').eq('email', emailLimpo).maybeSingle()
+  const perfilExistente = await buscarPorEmail(emailLimpo)
   if (perfilExistente) {
     return NextResponse.json({ error: 'Já existe uma conta com esse email.' }, { status: 400 })
   }
 
-  const { data: conviteAtivo } = await admin
-    .from('convites_usuario')
-    .select('id')
-    .eq('email', emailLimpo)
-    .is('aceito_em', null)
-    .is('revogado_em', null)
-    .gt('expira_em', new Date().toISOString())
-    .maybeSingle()
+  const conviteAtivo = await conviteAtivoDoEmail(emailLimpo)
   if (conviteAtivo) {
     return NextResponse.json({ error: 'Já existe um convite ativo para esse email.' }, { status: 400 })
   }
 
   const token = randomBytes(32).toString('hex')
 
-  const { error: insertError } = await admin.from('convites_usuario').insert({
-    nome: nome.trim(),
-    email: emailLimpo,
-    papel: 'bibliotecario',
-    token,
-    criado_por: auth.userId,
-  })
-  if (insertError) {
-    return NextResponse.json({ error: 'Erro ao criar convite: ' + insertError.message }, { status: 400 })
+  try {
+    await criarConvite({
+      nome: nome.trim(),
+      email: emailLimpo,
+      papel: 'bibliotecario',
+      token,
+      criadoPor: auth.userId,
+    })
+  } catch (erro) {
+    console.error('[convites/criar] falha', erro)
+    return NextResponse.json({ error: 'Erro ao criar o convite.' }, { status: 400 })
   }
 
   const origin = request.headers.get('origin') ?? new URL(request.url).origin
   const link = `${origin}/admin/convite?token=${token}`
 
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'convite_bibliotecario_criado',
     userId: auth.userId,
     detalhes: { email: emailLimpo },

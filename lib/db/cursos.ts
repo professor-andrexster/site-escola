@@ -153,6 +153,132 @@ export async function contarCertificados(userId: string): Promise<number> {
   return prisma.certificados.count({ where: { user_id: userId } })
 }
 
+/**
+ * Perguntas da prova SEM a resposta correta — e o que vai para o aluno.
+ * A separacao e proposital: a resposta so existe no servidor, na correcao.
+ */
+export async function perguntasDaProvaParaAluno(cursoId: string) {
+  return prisma.curso_prova_perguntas.findMany({
+    where: { curso_id: cursoId },
+    select: {
+      id: true, enunciado: true, ordem: true,
+      alternativa_a: true, alternativa_b: true, alternativa_c: true, alternativa_d: true,
+    },
+    orderBy: { ordem: 'asc' },
+  })
+}
+
+/**
+ * Substitui as perguntas da prova numa transacao. Era apagar tudo e reinserir,
+ * solto: falha entre os dois deixava o curso sem prova nenhuma, e o aluno via
+ * "este curso ainda nao tem prova final".
+ */
+export async function substituirPerguntasDaProva(
+  cursoId: string,
+  perguntas: Array<{
+    enunciado: string
+    alternativa_a: string
+    alternativa_b: string
+    alternativa_c: string
+    alternativa_d: string
+    resposta_correta: string
+  }>
+) {
+  return prisma.$transaction(async tx => {
+    await tx.curso_prova_perguntas.deleteMany({ where: { curso_id: cursoId } })
+    if (perguntas.length) {
+      await tx.curso_prova_perguntas.createMany({
+        data: perguntas.map((q, i) => ({ ...q, curso_id: cursoId, ordem: i })),
+      })
+    }
+  })
+}
+
+/** Perguntas com gabarito — so para a gestao do curso. */
+export async function perguntasDaProva(cursoId: string) {
+  return prisma.curso_prova_perguntas.findMany({
+    where: { curso_id: cursoId },
+    orderBy: { ordem: 'asc' },
+  })
+}
+
+/** Dados que a correcao da prova precisa, numa consulta so por tabela. */
+export async function dadosDaProva(cursoId: string, userId: string) {
+  const [curso, aulas, perguntas, certificado] = await Promise.all([
+    prisma.cursos.findUnique({
+      where: { id: cursoId },
+      select: { id: true, titulo: true, autor_nome: true, carga_horaria: true, publicado: true },
+    }),
+    prisma.aulas.findMany({
+      where: { curso_id: cursoId, publicado: true },
+      select: { id: true, duracao_estimada_min: true },
+    }),
+    prisma.curso_prova_perguntas.findMany({
+      where: { curso_id: cursoId },
+      select: { id: true, resposta_correta: true },
+    }),
+    prisma.certificados.findFirst({
+      where: { curso_id: cursoId, user_id: userId },
+      select: { codigo: true },
+    }),
+  ])
+  return { curso, aulas, perguntas, certificado }
+}
+
+/**
+ * Emite o certificado. A unique (user_id, curso_id) e quem decide corrida de
+ * dois envios simultaneos; colisao de codigo, rarissima, tambem cai aqui e
+ * ganha nova tentativa.
+ *
+ * Devolve o certificado existente quando a corrida foi perdida, em vez de
+ * erro: para o aluno, ja ter o certificado e sucesso.
+ */
+export async function emitirCertificado(dados: {
+  codigo: string
+  userId: string
+  cursoId: string
+  alunoNome: string
+  cursoTitulo: string
+  autorNome: string | null
+  cargaHoraria: number
+  nota: number
+}): Promise<{ codigo: string; jaTinha: boolean }> {
+  try {
+    const c = await prisma.certificados.create({
+      data: {
+        codigo: dados.codigo,
+        user_id: dados.userId,
+        curso_id: dados.cursoId,
+        aluno_nome: dados.alunoNome,
+        curso_titulo: dados.cursoTitulo,
+        autor_nome: dados.autorNome,
+        carga_horaria: dados.cargaHoraria,
+        nota: dados.nota,
+      },
+    })
+    return { codigo: c.codigo, jaTinha: false }
+  } catch (erro) {
+    if ((erro as { code?: string })?.code !== 'P2002') throw erro
+    const existente = await prisma.certificados.findFirst({
+      where: { curso_id: dados.cursoId, user_id: dados.userId },
+      select: { codigo: true },
+    })
+    if (existente) return { codigo: existente.codigo, jaTinha: true }
+    // Colisao de codigo, nao de (usuario, curso): quem chamou tenta de novo.
+    throw erro
+  }
+}
+
+/** Aulas concluidas por um usuario dentro de um conjunto. */
+export async function concluidasEntre(userId: string, aulaIds: string[]): Promise<string[]> {
+  if (!aulaIds.length) return []
+  const linhas = await prisma.progresso_aulas.findMany({
+    where: { user_id: userId, concluida: true, aula_id: { in: aulaIds } },
+    select: { aula_id: true },
+  })
+  return linhas.map(l => l.aula_id)
+}
+
 // ------------------------------------------------------------------ GESTAO
 
 export async function listarTodos(): Promise<Curso[]> {

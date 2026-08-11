@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server'
-import { createAdminClient } from '@/lib/supabase/admin'
+import { conviteAtivoDoToken, aceitarConvite } from '@/lib/db/convites'
+import { criarConta, removerConta, EmailJaCadastrado } from '@/lib/auth/sessao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
-import { registrarAtividade, ipDoRequest } from '@/lib/log'
+import { ipDoRequest } from '@/lib/log'
+import { registrar } from '@/lib/db/log'
 
 const MSG_TOKEN_INVALIDO = 'Este link de convite não é válido ou já expirou. Peça um novo convite à direção da escola.'
 
@@ -10,12 +12,7 @@ export async function GET(request: Request) {
   const token = new URL(request.url).searchParams.get('token')
   if (!token) return NextResponse.json({ error: 'Convite não informado.' }, { status: 400 })
 
-  const admin = createAdminClient()
-  const { data: convite } = await admin
-    .from('convites_usuario')
-    .select('nome, email, aceito_em, revogado_em, expira_em')
-    .eq('token', token)
-    .maybeSingle()
+  const convite = await conviteAtivoDoToken(token)
 
   if (!convite || convite.aceito_em || convite.revogado_em || new Date(convite.expira_em) < new Date()) {
     return NextResponse.json({ error: MSG_TOKEN_INVALIDO }, { status: 400 })
@@ -42,65 +39,50 @@ export async function POST(request: Request) {
     }
   }
 
-  const admin = createAdminClient()
 
-  const { data: convite } = await admin
-    .from('convites_usuario')
-    .select('*')
-    .eq('token', token)
-    .maybeSingle()
+  const convite = await conviteAtivoDoToken(token)
 
   if (!convite || convite.aceito_em || convite.revogado_em || new Date(convite.expira_em) < new Date()) {
     return NextResponse.json({ error: MSG_TOKEN_INVALIDO }, { status: 400 })
   }
 
-  const { data: created, error: createError } = await admin.auth.admin.createUser({
-    email: convite.email,
-    password: senha,
-    email_confirm: true,
-  })
-  if (createError || !created.user) {
-    const duplicado = createError?.message?.toLowerCase().includes('already')
+  let userId: string
+  try {
+    userId = await criarConta(convite.email, senha)
+  } catch (erro) {
     return NextResponse.json(
-      { error: duplicado ? 'Já existe uma conta com esse email.' : 'Erro ao criar a conta. Tente novamente.' },
+      {
+        error:
+          erro instanceof EmailJaCadastrado
+            ? 'Já existe uma conta com esse email.'
+            : 'Erro ao criar a conta. Tente novamente.',
+      },
       { status: 400 }
     )
   }
 
-  const userId = created.user.id
-  async function desfazer(mensagem: string) {
-    await admin.from('profiles').delete().eq('id', userId)
-    await admin.auth.admin.deleteUser(userId)
-    return NextResponse.json({ error: mensagem }, { status: 400 })
-  }
-
-  const { error: profileError } = await admin.from('profiles').insert({
-    id: userId,
-    nome_completo: convite.nome,
-    role: 'bibliotecario',
-    turma: null,
-    disciplina: null,
-    aprovado: true,
-    email: convite.email,
-  })
-  if (profileError) return desfazer('Erro ao salvar o perfil. Tente novamente.')
-
-  if (cpfLimpo) {
-    const { error: identError } = await admin.from('identidades').insert({
-      user_id: userId,
-      cpf: cpfLimpo,
-      criado_via: 'convite_bibliotecario',
+  // Perfil, identidade e a marcacao do convite como aceito, numa transacao.
+  // Solto, falha no meio deixava o convite consumido sem conta criada — e o
+  // token nao serve mais, entao a pessoa ficava trancada de fora para sempre.
+  try {
+    await aceitarConvite({
+      conviteId: convite.id,
+      userId,
+      nome: convite.nome,
+      email: convite.email,
+      papel: 'bibliotecario',
+      cpf: cpfLimpo || null,
     })
-    if (identError) {
-      if (identError.code === '23505') {
-        return desfazer('Esse CPF já está vinculado a outra conta.')
-      }
-      return desfazer('Erro ao salvar seus dados. Tente novamente.')
-    }
+  } catch (erro) {
+    console.error('[convites/aceitar] falha', erro)
+    await removerConta(userId)
+    const duplicado = (erro as { code?: string })?.code === 'P2002'
+    return NextResponse.json(
+      { error: duplicado ? 'Esse CPF já está vinculado a outra conta.' : 'Erro ao salvar seus dados. Tente novamente.' },
+      { status: 400 }
+    )
   }
-
-  await admin.from('convites_usuario').update({ aceito_em: new Date().toISOString(), usuario_id: userId }).eq('id', convite.id)
-  await registrarAtividade(admin, {
+  await registrar({
     acao: 'convite_bibliotecario_aceito',
     userId,
     detalhes: { email: convite.email },

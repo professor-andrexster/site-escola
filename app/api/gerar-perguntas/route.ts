@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { exigirQuizStaff } from '@/lib/apiGestao'
 import { GESTAO_ROLES } from '@/lib/roles'
 
 const RESPONSE_SCHEMA = {
@@ -25,21 +25,9 @@ const RESPONSE_SCHEMA = {
 }
 
 export async function POST(request: Request) {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Não autenticado.' }, { status: 401 })
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, aprovado')
-    .eq('id', user.id)
-    .maybeSingle()
-
-  if (!profile?.aprovado || !['professor', 'monitor', ...GESTAO_ROLES].includes(profile.role)) {
-    return NextResponse.json({ error: 'Sem permissão.' }, { status: 403 })
-  }
+  // Mesma guarda das rotas de quiz: professor, monitor ou gestao.
+  const auth = await exigirQuizStaff()
+  if (!auth.ok) return auth.res
 
   const { materia, quantidade } = await request.json()
 
