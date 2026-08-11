@@ -16,3 +16,6 @@ cidadania.png
 erro_upload.png
 materias_ensinoMedio.png
 *.tsbuildinfo
+
+# Migração para MariaDB: credencial local do banco
+.env.local

@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorSlug } from '@/lib/db/noticias'
 import PageLayout from '@/components/PageLayout'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -14,13 +14,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data: noticia } = await supabase
-    .from('noticias')
-    .select('titulo, resumo, imagem_url')
-    .eq('slug', slug)
-    .eq('publicado', true)
-    .single()
+  const noticia = await buscarPorSlug(slug)
 
   if (!noticia) return { title: 'Notícia não encontrada' }
 
@@ -38,13 +32,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function NoticiaPage({ params }: Props) {
   const { slug } = await params
-  const supabase = await createClient()
-  const { data: noticia } = await supabase
-    .from('noticias')
-    .select('*')
-    .eq('slug', slug)
-    .eq('publicado', true)
-    .single()
+  const noticia = await buscarPorSlug(slug)
 
   if (!noticia) notFound()
 

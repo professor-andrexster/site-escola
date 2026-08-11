@@ -1,0 +1,831 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model alunos {
+  id                 String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome               String               @db.VarChar(120)
+  matricula          String               @unique @db.VarChar(20)
+  turma              String               @db.VarChar(20)
+  serie              String               @db.VarChar(20)
+  turno              String               @default("Integral") @db.VarChar(15)
+  data_nascimento    DateTime?            @db.Date
+  cpf                String?              @unique(map: "alunos_cpf_unique") @db.VarChar(14)
+  responsavel        String?              @db.VarChar(120)
+  telefone           String?              @db.VarChar(20)
+  email              String?              @unique(map: "alunos_email_unique") @db.VarChar(100)
+  foto_url           String?              @db.VarChar(300)
+  ativo              Boolean?             @default(true)
+  criado_em          DateTime?            @default(now())
+  atualizado_em      DateTime?            @default(now())
+  user_id            String?              @unique @db.Char(36)
+  usuarios           usuarios?            @relation(fields: [user_id], references: [id], onUpdate: Restrict)
+  perfis_vocacionais perfis_vocacionais[]
+  projetos           projetos[]
+  testes_vocacionais testes_vocacionais[]
+}
+
+model aulas {
+  id                   String            @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  curso_id             String?           @db.Char(36)
+  titulo               String            @db.VarChar(120)
+  slug                 String            @db.VarChar(140)
+  descricao            String?           @db.Text
+  ordem                Int?              @default(0)
+  slides_urls          String?           @db.LongText
+  duracao_estimada_min Int?
+  publicado            Boolean?          @default(false)
+  created_at           DateTime?         @default(now())
+  updated_at           DateTime?         @default(now())
+  conteudo             String?           @db.Text
+  revisado             Boolean?          @default(false)
+  cursos               cursos?           @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  curso_desafios       curso_desafios[]
+  progresso_aulas      progresso_aulas[]
+
+  @@unique([curso_id, slug])
+}
+
+model biblioteca_auditoria {
+  id               String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  usuario_id       String?   @db.Char(36)
+  acao             String    @db.VarChar(40)
+  tabela_afetada   String    @db.VarChar(40)
+  registro_afetado String?   @db.Char(36)
+  valor_anterior   String?   @db.LongText
+  valor_novo       String?   @db.LongText
+  criado_em        DateTime  @default(now())
+  usuarios         usuarios? @relation(fields: [usuario_id], references: [id], onUpdate: Restrict)
+
+  @@index([usuario_id], map: "biblioteca_auditoria_usuario_id_fkey")
+}
+
+model biblioteca_autores {
+  id                       String                     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome                     String                     @db.VarChar(150)
+  ativo                    Boolean                    @default(true)
+  criado_em                DateTime                   @default(now())
+  atualizado_em            DateTime                   @default(now())
+  atualizado_por           String?                    @db.Char(36)
+  usuarios                 usuarios?                  @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_obras_autores biblioteca_obras_autores[]
+
+  @@index([atualizado_por], map: "biblioteca_autores_atualizado_por_fkey")
+}
+
+model biblioteca_calendario {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  data       DateTime  @unique @db.Date
+  motivo     String    @db.VarChar(60)
+  criado_em  DateTime  @default(now())
+  criado_por String?   @db.Char(36)
+  usuarios   usuarios? @relation(fields: [criado_por], references: [id], onUpdate: Restrict)
+
+  @@index([criado_por], map: "biblioteca_calendario_criado_por_fkey")
+}
+
+model biblioteca_categorias {
+  id               String             @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome             String             @unique @db.VarChar(80)
+  ativo            Boolean            @default(true)
+  criado_em        DateTime           @default(now())
+  atualizado_em    DateTime           @default(now())
+  atualizado_por   String?            @db.Char(36)
+  usuarios         usuarios?          @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_obras biblioteca_obras[]
+
+  @@index([atualizado_por], map: "biblioteca_categorias_atualizado_por_fkey")
+}
+
+model biblioteca_configuracoes {
+  id                                    Boolean   @id @default(true)
+  prazo_dias_aluno                      Int       @default(7)
+  prazo_dias_professor                  Int       @default(15)
+  prazo_dias_funcionario                Int       @default(15)
+  prazo_dias_comunidade                 Int       @default(7)
+  limite_exemplares_aluno               Int       @default(2)
+  limite_exemplares_professor           Int       @default(5)
+  limite_exemplares_funcionario         Int       @default(5)
+  limite_exemplares_comunidade          Int       @default(1)
+  max_renovacoes                        Int       @default(2)
+  dias_suspensao_por_atraso             Int       @default(0)
+  multa_habilitada                      Boolean   @default(false)
+  valor_multa_por_dia                   Decimal   @default(0.00) @db.Decimal(10, 2)
+  gera_tombo_automatico                 Boolean   @default(true)
+  prefixo_tombo                         String    @default("BIB") @db.VarChar(10)
+  reserva_habilitada                    Boolean   @default(true)
+  prazo_validade_reserva_dias           Int       @default(2)
+  consulta_interna_professor_habilitada Boolean   @default(false)
+  nome_biblioteca                       String    @default("Biblioteca E.E. Dr. João Beraldo") @db.VarChar(150)
+  texto_comprovante                     String?   @db.Text
+  observacoes_implantacao               String?   @db.Text
+  atualizado_em                         DateTime  @default(now())
+  atualizado_por                        String?   @db.Char(36)
+  usuarios                              usuarios? @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+
+  @@index([atualizado_por], map: "biblioteca_configuracoes_atualizado_por_fkey")
+}
+
+model biblioteca_editoras {
+  id               String             @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome             String             @db.VarChar(120)
+  ativo            Boolean            @default(true)
+  criado_em        DateTime           @default(now())
+  atualizado_em    DateTime           @default(now())
+  atualizado_por   String?            @db.Char(36)
+  usuarios         usuarios?          @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_obras biblioteca_obras[]
+
+  @@index([atualizado_por], map: "biblioteca_editoras_atualizado_por_fkey")
+}
+
+model biblioteca_emprestimos {
+  id                                                       String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  exemplar_id                                              String                  @db.Char(36)
+  leitor_id                                                String                  @db.Char(36)
+  data_emprestimo                                          DateTime                @default(now())
+  data_prevista                                            DateTime                @db.Date
+  data_devolucao                                           DateTime?
+  renovacoes_feitas                                        Int                     @default(0)
+  situacao                                                 String                  @default("em_andamento") @db.VarChar(25)
+  registrado_por                                           String?                 @db.Char(36)
+  devolvido_por                                            String?                 @db.Char(36)
+  observacoes                                              String?                 @db.Text
+  criado_em                                                DateTime                @default(now())
+  atualizado_em                                            DateTime                @default(now())
+  usuarios_biblioteca_emprestimos_devolvido_porTousuarios  usuarios?               @relation("biblioteca_emprestimos_devolvido_porTousuarios", fields: [devolvido_por], references: [id], onUpdate: Restrict)
+  biblioteca_exemplares                                    biblioteca_exemplares   @relation(fields: [exemplar_id], references: [id], onDelete: NoAction, onUpdate: Restrict)
+  biblioteca_leitores                                      biblioteca_leitores     @relation(fields: [leitor_id], references: [id], onDelete: NoAction, onUpdate: Restrict)
+  usuarios_biblioteca_emprestimos_registrado_porTousuarios usuarios?               @relation("biblioteca_emprestimos_registrado_porTousuarios", fields: [registrado_por], references: [id], onUpdate: Restrict)
+  biblioteca_renovacoes                                    biblioteca_renovacoes[]
+
+  @@index([devolvido_por], map: "biblioteca_emprestimos_devolvido_por_fkey")
+  @@index([exemplar_id], map: "biblioteca_emprestimos_exemplar_id_fkey")
+  @@index([leitor_id], map: "biblioteca_emprestimos_leitor_id_fkey")
+  @@index([registrado_por], map: "biblioteca_emprestimos_registrado_por_fkey")
+}
+
+model biblioteca_exemplares {
+  id                       String                     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  obra_id                  String                     @db.Char(36)
+  tombo                    String                     @db.VarChar(30)
+  codigo_barras            String?                    @db.VarChar(40)
+  situacao                 String                     @default("disponivel") @db.VarChar(15)
+  estado_conservacao       String                     @default("bom") @db.VarChar(15)
+  estante                  String?                    @db.VarChar(20)
+  prateleira               String?                    @db.VarChar(20)
+  data_entrada             DateTime                   @db.Date
+  origem_aquisicao         String                     @default("compra") @db.VarChar(20)
+  valor_referencia         Decimal?                   @db.Decimal(10, 2)
+  consulta_local           Boolean                    @default(false)
+  observacoes              String?                    @db.Text
+  criado_em                DateTime                   @default(now())
+  atualizado_em            DateTime                   @default(now())
+  atualizado_por           String?                    @db.Char(36)
+  biblioteca_emprestimos   biblioteca_emprestimos[]
+  usuarios                 usuarios?                  @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_obras         biblioteca_obras           @relation(fields: [obra_id], references: [id], onDelete: NoAction, onUpdate: Restrict)
+  biblioteca_movimentacoes biblioteca_movimentacoes[]
+
+  @@index([atualizado_por], map: "biblioteca_exemplares_atualizado_por_fkey")
+  @@index([obra_id], map: "biblioteca_exemplares_obra_id_fkey")
+}
+
+model biblioteca_leitores {
+  id                     String                   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome_completo          String                   @db.VarChar(150)
+  nome_social            String?                  @db.VarChar(150)
+  tipo_leitor            String                   @db.VarChar(15)
+  matricula              String?                  @db.VarChar(30)
+  data_nascimento        DateTime?                @db.Date
+  turma                  String?                  @db.VarChar(20)
+  turno                  String?                  @db.VarChar(15)
+  ano_escolar            String?                  @db.VarChar(20)
+  telefone               String?                  @db.VarChar(20)
+  email                  String?                  @db.VarChar(120)
+  nome_responsavel       String?                  @db.VarChar(150)
+  telefone_responsavel   String?                  @db.VarChar(20)
+  situacao               String                   @default("ativo") @db.VarChar(15)
+  motivo_bloqueio        String?                  @db.Text
+  data_cadastro          DateTime                 @default(now())
+  observacoes            String?                  @db.Text
+  criado_em              DateTime                 @default(now())
+  atualizado_em          DateTime                 @default(now())
+  atualizado_por         String?                  @db.Char(36)
+  biblioteca_emprestimos biblioteca_emprestimos[]
+  usuarios               usuarios?                @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_reservas    biblioteca_reservas[]
+
+  @@index([atualizado_por], map: "biblioteca_leitores_atualizado_por_fkey")
+}
+
+model biblioteca_movimentacoes {
+  id                    String                @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  exemplar_id           String                @db.Char(36)
+  situacao_anterior     String?               @db.VarChar(15)
+  situacao_nova         String                @db.VarChar(15)
+  motivo                String?               @db.Text
+  responsavel_id        String?               @db.Char(36)
+  criado_em             DateTime              @default(now())
+  biblioteca_exemplares biblioteca_exemplares @relation(fields: [exemplar_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  usuarios              usuarios?             @relation(fields: [responsavel_id], references: [id], onUpdate: Restrict)
+
+  @@index([exemplar_id], map: "biblioteca_movimentacoes_exemplar_id_fkey")
+  @@index([responsavel_id], map: "biblioteca_movimentacoes_responsavel_id_fkey")
+}
+
+model biblioteca_obras {
+  id                        String                     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo                    String                     @db.VarChar(300)
+  subtitulo                 String?                    @db.VarChar(300)
+  ano_publicacao            Int?
+  edicao                    String?                    @db.VarChar(40)
+  isbn                      String?                    @db.VarChar(20)
+  idioma                    String                     @default("Portugues") @db.VarChar(40)
+  numero_paginas            Int?
+  sinopse                   String?                    @db.Text
+  palavras_chave            String                     @db.LongText
+  publico_indicado          String?                    @db.VarChar(60)
+  area_conhecimento         String?                    @db.VarChar(80)
+  classificacao_catalogacao String?                    @db.VarChar(60)
+  situacao                  String                     @default("ativa") @db.VarChar(15)
+  capa_url                  String?                    @db.Text
+  observacoes_internas      String?                    @db.Text
+  editora_id                String?                    @db.Char(36)
+  categoria_id              String?                    @db.Char(36)
+  criado_em                 DateTime                   @default(now())
+  atualizado_em             DateTime                   @default(now())
+  atualizado_por            String?                    @db.Char(36)
+  biblioteca_exemplares     biblioteca_exemplares[]
+  usuarios                  usuarios?                  @relation(fields: [atualizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_categorias     biblioteca_categorias?     @relation(fields: [categoria_id], references: [id], onUpdate: Restrict)
+  biblioteca_editoras       biblioteca_editoras?       @relation(fields: [editora_id], references: [id], onUpdate: Restrict)
+  biblioteca_obras_autores  biblioteca_obras_autores[]
+  biblioteca_reservas       biblioteca_reservas[]
+
+  @@index([atualizado_por], map: "biblioteca_obras_atualizado_por_fkey")
+  @@index([categoria_id], map: "biblioteca_obras_categoria_id_fkey")
+  @@index([editora_id], map: "biblioteca_obras_editora_id_fkey")
+}
+
+model biblioteca_obras_autores {
+  id                 String             @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  obra_id            String             @db.Char(36)
+  autor_id           String             @db.Char(36)
+  biblioteca_autores biblioteca_autores @relation(fields: [autor_id], references: [id], onDelete: NoAction, onUpdate: Restrict)
+  biblioteca_obras   biblioteca_obras   @relation(fields: [obra_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([obra_id, autor_id])
+  @@index([autor_id], map: "biblioteca_obras_autores_autor_id_fkey")
+}
+
+model biblioteca_renovacoes {
+  id                     String                 @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  emprestimo_id          String                 @db.Char(36)
+  autorizado_por         String?                @db.Char(36)
+  data_prevista_anterior DateTime               @db.Date
+  nova_data_prevista     DateTime               @db.Date
+  criado_em              DateTime               @default(now())
+  usuarios               usuarios?              @relation(fields: [autorizado_por], references: [id], onUpdate: Restrict)
+  biblioteca_emprestimos biblioteca_emprestimos @relation(fields: [emprestimo_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([autorizado_por], map: "biblioteca_renovacoes_autorizado_por_fkey")
+  @@index([emprestimo_id], map: "biblioteca_renovacoes_emprestimo_id_fkey")
+}
+
+model biblioteca_reservas {
+  id                  String              @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  obra_id             String              @db.Char(36)
+  leitor_id           String              @db.Char(36)
+  data_reserva        DateTime            @default(now())
+  posicao_fila        Int
+  validade            DateTime            @db.Date
+  situacao            String              @default("aguardando") @db.VarChar(15)
+  criado_em           DateTime            @default(now())
+  atualizado_em       DateTime            @default(now())
+  biblioteca_leitores biblioteca_leitores @relation(fields: [leitor_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  biblioteca_obras    biblioteca_obras    @relation(fields: [obra_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([leitor_id], map: "biblioteca_reservas_leitor_id_fkey")
+  @@index([obra_id], map: "biblioteca_reservas_obra_id_fkey")
+}
+
+model certificados {
+  id            String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  codigo        String    @unique @db.VarChar(16)
+  user_id       String    @db.Char(36)
+  curso_id      String    @db.Char(36)
+  aluno_nome    String    @db.VarChar(120)
+  curso_titulo  String    @db.VarChar(120)
+  autor_nome    String?   @db.VarChar(80)
+  carga_horaria Int
+  nota          Int
+  emitido_em    DateTime? @default(now())
+  cursos        cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  usuarios      usuarios  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([user_id, curso_id])
+  @@index([curso_id], map: "certificados_curso_id_fkey")
+}
+
+model configuracoes_site {
+  chave String  @id @db.VarChar(255)
+  valor String? @db.Text
+}
+
+model convites_usuario {
+  id                                             String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome                                           String    @db.VarChar(120)
+  email                                          String    @db.VarChar(120)
+  papel                                          String    @default("bibliotecario") @db.VarChar(20)
+  token                                          String    @unique @db.VarChar(64)
+  criado_por                                     String?   @db.Char(36)
+  criado_em                                      DateTime  @default(now())
+  expira_em                                      DateTime
+  aceito_em                                      DateTime?
+  usuario_id                                     String?   @db.Char(36)
+  revogado_em                                    DateTime?
+  usuarios_convites_usuario_criado_porTousuarios usuarios? @relation("convites_usuario_criado_porTousuarios", fields: [criado_por], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  usuarios_convites_usuario_usuario_idTousuarios usuarios? @relation("convites_usuario_usuario_idTousuarios", fields: [usuario_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([criado_por], map: "convites_usuario_criado_por_fkey")
+  @@index([usuario_id], map: "convites_usuario_usuario_id_fkey")
+}
+
+model curso_desafios {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  curso_id   String    @db.Char(36)
+  aula_id    String?   @db.Char(36)
+  titulo     String    @db.VarChar(160)
+  enunciado  String    @db.Text
+  tipo       String    @default("pratico") @db.VarChar(20)
+  gabarito   String?   @db.Text
+  ordem      Int?      @default(0)
+  created_at DateTime? @default(now())
+  aulas      aulas?    @relation(fields: [aula_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  cursos     cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([aula_id], map: "curso_desafios_aula_id_fkey")
+  @@index([curso_id], map: "curso_desafios_curso_id_fkey")
+}
+
+model curso_prova_perguntas {
+  id               String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  curso_id         String    @db.Char(36)
+  enunciado        String    @db.Text
+  alternativa_a    String    @db.Text
+  alternativa_b    String    @db.Text
+  alternativa_c    String    @db.Text
+  alternativa_d    String    @db.Text
+  resposta_correta String    @db.VarChar(1)
+  ordem            Int?      @default(0)
+  created_at       DateTime? @default(now())
+  cursos           cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([curso_id], map: "curso_prova_perguntas_curso_id_fkey")
+}
+
+model cursos {
+  id                    String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo                String                  @db.VarChar(120)
+  slug                  String                  @unique @db.VarChar(140)
+  descricao             String?                 @db.Text
+  capa_url              String?                 @db.VarChar(300)
+  categoria             String?                 @db.VarChar(60)
+  nivel                 String?                 @default("Iniciante") @db.VarChar(30)
+  autor_nome            String?                 @default("Professor André Gomes") @db.VarChar(80)
+  publicado             Boolean?                @default(false)
+  ordem                 Int?                    @default(0)
+  created_at            DateTime?               @default(now())
+  updated_at            DateTime?               @default(now())
+  criado_por            String?                 @db.Char(36)
+  criado_em             DateTime?               @default(now())
+  atualizado_em         DateTime?               @default(now())
+  carga_horaria         Int?
+  aulas                 aulas[]
+  certificados          certificados[]
+  curso_desafios        curso_desafios[]
+  curso_prova_perguntas curso_prova_perguntas[]
+  usuarios              usuarios?               @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "fk_cursos_author")
+  progresso_aulas       progresso_aulas[]
+
+  @@index([criado_por], map: "fk_cursos_author")
+}
+
+model desafio_fases {
+  id                    String     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  desafio_id            String     @db.Char(36)
+  ordem                 Int
+  titulo                String     @db.VarChar(120)
+  descricao             String?    @db.Text
+  entregavel_instrucoes String?    @db.Text
+  pontos_max            Int?       @default(0)
+  semana_sugerida       Int?
+  desafios              desafios   @relation(fields: [desafio_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  entregas              entregas[]
+
+  @@unique([desafio_id, ordem])
+}
+
+model desafio_papeis {
+  id             String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  desafio_id     String           @db.Char(36)
+  nome           String           @db.VarChar(80)
+  descricao      String?          @db.Text
+  desafios       desafios         @relation(fields: [desafio_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  equipe_membros equipe_membros[]
+
+  @@index([desafio_id], map: "desafio_papeis_desafio_id_fkey")
+}
+
+model desafios {
+  id             String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo         String           @db.VarChar(140)
+  subtitulo      String?          @db.VarChar(200)
+  briefing       String?          @db.Text
+  professor_id   String?          @db.Char(36)
+  turma_alvo     String?          @db.VarChar(20)
+  ano_letivo     String?          @default("2026") @db.VarChar(10)
+  pontos_total   Int?             @default(100)
+  publicado      Boolean?         @default(false)
+  created_at     DateTime?        @default(now())
+  updated_at     DateTime?        @default(now())
+  desafio_fases  desafio_fases[]
+  desafio_papeis desafio_papeis[]
+  profiles       profiles?        @relation(fields: [professor_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  equipes        equipes[]
+
+  @@index([professor_id], map: "desafios_professor_id_fkey")
+}
+
+model entregas {
+  id                 String        @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  equipe_id          String        @db.Char(36)
+  fase_id            String        @db.Char(36)
+  conteudo           String?       @db.Text
+  arquivo_url        String?       @db.VarChar(300)
+  link_url           String?       @db.VarChar(300)
+  dados_estruturados String?       @db.LongText
+  status             String?       @default("pendente") @db.VarChar(20)
+  nota               Decimal?      @db.Decimal(5, 2)
+  feedback_professor String?       @db.Text
+  enviado_em         DateTime?
+  avaliado_em        DateTime?
+  equipes            equipes       @relation(fields: [equipe_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  desafio_fases      desafio_fases @relation(fields: [fase_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([equipe_id, fase_id])
+  @@index([fase_id], map: "entregas_fase_id_fkey")
+}
+
+model equipe_membros {
+  id             String          @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  equipe_id      String          @db.Char(36)
+  profile_id     String          @db.Char(36)
+  papel_id       String?         @db.Char(36)
+  equipes        equipes         @relation(fields: [equipe_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  desafio_papeis desafio_papeis? @relation(fields: [papel_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  profiles       profiles        @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([equipe_id, profile_id])
+  @@index([papel_id], map: "equipe_membros_papel_id_fkey")
+  @@index([profile_id], map: "equipe_membros_profile_id_fkey")
+}
+
+model equipes {
+  id             String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  desafio_id     String           @db.Char(36)
+  nome_empresa   String?          @db.VarChar(120)
+  ideia_id       String?          @db.Char(36)
+  turma          String?          @db.VarChar(20)
+  created_at     DateTime?        @default(now())
+  entregas       entregas[]
+  equipe_membros equipe_membros[]
+  desafios       desafios         @relation(fields: [desafio_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  ideias         ideias?          @relation(fields: [ideia_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  projetos       projetos[]
+
+  @@index([desafio_id], map: "equipes_desafio_id_fkey")
+  @@index([ideia_id], map: "equipes_ideia_id_fkey")
+}
+
+model ideia_comentarios {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  ideia_id   String    @db.Char(36)
+  autor_id   String    @db.Char(36)
+  corpo      String    @db.Text
+  created_at DateTime? @default(now())
+  profiles   profiles  @relation(fields: [autor_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  ideias     ideias    @relation(fields: [ideia_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([autor_id], map: "ideia_comentarios_autor_id_fkey")
+  @@index([ideia_id], map: "ideia_comentarios_ideia_id_fkey")
+}
+
+model ideia_votos {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  ideia_id   String    @db.Char(36)
+  profile_id String    @db.Char(36)
+  created_at DateTime? @default(now())
+  ideias     ideias    @relation(fields: [ideia_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  profiles   profiles  @relation(fields: [profile_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([ideia_id, profile_id])
+  @@index([profile_id], map: "ideia_votos_profile_id_fkey")
+}
+
+model ideias {
+  id                String              @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  autor_id          String              @db.Char(36)
+  titulo            String              @db.VarChar(140)
+  dor               String?             @db.Text
+  lacuna            String?             @db.Text
+  inovacao          String?             @db.Text
+  trilha_id         String?             @db.Char(36)
+  status            String?             @default("nova") @db.VarChar(20)
+  created_at        DateTime?           @default(now())
+  updated_at        DateTime?           @default(now())
+  equipes           equipes[]
+  ideia_comentarios ideia_comentarios[]
+  ideia_votos       ideia_votos[]
+  profiles          profiles            @relation(fields: [autor_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  trilhas           trilhas?            @relation(fields: [trilha_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([autor_id], map: "ideias_autor_id_fkey")
+  @@index([trilha_id], map: "ideias_trilha_id_fkey")
+}
+
+model identidades {
+  user_id           String    @id @db.Char(36)
+  cpf               String?   @unique @db.VarChar(14)
+  data_nascimento   DateTime? @db.Date
+  email_alternativo String?   @db.VarChar(120)
+  criado_via        String    @default("direcao") @db.VarChar(20)
+  criado_em         DateTime? @default(now())
+  usuarios          usuarios  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+}
+
+model leads {
+  id         String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome       String   @db.Text
+  email      String   @db.Text
+  telefone   String?  @db.Text
+  mensagem   String?  @db.Text
+  lido       Boolean  @default(false)
+  created_at DateTime @default(now())
+}
+
+model log_atividades {
+  id        String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  user_id   String?   @db.Char(36)
+  acao      String    @db.VarChar(40)
+  detalhes  String?   @db.LongText
+  ip        String?   @db.VarChar(60)
+  criado_em DateTime? @default(now())
+  usuarios  usuarios? @relation(fields: [user_id], references: [id], onUpdate: Restrict)
+
+  @@index([user_id], map: "log_atividades_user_id_fkey")
+}
+
+model noticias {
+  id            String         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo        String         @db.Text
+  slug          String         @unique @db.VarChar(255)
+  resumo        String?        @db.Text
+  conteudo      String?        @db.Text
+  imagem_url    String?        @db.Text
+  destaque_home Boolean        @default(false)
+  publicado     Boolean        @default(false)
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @default(now())
+  categoria     String?        @db.Text
+  autor_id      String?        @db.Char(36)
+  autor_nome    String?        @db.Text
+  usuarios      usuarios?      @relation(fields: [autor_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  noticias_log  noticias_log[]
+
+  @@index([autor_id], map: "noticias_autor_id_fkey")
+}
+
+model noticias_log {
+  id             String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  noticia_id     String?   @db.Char(36)
+  noticia_titulo String?   @db.Text
+  user_id        String?   @db.Char(36)
+  autor_nome     String?   @db.Text
+  acao           String    @db.Text
+  created_at     DateTime  @default(now())
+  noticias       noticias? @relation(fields: [noticia_id], references: [id], onUpdate: Restrict)
+
+  @@index([noticia_id], map: "noticias_log_noticia_id_fkey")
+}
+
+model paginas_conteudo {
+  id         String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  pagina     String   @unique @db.VarChar(255)
+  titulo     String?  @db.Text
+  conteudo   String?  @db.Text
+  updated_at DateTime @default(now())
+}
+
+model perfis_vocacionais {
+  id            String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  aluno_id      String?   @db.Char(36)
+  trilha_id     String?   @db.Char(36)
+  pontuacao     Int       @default(0)
+  atualizado_em DateTime? @default(now())
+  alunos        alunos?   @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  trilhas       trilhas?  @relation(fields: [trilha_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@unique([aluno_id, trilha_id])
+  @@index([trilha_id], map: "perfis_vocacionais_trilha_id_fkey")
+}
+
+model profiles {
+  id                String              @id @db.Char(36)
+  nome_completo     String              @db.Text
+  role              String              @db.Text
+  turma             String?             @db.Text
+  disciplina        String?             @db.Text
+  aprovado          Boolean             @default(false)
+  created_at        DateTime?           @default(now())
+  updated_at        DateTime?           @default(now())
+  email             String?             @db.VarChar(120)
+  avatar_url        String?             @db.Text
+  desafios          desafios[]
+  equipe_membros    equipe_membros[]
+  ideia_comentarios ideia_comentarios[]
+  ideia_votos       ideia_votos[]
+  ideias            ideias[]
+  usuarios          usuarios            @relation(fields: [id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+}
+
+model progresso_aulas {
+  id            String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  user_id       String    @db.Char(36)
+  aula_id       String    @db.Char(36)
+  curso_id      String    @db.Char(36)
+  slide_atual   Int?      @default(0)
+  concluida     Boolean?  @default(false)
+  concluida_em  DateTime?
+  atualizado_em DateTime? @default(now())
+  aulas         aulas     @relation(fields: [aula_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  cursos        cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  usuarios      usuarios  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([user_id, aula_id])
+  @@index([aula_id], map: "progresso_aulas_aula_id_fkey")
+  @@index([curso_id], map: "progresso_aulas_curso_id_fkey")
+}
+
+model projetos {
+  id             String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  aluno_id       String?   @db.Char(36)
+  trilha_id      String?   @db.Char(36)
+  titulo         String    @db.VarChar(120)
+  descricao      String?   @db.Text
+  imagem_url     String?   @db.VarChar(300)
+  link_externo   String?   @db.VarChar(300)
+  tags           String?   @db.LongText
+  destaque       Boolean?  @default(false)
+  criado_em      DateTime? @default(now())
+  serie_na_epoca String?   @db.VarChar(20)
+  equipe_id      String?   @db.Char(36)
+  alunos         alunos?   @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  equipes        equipes?  @relation(fields: [equipe_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+  trilhas        trilhas?  @relation(fields: [trilha_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
+
+  @@index([aluno_id], map: "projetos_aluno_id_fkey")
+  @@index([equipe_id], map: "projetos_equipe_id_fkey")
+  @@index([trilha_id], map: "projetos_trilha_id_fkey")
+}
+
+model quiz_participantes {
+  id              String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  quiz_id         String           @db.Char(36)
+  nome            String           @db.Text
+  turma           String           @db.Text
+  pontuacao_total Int              @default(0)
+  concluido       Boolean          @default(false)
+  created_at      DateTime         @default(now())
+  user_id         String?          @db.Char(36)
+  quizzes         quizzes          @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  usuarios        usuarios?        @relation(fields: [user_id], references: [id], onUpdate: Restrict)
+  quiz_respostas  quiz_respostas[]
+
+  @@index([quiz_id], map: "quiz_participantes_quiz_id_fkey")
+  @@index([user_id], map: "quiz_participantes_user_id_fkey")
+}
+
+model quiz_perguntas {
+  id               String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  quiz_id          String           @db.Char(36)
+  ordem            Int              @default(0)
+  enunciado        String           @db.Text
+  alternativa_a    String           @db.Text
+  alternativa_b    String           @db.Text
+  alternativa_c    String           @db.Text
+  alternativa_d    String           @db.Text
+  resposta_correta String           @db.Text
+  pontos           Int              @default(100)
+  created_at       DateTime         @default(now())
+  quizzes          quizzes          @relation(fields: [quiz_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  quiz_respostas   quiz_respostas[]
+
+  @@index([quiz_id], map: "quiz_perguntas_quiz_id_fkey")
+}
+
+model quiz_respostas {
+  id                 String             @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  participante_id    String             @db.Char(36)
+  pergunta_id        String             @db.Char(36)
+  resposta           String?            @db.Text
+  correta            Boolean            @default(false)
+  tempo_resposta     Int?
+  pontos_obtidos     Int                @default(0)
+  created_at         DateTime           @default(now())
+  quiz_participantes quiz_participantes @relation(fields: [participante_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  quiz_perguntas     quiz_perguntas     @relation(fields: [pergunta_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@unique([participante_id, pergunta_id])
+  @@index([pergunta_id], map: "quiz_respostas_pergunta_id_fkey")
+}
+
+model quizzes {
+  id                   String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo               String               @db.Text
+  codigo               String               @unique @db.VarChar(255)
+  descricao            String?              @db.Text
+  ativo                Boolean              @default(false)
+  encerrado            Boolean              @default(false)
+  tempo_por_pergunta   Int                  @default(30)
+  created_at           DateTime             @default(now())
+  updated_at           DateTime             @default(now())
+  turma_alvo           String               @db.Text
+  lobby_aberto         Boolean              @default(false)
+  quiz_iniciado_em     DateTime?
+  pergunta_atual       Int?                 @default(0)
+  pergunta_liberada_em DateTime?
+  resposta_revelada    Boolean?             @default(false)
+  quiz_participantes   quiz_participantes[]
+  quiz_perguntas       quiz_perguntas[]
+}
+
+model testes_vocacionais {
+  id           String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  aluno_id     String?   @db.Char(36)
+  respostas    String    @db.LongText
+  realizado_em DateTime? @default(now())
+  alunos       alunos?   @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+
+  @@index([aluno_id], map: "testes_vocacionais_aluno_id_fkey")
+}
+
+model trilhas {
+  id                 String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome               String               @db.VarChar(60)
+  descricao          String?              @db.Text
+  icone              String?              @db.VarChar(10)
+  cor_tailwind       String?              @db.VarChar(30)
+  ideias             ideias[]
+  perfis_vocacionais perfis_vocacionais[]
+  projetos           projetos[]
+}
+
+model usuarios {
+  id                                                                     String                     @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  email                                                                  String                     @unique @db.VarChar(255)
+  encrypted_password                                                     String?                    @db.VarChar(255)
+  email_confirmed_at                                                     DateTime?
+  last_sign_in_at                                                        DateTime?
+  banned_until                                                           DateTime?
+  created_at                                                             DateTime                   @default(now())
+  alunos                                                                 alunos?
+  biblioteca_auditoria                                                   biblioteca_auditoria[]
+  biblioteca_autores                                                     biblioteca_autores[]
+  biblioteca_calendario                                                  biblioteca_calendario[]
+  biblioteca_categorias                                                  biblioteca_categorias[]
+  biblioteca_configuracoes                                               biblioteca_configuracoes[]
+  biblioteca_editoras                                                    biblioteca_editoras[]
+  biblioteca_emprestimos_biblioteca_emprestimos_devolvido_porTousuarios  biblioteca_emprestimos[]   @relation("biblioteca_emprestimos_devolvido_porTousuarios")
+  biblioteca_emprestimos_biblioteca_emprestimos_registrado_porTousuarios biblioteca_emprestimos[]   @relation("biblioteca_emprestimos_registrado_porTousuarios")
+  biblioteca_exemplares                                                  biblioteca_exemplares[]
+  biblioteca_leitores                                                    biblioteca_leitores[]
+  biblioteca_movimentacoes                                               biblioteca_movimentacoes[]
+  biblioteca_obras                                                       biblioteca_obras[]
+  biblioteca_renovacoes                                                  biblioteca_renovacoes[]
+  certificados                                                           certificados[]
+  convites_usuario_convites_usuario_criado_porTousuarios                 convites_usuario[]         @relation("convites_usuario_criado_porTousuarios")
+  convites_usuario_convites_usuario_usuario_idTousuarios                 convites_usuario[]         @relation("convites_usuario_usuario_idTousuarios")
+  cursos                                                                 cursos[]
+  identidades                                                            identidades?
+  log_atividades                                                         log_atividades[]
+  noticias                                                               noticias[]
+  profiles                                                               profiles?
+  progresso_aulas                                                        progresso_aulas[]
+  quiz_participantes                                                     quiz_participantes[]
+}

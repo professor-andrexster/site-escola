@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { listarPublicadas } from '@/lib/db/noticias'
 import PageLayout from '@/components/PageLayout'
 import NewsCard from '@/components/NewsCard'
 import { CATEGORIAS, type CategoriaKey } from '@/lib/categorias'
@@ -20,18 +20,7 @@ export default async function NoticiasPage({
     ? (params.categoria as CategoriaKey)
     : null
 
-  const supabase = await createClient()
-  let query = supabase
-    .from('noticias')
-    .select('*')
-    .eq('publicado', true)
-    .order('created_at', { ascending: false })
-
-  if (categoriaFiltro) {
-    query = query.eq('categoria', categoriaFiltro)
-  }
-
-  const { data: noticias } = await query
+  const noticias = await listarPublicadas(categoriaFiltro)
 
   return (
     <PageLayout>
