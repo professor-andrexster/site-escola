@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorCodigo, participante as buscarParticipante, respostasComPerguntas,
+         rankingDoQuiz, contarPerguntas, rankingGeral as buscarRankingGeral } from '@/lib/db/quiz'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { Trophy, Home, RotateCcw, Medal, TrendingUp, Star, ThumbsUp, BookOpen, Dumbbell } from 'lucide-react'
@@ -13,40 +14,26 @@ export default async function ResultadoPage({
   params: Promise<{ codigo: string; participanteId: string }>
 }) {
   const { codigo, participanteId } = await params
-  const supabase = await createClient()
-
-  const [{ data: participante }, { data: quiz }] = await Promise.all([
-    supabase.from('quiz_participantes').select('*').eq('id', participanteId).single(),
-    supabase.from('quizzes').select('*').eq('codigo', codigo).single(),
+  const [participante, quiz] = await Promise.all([
+    buscarParticipante(participanteId),
+    buscarPorCodigo(codigo),
   ])
 
   if (!participante || !quiz) notFound()
 
-  const [{ data: respostas }, { data: rankingDia }, { data: perguntas }] = await Promise.all([
-    supabase
-      .from('quiz_respostas')
-      .select('*, quiz_perguntas(enunciado, resposta_correta, pontos)')
-      .eq('participante_id', participanteId),
-    supabase
-      .from('quiz_participantes')
-      .select('id, nome, turma, pontuacao_total')
-      .eq('quiz_id', quiz.id)
-      .eq('concluido', true)
-      .order('pontuacao_total', { ascending: false }),
-    supabase
-      .from('quiz_perguntas')
-      .select('id')
-      .eq('quiz_id', quiz.id),
+  const [respostas, rankingDia, totalPerguntas] = await Promise.all([
+    respostasComPerguntas(participanteId),
+    rankingDoQuiz(quiz.id),
+    contarPerguntas(quiz.id),
   ])
 
-  const totalPerguntas = perguntas?.length ?? 0
-  const acertos = respostas?.filter(r => r.correta).length ?? 0
+  const acertos = respostas.filter(r => r.correta).length
   const percentual = totalPerguntas > 0 ? Math.round((acertos / totalPerguntas) * 100) : 0
 
   const IconeDesempenho = percentual === 100 ? Trophy : percentual >= 80 ? Star : percentual >= 60 ? ThumbsUp : percentual >= 40 ? BookOpen : Dumbbell
 
   // Ranking do dia (deste quiz)
-  const ranking = rankingDia ?? []
+  const ranking = rankingDia
   const posicaoDia = ranking.findIndex(p => p.id === participanteId)
   const posicao = posicaoDia === -1 ? ranking.length + 1 : posicaoDia + 1
   const acimaDia = posicaoDia > 0 ? ranking[posicaoDia - 1] : null
@@ -57,7 +44,7 @@ export default async function ResultadoPage({
   let posicaoGeral = -1
   let acimaGeral: typeof rankingGeral[number] | null = null
   if (participante.user_id) {
-    const { data } = await supabase.rpc('ranking_geral_quiz')
+    const data = await buscarRankingGeral()
     rankingGeral = data ?? []
     posicaoGeral = rankingGeral.findIndex(r => r.user_id === participante.user_id)
     acimaGeral = posicaoGeral > 0 ? rankingGeral[posicaoGeral - 1] : null

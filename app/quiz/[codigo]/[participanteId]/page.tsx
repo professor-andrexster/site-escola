@@ -1,4 +1,5 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorCodigo, participante as buscarParticipante,
+         perguntasDoQuiz, perguntasRespondidas } from '@/lib/db/quiz'
 import { redirect, notFound } from 'next/navigation'
 import QuizRoom from '@/components/quiz/QuizRoom'
 import type { Metadata } from 'next'
@@ -7,9 +8,8 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ codigo: string }> }): Promise<Metadata> {
   const { codigo } = await params
-  const supabase = await createClient()
-  const { data } = await supabase.from('quizzes').select('titulo').eq('codigo', codigo).single()
-  return { title: data?.titulo ?? 'JBQuiz' }
+  const quiz = await buscarPorCodigo(codigo)
+  return { title: quiz?.titulo ?? 'JBQuiz' }
 }
 
 export default async function QuizJogarPage({
@@ -18,11 +18,9 @@ export default async function QuizJogarPage({
   params: Promise<{ codigo: string; participanteId: string }>
 }) {
   const { codigo, participanteId } = await params
-  const supabase = await createClient()
-
-  const [{ data: quiz }, { data: participante }] = await Promise.all([
-    supabase.from('quizzes').select('*').eq('codigo', codigo).single(),
-    supabase.from('quiz_participantes').select('*').eq('id', participanteId).single(),
+  const [quiz, participante] = await Promise.all([
+    buscarPorCodigo(codigo),
+    buscarParticipante(participanteId),
   ])
 
   if (!quiz || !participante) notFound()
@@ -41,12 +39,12 @@ export default async function QuizJogarPage({
     redirect(`/quiz?codigo=${codigo}`)
   }
 
-  const [{ data: perguntas }, { data: respostas }] = await Promise.all([
-    supabase.from('quiz_perguntas').select('*').eq('quiz_id', quiz.id).order('ordem'),
-    supabase.from('quiz_respostas').select('pergunta_id').eq('participante_id', participanteId),
+  const [perguntas, respondidas] = await Promise.all([
+    perguntasDoQuiz(quiz.id),
+    perguntasRespondidas(participanteId),
   ])
 
-  if (!perguntas || perguntas.length === 0) {
+  if (perguntas.length === 0) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
@@ -57,7 +55,7 @@ export default async function QuizJogarPage({
     )
   }
 
-  const jaRespondidas = new Set((respostas ?? []).map(r => r.pergunta_id))
+  const jaRespondidas = new Set(respondidas)
 
   return (
     <QuizRoom
@@ -70,9 +68,9 @@ export default async function QuizJogarPage({
         ativo: quiz.ativo,
         encerrado: quiz.encerrado,
         tempo_por_pergunta: quiz.tempo_por_pergunta,
-        quiz_iniciado_em: quiz.quiz_iniciado_em,
+        quiz_iniciado_em: quiz.quiz_iniciado_em?.toISOString() ?? null,
         pergunta_atual: quiz.pergunta_atual ?? 0,
-        pergunta_liberada_em: quiz.pergunta_liberada_em,
+        pergunta_liberada_em: quiz.pergunta_liberada_em?.toISOString() ?? null,
         resposta_revelada: quiz.resposta_revelada ?? false,
       }}
       participante={participante}

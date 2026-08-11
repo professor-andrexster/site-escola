@@ -27,15 +27,28 @@ export async function buscarPorId(id: string): Promise<Quiz | null> {
   return prisma.quizzes.findUnique({ where: { id } })
 }
 
-export async function perguntasDoQuiz(quizId: string): Promise<Pergunta[]> {
-  return prisma.quiz_perguntas.findMany({
+/**
+ * Perguntas de um quiz, na ordem.
+ *
+ * Serializa created_at e estreita resposta_correta para a uniao 'a'|'b'|'c'|'d'
+ * que o dominio usa — a coluna e text no banco, e o QuizRoom depende do tipo
+ * fechado para renderizar a alternativa certa.
+ */
+export async function perguntasDoQuiz(quizId: string) {
+  const linhas = await prisma.quiz_perguntas.findMany({
     where: { quiz_id: quizId },
     orderBy: { ordem: 'asc' },
   })
+  return linhas.map(p => ({
+    ...p,
+    created_at: p.created_at.toISOString(),
+    resposta_correta: p.resposta_correta as 'a' | 'b' | 'c' | 'd',
+  }))
 }
 
-export async function participante(id: string): Promise<Participante | null> {
-  return prisma.quiz_participantes.findUnique({ where: { id } })
+export async function participante(id: string) {
+  const p = await prisma.quiz_participantes.findUnique({ where: { id } })
+  return p ? { ...p, created_at: p.created_at.toISOString() } : null
 }
 
 export async function participantesDoQuiz(quizId: string) {
@@ -112,6 +125,67 @@ export async function totaisDoPainel() {
     prisma.quiz_participantes.count({ where: { concluido: true } }),
   ])
   return { quizzes, participantesConcluidos }
+}
+
+/**
+ * Ranking geral acumulado por aluno.
+ *
+ * Substitui a funcao ranking_geral_quiz() do Postgres — uma das seis que
+ * moravam no banco. Ela era SECURITY DEFINER, ou seja, rodava com os
+ * privilegios do dono para atravessar o RLS de profiles. Sem RLS, isso deixa
+ * de ser necessario: a consulta e a mesma, so que em codigo.
+ */
+export async function rankingGeral() {
+  const somas = await prisma.quiz_participantes.groupBy({
+    by: ['user_id'],
+    where: { concluido: true, user_id: { not: null } },
+    _sum: { pontuacao_total: true },
+  })
+  if (!somas.length) return []
+
+  const ids = somas.map(s => s.user_id!).filter(Boolean)
+  const perfis = await prisma.profiles.findMany({
+    where: { id: { in: ids } },
+    select: { id: true, nome_completo: true, turma: true },
+  })
+  const porId = new Map(perfis.map(p => [p.id, p]))
+
+  return somas
+    .map(s => {
+      const perfil = porId.get(s.user_id!)
+      return {
+        user_id: s.user_id!,
+        nome_completo: perfil?.nome_completo ?? '',
+        turma: perfil?.turma ?? null,
+        pontuacao_total: s._sum.pontuacao_total ?? 0,
+      }
+    })
+    .filter(r => r.nome_completo)
+    .sort((a, b) => b.pontuacao_total - a.pontuacao_total)
+}
+
+/** Ranking de um quiz especifico, so quem concluiu. */
+export async function rankingDoQuiz(quizId: string) {
+  return prisma.quiz_participantes.findMany({
+    where: { quiz_id: quizId, concluido: true },
+    select: { id: true, nome: true, turma: true, pontuacao_total: true },
+    orderBy: { pontuacao_total: 'desc' },
+  })
+}
+
+/** Respostas de um participante, com o enunciado e o gabarito de cada uma. */
+export async function respostasComPerguntas(participanteId: string) {
+  return prisma.quiz_respostas.findMany({
+    where: { participante_id: participanteId },
+    include: {
+      quiz_perguntas: { select: { enunciado: true, resposta_correta: true, pontos: true } },
+    },
+  })
+}
+
+/** Quantas perguntas o quiz tem. */
+export async function contarPerguntas(quizId: string): Promise<number> {
+  return prisma.quiz_perguntas.count({ where: { quiz_id: quizId } })
 }
 
 // -------------------------------------------------------------- escrita
