@@ -55,9 +55,21 @@ export async function exigirProfessorOuGestao(): Promise<Resultado> {
   return exigirAprovado(role => role === 'professor' || isGestao(role))
 }
 
-/** Quem conduz um quiz ao vivo: professor, monitor ou gestao. */
-export async function exigirQuizStaff(): Promise<Resultado> {
+/**
+ * Professor, monitor ou gestao — o mesmo conjunto que `requireProfessorOrAbove`
+ * deixa entrar nas telas de curso e de quiz. As rotas dessas telas usam esta
+ * guarda para que a permissao da API case com a da pagina.
+ */
+export async function exigirProfessorOrAbove(): Promise<Resultado> {
   return exigirAprovado(role => role === 'professor' || role === 'monitor' || isGestao(role))
+}
+
+/** Quem conduz um quiz ao vivo: professor, monitor ou gestao. */
+export const exigirQuizStaff = exigirProfessorOrAbove
+
+/** Quem escreve noticia: monitor ou gestao. */
+export async function exigirMonitorOrAbove(): Promise<Resultado> {
+  return exigirAprovado(role => role === 'monitor' || isGestao(role))
 }
 
 /** Escrita do modulo de biblioteca: acervo, exemplares, leitores. */

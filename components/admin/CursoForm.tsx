@@ -85,25 +85,20 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
       publicado,
     }
 
-    if (isEditing) {
-      const { error } = await supabase.from('cursos').update(payload).eq('id', curso.id)
-      if (error) {
-        setError(error.message)
-        setSaving(false)
-        return
-      }
-      router.push(`/admin/cursos/gerenciar/${curso.id}`)
-      router.refresh()
-    } else {
-      const { data, error } = await supabase.from('cursos').insert(payload).select('id').single()
-      if (error || !data) {
-        setError(error?.message ?? 'Erro ao criar curso.')
-        setSaving(false)
-        return
-      }
-      router.push(`/admin/cursos/gerenciar/${data.id}`)
-      router.refresh()
+    const res = await fetch(isEditing ? `/api/cursos/${curso.id}` : '/api/cursos', {
+      method: isEditing ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    const resposta = await res.json().catch(() => ({}))
+    if (!res.ok) {
+      setError(resposta.error ?? 'Erro ao salvar o curso.')
+      setSaving(false)
+      return
     }
+
+    router.push(`/admin/cursos/gerenciar/${isEditing ? curso.id : resposta.id}`)
+    router.refresh()
   }
 
   return (

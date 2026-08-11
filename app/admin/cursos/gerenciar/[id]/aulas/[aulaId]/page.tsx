@@ -30,7 +30,7 @@ export default async function EditarAulaPage({ params }: Params) {
         Voltar ao curso
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Editar Aula</h1>
-      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} proximaOrdem={aula.ordem} aula={aula} />
+      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} aula={aula} />
     </div>
   )
 }

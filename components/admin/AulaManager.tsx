@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, Eye, EyeOff, ArrowUp, ArrowDown, ImageIcon } from 'lucide-react'
 import type { Aula } from '@/types/database'
 
@@ -16,22 +15,36 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
   const [aulas, setAulas] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
 
   async function togglePublicado(id: string, publicado: boolean) {
     setLoadingId(id)
-    await supabase.from('aulas').update({ publicado: !publicado }).eq('id', id)
-    setAulas((prev) => prev.map((a) => (a.id === id ? { ...a, publicado: !publicado } : a)))
+    setErro('')
+    const res = await fetch(`/api/aulas/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicado: !publicado }),
+    })
+    if (res.ok) {
+      setAulas((prev) => prev.map((a) => (a.id === id ? { ...a, publicado: !publicado } : a)))
+    } else {
+      setErro('Não foi possível alterar a publicação da aula.')
+    }
     setLoadingId(null)
   }
 
   async function deleteAula(id: string) {
     if (!confirm('Deletar esta aula e seus slides? Essa ação não pode ser desfeita.')) return
     setLoadingId(id)
-    await supabase.from('aulas').delete().eq('id', id)
-    setAulas((prev) => prev.filter((a) => a.id !== id))
+    setErro('')
+    const res = await fetch(`/api/aulas/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setAulas((prev) => prev.filter((a) => a.id !== id))
+      router.refresh()
+    } else {
+      setErro('Não foi possível remover a aula.')
+    }
     setLoadingId(null)
-    router.refresh()
   }
 
   async function move(index: number, dir: -1 | 1) {
@@ -41,15 +54,21 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
     const b = aulas[target]
 
     setLoadingId(a.id)
-    await Promise.all([
-      supabase.from('aulas').update({ ordem: b.ordem }).eq('id', a.id),
-      supabase.from('aulas').update({ ordem: a.ordem }).eq('id', b.id),
-    ])
-    setAulas((prev) => {
-      const copy = [...prev]
-      ;[copy[index], copy[target]] = [{ ...copy[target], ordem: a.ordem }, { ...copy[index], ordem: b.ordem }]
-      return copy
+    setErro('')
+    const res = await fetch('/api/aulas/ordem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ aulaA: a.id, ordemA: b.ordem, aulaB: b.id, ordemB: a.ordem }),
     })
+    if (res.ok) {
+      setAulas((prev) => {
+        const copy = [...prev]
+        ;[copy[index], copy[target]] = [{ ...copy[target], ordem: a.ordem }, { ...copy[index], ordem: b.ordem }]
+        return copy
+      })
+    } else {
+      setErro('Não foi possível reordenar as aulas.')
+    }
     setLoadingId(null)
   }
 
@@ -64,6 +83,11 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
 
   return (
     <div className="space-y-2.5">
+      {erro && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+          {erro}
+        </div>
+      )}
       {aulas.map((aula, i) => {
         const isLoading = loadingId === aula.id
         return (

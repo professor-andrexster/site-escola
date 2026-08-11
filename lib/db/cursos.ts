@@ -530,6 +530,96 @@ export async function cursosComAulas() {
   return linhas.map(({ aulas, ...c }) => ({ ...serializarCurso(c), aulas }))
 }
 
+/**
+ * Cria o curso. `criado_por` vem da sessao, nunca do corpo do pedido — antes
+ * ninguem preenchia essa coluna, e por isso a tela de cursos pendentes
+ * mostrava "Desconhecido" no lugar do autor.
+ */
+export async function criarCurso(dados: {
+  titulo: string
+  slug: string
+  descricao: string | null
+  categoria: string | null
+  nivel: string
+  capa_url: string | null
+  carga_horaria: number | null
+  publicado: boolean
+  criadoPor: string
+}) {
+  const { criadoPor, ...campos } = dados
+  const c = await prisma.cursos.create({
+    data: { ...campos, criado_por: criadoPor },
+    select: { id: true },
+  })
+  return c
+}
+
+export async function atualizarCurso(
+  id: string,
+  dados: {
+    titulo: string
+    slug: string
+    descricao: string | null
+    categoria: string | null
+    nivel: string
+    capa_url: string | null
+    carga_horaria: number | null
+    publicado?: boolean
+  }
+) {
+  return prisma.cursos.update({
+    where: { id },
+    data: { ...dados, atualizado_em: new Date(), updated_at: new Date() },
+  })
+}
+
+/** slides_urls era text[] no Postgres; aqui e JSON, e a conversao mora aqui. */
+export async function criarAula(dados: {
+  cursoId: string
+  titulo: string
+  slug: string
+  descricao: string | null
+  duracao_estimada_min: number | null
+  publicado: boolean
+  slides_urls: string[]
+  ordem: number
+}) {
+  const { cursoId, slides_urls, ...campos } = dados
+  return prisma.aulas.create({
+    data: { ...campos, curso_id: cursoId, slides_urls: JSON.stringify(slides_urls) },
+    select: { id: true },
+  })
+}
+
+export async function atualizarAula(
+  id: string,
+  dados: {
+    titulo: string
+    slug: string
+    descricao: string | null
+    duracao_estimada_min: number | null
+    publicado: boolean
+    slides_urls: string[]
+  }
+) {
+  const { slides_urls, ...campos } = dados
+  return prisma.aulas.update({
+    where: { id },
+    data: { ...campos, slides_urls: JSON.stringify(slides_urls), updated_at: new Date() },
+  })
+}
+
+/** Apaga a aula. progresso_aulas e curso_desafios caem por cascata no banco. */
+export async function removerAula(id: string) {
+  return prisma.aulas.delete({ where: { id } })
+}
+
+/** A qual curso uma aula pertence — usado para conferir dono antes de gravar. */
+export async function cursoDaAula(aulaId: string): Promise<string | null> {
+  const a = await prisma.aulas.findUnique({ where: { id: aulaId }, select: { curso_id: true } })
+  return a?.curso_id ?? null
+}
+
 export async function alternarPublicado(id: string, publicado: boolean) {
   return prisma.cursos.update({ where: { id }, data: { publicado } })
 }

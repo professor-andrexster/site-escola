@@ -1,4 +1,4 @@
-import { buscarPorId, contarAulas } from '@/lib/db/cursos'
+import { buscarPorId } from '@/lib/db/cursos'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
@@ -16,8 +16,6 @@ export default async function NovaAulaPage({ params }: Params) {
   const curso = await buscarPorId(id)
   if (!curso) notFound()
 
-  const total = await contarAulas(id)
-
   return (
     <div>
       <Link href={`/admin/cursos/gerenciar/${id}`} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-700 text-sm mb-4 transition-colors">
@@ -25,7 +23,7 @@ export default async function NovaAulaPage({ params }: Params) {
         Voltar ao curso
       </Link>
       <h1 className="text-2xl font-bold text-gray-900 mb-8">Nova Aula</h1>
-      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} proximaOrdem={total + 1} />
+      <AulaForm cursoId={curso.id} cursoSlug={curso.slug} />
     </div>
   )
 }

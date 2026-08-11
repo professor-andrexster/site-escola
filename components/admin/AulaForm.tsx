@@ -20,11 +20,10 @@ function slugify(text: string): string {
 interface AulaFormProps {
   cursoId: string
   cursoSlug: string
-  proximaOrdem: number
   aula?: Aula
 }
 
-export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: AulaFormProps) {
+export default function AulaForm({ cursoId, cursoSlug, aula }: AulaFormProps) {
   const isEditing = !!aula
   const [titulo, setTitulo] = useState(aula?.titulo ?? '')
   const [slug, setSlug] = useState(aula?.slug ?? '')
@@ -84,7 +83,6 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
     setSaving(true)
     setError('')
     const payload = {
-      curso_id: cursoId,
       titulo,
       slug,
       descricao: descricao || null,
@@ -93,20 +91,15 @@ export default function AulaForm({ cursoId, cursoSlug, proximaOrdem, aula }: Aul
       slides_urls: slidesUrls,
     }
 
-    if (isEditing) {
-      const { error } = await supabase.from('aulas').update(payload).eq('id', aula.id)
-      if (error) {
-        setError(error.message)
-        setSaving(false)
-        return
-      }
-    } else {
-      const { error } = await supabase.from('aulas').insert({ ...payload, ordem: proximaOrdem })
-      if (error) {
-        setError(error.message)
-        setSaving(false)
-        return
-      }
+    const res = await fetch(isEditing ? `/api/aulas/${aula.id}` : `/api/cursos/${cursoId}/aulas`, {
+      method: isEditing ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    })
+    if (!res.ok) {
+      setError((await res.json().catch(() => ({}))).error ?? 'Erro ao salvar a aula.')
+      setSaving(false)
+      return
     }
 
     router.push(`/admin/cursos/gerenciar/${cursoId}`)

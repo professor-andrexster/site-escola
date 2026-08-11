@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Pencil, Trash2, Eye, EyeOff, GraduationCap } from 'lucide-react'
 import type { Curso } from '@/types/database'
 
@@ -19,22 +18,36 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
   const [cursos, setCursos] = useState(initial)
   const [loadingId, setLoadingId] = useState<string | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+  const [erro, setErro] = useState('')
 
   async function togglePublicado(id: string, publicado: boolean) {
     setLoadingId(id)
-    await supabase.from('cursos').update({ publicado: !publicado }).eq('id', id)
-    setCursos((prev) => prev.map((c) => (c.id === id ? { ...c, publicado: !publicado } : c)))
+    setErro('')
+    const res = await fetch(`/api/cursos/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ publicado: !publicado }),
+    })
+    if (res.ok) {
+      setCursos((prev) => prev.map((c) => (c.id === id ? { ...c, publicado: !publicado } : c)))
+    } else {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível alterar a publicação.')
+    }
     setLoadingId(null)
   }
 
   async function deleteCurso(id: string) {
     if (!confirm('Deletar este curso e todas as suas aulas? Essa ação não pode ser desfeita.')) return
     setLoadingId(id)
-    await supabase.from('cursos').delete().eq('id', id)
-    setCursos((prev) => prev.filter((c) => c.id !== id))
+    setErro('')
+    const res = await fetch(`/api/cursos/${id}`, { method: 'DELETE' })
+    if (res.ok) {
+      setCursos((prev) => prev.filter((c) => c.id !== id))
+      router.refresh()
+    } else {
+      setErro((await res.json().catch(() => ({}))).error ?? 'Não foi possível remover o curso.')
+    }
     setLoadingId(null)
-    router.refresh()
   }
 
   if (cursos.length === 0) {
@@ -48,6 +61,11 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
 
   return (
     <div className="space-y-3">
+      {erro && (
+        <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg px-4 py-3 text-sm">
+          {erro}
+        </div>
+      )}
       {cursos.map((curso) => {
         const isLoading = loadingId === curso.id
         return (
