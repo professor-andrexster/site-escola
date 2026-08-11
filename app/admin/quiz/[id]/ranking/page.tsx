@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { buscarPorId as buscarQuiz, participantesComRespostas, contarPerguntas } from '@/lib/db/quiz'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Trophy, Medal } from 'lucide-react'
@@ -8,32 +8,25 @@ export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
-  const supabase = await createClient()
-  const { data } = await supabase.from('quizzes').select('titulo').eq('id', id).single()
+  const data = await buscarQuiz(id)
   return { title: data ? `Ranking: ${data.titulo}` : 'Ranking' }
 }
 
 export default async function RankingPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const supabase = await createClient()
 
-  const [{ data: quiz }, { data: participantesRaw }, { data: totalPerguntas }] = await Promise.all([
-    supabase.from('quizzes').select('*').eq('id', id).single(),
-    supabase
-      .from('quiz_participantes')
-      .select('*, quiz_respostas(correta, pontos_obtidos)')
-      .eq('quiz_id', id),
-    supabase.from('quiz_perguntas').select('id').eq('quiz_id', id),
+  const [quiz, participantesRaw, numPerguntas] = await Promise.all([
+    buscarQuiz(id),
+    participantesComRespostas(id),
+    contarPerguntas(id),
   ])
 
   if (!quiz) notFound()
 
-  const numPerguntas = totalPerguntas?.length ?? 0
-
   // Pontuação calculada direto das respostas (fonte da verdade), sem depender
   // do celular do aluno ter finalizado o quiz
   type Resp = { correta: boolean; pontos_obtidos: number }
-  const participantes = (participantesRaw ?? [])
+  const participantes = participantesRaw
     .map(p => {
       const respostas = (p.quiz_respostas ?? []) as Resp[]
       return {

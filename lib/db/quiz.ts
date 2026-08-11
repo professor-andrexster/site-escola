@@ -164,6 +164,16 @@ export async function rankingGeral() {
     .sort((a, b) => b.pontuacao_total - a.pontuacao_total)
 }
 
+/** Participantes com as respostas, para o ranking detalhado do professor. */
+export async function participantesComRespostas(quizId: string) {
+  const linhas = await prisma.quiz_participantes.findMany({
+    where: { quiz_id: quizId },
+    include: { quiz_respostas: { select: { correta: true, pontos_obtidos: true } } },
+    orderBy: { pontuacao_total: 'desc' },
+  })
+  return linhas.map(p => ({ ...p, created_at: p.created_at.toISOString() }))
+}
+
 /** Ranking de um quiz especifico, so quem concluiu. */
 export async function rankingDoQuiz(quizId: string) {
   return prisma.quiz_participantes.findMany({

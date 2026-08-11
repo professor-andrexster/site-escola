@@ -1,4 +1,5 @@
-import { createAdminClient } from '@/lib/supabase/admin'
+import { totaisDoPainel, emprestimosAbertos as buscarEmprestimosAbertos,
+         emprestimosDesde } from '@/lib/db/biblioteca'
 import { calcularDiasAtraso } from '@/lib/biblioteca/emprestimos'
 import Link from 'next/link'
 import {
@@ -29,49 +30,38 @@ function StatCard({ label, value, icon: Icon, color }: {
 }
 
 export default async function BibliotecaPainelPage() {
-  const admin = createAdminClient()
+  const totais = await totaisDoPainel()
+  const { obras: totalObras, exemplares: totalExemplares } = totais
+  const leitoresAtivos = totais.leitores
+  const emprestimosAndamento = totais.emprestimos
 
-  const [
-    { count: totalObras },
-    { count: totalExemplares },
-    { count: leitoresAtivos },
-    { count: emprestimosAndamento },
-  ] = await Promise.all([
-    admin.from('biblioteca_obras').select('id', { count: 'exact', head: true }).eq('situacao', 'ativa'),
-    admin.from('biblioteca_exemplares').select('id', { count: 'exact', head: true }),
-    admin.from('biblioteca_leitores').select('id', { count: 'exact', head: true }).eq('situacao', 'ativo'),
-    admin.from('biblioteca_emprestimos').select('id', { count: 'exact', head: true }).in('situacao', ['em_andamento', 'renovado']),
-  ])
-
-  const semAcervo = (totalObras ?? 0) === 0 && (totalExemplares ?? 0) === 0
+  const semAcervo = totalObras === 0 && totalExemplares === 0
 
   const hoje = new Date()
   const hojeIso = hoje.toISOString().slice(0, 10)
   const proximosSeteDias = new Date(hoje)
   proximosSeteDias.setDate(proximosSeteDias.getDate() + 7)
 
-  const { data: emprestimosAbertos } = await admin
-    .from('biblioteca_emprestimos')
-    .select('id, exemplar_id, data_prevista, biblioteca_exemplares(tombo, biblioteca_obras(titulo)), biblioteca_leitores(nome_completo, turma)')
-    .in('situacao', ['em_andamento', 'renovado'])
-    .order('data_prevista')
+  const emprestimosAbertos = await buscarEmprestimosAbertos()
 
-  const atrasados = (emprestimosAbertos ?? [])
-    .filter(e => e.data_prevista < hojeIso)
-    .map(e => ({ ...e, diasAtraso: calcularDiasAtraso(e.data_prevista, hoje) }))
+  const atrasados = emprestimosAbertos
+    .filter(e => e.data_prevista !== null && e.data_prevista < hoje)
+    .map(e => ({
+      ...e,
+      diasAtraso: calcularDiasAtraso(e.data_prevista!.toISOString().slice(0, 10), hoje),
+    }))
 
-  const devolucoesProximas = (emprestimosAbertos ?? []).filter(
-    e => e.data_prevista >= hojeIso && e.data_prevista <= proximosSeteDias.toISOString().slice(0, 10)
+  // Comparacao de Date com Date: a camada devolve o tipo do banco, e nao a
+  // string ISO que o PostgREST entregava.
+  const devolucoesProximas = emprestimosAbertos.filter(
+    e => e.data_prevista !== null && e.data_prevista >= hoje && e.data_prevista <= proximosSeteDias
   )
 
-  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1).toISOString()
-  const { data: emprestimosDoMes } = await admin
-    .from('biblioteca_emprestimos')
-    .select('leitor_id, biblioteca_leitores(nome_completo, turma)')
-    .gte('data_emprestimo', inicioMes)
+  const inicioMes = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
+  const emprestimosDoMes = await emprestimosDesde(inicioMes)
 
   const contagemPorLeitor = new Map<string, { nome: string; turma: string | null; total: number }>()
-  for (const e of emprestimosDoMes ?? []) {
+  for (const e of emprestimosDoMes) {
     const leitor = Array.isArray(e.biblioteca_leitores) ? e.biblioteca_leitores[0] : e.biblioteca_leitores
     if (!leitor) continue
     const atual = contagemPorLeitor.get(e.leitor_id) ?? { nome: leitor.nome_completo, turma: leitor.turma, total: 0 }

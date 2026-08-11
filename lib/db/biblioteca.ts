@@ -709,6 +709,45 @@ export async function renovar(dados: {
 
 // ------------------------------------------------------------- painel
 
+/** Os quatro numeros do topo do painel da biblioteca. */
+export async function totaisDoPainel() {
+  const [obras, exemplares, leitores, emprestimos] = await Promise.all([
+    prisma.biblioteca_obras.count({ where: { situacao: 'ativa' } }),
+    prisma.biblioteca_exemplares.count(),
+    prisma.biblioteca_leitores.count({ where: { situacao: 'ativo' } }),
+    prisma.biblioteca_emprestimos.count({ where: { situacao: { in: [...SITUACOES_ATIVAS] } } }),
+  ])
+  return { obras, exemplares, leitores, emprestimos }
+}
+
+/** Emprestimos do mes, com o leitor — alimenta a lista de assiduos. */
+export async function emprestimosDesde(inicio: Date) {
+  return prisma.biblioteca_emprestimos.findMany({
+    where: { data_emprestimo: { gte: inicio } },
+    select: {
+      leitor_id: true,
+      biblioteca_leitores: { select: { nome_completo: true, turma: true } },
+    },
+  })
+}
+
+/** Emprestimos abertos, com obra, tombo e leitor — a fila do balcao. */
+export async function emprestimosAbertos() {
+  return prisma.biblioteca_emprestimos.findMany({
+    where: { situacao: { in: [...SITUACOES_ATIVAS] } },
+    select: {
+      id: true,
+      exemplar_id: true,
+      data_prevista: true,
+      biblioteca_exemplares: {
+        select: { tombo: true, biblioteca_obras: { select: { titulo: true } } },
+      },
+      biblioteca_leitores: { select: { nome_completo: true, turma: true } },
+    },
+    orderBy: { data_prevista: 'asc' },
+  })
+}
+
 export async function contarEmprestimosAtivos(): Promise<number> {
   return prisma.biblioteca_emprestimos.count({
     where: { situacao: { in: [...SITUACOES_ATIVAS] } },
