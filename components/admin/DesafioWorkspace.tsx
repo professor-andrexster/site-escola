@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Upload, Circle, Clock, CheckCircle2, Lock } from 'lucide-react'
 import type { Desafio, DesafioFase, DesafioPapel, Equipe, EquipeMembro, Entrega } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 type PerfilResumo = { nome_completo: string }
 type PapelResumo = { nome: string }
@@ -266,24 +266,21 @@ function FaseParticipante({
   onSaved: () => void
 }) {
   // O cliente do Supabase fica so pelo upload de arquivo — e a fase 5.
-  const supabase = createClient()
   const [aberta, setAberta] = useState(false)
   const [conteudo, setConteudo] = useState(entrega?.conteudo ?? '')
   const [linkUrl, setLinkUrl] = useState(entrega?.link_url ?? '')
   const [arquivoUrl, setArquivoUrl] = useState(entrega?.arquivo_url ?? '')
   const [uploading, setUploading] = useState(false)
+  const [erroEnvio, setErroEnvio] = useState('')
   const [saving, setSaving] = useState(false)
   const status = entrega?.status ?? 'pendente'
 
   async function upload(file: File) {
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const path = `${equipeId}/${fase.id}-${Date.now()}.${ext}`
-    const { data, error } = await supabase.storage.from('desafios').upload(path, file)
-    if (!error && data) {
-      const { data: pub } = supabase.storage.from('desafios').getPublicUrl(data.path)
-      setArquivoUrl(pub.publicUrl)
-    }
+    // A equipe vai junto porque o servidor confere se quem envia é dela.
+    const enviado = await enviarArquivo('desafio', file, { equipeId })
+    if ('erro' in enviado) setErroEnvio(enviado.erro)
+    else { setErroEnvio(''); setArquivoUrl(enviado.url) }
     setUploading(false)
   }
 
@@ -344,6 +341,7 @@ function FaseParticipante({
             {uploading ? 'Enviando...' : arquivoUrl ? 'Trocar arquivo' : 'Anexar arquivo'}
             <input type="file" className="hidden" disabled={uploading} onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
           </label>
+          {erroEnvio && <p className="text-xs text-red-600">{erroEnvio}</p>}
           {arquivoUrl && <a href={arquivoUrl} target="_blank" rel="noopener noreferrer" className="block text-xs text-escola-azul hover:underline">Ver arquivo anexado</a>}
 
           {entrega?.status === 'avaliada' && (

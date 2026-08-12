@@ -6,8 +6,8 @@ import { Check, X, KeyRound, Copy, Pencil, Upload } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { formatarCPF } from '@/lib/cpf'
 import { TELA_POR_ROLE } from '@/lib/roles'
-import { createClient } from '@/lib/supabase/client'
 import Avatar from '@/components/admin/ui/Avatar'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 export type UsuarioLinha = Profile & {
   email: string
@@ -94,7 +94,6 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
   const [senhaTemp, setSenhaTemp] = useState<{ id: string; senha: string } | null>(null)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   function abrirEdicao(p: UsuarioLinha) {
     setEditandoId(p.id)
@@ -105,15 +104,15 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
   async function uploadAvatarEdicao(id: string, file: File) {
     setUploadandoAvatar(true)
     setError('')
-    const ext = file.name.split('.').pop()
-    const fileName = `avatars/${id}-${Date.now()}.${ext}`
-    const { error: uploadError } = await supabase.storage.from('imagens').upload(fileName, file, { upsert: true })
-    if (uploadError) {
-      setError('Erro ao enviar a foto.')
+    // O caminho e o nome do arquivo saem do servidor. Antes vinham daqui, com
+    // o id da pessoa no nome — dava para enviar na pasta de qualquer um.
+    const enviado = await enviarArquivo('avatar', file)
+    if ('erro' in enviado) {
+      setError(enviado.erro)
       setUploadandoAvatar(false)
       return
     }
-    const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(fileName)
+    const publicUrl = enviado.url
 
     // Salva a foto assim que sobe, sem depender do clique em "Salvar" logo
     // abaixo: assim ela nao se perde se a pessoa fechar a edicao sem salvar.

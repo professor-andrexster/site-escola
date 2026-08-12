@@ -2,11 +2,11 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import type { Noticia } from '@/types/database'
 import { CATEGORIAS, type CategoriaKey } from '@/lib/categorias'
 import TipTapEditor from './TipTapEditor'
 import { User } from 'lucide-react'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 function slugify(text: string): string {
   return text
@@ -41,7 +41,6 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   function handleTituloChange(value: string) {
     setTitulo(value)
@@ -52,18 +51,13 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
 
   async function uploadImagem(file: File) {
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const fileName = `${Date.now()}.${ext}`
-    const { data, error } = await supabase.storage
-      .from('imagens')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false })
-    if (error) {
-      setError('Erro ao fazer upload da imagem.')
+    const enviado = await enviarArquivo('noticia', file)
+    if ('erro' in enviado) {
+      setError(enviado.erro)
       setUploading(false)
       return
     }
-    const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(data.path)
-    setImagemUrl(publicUrl)
+    setImagemUrl(enviado.url)
     setUploading(false)
   }
 

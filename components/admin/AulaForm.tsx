@@ -2,9 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { ArrowLeft, ArrowRight, X, Upload } from 'lucide-react'
 import type { Aula } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 function slugify(text: string): string {
   return text
@@ -35,7 +35,6 @@ export default function AulaForm({ cursoId, cursoSlug, aula }: AulaFormProps) {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   function handleTituloChange(value: string) {
     setTitulo(value)
@@ -49,17 +48,12 @@ export default function AulaForm({ cursoId, cursoSlug, aula }: AulaFormProps) {
     const novasUrls: string[] = []
     for (let i = 0; i < files.length; i++) {
       const file = files[i]
-      const ext = file.name.split('.').pop()
-      const fileName = `${cursoSlug}/${slug || 'aula'}/slide-${Date.now()}-${i}.${ext}`
-      const { data, error } = await supabase.storage
-        .from('cursos-slides')
-        .upload(fileName, file, { cacheControl: '3600', upsert: false })
-      if (error) {
-        setError(`Erro ao subir "${file.name}": ${error.message}`)
+      const enviado = await enviarArquivo('curso', file)
+      if ('erro' in enviado) {
+        setError(`Erro ao subir "${file.name}": ${enviado.erro}`)
         continue
       }
-      const { data: { publicUrl } } = supabase.storage.from('cursos-slides').getPublicUrl(data.path)
-      novasUrls.push(publicUrl)
+      novasUrls.push(enviado.url)
     }
     setSlidesUrls((prev) => [...prev, ...novasUrls])
     setUploading(false)

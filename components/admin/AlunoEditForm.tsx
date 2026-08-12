@@ -3,10 +3,10 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2, AlertCircle, Upload, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import { TURMAS } from '@/lib/turmas'
 import { formatarCPF, validarCPF } from '@/lib/cpf'
 import type { Aluno } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -31,7 +31,6 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
   const [loading, setLoading] = useState(false)
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   async function handleUploadFoto(file: File) {
     if (!file) return
@@ -40,26 +39,14 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
     setErro('')
 
     try {
-      const ext = file.name.split('.').pop()
-      // A foto mora no bucket "imagens" (o bucket "alunos" nunca existiu no
-      // Storage), mesmo caminho usado pelo aluno em MeuPerfilForm.
-      const fileName = `avatars/aluno-${aluno.id}-${Date.now()}.${ext}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('imagens')
-        .upload(fileName, file, { upsert: true })
-
-      if (uploadError) {
-        setErro('Erro ao fazer upload da foto.')
+      const enviado = await enviarArquivo('avatar', file)
+      if ('erro' in enviado) {
+        setErro(enviado.erro)
         setUploadandoFoto(false)
         return
       }
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('imagens')
-        .getPublicUrl(fileName)
-
-      setFotoUrl(publicUrl)
+      setFotoUrl(enviado.url)
       setUploadandoFoto(false)
     } catch (err) {
       setErro('Erro ao fazer upload da foto.')

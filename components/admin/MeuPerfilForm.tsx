@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { Save, AlertCircle, Upload, X } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import type { Aluno } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -12,7 +12,6 @@ function validarEmail(email: string): boolean {
 }
 
 export default function MeuPerfilForm() {
-  const supabase = createClient()
   const [aluno, setAluno] = useState<Partial<Aluno> | null>(null)
   const [telefone, setTelefone] = useState('')
   const [email, setEmail] = useState('')
@@ -57,25 +56,15 @@ export default function MeuPerfilForm() {
     setSucesso(false)
 
     try {
-      const ext = file.name.split('.').pop()
-      // Bucket "alunos" nunca existiu de verdade no Storage, todo envio
-      // falhava; a foto do aluno mora no mesmo bucket "imagens" das outras
-      // fotos de perfil, só que com prefixo proprio.
-      const fileName = `avatars/aluno-${aluno.id}-${Date.now()}.${ext}`
-
-      const { error: uploadError } = await supabase.storage
-        .from('imagens')
-        .upload(fileName, file, { upsert: true })
-
-      if (uploadError) {
-        setErro('Erro ao fazer upload da foto.')
+      // A confusão dos buckets acabou junto com os buckets: o servidor
+      // resolve a pasta a partir da finalidade.
+      const enviado = await enviarArquivo('avatar', file)
+      if ('erro' in enviado) {
+        setErro(enviado.erro)
         setUploadandoFoto(false)
         return
       }
-
-      const { data: { publicUrl } } = supabase.storage
-        .from('imagens')
-        .getPublicUrl(fileName)
+      const publicUrl = enviado.url
 
       // Salva a foto na hora, sem depender de um segundo clique em "Salvar".
       const res = await fetch('/api/alunos/meu-perfil', {

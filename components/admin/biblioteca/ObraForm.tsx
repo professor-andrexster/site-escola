@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, Upload, X, Save } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import type { BibliotecaObra } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 const inputClass = 'w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30'
 const labelClass = 'block text-sm font-medium text-gray-700 mb-1.5'
@@ -41,7 +41,6 @@ async function buscarOuCriar(caminho: 'autores' | 'editoras' | 'categorias', nom
 
 export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicial, categoriaNomeInicial }: ObraFormProps) {
   const router = useRouter()
-  const supabase = createClient()
 
   const [titulo, setTitulo] = useState(obra?.titulo ?? '')
   const [subtitulo, setSubtitulo] = useState(obra?.subtitulo ?? '')
@@ -133,12 +132,9 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
     setUploadandoCapa(true)
     setErro('')
     try {
-      const ext = file.name.split('.').pop()
-      const fileName = `capas/${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('biblioteca').upload(fileName, file, { upsert: true })
-      if (uploadError) throw new Error('Erro ao enviar a capa.')
-      const { data: { publicUrl } } = supabase.storage.from('biblioteca').getPublicUrl(fileName)
-      setCapaUrl(publicUrl)
+      const enviado = await enviarArquivo('obra', file)
+      if ('erro' in enviado) throw new Error(enviado.erro)
+      setCapaUrl(enviado.url)
     } catch (e) {
       setErro(e instanceof Error ? e.message : 'Erro ao enviar a capa.')
     }

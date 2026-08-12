@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import type { Curso } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 function slugify(text: string): string {
   return text
@@ -35,7 +35,6 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const router = useRouter()
-  const supabase = createClient()
 
   function handleTituloChange(value: string) {
     setTitulo(value)
@@ -46,18 +45,13 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
 
   async function uploadCapa(file: File) {
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const fileName = `${slug || 'curso'}/capa-${Date.now()}.${ext}`
-    const { data, error } = await supabase.storage
-      .from('cursos-slides')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false })
-    if (error) {
-      setError('Erro ao fazer upload da capa.')
+    const enviado = await enviarArquivo('curso', file)
+    if ('erro' in enviado) {
+      setError(enviado.erro)
       setUploading(false)
       return
     }
-    const { data: { publicUrl } } = supabase.storage.from('cursos-slides').getPublicUrl(data.path)
-    setCapaUrl(publicUrl)
+    setCapaUrl(enviado.url)
     setUploading(false)
   }
 

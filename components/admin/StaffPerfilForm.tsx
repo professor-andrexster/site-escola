@@ -3,13 +3,12 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Save, Upload, X, AlertCircle } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
 import Avatar from '@/components/admin/ui/Avatar'
 import { ROLE_LABELS } from '@/lib/roles'
 import type { Profile } from '@/types/database'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 export default function StaffPerfilForm({ profile }: { profile: Profile }) {
-  const supabase = createClient()
   const router = useRouter()
 
   const [nomeCompleto, setNomeCompleto] = useState(profile.nome_completo)
@@ -25,11 +24,9 @@ export default function StaffPerfilForm({ profile }: { profile: Profile }) {
     setErro('')
     setSucesso(false)
     try {
-      const ext = file.name.split('.').pop()
-      const fileName = `avatars/${profile.id}-${Date.now()}.${ext}`
-      const { error: uploadError } = await supabase.storage.from('imagens').upload(fileName, file, { upsert: true })
-      if (uploadError) { setErro('Erro ao enviar a foto.'); setUploadando(false); return }
-      const { data: { publicUrl } } = supabase.storage.from('imagens').getPublicUrl(fileName)
+      const enviado = await enviarArquivo('avatar', file)
+      if ('erro' in enviado) { setErro(enviado.erro); setUploadando(false); return }
+      const publicUrl = enviado.url
 
       // A foto salva na hora, sem depender de outro clique em "Salvar
       // Alteracoes": era exatamente esse segundo passo esquecido que fazia

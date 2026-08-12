@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Plus, Pencil, Trash2, X, Star, ExternalLink } from 'lucide-react'
 import type { Projeto, Trilha } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
+import { enviarArquivo } from '@/lib/enviarArquivo'
 
 type ProjetoComTrilha = Projeto & { trilhas: Trilha | Trilha[] | null }
 
@@ -50,7 +50,6 @@ export default function AlunoProjetosManager({
   const [uploading, setUploading] = useState(false)
   const [saving, setSaving] = useState(false)
   const [erro, setErro] = useState('')
-  const supabase = createClient()
 
   function abrirNovo() {
     setForm(FORM_VAZIO)
@@ -86,18 +85,13 @@ export default function AlunoProjetosManager({
 
   async function uploadImagem(file: File) {
     setUploading(true)
-    const ext = file.name.split('.').pop()
-    const fileName = `${alunoId}-${Date.now()}.${ext}`
-    const { data, error } = await supabase.storage
-      .from('projetos')
-      .upload(fileName, file, { cacheControl: '3600', upsert: false })
-    if (error) {
-      setErro('Erro ao fazer upload da imagem.')
+    const enviado = await enviarArquivo('projeto', file)
+    if ('erro' in enviado) {
+      setErro(enviado.erro)
       setUploading(false)
       return
     }
-    const { data: { publicUrl } } = supabase.storage.from('projetos').getPublicUrl(data.path)
-    setForm(prev => ({ ...prev, imagem_url: publicUrl }))
+    setForm(prev => ({ ...prev, imagem_url: enviado.url }))
     setUploading(false)
   }
 
