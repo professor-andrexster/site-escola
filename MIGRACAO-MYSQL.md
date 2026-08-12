@@ -62,7 +62,7 @@ O que ainda usa o Supabase, e em qual fase cai:
 
 | O quê | Arquivos | Fase |
 |---|---|---|
-| Upload de imagem e arquivo (Storage) | 10 componentes | 5 |
+| ~~Upload de imagem e arquivo (Storage)~~ | — | ~~5~~ **feito** |
 | ~~Sessão, login e senha (Auth)~~ | — | ~~4~~ **feito** |
 | Quiz ao vivo (Realtime) | `QuizControle`, `QuizRoom` | 6 |
 
@@ -154,8 +154,62 @@ Agora está só em `lib/auth/senha.ts` (`MINIMO_DE_SENHA`). Continua 6:
 endurecer é decisão da direção, não efeito colateral de trocar de provedor —
 mas agora é uma linha.
 
-### Fase 5 — Arquivos
-Baixar os buckets, servir de `/var/www/escola/data/uploads` pelo nginx, reescrever as 20 chamadas de upload.
+### Fase 5 — Arquivos — **concluída (falta mover os arquivos)**
+
+As doze chamadas de upload viraram uma rota (`POST /api/arquivos`) e uma função
+no cliente (`lib/enviarArquivo.ts`). O cliente manda a **finalidade** — uma de
+seis, fechada — e o servidor decide pasta, nome e extensão.
+
+| Finalidade | Pasta | Quem pode | Limite |
+|---|---|---|---|
+| `avatar` | `avatares/` | qualquer conta aprovada | 5 MB |
+| `noticia` | `noticias/` | monitor ou gestão | 8 MB |
+| `curso` | `cursos/` | professor, monitor ou gestão | 8 MB |
+| `projeto` | `projetos/` | gestão | 8 MB |
+| `obra` | `biblioteca/` | bibliotecário ou gestão | 5 MB |
+| `desafio` | `desafios/` | integrante da equipe, ou quem avalia | 25 MB |
+
+**O que a fase 5 fechou** (nada disso existia no Storage):
+
+- **upload não tinha autorização nenhuma.** Qualquer sessão escrevia em
+  qualquer bucket;
+- **o caminho vinha do cliente**, com o id da pessoa no nome — dava para gravar
+  em `avatars/<id de qualquer um>`;
+- **o tipo era o que a extensão dissesse.** Agora sai dos bytes iniciais: um
+  `.html` renomeado para `.png` é recusado;
+- **não havia limite de tamanho.**
+
+**Entrega de desafio** continua aceitando qualquer tipo — é planilha,
+apresentação, protótipo zipado — mas é servida com `Content-Disposition:
+attachment`. Sem isso, um HTML enviado como entrega rodaria no domínio da
+escola, com acesso aos cookies de quem abrisse. O mesmo vale para tudo que vier
+dos buckets antigos, que nunca validaram tipo nenhum.
+
+**Serviço dos arquivos:** rota Next em `/arquivos/[...caminho]`, para o sistema
+não depender do nginx. Na virada o nginx assume esse prefixo — que por isso já é
+o definitivo, e nenhuma URL gravada no banco vai precisar mudar de novo.
+
+**Variável nova:** `UPLOAD_ROOT` (produção: `/var/www/escola/data/uploads`).
+
+#### O que falta: mover os arquivos
+
+`scripts/baixar-storage.mjs` baixa os cinco buckets e imprime o SQL que reescreve
+as oito colunas de URL (`profiles.avatar_url`, `alunos.foto_url`,
+`noticias.imagem_url`, `cursos.capa_url`, `aulas.slides_urls`,
+`projetos.imagem_url`, `entregas.arquivo_url`, `biblioteca_obras.capa_url`).
+
+Ele preserva a estrutura original em `legado/<bucket>/<caminho>` — assim a
+reescrita é troca de prefixo, não casamento arquivo a arquivo, e não colide com
+os nomes novos.
+
+**Não foi rodado:** depende de `SUPABASE_SERVICE_ROLE_KEY`, que está no desktop.
+Rode primeiro com `--so-listar`, que conta e mede tudo sem baixar nada:
+
+```bash
+SUPABASE_URL=https://yxtjkorchxcjkfnbekrs.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=... \
+node scripts/baixar-storage.mjs --so-listar
+```
 
 ### Fase 6 — Quiz ao vivo
 Substituir o Realtime. No VPS, WebSocket próprio funciona; a alternativa é polling a cada 2s.
