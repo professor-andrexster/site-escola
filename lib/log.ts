@@ -1,5 +1,3 @@
-import type { SupabaseClient } from '@supabase/supabase-js'
-
 export type AcaoLog =
   | 'cadastro_aluno'
   | 'cadastro_professor'

@@ -1,8 +1,7 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import QuizPlayer from './QuizPlayer'
+import { usarEstadoDaSala } from '@/lib/quiz/usarEstadoDaSala'
 import { Gamepad2, Users, Clock } from 'lucide-react'
 import type { QuizPergunta, QuizParticipante } from '@/types/database'
 
@@ -29,54 +28,14 @@ interface QuizRoomProps {
 }
 
 export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, jaRespondidas }: QuizRoomProps) {
-  const [quiz, setQuiz] = useState(initialQuiz)
-  const [participantes, setParticipantes] = useState<{ id: string; nome: string; turma: string }[]>([])
-  const supabase = createClient()
-
-  // Subscrição em tempo real no estado do quiz
-  useEffect(() => {
-    const channel = supabase
-      .channel(`quiz-room-${quiz.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'quizzes', filter: `id=eq.${quiz.id}` },
-        (payload) => {
-          setQuiz(prev => ({ ...prev, ...payload.new }))
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [quiz.id])
-
-  // Lista de participantes no lobby (atualiza em tempo real)
-  useEffect(() => {
-    if (!quiz.lobby_aberto && !quiz.ativo) return
-
-    async function loadParticipantes() {
-      const res = await fetch(
-        `/api/quiz/${quiz.id}/participantes?participanteId=${participante.id}`
-      )
-      if (!res.ok) return
-      const { participantes } = await res.json()
-      setParticipantes(participantes)
-    }
-
-    loadParticipantes()
-
-    const channel = supabase
-      .channel(`lobby-${quiz.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'quiz_participantes', filter: `quiz_id=eq.${quiz.id}` },
-        (payload) => {
-          setParticipantes(prev => [...prev, payload.new as { id: string; nome: string; turma: string }])
-        }
-      )
-      .subscribe()
-
-    return () => { supabase.removeChannel(channel) }
-  }, [quiz.id, quiz.lobby_aberto, quiz.ativo, participante.id])
+  // O estado da sala e a lista de espera vinham por Realtime; agora vêm de uma
+  // consulta a cada dois segundos, numa chamada só. O primeiro render usa o que
+  // o servidor já mandou, então a tela nunca aparece vazia esperando a rede.
+  const { estado: quiz, participantes } = usarEstadoDaSala(
+    initialQuiz.id,
+    initialQuiz,
+    participante.id
+  )
 
   // Quiz em andamento — mostra o player
   if (quiz.ativo) {

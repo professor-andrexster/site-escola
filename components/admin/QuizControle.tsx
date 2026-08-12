@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
 import { Eye, ArrowRight, Square, Users, CheckCircle2 } from 'lucide-react'
+import { usarEstadoDaSala } from '@/lib/quiz/usarEstadoDaSala'
 import type { Quiz, QuizPergunta } from '@/types/database'
 
 const CORES = ['bg-red-500', 'bg-blue-500', 'bg-yellow-400 text-gray-900', 'bg-green-500']
@@ -17,13 +17,14 @@ interface QuizControleProps {
 // Telão do professor: ele comanda quando revelar a resposta e quando
 // passar para a próxima pergunta. Os alunos seguem via Realtime.
 export default function QuizControle({ quiz: initialQuiz, perguntas, totalParticipantes }: QuizControleProps) {
-  const [quiz, setQuiz] = useState(initialQuiz)
+  // Acompanha a sala pelo mesmo caminho que a tela do aluno: outra aba do
+  // professor comandando o quiz aparece aqui em ate dois segundos.
+  const { estado: quiz, setEstado: setQuiz } = usarEstadoDaSala(initialQuiz.id, initialQuiz)
   const [respostasCount, setRespostasCount] = useState(0)
   const [contagem, setContagem] = useState<Record<string, number>>({})
   const [loading, setLoading] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const router = useRouter()
-  const supabase = createClient()
 
   const currentIndex = Math.min(quiz.pergunta_atual ?? 0, perguntas.length - 1)
   const pergunta = perguntas[currentIndex]
@@ -45,22 +46,8 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     return () => clearInterval(interval)
   }, [quiz.pergunta_liberada_em, quiz.quiz_iniciado_em, quiz.tempo_por_pergunta])
 
-  // Acompanha o quiz (caso outra aba do professor também controle)
-  useEffect(() => {
-    const channel = supabase
-      .channel(`quiz-controle-${quiz.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'UPDATE', schema: 'public', table: 'quizzes', filter: `id=eq.${quiz.id}` },
-        (payload) => setQuiz(prev => ({ ...prev, ...payload.new }))
-      )
-      .subscribe()
-    return () => { supabase.removeChannel(channel) }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [quiz.id])
-
-  // Contagem de respostas da pergunta atual: eventos Realtime + polling de
-  // segurança a cada 3s (se o Realtime falhar, o contador continua vivo)
+  // Contagem de respostas da pergunta atual. Já era consultada a cada 3s como
+  // rede de segurança do Realtime; agora é só isso, sem o Realtime.
   const perguntaIdRef = useRef(pergunta?.id)
   useEffect(() => {
     perguntaIdRef.current = pergunta?.id
@@ -81,19 +68,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     carregar()
 
     const poll = setInterval(carregar, 3000)
-
-    const channel = supabase
-      .channel(`respostas-${pergunta.id}`)
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'quiz_respostas', filter: `pergunta_id=eq.${pergunta.id}` },
-        () => { carregar() }
-      )
-      .subscribe()
-    return () => {
-      clearInterval(poll)
-      supabase.removeChannel(channel)
-    }
+    return () => clearInterval(poll)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pergunta?.id])
 
