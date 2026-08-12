@@ -64,7 +64,7 @@ O que ainda usa o Supabase, e em qual fase cai:
 |---|---|---|
 | ~~Upload de imagem e arquivo (Storage)~~ | — | ~~5~~ **feito** |
 | ~~Sessão, login e senha (Auth)~~ | — | ~~4~~ **feito** |
-| Quiz ao vivo (Realtime) | `QuizControle`, `QuizRoom` | 6 |
+| ~~Quiz ao vivo (Realtime)~~ | — | ~~6~~ **feito** |
 
 ### O que a fase 2 corrigiu de autorização
 
@@ -211,16 +211,87 @@ SUPABASE_SERVICE_ROLE_KEY=... \
 node scripts/baixar-storage.mjs --so-listar
 ```
 
-### Fase 6 — Quiz ao vivo
-Substituir o Realtime. No VPS, WebSocket próprio funciona; a alternativa é polling a cada 2s.
+### Fase 6 — Quiz ao vivo — **concluída**
 
-### Fase 7 — Virada
-1. Congelar escritas (aviso no painel)
-2. Exportar Postgres → transformar → importar MySQL
-3. Apontar DNS `escolaestadualdrjoaoberaldo.com` para `187.127.18.53`
-4. Certbot, nginx, systemd — mesmo padrão dos outros 4 sistemas
-5. Smoke test: login, perfil, quiz, biblioteca, certificado, portfólio
-6. Supabase e Vercel ficam intocados por 30 dias, como rollback
+`QuizRoom` e `QuizControle` trocam a subscrição Realtime por consulta a cada
+dois segundos em `GET /api/quiz/[id]/estado`.
+
+**Polling e não WebSocket/SSE por causa do modo de falhar.** Os dois dependem de
+configuração no nginx (upgrade de conexão, `proxy_buffering off`) que, se faltar
+na virada, quebra em silêncio — e essa quebra acontece com a turma inteira
+olhando o telão. Requisição HTTP comum não tem esse modo de falha. São ~40
+alunos por sala, uma consulta leve cada.
+
+O hook (`lib/quiz/usarEstadoDaSala.ts`) evita dois erros da versão ingênua: a
+consulta seguinte só parte quando a anterior volta (senão resposta lenta empilha
+requisição), e aba em segundo plano não consulta — mas ao voltar busca na hora.
+
+A tela do aluno faz **uma** requisição por rodada: estado da sala e lista de
+espera vêm juntos. Antes eram duas subscrições.
+
+**`lib/supabase/` foi apagado.** Não há mais uma linha de Supabase em `app/`,
+`components/`, `lib/` ou no middleware, e o `next build` passa sem nenhuma
+variável `NEXT_PUBLIC_SUPABASE_*` — é assim que se confirma que a dependência
+acabou.
+
+
+### Fase 7 — Virada — **ensaiada, não executada**
+
+O runbook completo está em **`deploy/VIRADA.md`**. Resumo do que já foi feito e
+do que falta.
+
+#### Já feito: o ensaio
+
+Os **2.065 registros** do Supabase foram copiados para o MariaDB deste servidor
+e conferidos linha a linha. O site sobe contra eles e serve conteúdo real —
+notícias, cursos, quizzes, ranking, sitemap, página de curso.
+
+Isso significa que o roteiro de dados está testado contra os dados de verdade,
+não contra um banco de exemplo.
+
+| Script | O que faz |
+|---|---|
+| `scripts/migrar-dados.mjs` | lê pelo `psql`, grava pelo Prisma; `--ensaio` não escreve |
+| `scripts/conferir-migracao.mjs` | compara a contagem das duas pontas |
+| `scripts/limpar-banco.mjs` | zera antes da importação definitiva (exige `--confirmo`) |
+| `scripts/baixar-storage.mjs` | baixa os buckets e imprime o SQL das URLs |
+| `deploy/escola.service` | unit do systemd (porta 3003) |
+| `deploy/escola.nginx` | vhost — **não instalado** |
+
+**Os dados reais estão no MariaDB deste servidor agora.** É o destino da
+migração e o banco só aceita conexão local, mas se a migração for abandonada,
+apague com `node scripts/limpar-banco.mjs --confirmo`.
+
+#### Três decisões pendentes, nenhuma técnica
+
+**1. As senhas.** O papel `diagnostico_ro` não alcança o schema `auth`, onde
+ficam os hashes. Sem eles, `usuarios` é montada a partir de `profiles` e as
+**37 contas precisam redefinir a senha**. Para evitar, exporte `auth.users` pelo
+painel e passe em `CONTAS_JSON` — os hashes do Supabase são bcrypt e validam
+direto, que é o motivo de a fase 4 ter usado bcrypt.
+
+**2. Duas alunas com a mesma matrícula.**
+
+```
+ALU20260010  Daphne Ferraz Pereira
+Alu20260010  Anne Pereira da Silva
+```
+
+Não é problema da migração: a collation do Postgres escondia. E **já quebra
+hoje** — `normalizarMatricula` põe tudo em maiúscula antes de consultar, então
+`ALU20260010` sempre acha a Daphne. A Anne não entra por matrícula, não recupera
+senha por CPF e não conclui o autocadastro. A secretaria decide qual é a
+correta; o script recusa rodar enquanto a colisão existir.
+
+**3. O tamanho dos arquivos.** `scripts/baixar-storage.mjs --so-listar` conta e
+mede os cinco buckets sem baixar nada. Precisa da chave de serviço, que está no
+desktop.
+
+#### O que não foi executado, e por quê
+
+Instalar o vhost, criar o serviço, apontar o DNS e emitir o certificado mexem em
+recurso compartilhado com os outros quatro sites deste servidor, ou dependem de
+decisão do André. Estão escritos e comentados, prontos para rodar.
 
 ## Rollback
 
