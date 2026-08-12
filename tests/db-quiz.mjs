@@ -62,11 +62,13 @@ try {
   })
   ok('reabrir apaga participantes e respostas',
      (await prisma.quiz_participantes.count({ where: { quiz_id: qid } })) === 0 &&
-     (await prisma.quiz_respostas.count()) === 0)
+     (await prisma.quiz_respostas.count({ where: { participante_id: part } })) === 0)
 } finally {
   await limpar()
-  const sobrou = await prisma.quizzes.count()
-  ok('banco limpo ao final', sobrou === 0, `${sobrou} quizzes`)
+  // Conta so o que esta suite criou. Contar a tabela inteira quebrava assim
+  // que o banco deixou de estar vazio — e o banco de verdade nunca esta.
+  const sobrou = await prisma.quizzes.count({ where: { codigo: CODIGO } })
+  ok('banco limpo ao final', sobrou === 0, `${sobrou} quizzes do teste`)
   await prisma.$disconnect()
 }
 process.exit(falhas ? 1 : 0)

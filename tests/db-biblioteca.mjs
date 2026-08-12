@@ -127,7 +127,9 @@ try {
   await prisma.biblioteca_exemplares.delete({ where: { id: e2 } })
 } finally {
   await limpar()
-  ok('banco limpo ao final', (await prisma.biblioteca_exemplares.count()) === 0)
+  // Escopado aos exemplares desta suite.
+  ok('banco limpo ao final',
+     (await prisma.biblioteca_exemplares.count({ where: { obra_id: oid } })) === 0)
   await prisma.$disconnect()
 }
 process.exit(falhas ? 1 : 0)

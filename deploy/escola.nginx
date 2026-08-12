@@ -1,0 +1,90 @@
+# vhost da escola.
+#
+# NÃO INSTALADO de propósito: mexer na configuração compartilhada do nginx
+# derruba os outros sites deste servidor se algo estiver errado. A instalação
+# é um passo consciente da virada, não efeito colateral do deploy.
+#
+# Instalação (com o DNS já apontando para cá):
+#   cp deploy/escola.nginx /etc/nginx/sites-available/escola
+#   ln -s /etc/nginx/sites-available/escola /etc/nginx/sites-enabled/
+#   nginx -t                      # OBRIGATÓRIO antes de recarregar
+#   systemctl reload nginx        # reload, nunca restart
+#
+# O certificado sai depois, com o bloco da porta 80 já no ar:
+#   certbot --nginx -d escolaestadualdrjoaoberaldo.com \
+#                   -d www.escolaestadualdrjoaoberaldo.com
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name escolaestadualdrjoaoberaldo.com www.escolaestadualdrjoaoberaldo.com;
+
+    # Webroot do ACME, no mesmo lugar que os demais vhosts deste servidor usam.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://escolaestadualdrjoaoberaldo.com$request_uri;
+    }
+}
+
+# O www redireciona para o domínio raiz. É o mesmo redirect que estava
+# pendente na Vercel — aqui ele nasce junto.
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name www.escolaestadualdrjoaoberaldo.com;
+
+    # ssl_certificate preenchido pelo certbot.
+    return 301 https://escolaestadualdrjoaoberaldo.com$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name escolaestadualdrjoaoberaldo.com;
+
+    # Limite de envio: o maior aceito pela aplicação é 25 MB (entrega de
+    # desafio). Sem esta linha o nginx corta em 1 MB e o erro chega na tela
+    # como "falha ao enviar", sem dizer por quê.
+    client_max_body_size 30M;
+
+    # Entrega de desafio e arquivo herdado do Supabase são de tipo livre:
+    # baixam, nunca abrem no navegador. Sem isto, um HTML enviado como entrega
+    # roda no domínio da escola, com acesso aos cookies de quem abrir.
+    # Precede o bloco geral de /arquivos/ porque regex ganha de prefixo.
+    location ~ ^/arquivos/(desafios|legado)/ {
+        alias /var/www/escola/data/uploads/;
+        add_header Content-Disposition "attachment";
+        add_header X-Content-Type-Options "nosniff";
+        access_log off;
+        expires 1y;
+    }
+
+    # Demais arquivos enviados pelo site, servidos direto do disco. A rota
+    # /arquivos da aplicação continua existindo como reserva, e as URLs
+    # gravadas no banco são as mesmas nos dois caminhos.
+    location /arquivos/ {
+        alias /var/www/escola/data/uploads/;
+        access_log off;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+        add_header X-Content-Type-Options "nosniff";
+        try_files $uri @app;
+    }
+
+    location @app {
+        proxy_pass http://127.0.0.1:3003;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3003;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        # A aplicação lê o IP daqui para o limite de tentativas de login.
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}

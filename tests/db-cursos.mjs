@@ -63,7 +63,8 @@ try {
      (await prisma.progresso_aulas.count({ where: { curso_id: cid } })) === 0)
 } finally {
   await limpar()
-  ok('banco limpo ao final', (await prisma.cursos.count()) === 0)
+  // Escopado ao curso desta suite: o banco de verdade tem cursos reais.
+  ok('banco limpo ao final', (await prisma.cursos.count({ where: { id: cid } })) === 0)
   await prisma.$disconnect()
 }
 process.exit(falhas ? 1 : 0)
