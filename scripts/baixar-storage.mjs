@@ -135,9 +135,12 @@ const COLUNAS = [
 
 console.log('\nSQL de reescrita das URLs (confira e rode depois de importar os dados):\n')
 for (const [tabela, coluna] of COLUNAS) {
+  // O LIKE precisa do % NA FRENTE. Sem ele, `aulas.slides_urls` fica de fora:
+  // a coluna guarda uma lista, entao o valor nao COMECA com a URL. Foram 133
+  // aulas que quase ficaram apontando para o Supabase para sempre.
   console.log(
     `UPDATE \`${tabela}\` SET \`${coluna}\` = REPLACE(\`${coluna}\`, ` +
-    `'${PREFIXO_ANTIGO}', '${PREFIXO_NOVO}') WHERE \`${coluna}\` LIKE '${PREFIXO_ANTIGO}%';`
+    `'${PREFIXO_ANTIGO}', '${PREFIXO_NOVO}') WHERE \`${coluna}\` LIKE '%${PREFIXO_ANTIGO}%';`
   )
 }
 
