@@ -6,6 +6,7 @@ import { exigirGestao } from '@/lib/apiGestao'
 import { enviarConviteBibliotecario } from '@/lib/email'
 import { ipDoRequest } from '@/lib/log'
 import { registrar } from '@/lib/db/log'
+import { enderecoPublico } from '@/lib/http/endereco-publico'
 
 export async function POST(request: Request) {
   const auth = await exigirGestao()
@@ -42,7 +43,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Erro ao criar o convite.' }, { status: 400 })
   }
 
-  const origin = request.headers.get('origin') ?? new URL(request.url).origin
+  const origin = enderecoPublico(request)
   const link = `${origin}/admin/convite?token=${token}`
 
   await registrar({
