@@ -28,7 +28,23 @@ export async function POST(request: Request) {
   const email = await resolverEmail(identificador)
 
   if (email) {
-    const origin = request.headers.get('origin') ?? new URL(request.url).origin
+    // O endereco publico do site, para montar o link do e-mail.
+    //
+    // Nao dava para confiar so no cabecalho Origin: quando ele falta — chamada
+    // sem navegador, ou proxy que o remove — o codigo caia em
+    // `new URL(request.url).origin`, que atras do nginx e o endereco INTERNO
+    // de escuta. O primeiro e-mail de verdade saiu com https://0.0.0.0:3004 no
+    // link, e o link nao abre em lugar nenhum.
+    //
+    // Ordem: o que estiver configurado; senao o Host que o nginx repassa
+    // (o dominio de verdade); so entao o Origin.
+    const encaminhado = request.headers.get('host')
+    const protocolo = request.headers.get('x-forwarded-proto') ?? 'https'
+    const origin =
+      process.env.APP_URL?.replace(/\/$/, '') ??
+      (encaminhado ? `${protocolo}://${encaminhado}` : null) ??
+      request.headers.get('origin') ??
+      new URL(request.url).origin
     const { erro: error } = await enviarRedefinicaoDeSenha(
       email,
       `${origin}/admin/redefinir-senha`
