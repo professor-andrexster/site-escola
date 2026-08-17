@@ -27,12 +27,27 @@ for (const tabela of TABELAS.sort()) {
   else if (pg > 0) console.log(`  ${tabela.padEnd(28)} ${pg}  ok`)
 }
 
+// Contas e perfis NÃO precisam bater em número: `auth.users` tem contas que
+// nunca completaram o cadastro e por isso não têm perfil. O que não pode
+// acontecer é o contrário — perfil sem conta é gente trancada do lado de fora.
 const contas = await prisma.usuarios.count()
 const perfis = await prisma.profiles.count()
-console.log(`\n  usuarios ${contas} / profiles ${perfis} — ${contas === perfis ? 'ok' : 'DIVERGE'}`)
+// SQL cru porque a relação profiles→usuarios é obrigatória no schema, e o
+// Prisma não deixa filtrar por ela nula. Só que a importação roda com as FKs
+// desligadas — então o caso PODE existir no banco, e é justamente ele que
+// precisa ser conferido.
+const [{ n: semConta }] = await prisma.$queryRawUnsafe(
+  'SELECT COUNT(*) AS n FROM profiles p LEFT JOIN usuarios u ON u.id = p.id WHERE u.id IS NULL'
+)
+console.log(`\n  usuarios ${contas} / profiles ${perfis}`)
+console.log(`  perfis sem conta: ${semConta} — ${Number(semConta) === 0 ? 'ok' : 'PROBLEMA: essas pessoas não conseguem entrar'}`)
+if (contas > perfis) {
+  console.log(`  ${contas - perfis} conta(s) sem perfil: entram, mas não têm acesso a nada`)
+}
+
 const semSenha = await prisma.usuarios.count({ where: { encrypted_password: null } })
-if (semSenha) console.log(`  ${semSenha} conta(s) sem hash: vão precisar redefinir a senha`)
+console.log(`  contas sem hash de senha: ${semSenha}${semSenha ? ' — vão precisar redefinir' : ' — ninguém precisa trocar de senha'}`)
 
 await prisma.$disconnect()
 console.log(divergentes ? `\n${divergentes} tabela(s) divergente(s)` : '\ntodas as contagens batem')
-process.exit(divergentes || contas !== perfis ? 1 : 0)
+process.exit(divergentes || Number(semConta) ? 1 : 0)
