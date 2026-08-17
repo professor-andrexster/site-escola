@@ -37,8 +37,12 @@ server {
     # baixam, nunca abrem no navegador. Sem isto, um HTML enviado como entrega
     # roda no domínio da escola, com acesso aos cookies de quem abrir.
     # Vem antes do bloco geral porque regex ganha de prefixo.
-    location ~ ^/arquivos/(desafios|legado)/ {
-        alias /var/www/escola/data/uploads/;
+    location ~ ^/arquivos/((?:desafios|legado)/.+)$ {
+        # O caminho capturado ENTRA no alias. Dentro de um location com
+        # expressao regular, `alias` sem a captura faz o nginx mapear a
+        # requisicao para o diretorio e responder 301 com barra no fim — o
+        # arquivo nunca chega. Visto em producao na conferencia.
+        alias /var/www/escola/data/uploads/$1;
         add_header Content-Disposition "attachment";
         add_header X-Content-Type-Options "nosniff";
         access_log off;
