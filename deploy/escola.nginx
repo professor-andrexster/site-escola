@@ -1,18 +1,21 @@
-# vhost da escola.
+# vhost da escola — ETAPA 1, só HTTP.
 #
-# NÃO INSTALADO de propósito: mexer na configuração compartilhada do nginx
-# derruba os outros sites deste servidor se algo estiver errado. A instalação
-# é um passo consciente da virada, não efeito colateral do deploy.
+# De propósito sem os blocos 443: o certificado ainda não existe, e um
+# `ssl_certificate` apontando para arquivo inexistente faz `nginx -t` falhar —
+# o que impediria o reload e deixaria os outros sites deste servidor sem
+# poder recarregar configuração até alguém perceber.
 #
-# Instalação (com o DNS já apontando para cá):
-#   cp deploy/escola.nginx /etc/nginx/sites-available/escola
-#   ln -s /etc/nginx/sites-available/escola /etc/nginx/sites-enabled/
-#   nginx -t                      # OBRIGATÓRIO antes de recarregar
-#   systemctl reload nginx        # reload, nunca restart
+# O Certbot completa este arquivo sozinho, acrescentando o bloco 443 e o
+# redirecionamento, depois que o DNS apontar para cá:
 #
-# O certificado sai depois, com o bloco da porta 80 já no ar:
 #   certbot --nginx -d escolaestadualdrjoaoberaldo.com \
 #                   -d www.escolaestadualdrjoaoberaldo.com
+#
+# Instalação:
+#   cp deploy/escola.nginx /etc/nginx/sites-available/escola
+#   ln -s /etc/nginx/sites-available/escola /etc/nginx/sites-enabled/
+#   nginx -t            # OBRIGATÓRIO — se falhar, remova o link e pare
+#   systemctl reload nginx   # reload, nunca restart
 
 server {
     listen 80;
@@ -20,30 +23,10 @@ server {
     server_name escolaestadualdrjoaoberaldo.com www.escolaestadualdrjoaoberaldo.com;
 
     # Webroot do ACME, no mesmo lugar que os demais vhosts deste servidor usam.
+    # Precisa vir antes das outras regras para o Certbot conseguir validar.
     location /.well-known/acme-challenge/ {
         root /var/www/certbot;
     }
-
-    location / {
-        return 301 https://escolaestadualdrjoaoberaldo.com$request_uri;
-    }
-}
-
-# O www redireciona para o domínio raiz. É o mesmo redirect que estava
-# pendente na Vercel — aqui ele nasce junto.
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name www.escolaestadualdrjoaoberaldo.com;
-
-    # ssl_certificate preenchido pelo certbot.
-    return 301 https://escolaestadualdrjoaoberaldo.com$request_uri;
-}
-
-server {
-    listen 443 ssl http2;
-    listen [::]:443 ssl http2;
-    server_name escolaestadualdrjoaoberaldo.com;
 
     # Limite de envio: o maior aceito pela aplicação é 25 MB (entrega de
     # desafio). Sem esta linha o nginx corta em 1 MB e o erro chega na tela
@@ -53,7 +36,7 @@ server {
     # Entrega de desafio e arquivo herdado do Supabase são de tipo livre:
     # baixam, nunca abrem no navegador. Sem isto, um HTML enviado como entrega
     # roda no domínio da escola, com acesso aos cookies de quem abrir.
-    # Precede o bloco geral de /arquivos/ porque regex ganha de prefixo.
+    # Vem antes do bloco geral porque regex ganha de prefixo.
     location ~ ^/arquivos/(desafios|legado)/ {
         alias /var/www/escola/data/uploads/;
         add_header Content-Disposition "attachment";
