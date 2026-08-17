@@ -357,17 +357,21 @@ model convites_usuario {
 }
 
 model curso_desafios {
-  id         String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  curso_id   String    @db.Char(36)
-  aula_id    String?   @db.Char(36)
-  titulo     String    @db.VarChar(160)
-  enunciado  String    @db.Text
-  tipo       String    @default("pratico") @db.VarChar(20)
-  gabarito   String?   @db.Text
-  ordem      Int?      @default(0)
-  created_at DateTime? @default(now())
-  aulas      aulas?    @relation(fields: [aula_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  cursos     cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  id                   String                 @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  curso_id             String                 @db.Char(36)
+  aula_id              String?                @db.Char(36)
+  titulo               String                 @db.VarChar(160)
+  enunciado            String                 @db.Text
+  tipo                 String                 @default("pratico") @db.VarChar(20)
+  gabarito             String?                @db.Text
+  ordem                Int?                   @default(0)
+  created_at           DateTime?              @default(now())
+  vale_certificado     Boolean                @default(false)
+  formatos_aceitos     String?                @db.VarChar(120)
+  instrucoes_envio     String?                @db.Text
+  curso_desafio_envios curso_desafio_envios[]
+  aulas                aulas?                 @relation(fields: [aula_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  cursos               cursos                 @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@index([aula_id], map: "curso_desafios_aula_id_fkey")
   @@index([curso_id], map: "curso_desafios_curso_id_fkey")
@@ -408,6 +412,7 @@ model cursos {
   carga_horaria         Int?
   aulas                 aulas[]
   certificados          certificados[]
+  curso_avaliadores     curso_avaliadores[]
   curso_desafios        curso_desafios[]
   curso_prova_perguntas curso_prova_perguntas[]
   usuarios              usuarios?               @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "fk_cursos_author")
@@ -821,6 +826,10 @@ model usuarios {
   certificados                                                           certificados[]
   convites_usuario_convites_usuario_criado_porTousuarios                 convites_usuario[]         @relation("convites_usuario_criado_porTousuarios")
   convites_usuario_convites_usuario_usuario_idTousuarios                 convites_usuario[]         @relation("convites_usuario_usuario_idTousuarios")
+  curso_avaliadores_curso_avaliadores_convidado_porTousuarios            curso_avaliadores[]        @relation("curso_avaliadores_convidado_porTousuarios")
+  curso_avaliadores_curso_avaliadores_user_idTousuarios                  curso_avaliadores[]        @relation("curso_avaliadores_user_idTousuarios")
+  curso_desafio_envios_curso_desafio_envios_avaliado_porTousuarios       curso_desafio_envios[]     @relation("curso_desafio_envios_avaliado_porTousuarios")
+  curso_desafio_envios_curso_desafio_envios_user_idTousuarios            curso_desafio_envios[]     @relation("curso_desafio_envios_user_idTousuarios")
   cursos                                                                 cursos[]
   identidades                                                            identidades?
   log_atividades                                                         log_atividades[]
@@ -856,4 +865,40 @@ model tokens_senha {
   usuarios   usuarios  @relation(fields: [usuario_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@index([usuario_id])
+}
+
+model curso_desafio_envios {
+  id                                                   String         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  desafio_id                                           String         @db.Char(36)
+  user_id                                              String         @db.Char(36)
+  arquivo_url                                          String?        @db.VarChar(300)
+  link_url                                             String?        @db.VarChar(300)
+  comentario                                           String?        @db.Text
+  status                                               String         @default("entregue") @db.VarChar(20)
+  feedback_professor                                   String?        @db.Text
+  avaliado_por                                         String?        @db.Char(36)
+  avaliado_em                                          DateTime?
+  enviado_em                                           DateTime       @default(now())
+  usuarios_curso_desafio_envios_avaliado_porTousuarios usuarios?      @relation("curso_desafio_envios_avaliado_porTousuarios", fields: [avaliado_por], references: [id], onUpdate: Restrict, map: "curso_desafio_envios_avaliador_fkey")
+  curso_desafios                                       curso_desafios @relation(fields: [desafio_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curso_desafio_envios_desafio_fkey")
+  usuarios_curso_desafio_envios_user_idTousuarios      usuarios       @relation("curso_desafio_envios_user_idTousuarios", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curso_desafio_envios_user_fkey")
+
+  @@unique([desafio_id, user_id], map: "curso_desafio_envios_desafio_user_key")
+  @@index([avaliado_por], map: "curso_desafio_envios_avaliador_fkey")
+  @@index([user_id], map: "curso_desafio_envios_user_idx")
+}
+
+model curso_avaliadores {
+  id                                                 String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  curso_id                                           String    @db.Char(36)
+  user_id                                            String    @db.Char(36)
+  convidado_por                                      String?   @db.Char(36)
+  criado_em                                          DateTime  @default(now())
+  usuarios_curso_avaliadores_convidado_porTousuarios usuarios? @relation("curso_avaliadores_convidado_porTousuarios", fields: [convidado_por], references: [id], onUpdate: Restrict, map: "curso_avaliadores_convidou_fkey")
+  cursos                                             cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curso_avaliadores_curso_fkey")
+  usuarios_curso_avaliadores_user_idTousuarios       usuarios  @relation("curso_avaliadores_user_idTousuarios", fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curso_avaliadores_user_fkey")
+
+  @@unique([curso_id, user_id], map: "curso_avaliadores_curso_user_key")
+  @@index([convidado_por], map: "curso_avaliadores_convidou_fkey")
+  @@index([user_id], map: "curso_avaliadores_user_idx")
 }

@@ -43,6 +43,11 @@ async function autorizado(
     case 'projeto':
       return isGestao(autor.role) ? null : 'Só a direção mexe no portfólio.'
 
+    // Desafio final de curso: qualquer conta aprovada envia o próprio trabalho.
+    // Quem pode avaliar é outra história, conferida na rota de avaliação.
+    case 'desafio-curso':
+      return null
+
     case 'obra':
       return autor.role === 'bibliotecario' || isGestao(autor.role)
         ? null

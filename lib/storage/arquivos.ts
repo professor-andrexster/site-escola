@@ -21,7 +21,7 @@ export const PREFIXO_PUBLICO = '/arquivos'
 
 const MB = 1024 * 1024
 
-export type Finalidade = 'avatar' | 'noticia' | 'curso' | 'projeto' | 'desafio' | 'obra'
+export type Finalidade = 'avatar' | 'noticia' | 'curso' | 'projeto' | 'desafio' | 'desafio-curso' | 'obra'
 
 type Regra = { pasta: string; limite: number; tipos: string[] | 'qualquer' }
 
@@ -34,9 +34,13 @@ const REGRAS: Record<Finalidade, Regra> = {
   projeto: { pasta: 'projetos', limite: 8 * MB, tipos: IMAGENS },
   obra: { pasta: 'biblioteca', limite: 5 * MB, tipos: IMAGENS },
   // A entrega de uma fase de desafio pode ser qualquer coisa: planilha,
-  // apresentação, protótipo zipado. É o único envio sem lista de tipos, e por
-  // isso o único servido com Content-Disposition: attachment.
+  // apresentação, protótipo zipado.
   desafio: { pasta: 'desafios', limite: 25 * MB, tipos: 'qualquer' },
+  // Desafio final de curso: o aluno manda o próprio código. Num curso de HTML
+  // e CSS o entregável É um .html — o mesmo tipo que em qualquer outro lugar
+  // do sistema seria recusado. Por isso a pasta é servida como anexo: baixa,
+  // nunca roda no domínio da escola.
+  'desafio-curso': { pasta: 'desafios-curso', limite: 15 * MB, tipos: 'qualquer' },
 }
 
 export function finalidadeValida(v: unknown): v is Finalidade {
@@ -155,12 +159,19 @@ export function caminhoNoDisco(partes: string[]): string | null {
 /**
  * Arquivo que deve baixar em vez de abrir no navegador.
  *
- * Vale para a pasta de desafios (envio livre) e para TUDO que veio do Supabase
- * — os buckets antigos nunca validaram tipo nenhum, entao nao da para supor
- * que o que esta la e imagem de verdade.
+ * Vale para as duas pastas de envio livre: entrega de fase de desafio e
+ * desafio final de curso. Num curso de HTML o entregavel e um .html, e servi-lo
+ * normalmente faria o codigo do aluno RODAR no dominio da escola, com acesso
+ * aos cookies de quem abrisse.
+ *
+ * O legado do Supabase saiu desta regra na conferencia: os 1333 arquivos foram
+ * verificados pelos bytes e sao todos imagem.
  */
 export function ehAnexo(caminho: string): boolean {
-  return caminho.startsWith(`${REGRAS.desafio.pasta}/`) || caminho.startsWith(`${PASTA_LEGADO}/`)
+  return (
+    caminho.startsWith(`${REGRAS.desafio.pasta}/`) ||
+    caminho.startsWith(`${REGRAS['desafio-curso'].pasta}/`)
+  )
 }
 
 /**

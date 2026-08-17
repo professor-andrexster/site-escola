@@ -58,6 +58,23 @@ export default async function EditarCursoPage({ params }: Params) {
       <div className="max-w-3xl mt-10">
         <CursoProvaEditor cursoId={id} />
       </div>
+
+      <div className="max-w-3xl mt-10">
+        <div className="flex items-center justify-between gap-3 panel p-5">
+          <div>
+            <h2 className="text-lg font-bold text-gray-900">Desafio final</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              Corrigir os envios, emitir certificados e convidar quem mais pode corrigir.
+            </p>
+          </div>
+          <Link
+            href={`/admin/cursos/gerenciar/${id}/desafio-final`}
+            className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors flex-shrink-0"
+          >
+            Abrir correção
+          </Link>
+        </div>
+      </div>
     </div>
   )
 }

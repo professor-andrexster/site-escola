@@ -68,7 +68,14 @@ ok('caminho que sobe de dentro de uma pasta e recusado',
    caminhoNoDisco(['avatares', '..', '..', '..', 'etc', 'passwd']) === null)
 
 ok('entrega de desafio e servida como anexo', ehAnexo('desafios/x.zip'))
-ok('arquivo vindo do Supabase e servido como anexo', ehAnexo('legado/imagens/x.png'))
+// O .html do aluno no curso de HTML e o caso que mais importa: servido
+// normalmente, o codigo dele RODARIA no dominio da escola.
+ok('desafio final de curso e servido como anexo', ehAnexo('desafios-curso/aluno.html'))
 ok('imagem enviada pelo site nao e anexo', !ehAnexo('avatares/x.png'))
+// O legado saiu da regra de anexo depois da conferencia em producao: os 1333
+// arquivos foram verificados pelos bytes e sao 1317 PNG e 16 JPEG, sem um
+// unico HTML ou executavel. Servi-los como anexo so atrapalhava quem abrisse
+// uma imagem direto.
+ok('legado do Supabase, ja verificado, nao e anexo', !ehAnexo('legado/imagens/x.png'))
 
 process.exit(falhas ? 1 : 0)

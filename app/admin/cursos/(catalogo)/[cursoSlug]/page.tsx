@@ -6,6 +6,8 @@ import Image from 'next/image'
 import { ArrowLeft, Award, Lock, Play, Trophy } from 'lucide-react'
 import AulaListItem, { type AulaStatus } from '@/components/cursos/AulaListItem'
 import ProvaFinal from '@/components/cursos/ProvaFinal'
+import DesafioFinal from '@/components/cursos/DesafioFinal'
+import { desafioFinalDoCurso, envioDoAluno } from '@/lib/db/desafio-curso'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -25,6 +27,12 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
   const dados = await cursoParaAluno(cursoSlug, user.id)
   if (!dados) notFound()
   const { curso, aulas, progresso, desafios: desafiosCurso, totalPerguntasProva, certificado } = dados
+
+  // Desafio final: o caminho novo para o certificado. Quando o curso tem um,
+  // ele substitui a prova de multipla escolha — sao dois jeitos de provar a
+  // mesma coisa, e mostrar os dois confundiria.
+  const desafioFinal = await desafioFinalDoCurso(curso.id)
+  const envioFinal = desafioFinal ? await envioDoAluno(desafioFinal.id, user.id) : null
 
   const progressoMap = new Map(progresso.map(p => [p.aula_id, p]))
 

@@ -33,11 +33,16 @@ server {
     # como "falha ao enviar", sem dizer por quê.
     client_max_body_size 30M;
 
-    # Entrega de desafio e arquivo herdado do Supabase são de tipo livre:
-    # baixam, nunca abrem no navegador. Sem isto, um HTML enviado como entrega
-    # roda no domínio da escola, com acesso aos cookies de quem abrir.
+    # Entrega de desafio e desafio final de curso são de tipo livre: baixam,
+    # nunca abrem no navegador. Num curso de HTML o entregável É um .html —
+    # servi-lo normalmente faria o código do aluno RODAR no domínio da escola,
+    # com acesso aos cookies de quem abrisse. Foi pego em produção: a pasta
+    # nova (desafios-curso) não casava com a regra antiga (desafios).
+    #
+    # O legado do Supabase saiu desta regra: os 1333 arquivos foram verificados
+    # pelos bytes e são todos imagem.
     # Vem antes do bloco geral porque regex ganha de prefixo.
-    location ~ ^/arquivos/((?:desafios|legado)/.+)$ {
+    location ~ ^/arquivos/((?:desafios|desafios-curso)/.+)$ {
         # O caminho capturado ENTRA no alias. Dentro de um location com
         # expressao regular, `alias` sem a captura faz o nginx mapear a
         # requisicao para o diretorio e responder 301 com barra no fim — o

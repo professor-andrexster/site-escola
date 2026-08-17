@@ -5,7 +5,14 @@
  * chamar o bucket, pedir a URL pública. O caminho agora é decidido no servidor,
  * então do lado do navegador sobrou isto — uma função.
  */
-export type Finalidade = 'avatar' | 'noticia' | 'curso' | 'projeto' | 'desafio' | 'obra'
+export type Finalidade =
+  | 'avatar'
+  | 'noticia'
+  | 'curso'
+  | 'projeto'
+  | 'desafio'
+  | 'desafio-curso'
+  | 'obra'
 
 export async function enviarArquivo(
   finalidade: Finalidade,
