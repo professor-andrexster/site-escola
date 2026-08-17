@@ -8,26 +8,31 @@ compartilham. Nada abaixo foi executado.
 
 Três coisas precisam de decisão, e nenhuma é técnica:
 
-### 1. As senhas — decidido por omissão se ninguém agir
+### 1. As senhas — ~~pendente~~ **resolvido**
 
-O papel de leitura (`diagnostico_ro`) **não alcança o schema `auth`**, onde ficam
-os hashes bcrypt. Sem eles, `scripts/migrar-dados.mjs` monta a tabela `usuarios`
-a partir de `profiles` (id + e-mail) e deixa `encrypted_password` nulo:
-**as 37 contas precisam redefinir a senha na primeira entrada.**
+As 40 contas foram exportadas de `auth.users` para
+`/root/escola-migracao/contas.json` e importadas. **Ninguém precisa trocar de
+senha na virada.**
 
-Para evitar, exporte `auth.users` pelo painel do Supabase e passe o arquivo:
+Não deu para liberar o schema `auth` para o papel de leitura, e não é limitação
+de permissão do André: no `auth`, o papel `postgres` tem `USAGE` **sem opção de
+repasse** (`postgres=U`), enquanto no `storage` tem (`postgres=U*`). Ou seja,
+nem o dono do projeto consegue repassar. O caminho foi exportar pelo SQL Editor,
+que lê normalmente.
+
+Verificado: 40 contas, todas em bcrypt `$2a$10$`, nenhuma sem hash, nenhuma
+bloqueada; os 40 hashes no MariaDB são byte a byte idênticos aos do Supabase; e
+um hash gerado no mesmo formato `$2a$` autentica pelo login real.
+
+Na virada, refaça o export (contas criadas depois de 17/08/2026 não estão no
+arquivo) e rode com:
 
 ```bash
 CONTAS_JSON=/root/escola-migracao/contas.json node scripts/migrar-dados.mjs
 ```
 
-O arquivo é uma lista de objetos com `id`, `email`, `encrypted_password` e,
-opcionalmente, `email_confirmed_at`, `last_sign_in_at`, `banned_until`,
-`created_at`. Os hashes do Supabase são bcrypt e validam direto — foi por isso
-que a fase 4 usou bcrypt em vez de argon2.
-
-Se a decisão for "todo mundo troca", ela é gratuita, mas precisa de aviso à
-escola antes: 37 pessoas vão encontrar o login recusando na segunda-feira.
+**Apague o `contas.json` depois.** São hashes de senha de 40 pessoas; bcrypt não
+é reversível, mas não há motivo para o arquivo continuar existindo.
 
 ### 2. Duas alunas com a mesma matrícula
 
@@ -161,6 +166,25 @@ dia**. Deixe os dois de pé por 30 dias.
 O que for gravado no MariaDB depois da virada não volta para o Supabase. Se a
 volta acontecer horas depois, esse período se perde — outro motivo para a
 conferência do passo 8 ser feita antes de avisar a escola.
+
+## Contas sem perfil
+
+Três contas entram no sistema mas não têm perfil, então caem na tela de entrada
+sem acesso a nada:
+
+| E-mail | Último acesso |
+|---|---|
+| `lavinia.8901849@aluno.mg.gov.br` | 13/07/2026 |
+| `michael@gmail.com` | 10/06/2026 |
+| `prof.teste@jberaldo.edu.br` | 03/08/2026 |
+
+A primeira é a que importa: é uma aluna que **entrou de verdade em julho** e cujo
+cadastro parou no meio. As outras duas parecem teste. Não é problema da migração
+— acontece hoje, do mesmo jeito — mas é o tipo de coisa que vira "não consigo
+entrar no sistema" sem ninguém saber por quê.
+
+Nenhum perfil ficou sem conta, que seria o caso grave: ninguém foi trancado do
+lado de fora pela migração.
 
 ## Sobra conhecida
 
