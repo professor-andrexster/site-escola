@@ -13,7 +13,7 @@ set -euo pipefail
 
 SRC="$(cd "$(dirname "$0")/.." && pwd)"
 APP=/srv/escola/app
-PORTA=3003
+PORTA=3004
 SERVICO=escola
 
 cd "$SRC"

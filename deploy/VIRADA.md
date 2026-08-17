@@ -114,7 +114,7 @@ chown -R escola:escola /srv/escola /var/www/escola/data
 cp deploy/escola.service /etc/systemd/system/
 systemctl daemon-reload
 systemctl enable --now escola
-curl -sS localhost:3003/api/usuarios/perfil   # 401 = de pé
+curl -sS localhost:3004/api/usuarios/perfil   # 401 = de pé
 ```
 
 O `.env` de `/srv/escola/app` precisa de: `DATABASE_URL`, `UPLOAD_ROOT`,

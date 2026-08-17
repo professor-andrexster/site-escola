@@ -5,8 +5,9 @@
 #   cp deploy/escola.service /etc/systemd/system/
 #   systemctl daemon-reload && systemctl enable --now escola
 #
-# A porta 3003 é a próxima livre: 3000, 3001 e 3002 já estão ocupadas pelos
-# outros sistemas do servidor.
+# Porta 3004. A 3003 parecia livre pela documentação, mas está ocupada desde
+# 02/08 por um contêiner Docker (nexialabs-crm) que o CLAUDE.md ainda descreve
+# como projeto só do desktop. 3000, 3001 e 3002 são dos outros três serviços.
 
 [Unit]
 Description=E.E. Dr. Joao Beraldo — site e painel
@@ -20,7 +21,7 @@ Group=escola
 WorkingDirectory=/srv/escola/app
 EnvironmentFile=/srv/escola/app/.env
 Environment=NODE_ENV=production
-Environment=PORT=3003
+Environment=PORT=3004
 ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=5
