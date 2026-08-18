@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { jaExiste, criar, atualizar, buscarPorId, remover } from '@/lib/db/alunos'
+import { jaExiste, criar, atualizar, buscarPorId, remover, proximaMatricula } from '@/lib/db/alunos'
 import { papelEAprovacao, sincronizarTurma, revogar } from '@/lib/db/perfis'
 import { registrar } from '@/lib/db/log'
 import { exigirGestao } from '@/lib/apiGestao'
@@ -36,8 +36,11 @@ function validarEmail(email: string): boolean {
 function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: true; dados: Record<string, unknown> } | { ok: false; erro: string } {
   const dados: Record<string, unknown> = {}
 
-  if (exigirObrigatorios && (!body.nome?.trim() || !body.matricula?.trim() || !body.turma)) {
-    return { ok: false, erro: 'Preencha nome, matrícula e turma.' }
+  // Matricula saiu dos obrigatorios: a tela de cadastro nao pede mais, e o
+  // POST gera uma. Quem tiver o numero da secretaria preenche depois, na tela
+  // de edicao do aluno.
+  if (exigirObrigatorios && (!body.nome?.trim() || !body.turma)) {
+    return { ok: false, erro: 'Preencha nome e turma.' }
   }
 
   if (body.nome !== undefined) dados.nome = body.nome.trim()
@@ -46,7 +49,25 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
     dados.turma = body.turma
     dados.serie = body.turma // padrão existente: serie espelha a turma
   }
-  if (body.data_nascimento !== undefined) dados.data_nascimento = body.data_nascimento || null
+
+  // A coluna e DateTime (@db.Date) e o formulario manda "2010-02-07". Repassar
+  // a string crua fazia o Prisma recusar com "premature end of input. Expected
+  // ISO-8601 DateTime" — e como o campo e opcional, o cadastro so quebrava
+  // para quem preenchia a data. Era este o "nao da para criar novos alunos".
+  //
+  // Data pura e lida como UTC, que e o certo para uma coluna DATE: construir
+  // com fuso local jogaria o dia para tras a oeste de Greenwich.
+  if (body.data_nascimento !== undefined) {
+    if (body.data_nascimento) {
+      const data = new Date(`${body.data_nascimento}T00:00:00Z`)
+      if (Number.isNaN(data.getTime())) {
+        return { ok: false, erro: 'Data de nascimento inválida.' }
+      }
+      dados.data_nascimento = data
+    } else {
+      dados.data_nascimento = null
+    }
+  }
   if (body.responsavel !== undefined) dados.responsavel = body.responsavel?.trim() || null
   if (body.telefone !== undefined) dados.telefone = body.telefone?.trim() || null
   if (body.ativo !== undefined) dados.ativo = body.ativo
@@ -74,21 +95,37 @@ function validarCampos(body: CamposAluno, exigirObrigatorios: boolean): { ok: tr
   return { ok: true, dados }
 }
 
-function erroBanco(error: { code?: string; message: string }, camposDuplicados?: string[]): NextResponse {
-  if (error.code === '23505') {
-    // Constraint violation - diferenciar qual campo duplicou
-    if (camposDuplicados?.includes('matricula')) {
+/**
+ * Traduz erro do banco em mensagem de tela.
+ *
+ * Procurava o codigo '23505', que e do Postgres — sobra do Supabase. No
+ * MariaDB o Prisma usa 'P2002' e diz no `meta.target` qual unique estourou,
+ * entao nenhuma das mensagens abaixo chegava a aparecer: tudo caia no ramo
+ * final e a tela mostrava o dump cru do Prisma, com a chamada inteira e os
+ * dados do aluno (CPF incluso) na mensagem de erro.
+ */
+function erroBanco(error: { code?: string; message: string; meta?: { target?: string[] | string } }): NextResponse {
+  if (error.code === 'P2002') {
+    const alvo = Array.isArray(error.meta?.target) ? error.meta.target.join(',') : String(error.meta?.target ?? '')
+    if (alvo.includes('matricula')) {
       return NextResponse.json({ error: 'Já existe um aluno com essa matrícula. Verifique o cadastro.' }, { status: 400 })
     }
-    if (camposDuplicados?.includes('cpf')) {
+    if (alvo.includes('cpf')) {
       return NextResponse.json({ error: 'Já existe um aluno com esse CPF. Verifique o cadastro.' }, { status: 400 })
     }
-    if (camposDuplicados?.includes('email')) {
+    if (alvo.includes('email')) {
       return NextResponse.json({ error: 'Já existe um aluno com esse e-mail. Verifique o cadastro.' }, { status: 400 })
     }
     return NextResponse.json({ error: 'Dados duplicados no cadastro. Verifique matrícula, CPF e e-mail.' }, { status: 400 })
   }
-  return NextResponse.json({ error: 'Erro ao salvar: ' + error.message }, { status: 400 })
+
+  // O `message` do Prisma traz a chamada inteira e os valores enviados. Vai
+  // para o log do servidor, nao para a tela do usuario.
+  console.error('[alunos] falha ao salvar', error)
+  return NextResponse.json(
+    { error: 'Não foi possível salvar o cadastro. Confira os dados e tente novamente.' },
+    { status: 400 }
+  )
 }
 
 export async function POST(request: Request) {
@@ -116,11 +153,29 @@ export async function POST(request: Request) {
     }
   }
 
+  // `alunos.matricula` e NOT NULL UNIQUE, entao alguem tem que preencher. Como
+  // a tela deixou de pedir, o servidor gera — e a gestao troca depois pelo
+  // numero real da secretaria, na tela de edicao do aluno.
+  //
+  // Duas secretarias cadastrando ao mesmo tempo pegariam o mesmo numero; o
+  // unique recusa a segunda e aqui ela tenta o proximo.
   let criado
-  try {
-    criado = await criar(validacao.dados as never)
-  } catch (erro) {
-    return erroBanco(erro as { code?: string; message: string }, ['matricula', 'cpf', 'email'])
+  let tentativa = 0
+  for (;;) {
+    try {
+      const dados = validacao.dados.matricula
+        ? validacao.dados
+        : { ...validacao.dados, matricula: await proximaMatricula() }
+      criado = await criar(dados as never)
+      break
+    } catch (erro) {
+      const e = erro as { code?: string; meta?: { target?: string[] | string } }
+      const alvo = Array.isArray(e.meta?.target) ? e.meta.target.join(',') : String(e.meta?.target ?? '')
+      const colidiuMatriculaGerada =
+        e.code === 'P2002' && alvo.includes('matricula') && !validacao.dados.matricula
+      if (colidiuMatriculaGerada && tentativa++ < 5) continue
+      return erroBanco(erro as Parameters<typeof erroBanco>[0])
+    }
   }
 
   return NextResponse.json({ ok: true, id: criado.id })
@@ -135,7 +190,8 @@ export async function PUT(request: Request) {
 
   const validacao = validarCampos(body, false)
   if (!validacao.ok) return NextResponse.json({ error: validacao.erro }, { status: 400 })
-  validacao.dados.atualizado_em = new Date().toISOString()
+  // `atualizar()` ja carimba atualizado_em com um Date; atribuir a string
+  // aqui era redundante e repetia a armadilha que quebrou data_nascimento.
 
 
   // Se está atualizando matrícula, CPF ou email, verificar duplicatas (excluindo este aluno)
@@ -158,7 +214,7 @@ export async function PUT(request: Request) {
   try {
     await atualizar(body.id, validacao.dados as never)
   } catch (erro) {
-    return erroBanco(erro as { code?: string; message: string }, ['matricula', 'cpf', 'email'])
+    return erroBanco(erro as Parameters<typeof erroBanco>[0])
   }
 
   // Desativar o cadastro academico tambem derruba o acesso de login, se

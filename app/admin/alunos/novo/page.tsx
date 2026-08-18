@@ -5,14 +5,11 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save } from 'lucide-react'
 import { TURMAS } from '@/lib/turmas'
-import { formatarCPF, validarCPF } from '@/lib/cpf'
 
 interface FormState {
   nome: string
-  matricula: string
   turma: string
   data_nascimento: string
-  cpf: string
   responsavel: string
   telefone: string
   email: string
@@ -20,10 +17,8 @@ interface FormState {
 
 const INITIAL: FormState = {
   nome: '',
-  matricula: '',
   turma: '',
   data_nascimento: '',
-  cpf: '',
   responsavel: '',
   telefone: '',
   email: '',
@@ -45,12 +40,7 @@ export default function NovoAlunoPage() {
     const novosErros: Partial<Record<keyof FormState, string>> = {}
 
     if (!form.nome.trim()) novosErros.nome = 'Informe o nome do aluno.'
-    if (!form.matricula.trim()) novosErros.matricula = 'Informe a matrícula.'
     if (!form.turma) novosErros.turma = 'Selecione a turma.'
-
-    if (form.cpf.trim() && !validarCPF(form.cpf)) {
-      novosErros.cpf = 'CPF inválido. Confira os números digitados.'
-    }
 
     if (form.telefone.trim()) {
       const digitos = form.telefone.replace(/\D/g, '')
@@ -78,10 +68,8 @@ export default function NovoAlunoPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         nome: form.nome,
-        matricula: form.matricula,
         turma: form.turma,
         data_nascimento: form.data_nascimento || null,
-        cpf: form.cpf || null,
         responsavel: form.responsavel || null,
         telefone: form.telefone || null,
         email: form.email || null,
@@ -132,19 +120,6 @@ export default function NovoAlunoPage() {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1.5">
-              Matrícula <span className="text-escola-vermelho">*</span>
-            </label>
-            <input
-              type="text"
-              value={form.matricula}
-              onChange={(e) => setField('matricula', e.target.value.toUpperCase())}
-              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 ${erros.matricula ? 'border-red-400' : 'border-gray-200'}`}
-            />
-            {erros.matricula && <p className="text-xs text-red-500 mt-1">{erros.matricula}</p>}
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">
               Turma <span className="text-escola-vermelho">*</span>
             </label>
             <select
@@ -156,6 +131,19 @@ export default function NovoAlunoPage() {
               {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
             </select>
             {erros.turma && <p className="text-xs text-red-500 mt-1">{erros.turma}</p>}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1.5">Matrícula</label>
+            <input
+              type="text"
+              value="Gerada automaticamente"
+              disabled
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400"
+            />
+            <p className="text-xs text-gray-400 mt-1">
+              Quando a secretaria informar o número oficial, edite o aluno e substitua.
+            </p>
           </div>
         </div>
 
@@ -173,20 +161,9 @@ export default function NovoAlunoPage() {
               onChange={(e) => setField('data_nascimento', e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
             />
-            <p className="text-xs text-gray-400 mt-1">Usado pelo aluno para criar a conta e recuperar a senha.</p>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1.5">CPF</label>
-            <input
-              type="text"
-              inputMode="numeric"
-              value={form.cpf}
-              onChange={(e) => setField('cpf', formatarCPF(e.target.value))}
-              placeholder="000.000.000-00"
-              className={`w-full px-3 py-2.5 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 ${erros.cpf ? 'border-red-400' : 'border-gray-200'}`}
-            />
-            {erros.cpf && <p className="text-xs text-red-500 mt-1">{erros.cpf}</p>}
-            <p className="text-xs text-gray-400 mt-1">Sem o CPF o aluno não consegue criar a própria conta.</p>
+            <p className="text-xs text-gray-400 mt-1">
+              Ajuda o sistema a ligar esta ficha à conta quando o aluno se cadastrar sozinho.
+            </p>
           </div>
         </div>
 

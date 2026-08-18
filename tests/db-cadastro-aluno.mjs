@@ -145,6 +145,28 @@ try {
   ok('nascimento que nao bate em nenhuma nao escolhe no chute',
     (await resolverFicha(`Ana ${MARCA} Lima`, '3° Ano', '1999-01-01')) === null)
 
+  // --------------------------------------------- data de nascimento na ficha
+  // Regressao: /api/alunos repassava a string "2010-02-07" para uma coluna
+  // DateTime e o Prisma recusava com "premature end of input. Expected
+  // ISO-8601 DateTime". Como o campo e opcional, o cadastro so quebrava para
+  // quem preenchia a data — foi o erro relatado na tela de Novo Aluno.
+  const comData = await prisma.alunos.create({ data: {
+    nome: `Data ${MARCA} Nascimento`, matricula: `M-${MARCA}-4`,
+    turma: '1° Ano', serie: '1° Ano', turno: 'Integral',
+    data_nascimento: new Date('2010-02-07T00:00:00Z') } })
+  ok('data de nascimento grava e volta no mesmo dia',
+    comData.data_nascimento?.toISOString().slice(0, 10) === '2010-02-07',
+    comData.data_nascimento?.toISOString())
+
+  let recusouString = false
+  try {
+    await prisma.alunos.create({ data: {
+      nome: `String ${MARCA} Data`, matricula: `M-${MARCA}-5`,
+      turma: '1° Ano', serie: '1° Ano', turno: 'Integral',
+      data_nascimento: '2010-02-07' } })
+  } catch { recusouString = true }
+  ok('string pura de data e recusada pelo Prisma (por isso a rota converte)', recusouString)
+
   // ------------------------------------------------- transacao e tudo ou nada
   const c3 = novaConta()
   await prisma.usuarios.create({ data: { id: c3, email: `${MARCA}3@escola.local` } })
