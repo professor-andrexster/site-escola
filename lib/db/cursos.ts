@@ -246,9 +246,15 @@ export async function cursoParaAluno(slug: string, userId: string) {
       where: { user_id: userId, aula_id: { in: aulas.map(a => a.id) } },
       select: { aula_id: true, slide_atual: true, concluida: true },
     }),
+    // Desafios soltos do curso, para a secao "Projeto do curso" — que so
+    // exibe o enunciado, sem envio.
+    //
+    // O desafio final fica de fora: ele tem tela propria (DesafioFinal), com
+    // formulario de envio e acompanhamento. Sem este filtro ele apareceria
+    // duas vezes na mesma pagina, uma delas sem como enviar nada.
     prisma.curso_desafios
       .findMany({
-        where: { curso_id: curso.id, aula_id: null },
+        where: { curso_id: curso.id, aula_id: null, vale_certificado: false },
         select: { id: true, titulo: true, enunciado: true, tipo: true, ordem: true },
         orderBy: { ordem: 'asc' },
       })
@@ -275,9 +281,19 @@ export async function cursoComAulas(slug: string) {
 }
 
 /** Desafios de uma aula, sem gabarito — a coluna e bloqueada para alunos. */
+/**
+ * Desafios exibidos dentro do player da aula.
+ *
+ * O desafio final fica de fora mesmo quando esta preso a uma aula. Em cinco
+ * cursos (HTML, CSS, JavaScript, Excel e PHP) ele nasceu como desafio da
+ * ultima aula e depois foi promovido a final, entao manteve o `aula_id`. Sem
+ * este filtro, o aluno veria o mesmo projeto em dois lugares: aqui, como
+ * exercicio solto, e na pagina do curso, com o formulario de entrega — e
+ * provavelmente entregaria no lugar que nao recebe.
+ */
 export async function desafiosDaAula(aulaId: string) {
   const linhas = await prisma.curso_desafios.findMany({
-    where: { aula_id: aulaId },
+    where: { aula_id: aulaId, vale_certificado: false },
     select: { id: true, titulo: true, enunciado: true, tipo: true, ordem: true },
     orderBy: { ordem: 'asc' },
   })

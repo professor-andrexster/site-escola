@@ -106,8 +106,41 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
         ))}
       </div>
 
-      {/* Prova final e certificado */}
-      {(totalPerguntasProva ?? 0) > 0 && (
+      {/* Desafio final: o caminho do certificado quando o curso tem um.
+          Estava carregado mas nunca renderizado — por isso nenhum aluno
+          conseguia entregar, em curso nenhum, e não havia um único envio no
+          banco. Vem antes da prova, e a prova só aparece se não houver
+          desafio (o comentário do topo explica por quê). */}
+      {desafioFinal && (
+        <section className="mt-10">
+          <h2 className="text-white font-black text-lg font-geom flex items-center gap-2 mb-4">
+            <Award className="w-5 h-5 text-curso-ciano" />
+            Certificado do curso
+          </h2>
+          {progressoPct === 100 || envioFinal || certificado ? (
+            <DesafioFinal
+              desafio={desafioFinal}
+              envioInicial={
+                envioFinal
+                  ? { ...envioFinal, enviado_em: envioFinal.enviado_em.toISOString() }
+                  : null
+              }
+              certificadoCodigo={certificado?.codigo ?? null}
+            />
+          ) : (
+            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center gap-3">
+              <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
+              <p className="text-white/50 text-sm">
+                Conclua as {listaAulas.length} aulas para liberar o desafio final e ganhar o
+                certificado do curso.
+              </p>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* Prova final e certificado — só quando o curso não tem desafio final */}
+      {!desafioFinal && (totalPerguntasProva ?? 0) > 0 && (
         <section className="mt-10">
           <h2 className="text-white font-black text-lg font-geom flex items-center gap-2 mb-4">
             <Award className="w-5 h-5 text-curso-ciano" />
