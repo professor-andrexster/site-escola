@@ -63,6 +63,28 @@ export async function contaDaMatricula(matricula: string): Promise<string | null
   return a?.user_id ?? null
 }
 
+/**
+ * Resolve o e-mail da FICHA para a conta de login.
+ *
+ * A escola dá a cada aluno um e-mail institucional (@aluno.mg.gov.br), e é ele
+ * que fica gravado em `alunos.email`. Só que a conta de acesso costuma ter sido
+ * criada com o e-mail pessoal — e o aluno, naturalmente, tenta entrar com o
+ * institucional, que é o que ele considera "o e-mail dele".
+ *
+ * Sem isto, o login responde "conta não encontrada" para um aluno que existe,
+ * está aprovado e tem ficha. Aconteceu com o Olliver em 18/08/2026, três
+ * tentativas seguidas, e tinha acontecido antes com a Lilian.
+ *
+ * Só resolve fichas que já têm conta: sem `user_id` não há para onde apontar.
+ */
+export async function contaDoEmailDaFicha(email: string): Promise<string | null> {
+  const a = await prisma.alunos.findFirst({
+    where: { email: email.trim(), NOT: { user_id: null } },
+    select: { user_id: true },
+  })
+  return a?.user_id ?? null
+}
+
 /** Perfil publico para portfolio: so aluno ativo, so campos publicos. */
 export async function perfilPublico(matricula: string) {
   return prisma.alunos.findFirst({
