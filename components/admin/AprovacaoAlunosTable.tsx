@@ -2,12 +2,12 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Check, X, UserCheck, Lock } from 'lucide-react'
+import { Check, X, UserCheck, Lock, TriangleAlert } from 'lucide-react'
 import type { Profile } from '@/types/database'
 import { ROLE_LABELS } from '@/lib/roles'
 import Avatar from '@/components/admin/ui/Avatar'
 
-export type AlunoPendente = Profile & { matricula: string | null }
+export type AlunoPendente = Profile & { matricula: string | null; fichaNova?: boolean }
 
 interface AprovacaoAlunosTableProps {
   pendentes: AlunoPendente[]
@@ -96,6 +96,18 @@ export default function AprovacaoAlunosTable({ pendentes: initial, viewerRole }:
                 {p.disciplina && <span>Disciplina: <strong>{p.disciplina}</strong></span>}
               </p>
               <p className="text-gray-400 text-xs mt-0.5">{p.email}</p>
+              {/* O aluno nao digita mais matricula nem CPF, entao a conta pode
+                  ter criado uma ficha nova em vez de casar com uma da
+                  secretaria. Quem aprova precisa ver essa diferenca. */}
+              {p.fichaNova && (
+                <p className="flex items-start gap-1.5 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-md px-2 py-1 mt-1.5">
+                  <TriangleAlert className="w-3.5 h-3.5 flex-shrink-0 mt-px" />
+                  <span>
+                    Ficha nova: não achamos esse nome na base da secretaria. Confira se é aluno
+                    da escola antes de aprovar.
+                  </span>
+                </p>
+              )}
             </div>
 
             {podeAgir ? (

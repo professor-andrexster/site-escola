@@ -17,19 +17,45 @@ import { prisma } from '@/lib/db'
 
 export class CpfJaVinculado extends Error {}
 
-export async function vincularCadastroDeAluno(dados: {
+/** Como a conta chegou na ficha: casada com uma que ja existia, ou ficha nova. */
+export type OrigemDaFicha = 'ficha_existente' | 'ficha_nova'
+
+/**
+ * Cadastro do aluno que se inscreve sozinho.
+ *
+ * O aluno nao digita mais matricula nem CPF (22 das 32 fichas de producao nao
+ * tinham CPF, e o formulario exigia). Sobrou nome + turma + nascimento, que
+ * nao identificam ninguem com certeza — entao a rota resolve a ficha antes e
+ * passa o resultado aqui:
+ *
+ *  - achou ficha sem dono batendo nome e turma  -> `alunoId`, so vincula;
+ *  - nao achou                                   -> `fichaNova`, cria a ficha.
+ *
+ * Criar a ficha e obrigatorio, nao conveniencia: `alunos.user_id` e o unico
+ * vinculo entre conta e registro academico, e sem ele o "meu perfil" responde
+ * 404 e o aluno fica sem portfolio e sem vocacional. Deixar a conta solta
+ * transformaria em regra o bug que ja custou investigacao.
+ *
+ * Quem valida se a pessoa e mesmo quem diz continua sendo o professor, na tela
+ * de aprovacao — por isso `criado_via` distingue os dois casos: e o que faz a
+ * tela avisar que aquela ficha nasceu ali, e nao veio da secretaria.
+ */
+export async function criarCadastroDeAluno(dados: {
   userId: string
-  alunoId: string
   nome: string
   turma: string
   email: string
-  cpf: string
-  dataNascimento: Date
+  dataNascimento: Date | null
   emailAlternativo?: string | null
   aprovado: boolean
-}) {
+} & (
+  | { alunoId: string; matricula?: undefined }
+  | { alunoId?: undefined; matricula: string }
+)): Promise<OrigemDaFicha> {
+  const origem: OrigemDaFicha = dados.alunoId ? 'ficha_existente' : 'ficha_nova'
+
   try {
-    return await prisma.$transaction(async tx => {
+    await prisma.$transaction(async tx => {
       await tx.profiles.create({
         data: {
           id: dados.userId,
@@ -45,28 +71,57 @@ export async function vincularCadastroDeAluno(dados: {
       await tx.identidades.create({
         data: {
           user_id: dados.userId,
-          cpf: dados.cpf,
+          // Sem CPF no formulario a coluna fica nula — ela ja e anulavel, e o
+          // unique nao reclama de varios nulos.
+          cpf: null,
           data_nascimento: dados.dataNascimento,
           email_alternativo: dados.emailAlternativo ?? null,
-          criado_via: 'auto_aluno',
+          criado_via: origem === 'ficha_nova' ? 'auto_aluno_novo' : 'auto_aluno',
         },
       })
 
       // O vinculo ficha<->conta: alunos.user_id. Nao identidades.aluno_id,
       // que nao existe.
-      await tx.alunos.update({
-        where: { id: dados.alunoId },
-        data: { user_id: dados.userId },
-      })
+      if (dados.alunoId) {
+        await tx.alunos.update({
+          where: { id: dados.alunoId },
+          data: { user_id: dados.userId },
+        })
+      } else {
+        await tx.alunos.create({
+          data: {
+            nome: dados.nome,
+            matricula: dados.matricula!,
+            turma: dados.turma,
+            // `serie` e NOT NULL e na base de producao repete a turma.
+            serie: dados.turma,
+            data_nascimento: dados.dataNascimento,
+            email: dados.email,
+            user_id: dados.userId,
+          },
+        })
+      }
     })
+    return origem
   } catch (erro) {
-    // P2002 e violacao de unique. No CPF significa que outra conta ja o usa.
     if ((erro as { code?: string })?.code === 'P2002') {
-      throw new CpfJaVinculado('Esse CPF já está vinculado a outra conta. Procure a direção.')
+      // Qual unique estourou muda o que dizer e o que fazer. Matricula e
+      // corrida entre dois cadastros simultaneos: quem chama repete com o
+      // proximo numero. Email ja e do aluno, e repetir nao adianta.
+      const alvo = (erro as { meta?: { target?: string[] | string } }).meta?.target
+      const campos = Array.isArray(alvo) ? alvo.join(',') : String(alvo ?? '')
+      if (campos.includes('matricula')) throw new MatriculaEmCorrida()
+      if (campos.includes('email')) {
+        throw new CpfJaVinculado('Já existe um cadastro da escola com esse e-mail. Procure a direção.')
+      }
+      throw new CpfJaVinculado('Esses dados já estão vinculados a outra conta. Procure a direção.')
     }
     throw erro
   }
 }
+
+/** Duas inscricoes pegaram a mesma matricula. Recuperavel: basta repetir. */
+export class MatriculaEmCorrida extends Error {}
 
 /**
  * Mesma ideia para conta criada por quem administra — pode nao ser de aluno.
@@ -134,4 +189,23 @@ export async function criarContaInterna(dados: {
     }
     throw erro
   }
+}
+
+/**
+ * De onde veio a ficha ligada a esta conta: 'auto_aluno_novo' quando o proprio
+ * auto-cadastro a criou, 'auto_aluno' quando casou com uma da secretaria.
+ * Outros valores ('direcao', 'gestao', 'auto_professor') sao conta criada por
+ * dentro. Devolve null se nao ha identidade.
+ */
+export async function origemDoCadastro(userId: string): Promise<string | null> {
+  const i = await prisma.identidades.findUnique({
+    where: { user_id: userId },
+    select: { criado_via: true },
+  })
+  return i?.criado_via ?? null
+}
+
+/** Apaga a ficha de uma conta. So para ficha que o proprio cadastro criou. */
+export async function removerFichaDaConta(userId: string) {
+  return prisma.alunos.deleteMany({ where: { user_id: userId } })
 }

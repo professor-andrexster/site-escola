@@ -9,11 +9,19 @@ export const TURMAS_ALVO = [
   ...TURMAS,
 ] as const
 
+/**
+ * A turma escolhida numa lista ("2° Ano") cobre a turma da ficha, inclusive
+ * quando a ficha guarda o formato antigo com a letra ("2° Ano B"). A base de
+ * producao tem os dois formatos convivendo: 29 fichas no formato novo e 3 no
+ * antigo. Comparar por igualdade exata deixaria essas 3 de fora.
+ */
+export function turmaCompativel(turmaEscolhida: string, turmaDaFicha: string | null): boolean {
+  if (!turmaDaFicha) return false
+  if (turmaEscolhida === turmaDaFicha) return true
+  return turmaDaFicha.startsWith(turmaEscolhida + ' ')
+}
+
 export function quizMatchesTurma(turmaAlvo: string, studentTurma: string | null): boolean {
-  if (!studentTurma) return false
-  if (turmaAlvo === 'Todos') return true
-  if (turmaAlvo === studentTurma) return true
-  // Compatibilidade com turmas antigas no formato "1° Ano A"
-  if (studentTurma.startsWith(turmaAlvo + ' ')) return true
-  return false
+  if (turmaAlvo === 'Todos') return !!studentTurma
+  return turmaCompativel(turmaAlvo, studentTurma)
 }

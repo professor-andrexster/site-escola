@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { papelEAprovacao, remover as removerPerfil } from '@/lib/db/perfis'
+import { origemDoCadastro, removerFichaDaConta } from '@/lib/db/cadastro'
 import { removerConta } from '@/lib/auth/sessao'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 
@@ -30,7 +31,20 @@ export async function POST(request: Request) {
   // identidades cai em cascata com a conta; profiles removemos explicitamente.
   // Conferido no MariaDB: identidades.user_id e profiles.id tem ON DELETE
   // CASCADE para usuarios, entao o comportamento se mantem depois da virada.
+  //
+  // A ficha e caso a parte. `alunos.user_id` e ON DELETE SET NULL, o que e o
+  // certo para ficha que veio da secretaria: rejeitar o cadastro devolve a
+  // ficha para o proximo tentar. Mas desde que o auto-cadastro passou a criar
+  // a ficha quando nao acha nenhuma, rejeitar deixaria para tras um registro
+  // inventado, com matricula valida e sem dono — e a rejeicao promete que "a
+  // conta sera apagada por completo".
+  //
+  // Ler a origem antes de apagar a conta e obrigatorio: identidades cai em
+  // cascata junto, e depois nao ha mais como saber de onde a ficha veio.
+  const fichaCriadaNoCadastro = await origemDoCadastro(userId) === 'auto_aluno_novo'
+
   try {
+    if (fichaCriadaNoCadastro) await removerFichaDaConta(userId)
     await removerPerfil(userId)
     await removerConta(userId)
   } catch (erro) {

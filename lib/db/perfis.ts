@@ -85,6 +85,12 @@ export async function contarPendentes(papeis: string[]): Promise<number> {
  * alunos.user_id apontam ambos para `usuarios`, mas nao um para o outro —
  * nao existe relacao direta entre as duas tabelas. O que muda e o lugar: o
  * emparelhamento sai da tela e vem para a camada.
+ *
+ * Traz tambem `fichaNova`. Desde que o auto-cadastro deixou de pedir matricula
+ * e CPF, ele cria a ficha quando nao acha nenhuma sem dono com aquele nome e
+ * turma — e quem aprova precisa saber a diferenca entre confirmar um aluno que
+ * a secretaria ja tinha cadastrado e admitir um registro novo na base. Sem
+ * isso a tela fica igual nos dois casos, e a aprovacao vira carimbo.
  */
 export async function pendentesDeAprovacao(papeis: string[]) {
   const linhas = await prisma.profiles.findMany({
@@ -93,17 +99,27 @@ export async function pendentesDeAprovacao(papeis: string[]) {
   })
   if (!linhas.length) return []
 
-  const fichas = await prisma.alunos.findMany({
-    where: { user_id: { in: linhas.map(p => p.id) } },
-    select: { user_id: true, matricula: true },
-  })
+  const ids = linhas.map(p => p.id)
+  const [fichas, identidades] = await Promise.all([
+    prisma.alunos.findMany({
+      where: { user_id: { in: ids } },
+      select: { user_id: true, matricula: true },
+    }),
+    prisma.identidades.findMany({
+      where: { user_id: { in: ids } },
+      select: { user_id: true, criado_via: true },
+    }),
+  ])
+
   const matriculaPorConta = new Map(
     fichas.filter(f => f.user_id).map(f => [f.user_id as string, f.matricula])
   )
+  const origemPorConta = new Map(identidades.map(i => [i.user_id, i.criado_via]))
 
   return linhas.map(p => ({
     ...serializar(p),
     matricula: matriculaPorConta.get(p.id) ?? null,
+    fichaNova: origemPorConta.get(p.id) === 'auto_aluno_novo',
   }))
 }
 

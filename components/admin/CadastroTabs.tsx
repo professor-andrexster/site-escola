@@ -3,7 +3,9 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Eye, EyeOff, BookOpen, Briefcase } from 'lucide-react'
+// CPF saiu do cadastro de aluno, mas o de professor continua exigindo.
 import { formatarCPF, validarCPF } from '@/lib/cpf'
+import { TURMAS } from '@/lib/turmas'
 import { cn } from '@/lib/utils'
 
 const inputClass = 'w-full border-2 border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:border-escola-azul transition-colors'
@@ -44,8 +46,8 @@ function CampoSenha({ id, label, valor, onChange, placeholder }: {
 }
 
 function FormAluno() {
-  const [matricula, setMatricula] = useState('')
-  const [cpf, setCpf] = useState('')
+  const [nome, setNome] = useState('')
+  const [turma, setTurma] = useState('')
   const [nascimento, setNascimento] = useState('')
   const [email, setEmail] = useState('')
   const [emailAlternativo, setEmailAlternativo] = useState('')
@@ -59,7 +61,8 @@ function FormAluno() {
     e.preventDefault()
     if (senha !== confirmar) { setErro('As senhas não coincidem.'); return }
     if (senha.length < 6) { setErro('A senha deve ter pelo menos 6 caracteres.'); return }
-    if (!validarCPF(cpf)) { setErro('CPF inválido. Confira os números digitados.'); return }
+    // Mesma regra do servidor, so que sem esperar a ida e volta.
+    if (!nome.trim().includes(' ')) { setErro('Informe o nome completo, com sobrenome.'); return }
 
     setLoading(true)
     setErro('')
@@ -68,8 +71,8 @@ function FormAluno() {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        matricula,
-        cpf,
+        nome,
+        turma,
         dataNascimento: nascimento,
         email,
         senha,
@@ -92,28 +95,34 @@ function FormAluno() {
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{erro}</div>}
 
       <p className="text-xs text-blue-700 bg-blue-50 rounded-lg px-3 py-2">
-        Seus dados precisam bater com o cadastro da secretaria. Se der erro, procure a direção.
-        Depois de criada, sua conta aguarda a aprovação de um professor ou da direção antes de acessar o painel.
+        Depois de criada, sua conta aguarda a aprovação de um professor ou da direção antes de
+        acessar o painel. Não precisa de matrícula nem de CPF — a escola confere seus dados na
+        hora de aprovar.
       </p>
 
       <div>
-        <label htmlFor="aluno-matricula" className={labelClass}>Matrícula *</label>
+        <label htmlFor="aluno-nome" className={labelClass}>Nome Completo *</label>
         <input
-          id="aluno-matricula" type="text" required value={matricula}
-          onChange={e => setMatricula(e.target.value.toUpperCase())}
-          placeholder="Sua matrícula da escola"
+          id="aluno-nome" type="text" required value={nome}
+          onChange={e => setNome(e.target.value)}
+          placeholder="Como está na chamada"
           className={inputClass}
         />
+        <p className="text-[11px] text-gray-400 mt-1">
+          Escreva igual ao da secretaria — é assim que sua conta acha seu cadastro na escola.
+        </p>
       </div>
 
       <div>
-        <label htmlFor="aluno-cpf" className={labelClass}>CPF *</label>
-        <input
-          id="aluno-cpf" type="text" required inputMode="numeric" value={cpf}
-          onChange={e => setCpf(formatarCPF(e.target.value))}
-          placeholder="000.000.000-00"
-          className={inputClass}
-        />
+        <label htmlFor="aluno-turma" className={labelClass}>Turma *</label>
+        <select
+          id="aluno-turma" required value={turma}
+          onChange={e => setTurma(e.target.value)}
+          className={cn(inputClass, 'bg-white')}
+        >
+          <option value="">Selecione sua turma...</option>
+          {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
       </div>
 
       <div>

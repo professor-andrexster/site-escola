@@ -182,6 +182,53 @@ export async function vincularConta(id: string, userId: string) {
   return prisma.alunos.update({ where: { id }, data: { user_id: userId } })
 }
 
+/**
+ * Fichas ativas que ainda nao foram reivindicadas por nenhuma conta.
+ *
+ * E o universo de busca do auto-cadastro: quem se cadastra sozinho nao digita
+ * mais matricula nem CPF, entao a ficha dele e procurada por nome e turma
+ * dentro desta lista. Filtrar por `user_id: null` aqui e o que impede alguem
+ * de se apossar da ficha de um colega que ja tem conta.
+ */
+export async function fichasSemConta() {
+  return prisma.alunos.findMany({
+    where: { user_id: null, NOT: { ativo: false } },
+    select: { id: true, nome: true, turma: true, data_nascimento: true },
+  })
+}
+
+/**
+ * Proxima matricula livre no padrao ALU<ano><sequencial de 4 digitos>.
+ *
+ * O auto-cadastro precisa disto porque `alunos.matricula` e NOT NULL UNIQUE:
+ * quando nao existe ficha para casar, o sistema cria uma, e a matricula tem
+ * que sair de algum lugar sem o aluno digitar.
+ *
+ * Duas pessoas se cadastrando no mesmo segundo pegariam o mesmo numero. O
+ * unique do banco recusa a segunda, e quem chama repete — ver `criarCadastro`.
+ */
+export async function proximaMatricula(ano = new Date().getFullYear()): Promise<string> {
+  const prefixo = `ALU${ano}`
+
+  // Le todas e pega o maior sufixo NUMERICO, em vez de confiar no maior
+  // lexicografico. Uma matricula digitada torta ("ALU2026TEMP") ordena depois
+  // de "ALU20260031" e daria NaN — e como o gerador e deterministico, ele
+  // devolveria o mesmo numero invalido a cada tentativa e o cadastro nunca
+  // mais sairia. Sao poucas dezenas de linhas; ler todas sai barato.
+  const linhas = await prisma.alunos.findMany({
+    where: { matricula: { startsWith: prefixo } },
+    select: { matricula: true },
+  })
+
+  const maior = linhas.reduce((maximo, { matricula }) => {
+    const sufixo = matricula.slice(prefixo.length)
+    if (!/^\d+$/.test(sufixo)) return maximo
+    return Math.max(maximo, Number(sufixo))
+  }, 0)
+
+  return `${prefixo}${String(maior + 1).padStart(4, '0')}`
+}
+
 export async function remover(id: string) {
   return prisma.alunos.delete({ where: { id } })
 }

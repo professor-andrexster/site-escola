@@ -2,6 +2,10 @@ export type AcaoLog =
   | 'cadastro_aluno'
   | 'cadastro_professor'
   | 'cadastro_recusado'
+  // Auto-cadastro achou mais de uma ficha sem dono com o mesmo nome e turma.
+  // Nenhuma e escolhida (dar a ficha errada misturaria o historico de dois
+  // alunos); fica para a tela de aprovacao resolver.
+  | 'cadastro_ficha_ambigua'
   | 'login_ok'
   | 'login_falha'
   | 'logout'
