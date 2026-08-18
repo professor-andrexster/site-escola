@@ -191,7 +191,11 @@ export async function envioComCurso(envioId: string) {
       id: true,
       user_id: true,
       status: true,
-      curso_desafios: { select: { curso_id: true, vale_certificado: true } },
+      // `modulo_id` entra aqui porque o desafio final pode ser de curso ou de
+      // modulo, e a rota de aprovacao decide qual certificado emitir por ele.
+      curso_desafios: {
+        select: { curso_id: true, modulo_id: true, vale_certificado: true },
+      },
     },
   })
 }

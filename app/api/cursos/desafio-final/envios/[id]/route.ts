@@ -3,6 +3,7 @@ import { usuarioAtual } from '@/lib/auth/sessao'
 import { papelEAprovacao } from '@/lib/db/perfis'
 import { avaliarEnvio, envioComCurso, podeAvaliarCurso } from '@/lib/db/desafio-curso'
 import { buscarPorId as buscarCurso, duracaoTotal, emitirCertificado } from '@/lib/db/cursos'
+import { emitirCertificadoDeModulo, moduloPorId, podeAvaliarModulo } from '@/lib/db/modulos'
 import { buscarPorId as buscarPerfil } from '@/lib/db/perfis'
 import { randomBytes } from 'crypto'
 
@@ -19,8 +20,14 @@ function gerarCodigo(): string {
 /**
  * Aprovacao ou recusa do desafio final. Aprovar emite o certificado.
  *
- * Quem avalia: o autor do curso, quem ele convidar, e a gestao como
- * destravamento. A regra mora em podeAvaliarCurso, num lugar so.
+ * Atende os DOIS tipos de desafio final, porque os dois moram na mesma tabela:
+ *
+ *  - desafio de CURSO  (`curso_id`)  -> certificado do curso
+ *  - desafio de MODULO (`modulo_id`) -> certificado do modulo, com a carga
+ *    somada dos cursos dele
+ *
+ * Quem avalia: o autor, quem ele convidar, e a gestao como destravamento. No
+ * modulo vale quem avalia qualquer curso dele — ver podeAvaliarModulo.
  */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const usuario = await usuarioAtual()
@@ -34,9 +41,22 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!envio) return NextResponse.json({ error: 'Envio não encontrado.' }, { status: 404 })
 
   const cursoId = envio.curso_desafios.curso_id
-  if (!(await podeAvaliarCurso(cursoId, usuario.id, perfil.role))) {
+  const moduloId = envio.curso_desafios.modulo_id
+
+  if (!cursoId && !moduloId) {
     return NextResponse.json(
-      { error: 'Só o professor autor do curso, ou quem ele convidou, avalia este desafio.' },
+      { error: 'Desafio sem curso nem módulo. Avise a coordenação.' },
+      { status: 400 }
+    )
+  }
+
+  const podeAvaliar = moduloId
+    ? await podeAvaliarModulo(moduloId, usuario.id, perfil.role)
+    : await podeAvaliarCurso(cursoId!, usuario.id, perfil.role)
+
+  if (!podeAvaliar) {
+    return NextResponse.json(
+      { error: 'Só o professor autor, ou quem ele convidou, avalia este desafio.' },
       { status: 403 }
     )
   }
@@ -58,26 +78,50 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       return NextResponse.json({ ok: true, certificado: null })
     }
 
-    const [curso, aluno] = await Promise.all([buscarCurso(cursoId), buscarPerfil(envio.user_id)])
-    if (!curso || !aluno) {
-      return NextResponse.json({ error: 'Curso ou aluno não encontrado.' }, { status: 404 })
+    const aluno = await buscarPerfil(envio.user_id)
+    if (!aluno) return NextResponse.json({ error: 'Aluno não encontrado.' }, { status: 404 })
+
+    // Aprovação de desafio prático é binária: não há prova com nota. 100
+    // registra "aprovado" no campo que o certificado imprime.
+    const NOTA_APROVADO = 100
+
+    // ------------------------------------------------- certificado de módulo
+    if (moduloId) {
+      const modulo = await moduloPorId(moduloId)
+      if (!modulo) return NextResponse.json({ error: 'Módulo não encontrado.' }, { status: 404 })
+
+      const cert = await emitirCertificadoDeModulo({
+        userId: envio.user_id,
+        moduloId,
+        alunoNome: aluno.nome_completo,
+        moduloTitulo: modulo.nome,
+        // O módulo reúne cursos de autores possivelmente diferentes, então o
+        // certificado sai assinado pela escola, não por um professor.
+        autorNome: null,
+        codigo: gerarCodigo(),
+        cargaHoraria: modulo.carga_horaria ?? 0,
+        nota: NOTA_APROVADO,
+      })
+      return NextResponse.json({ ok: true, certificado: cert })
     }
+
+    // -------------------------------------------------- certificado de curso
+    const curso = await buscarCurso(cursoId!)
+    if (!curso) return NextResponse.json({ error: 'Curso não encontrado.' }, { status: 404 })
 
     // A carga horária do curso é o que vale. Se ninguém preencheu, cai para a
     // soma das durações das aulas — melhor que imprimir zero num documento.
-    const carga = curso.carga_horaria ?? Math.max(1, Math.round((await duracaoTotal(cursoId)) / 60))
+    const carga = curso.carga_horaria ?? Math.max(1, Math.round((await duracaoTotal(cursoId!)) / 60))
 
     const cert = await emitirCertificado({
       userId: envio.user_id,
-      cursoId,
+      cursoId: cursoId!,
       alunoNome: aluno.nome_completo,
       cursoTitulo: curso.titulo,
       autorNome: curso.autor_nome ?? null,
       codigo: gerarCodigo(),
       cargaHoraria: carga,
-      // Aprovação de desafio prático é binária: não há prova com nota. 100
-      // registra "aprovado" no campo que o certificado imprime.
-      nota: 100,
+      nota: NOTA_APROVADO,
     })
     return NextResponse.json({ ok: true, certificado: cert })
   } catch (erro) {

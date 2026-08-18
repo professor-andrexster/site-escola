@@ -318,18 +318,23 @@ model certificados {
   id            String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
   codigo        String    @unique @db.VarChar(16)
   user_id       String    @db.Char(36)
-  curso_id      String    @db.Char(36)
+  curso_id      String?   @db.Char(36)
   aluno_nome    String    @db.VarChar(120)
   curso_titulo  String    @db.VarChar(120)
   autor_nome    String?   @db.VarChar(80)
   carga_horaria Int
   nota          Int
   emitido_em    DateTime? @default(now())
-  cursos        cursos    @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  modulo_id     String?   @db.Char(36)
+  modulo_titulo String?   @db.VarChar(120)
+  cursos        cursos?   @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  modulos       modulos?  @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "certificados_modulo_fkey")
   usuarios      usuarios  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
 
   @@unique([user_id, curso_id])
+  @@unique([user_id, modulo_id], map: "certificados_user_modulo_key")
   @@index([curso_id], map: "certificados_curso_id_fkey")
+  @@index([modulo_id], map: "certificados_modulo_fkey")
 }
 
 model configuracoes_site {
@@ -358,7 +363,7 @@ model convites_usuario {
 
 model curso_desafios {
   id                   String                 @id @default(dbgenerated("(uuid())")) @db.Char(36)
-  curso_id             String                 @db.Char(36)
+  curso_id             String?                @db.Char(36)
   aula_id              String?                @db.Char(36)
   titulo               String                 @db.VarChar(160)
   enunciado            String                 @db.Text
@@ -369,12 +374,15 @@ model curso_desafios {
   vale_certificado     Boolean                @default(false)
   formatos_aceitos     String?                @db.VarChar(120)
   instrucoes_envio     String?                @db.Text
+  modulo_id            String?                @db.Char(36)
   curso_desafio_envios curso_desafio_envios[]
   aulas                aulas?                 @relation(fields: [aula_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
-  cursos               cursos                 @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  cursos               cursos?                @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
+  modulos              modulos?               @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "curso_desafios_modulo_fkey")
 
   @@index([aula_id], map: "curso_desafios_aula_id_fkey")
   @@index([curso_id], map: "curso_desafios_curso_id_fkey")
+  @@index([modulo_id], map: "curso_desafios_modulo_fkey")
 }
 
 model curso_prova_perguntas {
@@ -410,15 +418,19 @@ model cursos {
   criado_em             DateTime?               @default(now())
   atualizado_em         DateTime?               @default(now())
   carga_horaria         Int?
+  modulo_id             String?                 @db.Char(36)
+  ordem_no_modulo       Int                     @default(0)
   aulas                 aulas[]
   certificados          certificados[]
   curso_avaliadores     curso_avaliadores[]
   curso_desafios        curso_desafios[]
   curso_prova_perguntas curso_prova_perguntas[]
+  modulos               modulos?                @relation(fields: [modulo_id], references: [id], onUpdate: Restrict, map: "cursos_modulo_fkey")
   usuarios              usuarios?               @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "fk_cursos_author")
   progresso_aulas       progresso_aulas[]
 
   @@index([criado_por], map: "fk_cursos_author")
+  @@index([modulo_id], map: "cursos_modulo_fkey")
 }
 
 model desafio_fases {
@@ -901,4 +913,21 @@ model curso_avaliadores {
   @@unique([curso_id, user_id], map: "curso_avaliadores_curso_user_key")
   @@index([convidado_por], map: "curso_avaliadores_convidou_fkey")
   @@index([user_id], map: "curso_avaliadores_user_idx")
+}
+
+model modulos {
+  id             String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  nome           String           @db.VarChar(80)
+  slug           String           @unique @db.VarChar(100)
+  descricao      String?          @db.Text
+  nivel          String           @db.VarChar(20)
+  ordem          Int              @default(0)
+  carga_horaria  Int?
+  capa_url       String?          @db.VarChar(300)
+  publicado      Boolean          @default(false)
+  criado_em      DateTime?        @default(now()) @db.DateTime(0)
+  atualizado_em  DateTime?        @default(now()) @db.DateTime(0)
+  certificados   certificados[]
+  curso_desafios curso_desafios[]
+  cursos         cursos[]
 }

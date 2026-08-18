@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, Settings,
   Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
-  UserCheck, ScanLine, RotateCcw,
+  UserCheck, ScanLine, RotateCcw, Layers, Award,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -33,7 +33,9 @@ const navGestao: NavGroup[] = [
       items: [
         { href: '/admin/quiz', label: 'JBQuiz', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
         { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
+        { href: '/admin/cursos/gerenciar/entregas', label: 'Entregas e Certificados', icon: Award },
         { href: '/admin/cursos/pendentes', label: 'Cursos Pendentes', icon: Clock },
       ],
     },
@@ -88,7 +90,9 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       label: 'Cursos',
       items: [
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
         { href: '/admin/cursos/gerenciar', label: 'Gerenciar Cursos', icon: Library },
+        { href: '/admin/cursos/gerenciar/entregas', label: 'Entregas e Certificados', icon: Award },
       ],
     },
     {
@@ -107,6 +111,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
@@ -121,6 +126,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
@@ -136,6 +142,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard },
         { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
       ],
     },
   ],
@@ -157,6 +164,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/meu-perfil', label: 'Meu Perfil', icon: User },
         { href: '/admin/meus-quizzes', label: 'Meus Quizzes', icon: Gamepad2 },
         { href: '/admin/cursos', label: 'Cursos', icon: BookOpen },
+        { href: '/admin/modulos', label: 'Módulos', icon: Layers },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
