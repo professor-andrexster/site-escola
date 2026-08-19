@@ -142,16 +142,21 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
             />
           </>
         ) : (
-          <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-start gap-3">
-            <Lock className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
-            <div>
-              <p className="text-white/60 text-sm">
-                Conclua as aulas dos {progresso.cursos.length} cursos para liberar o projeto do
-                módulo.
-              </p>
-              <p className="text-white/35 text-xs mt-1">
-                Faltam {progresso.totalAulas - progresso.aulasConcluidas} aulas.
-              </p>
+          <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+            {/* O título aparece mesmo trancado: saber o que vem pela frente
+                motiva mais que um cadeado sem contexto. */}
+            <h3 className="text-white font-bold mb-2">{desafio.titulo}</h3>
+            <div className="flex items-start gap-3">
+              <Lock className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-white/60 text-sm">
+                  Conclua as aulas dos {progresso.cursos.length} cursos para liberar este projeto e
+                  o certificado de {modulo.carga_horaria}h do módulo.
+                </p>
+                <p className="text-white/35 text-xs mt-1">
+                  Faltam {progresso.totalAulas - progresso.aulasConcluidas} aulas.
+                </p>
+              </div>
             </div>
           </div>
         )}

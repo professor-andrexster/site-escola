@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { isGestao } from '@/lib/roles'
 
 /**
  * Modulos: trilhas de ~20h que agrupam cursos afins, com nivel Facil, Medio ou
@@ -140,7 +141,11 @@ export async function podeAvaliarModulo(
   userId: string,
   role: string
 ): Promise<boolean> {
-  if (role === 'gestao' || role === 'direcao') return true
+  // Os papeis de gestao vem de lib/roles (diretora, vice_diretora, admin).
+  // Escrever a lista na mao aqui trocou 'admin' por 'gestao'/'direcao', que
+  // nao existem — e o resultado foi gestao levando 403 ao tentar avaliar
+  // projeto de modulo, sem nenhum caminho alternativo.
+  if (isGestao(role as Parameters<typeof isGestao>[0])) return true
 
   const cursos = await prisma.cursos.findMany({
     where: { modulo_id: moduloId },
