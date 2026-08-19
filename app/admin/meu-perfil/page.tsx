@@ -4,6 +4,7 @@ import { ArrowLeft, User, Award, Layers, BookOpen, Printer } from 'lucide-react'
 import MeuPerfilForm from '@/components/admin/MeuPerfilForm'
 import StaffPerfilForm from '@/components/admin/StaffPerfilForm'
 import { certificadosDoAluno } from '@/lib/db/modulos'
+import { buscarPorUsuario } from '@/lib/db/alunos'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Meu Perfil, Painel Escolar' }
@@ -30,7 +31,7 @@ export default async function MeuPerfilPage() {
         {profile.role === 'aluno' ? 'Atualize seus dados de contato e responsável' : 'Atualize sua foto e seus dados'}
       </p>
 
-      {profile.role === 'aluno' ? <MeuPerfilForm /> : <StaffPerfilForm profile={profile} />}
+      {profile.role === 'aluno' ? <PerfilDoAluno userId={user.id} /> : <StaffPerfilForm profile={profile} />}
 
       {/* Os certificados moram aqui porque é onde o aluno volta para procurar:
           "meu perfil" é o lugar dos documentos dele. Na página do curso o
@@ -38,6 +39,29 @@ export default async function MeuPerfilPage() {
       <MeusCertificados userId={user.id} />
     </div>
   )
+}
+
+/**
+ * Busca a ficha no servidor e entrega pronta ao formulário.
+ *
+ * Sem isto o formulário abria vazio e buscava sozinho, piscando "Carregando..."
+ * em toda visita — sendo que o servidor já sabe quem está logado.
+ */
+async function PerfilDoAluno({ userId }: { userId: string }) {
+  const aluno = await buscarPorUsuario(userId)
+
+  if (!aluno) {
+    return (
+      <div className="panel p-5">
+        <p className="text-sm text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
+          Sua conta ainda não está ligada a uma ficha de aluno. Procure a secretaria para completar
+          seu cadastro.
+        </p>
+      </div>
+    )
+  }
+
+  return <MeuPerfilForm aluno={aluno} />
 }
 
 /** Certificados de curso e de módulo do aluno, do mais recente ao mais antigo. */

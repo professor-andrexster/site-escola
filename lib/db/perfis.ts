@@ -231,6 +231,30 @@ export async function sincronizarTurma(id: string, turma: string) {
   return prisma.profiles.update({ where: { id }, data: { turma } })
 }
 
+/**
+ * Espelha a foto do aluno em `profiles.avatar_url`.
+ *
+ * A foto mora em dois lugares por razoes diferentes: `alunos.foto_url` alimenta
+ * o portfolio publico, e `profiles.avatar_url` e o que a sidebar, o cabecalho, o
+ * dashboard e o componente Avatar mostram dentro do sistema.
+ *
+ * Sem espelhar, o aluno enviava a foto em "Meu Perfil", ela era gravada e o
+ * avatar dele continuava sendo as iniciais — do ponto de vista dele, "a foto nao
+ * salvou". Um aluno chegou a reenviar o mesmo arquivo tres vezes em vinte
+ * minutos.
+ *
+ * Mesma ideia do sincronizarTurma acima: o dado tem dois lares legitimos, e
+ * quem escreve num precisa escrever no outro.
+ */
+export async function sincronizarFoto(id: string, url: string | null) {
+  const p = await prisma.profiles.findUnique({ where: { id }, select: { id: true } })
+  if (!p) return null
+  return prisma.profiles.update({
+    where: { id },
+    data: { avatar_url: url, updated_at: new Date() },
+  })
+}
+
 /** Campos que a pessoa edita no proprio perfil, ou a gestao no de outra. */
 export async function atualizarPerfil(
   id: string,

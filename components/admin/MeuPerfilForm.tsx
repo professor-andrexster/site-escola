@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { Save, AlertCircle, Upload, X } from 'lucide-react'
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Save, AlertCircle, Camera, X } from 'lucide-react'
 import type { Aluno } from '@/types/database'
 import { enviarArquivo } from '@/lib/enviarArquivo'
 
@@ -11,45 +12,67 @@ function validarEmail(email: string): boolean {
   return REGEX_EMAIL.test(email)
 }
 
-export default function MeuPerfilForm() {
-  const [aluno, setAluno] = useState<Partial<Aluno> | null>(null)
-  const [telefone, setTelefone] = useState('')
-  const [email, setEmail] = useState('')
-  const [responsavel, setResponsavel] = useState('')
-  const [fotoUrl, setFotoUrl] = useState('')
+/**
+ * Os dados chegam prontos do servidor, que ja sabe quem esta logado.
+ *
+ * Antes o componente montava vazio e buscava em useEffect, entao a tela
+ * abria em "Carregando..." em toda visita — e o HTML entregue nao continha
+ * nada do perfil, o que tambem tornava a tela impossivel de verificar sem
+ * navegador.
+ */
+export default function MeuPerfilForm({ aluno }: { aluno: Partial<Aluno> }) {
+  const [telefone, setTelefone] = useState(aluno.telefone ?? '')
+  const [email, setEmail] = useState(aluno.email ?? '')
+  const [responsavel, setResponsavel] = useState(aluno.responsavel ?? '')
+  const [fotoUrl, setFotoUrl] = useState(aluno.foto_url ?? '')
   const [uploadandoFoto, setUploadandoFoto] = useState(false)
   const [erro, setErro] = useState('')
   const [sucesso, setSucesso] = useState(false)
-  const [loading, setLoading] = useState(true)
   const [salvando, setSalvando] = useState(false)
+  const router = useRouter()
 
-  useEffect(() => {
-    async function carregarPerfil() {
-      try {
-        const res = await fetch('/api/alunos/meu-perfil')
-        if (!res.ok) {
-          const json = await res.json()
-          setErro(json.error || 'Erro ao carregar perfil.')
-          setLoading(false)
-          return
-        }
-        const dados = await res.json() as Aluno
-        setAluno(dados)
-        setTelefone(dados.telefone ?? '')
-        setEmail(dados.email ?? '')
-        setResponsavel(dados.responsavel ?? '')
-        setFotoUrl(dados.foto_url ?? '')
-      } catch (err) {
-        setErro('Erro ao carregar perfil.')
-      } finally {
-        setLoading(false)
-      }
+
+  /**
+   * Grava a foto na hora, sem depender de um segundo clique em "Salvar".
+   *
+   * O servidor espelha em `profiles.avatar_url`, que é o que a sidebar e o
+   * cabeçalho mostram — antes disso a foto era gravada só na ficha e o aluno
+   * continuava vendo as próprias iniciais, com cara de que não salvou.
+   */
+  async function salvarFoto(url: string | null): Promise<boolean> {
+    const res = await fetch('/api/alunos/meu-perfil', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ foto_url: url }),
+    })
+    if (!res.ok) {
+      const json = await res.json().catch(() => ({}))
+      setErro(json.error ?? 'Erro ao salvar a foto.')
+      return false
     }
-    carregarPerfil()
-  }, [])
+    setFotoUrl(url ?? '')
+    setSucesso(true)
+    setTimeout(() => setSucesso(false), 3000)
+    // A sidebar e o cabeçalho são renderizados no servidor: sem recarregar, o
+    // avatar antigo continuaria na tela até a próxima navegação.
+    router.refresh()
+    return true
+  }
 
   async function handleUploadFoto(file: File) {
     if (!file || !aluno?.id) return
+
+    // Conferido aqui só para dar mensagem clara antes da ida ao servidor, que
+    // valida de novo por conta própria.
+    if (!file.type.startsWith('image/')) {
+      setErro('Escolha uma imagem (JPG, PNG ou WebP).')
+      return
+    }
+    const MAX_MB = 5
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setErro(`A imagem tem ${(file.size / 1024 / 1024).toFixed(1)} MB. O limite é ${MAX_MB} MB — tire uma foto em resolução menor ou reduza antes de enviar.`)
+      return
+    }
 
     setUploadandoFoto(true)
     setErro('')
@@ -61,30 +84,23 @@ export default function MeuPerfilForm() {
       const enviado = await enviarArquivo('avatar', file)
       if ('erro' in enviado) {
         setErro(enviado.erro)
-        setUploadandoFoto(false)
         return
       }
-      const publicUrl = enviado.url
-
-      // Salva a foto na hora, sem depender de um segundo clique em "Salvar".
-      const res = await fetch('/api/alunos/meu-perfil', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ foto_url: publicUrl }),
-      })
-      if (!res.ok) {
-        const json = await res.json()
-        setErro(json.error ?? 'Erro ao salvar a foto.')
-        setUploadandoFoto(false)
-        return
-      }
-
-      setFotoUrl(publicUrl)
-      setSucesso(true)
-      setUploadandoFoto(false)
-      setTimeout(() => setSucesso(false), 3000)
-    } catch (err) {
+      await salvarFoto(enviado.url)
+    } catch {
       setErro('Erro ao fazer upload da foto.')
+    } finally {
+      setUploadandoFoto(false)
+    }
+  }
+
+  async function handleRemoverFoto() {
+    if (!confirm('Remover sua foto de perfil?')) return
+    setUploadandoFoto(true)
+    setErro('')
+    try {
+      await salvarFoto(null)
+    } finally {
       setUploadandoFoto(false)
     }
   }
@@ -107,7 +123,9 @@ export default function MeuPerfilForm() {
           email: email || null,
           telefone: telefone || null,
           responsavel: responsavel || null,
-          foto_url: fotoUrl || null,
+          // A foto NAO vai aqui: ela tem gravacao propria e imediata. Reenviar
+          // junto faria o botao Salvar sobrescrever a foto com o que estivesse
+          // na tela, desfazendo uma troca feita em outra aba.
         }),
       })
 
@@ -126,25 +144,6 @@ export default function MeuPerfilForm() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="panel p-8 text-center">
-        <p className="text-gray-400">Carregando...</p>
-      </div>
-    )
-  }
-
-  if (!aluno) {
-    return (
-      <div className="panel p-5">
-        <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-lg px-4 py-3">
-          <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-          <p className="text-sm">{erro || 'Não foi possível carregar seus dados.'}</p>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="panel p-5 space-y-4 max-w-2xl">
       {erro && (
@@ -159,27 +158,76 @@ export default function MeuPerfilForm() {
         </div>
       )}
 
-      <div className="space-y-4 pb-4 border-b border-gray-200">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Nome completo</label>
-          <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
-            {aluno.nome}
-          </div>
-          <p className="text-xs text-gray-400 mt-1">Não pode ser alterado. Solicite à direção se precisar de mudanças.</p>
+      {/* Cartão de identificação: foto, nome e os dados que a secretaria
+          controla. A foto vem primeiro porque é o que a pessoa entra aqui para
+          mexer — antes ela estava no fim, depois de três campos de texto. */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-start gap-5 pb-5 border-b border-gray-200">
+        <div className="flex-shrink-0 flex flex-col items-center gap-2">
+          {fotoUrl ? (
+            <img
+              src={fotoUrl}
+              alt={aluno.nome}
+              className="w-28 h-28 rounded-full object-cover border-2 border-white shadow-elevation-low"
+            />
+          ) : (
+            <div className="w-28 h-28 rounded-full bg-escola-azul/10 border-2 border-dashed border-escola-azul/30 flex items-center justify-center">
+              <span className="text-2xl font-bold text-escola-azul/60 font-playfair">
+                {(aluno.nome ?? '?')
+                  .split(' ')
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map(n => n[0])
+                  .join('')
+                  .toUpperCase()}
+              </span>
+            </div>
+          )}
+
+          <label
+            className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
+              uploadandoFoto
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-escola-azul text-white hover:bg-escola-azul/90 cursor-pointer'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            {uploadandoFoto ? 'Enviando...' : fotoUrl ? 'Trocar foto' : 'Enviar foto'}
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              disabled={uploadandoFoto}
+              onChange={e => e.target.files?.[0] && handleUploadFoto(e.target.files[0])}
+            />
+          </label>
+
+          {fotoUrl && (
+            <button
+              type="button"
+              onClick={handleRemoverFoto}
+              disabled={uploadandoFoto}
+              className="text-xs text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+            >
+              <X className="w-3 h-3 inline mr-0.5" />
+              Remover
+            </button>
+          )}
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Matrícula</label>
-          <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
-            {aluno.matricula}
+        <div className="flex-1 min-w-0 text-center sm:text-start">
+          <p className="font-playfair text-xl font-bold text-gray-900">{aluno.nome}</p>
+          <div className="flex flex-wrap justify-center sm:justify-start gap-x-4 gap-y-1 mt-2 text-sm">
+            <span className="text-gray-500">
+              Matrícula <span className="font-mono text-gray-700">{aluno.matricula}</span>
+            </span>
+            <span className="text-gray-500">
+              Turma <span className="font-semibold text-gray-700">{aluno.turma}</span>
+            </span>
           </div>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1.5">Turma</label>
-          <div className="px-3 py-2.5 bg-gray-50 border border-gray-200 rounded-lg text-sm text-gray-600">
-            {aluno.turma}
-          </div>
+          <p className="text-xs text-gray-400 mt-3">
+            Nome, matrícula e turma são mantidos pela secretaria. Se algum estiver errado, fale com
+            a direção. A foto salva sozinha, sem precisar clicar em Salvar.
+          </p>
         </div>
       </div>
 
@@ -218,40 +266,6 @@ export default function MeuPerfilForm() {
           placeholder="Nome do responsável"
           className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
         />
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1.5">Sua Foto</label>
-        <div className="flex gap-4">
-          {fotoUrl ? (
-            <div className="flex flex-col gap-2">
-              <img src={fotoUrl} alt={aluno?.nome} className="w-24 h-24 rounded-lg object-cover border border-gray-200" />
-              <button
-                type="button"
-                onClick={() => setFotoUrl('')}
-                disabled={uploadandoFoto}
-                className="text-xs text-red-600 hover:text-red-700 disabled:opacity-50"
-              >
-                <X className="w-4 h-4 inline mr-1" />
-                Remover
-              </button>
-            </div>
-          ) : (
-            <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-              <Upload className="w-4 h-4 text-gray-400" />
-            </div>
-          )}
-          <div className="flex-1">
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => e.target.files?.[0] && handleUploadFoto(e.target.files[0])}
-              disabled={uploadandoFoto}
-              className="w-full"
-            />
-            {uploadandoFoto && <p className="text-xs text-gray-500 mt-2">Enviando...</p>}
-          </div>
-        </div>
       </div>
 
       <div className="flex gap-3 pt-2">

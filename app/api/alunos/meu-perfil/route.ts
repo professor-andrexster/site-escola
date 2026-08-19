@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { usuarioAtual } from '@/lib/auth/sessao'
 import { buscarPorUsuario, jaExiste, atualizar } from '@/lib/db/alunos'
+import { sincronizarFoto } from '@/lib/db/perfis'
 
 const REGEX_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -75,6 +76,14 @@ export async function PUT(request: Request) {
 
   try {
     await atualizar(aluno.id, dados)
+
+    // A foto tem dois lares: `alunos.foto_url` alimenta o portfólio público e
+    // `profiles.avatar_url` é o que a sidebar, o cabeçalho e o dashboard
+    // mostram. Gravar só o primeiro fazia o aluno enviar a foto e continuar
+    // vendo as próprias iniciais como avatar — daí o "a foto não fica salva".
+    if (body.foto_url !== undefined) {
+      await sincronizarFoto(usuario.id, body.foto_url || null)
+    }
   } catch (erro) {
     console.error('[meu-perfil] falha ao atualizar', erro)
     return NextResponse.json({ error: 'Erro ao atualizar seus dados.' }, { status: 400 })

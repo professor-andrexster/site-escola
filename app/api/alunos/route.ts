@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { jaExiste, criar, atualizar, buscarPorId, remover, proximaMatricula } from '@/lib/db/alunos'
-import { papelEAprovacao, sincronizarTurma, revogar } from '@/lib/db/perfis'
+import { papelEAprovacao, sincronizarTurma, sincronizarFoto, revogar } from '@/lib/db/perfis'
 import { registrar } from '@/lib/db/log'
 import { exigirGestao } from '@/lib/apiGestao'
 import { limparCPF, validarCPF } from '@/lib/cpf'
@@ -213,6 +213,17 @@ export async function PUT(request: Request) {
 
   try {
     await atualizar(body.id, validacao.dados as never)
+
+    // A foto tem dois lares: alunos.foto_url (portfólio público) e
+    // profiles.avatar_url (o avatar dentro do sistema). Quando a gestão troca a
+    // foto de um aluno, o avatar dele tem que acompanhar — senão a listagem
+    // mostra uma foto e a sidebar dele mostra outra.
+    if (validacao.dados.foto_url !== undefined) {
+      const ficha = await buscarPorId(body.id)
+      if (ficha?.user_id) {
+        await sincronizarFoto(ficha.user_id, (validacao.dados.foto_url as string | null) || null)
+      }
+    }
   } catch (erro) {
     return erroBanco(erro as Parameters<typeof erroBanco>[0])
   }
