@@ -45,6 +45,17 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
 
   const listaAulas = aulas
   const primeiraNaoConcluida = listaAulas.find((a) => statusDe(a.id) !== 'concluida') ?? listaAulas[0]
+
+  /**
+   * As aulas que faltam, com a posição de cada uma.
+   *
+   * A caixa trancada dizia só "conclua as N aulas", e quem tinha 4 de 6 não
+   * descobria QUAIS duas faltavam sem abrir uma por uma. Aconteceu de verdade:
+   * duas aulas paradas no meio dos slides seguravam o desafio final.
+   */
+  const aulasFaltando = listaAulas
+    .map((a, i) => ({ ...a, numero: i + 1 }))
+    .filter((a) => statusDe(a.id) !== 'concluida')
   const totalConcluidas = listaAulas.filter((a) => statusDe(a.id) === 'concluida').length
   const progressoPct = listaAulas.length > 0 ? Math.round((totalConcluidas / listaAulas.length) * 100) : 0
 
@@ -128,13 +139,11 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
               certificadoCodigo={certificado?.codigo ?? null}
             />
           ) : (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center gap-3">
-              <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
-              <p className="text-white/50 text-sm">
-                Conclua as {listaAulas.length} aulas para liberar o desafio final e ganhar o
-                certificado do curso.
-              </p>
-            </div>
+            <AulasQueFaltam
+              cursoSlug={curso.slug}
+              aulas={aulasFaltando}
+              oQueLibera="o desafio final e o certificado do curso"
+            />
           )}
         </section>
       )}
@@ -163,12 +172,11 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
           ) : progressoPct === 100 ? (
             <ProvaFinal cursoId={curso.id} totalPerguntas={totalPerguntasProva ?? 0} />
           ) : (
-            <div className="bg-white/5 border border-white/10 rounded-2xl p-5 flex items-center gap-3">
-              <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
-              <p className="text-white/50 text-sm">
-                Conclua as {listaAulas.length} aulas para liberar a prova final e ganhar o certificado do curso.
-              </p>
-            </div>
+            <AulasQueFaltam
+              cursoSlug={curso.slug}
+              aulas={aulasFaltando}
+              oQueLibera="a prova final e o certificado do curso"
+            />
           )}
         </section>
       )}
@@ -192,6 +200,68 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
           </div>
         </section>
       )}
+    </div>
+  )
+}
+
+/**
+ * Lista as aulas que ainda faltam, com link direto para cada uma.
+ *
+ * Mostra no máximo cinco: com mais que isso a caixa vira uma segunda lista de
+ * aulas, e a página já tem uma logo acima.
+ */
+function AulasQueFaltam({
+  cursoSlug,
+  aulas,
+  oQueLibera,
+}: {
+  cursoSlug: string
+  aulas: { id: string; slug: string; titulo: string; numero: number }[]
+  oQueLibera: string
+}) {
+  const MOSTRAR = 5
+  const visiveis = aulas.slice(0, MOSTRAR)
+  const resto = aulas.length - visiveis.length
+
+  return (
+    <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
+      <p className="flex items-center gap-2 text-white/60 text-sm mb-3">
+        <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
+        {aulas.length === 1 ? (
+          <>Falta <strong className="text-white">1 aula</strong> para liberar {oQueLibera}.</>
+        ) : (
+          <>Faltam <strong className="text-white">{aulas.length} aulas</strong> para liberar {oQueLibera}.</>
+        )}
+      </p>
+
+      <ul className="space-y-1.5">
+        {visiveis.map((a) => (
+          <li key={a.id}>
+            <Link
+              href={`/admin/cursos/${cursoSlug}/${a.slug}`}
+              className="group flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-white/5 transition-colors"
+            >
+              <span className="flex-shrink-0 w-6 h-6 rounded-full border border-white/20 text-white/50 text-xs font-jetbrains flex items-center justify-center">
+                {a.numero}
+              </span>
+              <span className="text-white/70 text-sm group-hover:text-white transition-colors flex-1 min-w-0 truncate">
+                {a.titulo}
+              </span>
+              <span className="text-curso-ciano text-xs flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                continuar
+              </span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+
+      {resto > 0 && (
+        <p className="text-white/30 text-xs mt-2 ps-3">e mais {resto}.</p>
+      )}
+
+      <p className="text-white/30 text-xs mt-3 ps-3">
+        A aula é marcada como concluída quando você chega no último slide.
+      </p>
     </div>
   )
 }

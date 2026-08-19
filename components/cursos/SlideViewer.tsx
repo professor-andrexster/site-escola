@@ -74,22 +74,46 @@ export default function SlideViewer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSlide, totalSlides])
 
+  /**
+   * Salva o slide atual e, ao chegar no ultimo, marca a aula como concluida.
+   *
+   * A conclusao era so pelo botao, que aparecia unicamente no ultimo slide.
+   * Quem parava no meio ficava com a aula em aberto sem perceber, e depois nao
+   * entendia por que o desafio final nao liberava — foi exatamente o que houve
+   * com duas aulas do HTML, paradas nos slides 2 e 4 de 5.
+   *
+   * Chegar ao ultimo slide de uma apresentacao E o sinal de conclusao. O botao
+   * continua ali para levar a proxima aula.
+   */
   useEffect(() => {
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    const ultimo = currentSlide === totalSlides - 1
+    const marcarAgora = ultimo && !concluida
+
     saveTimeoutRef.current = setTimeout(async () => {
       setSaving(true)
       await fetch('/api/cursos/progresso', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ aulaId, slideAtual: currentSlide }),
+        body: JSON.stringify({
+          aulaId,
+          slideAtual: currentSlide,
+          ...(marcarAgora ? { concluida: true } : {}),
+        }),
       })
+      if (marcarAgora) {
+        setConcluida(true)
+        // A lista de aulas e a barra de progresso do curso sao renderizadas no
+        // servidor: sem isto, voltar para o curso mostraria a aula ainda aberta.
+        router.refresh()
+      }
       setSaving(false)
     }, 600)
     return () => {
       if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentSlide])
+  }, [currentSlide, concluida, totalSlides])
 
   async function concluirAula() {
     setSaving(true)
@@ -194,7 +218,9 @@ export default function SlideViewer({
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-curso-azul hover:bg-curso-azul-claro text-white font-bold text-sm transition-colors"
           >
             <CircleCheck className="w-4 h-4" />
-            {concluida ? 'Concluída — continuar' : nextAulaSlug ? 'Concluir e ir para próxima' : 'Concluir aula'}
+            {concluida
+              ? nextAulaSlug ? 'Concluída — próxima aula' : 'Concluída — voltar ao curso'
+              : nextAulaSlug ? 'Concluir e ir para próxima' : 'Concluir aula'}
           </button>
         ) : (
           <button
