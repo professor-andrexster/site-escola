@@ -263,15 +263,26 @@ export default function SlideViewer({
                   Desafio{desafios.length > 1 ? 's' : ''} da aula
                 </h2>
                 {desafios.map(d => (
-                  <div key={d.id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                  // Clicável: abre o desafio na trilha, onde ele aparece com o
+                  // nível, a origem e — quando vale certificado — a entrega.
+                  <Link
+                    key={d.id}
+                    href={`/admin/cursos/desafios/${d.id}`}
+                    className="group block bg-white/5 border border-white/10 rounded-2xl p-5 hover:border-white/25 transition-colors"
+                  >
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <h3 className="text-white font-bold">{d.titulo}</h3>
+                      <h3 className="text-white font-bold group-hover:text-curso-ciano transition-colors">
+                        {d.titulo}
+                      </h3>
                       <span className="flex-shrink-0 text-[10px] font-jetbrains uppercase tracking-widest text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
                         {d.tipo}
                       </span>
                     </div>
                     <div className={proseDesafio} dangerouslySetInnerHTML={{ __html: d.enunciado }} />
-                  </div>
+                    <p className="text-curso-ciano text-xs mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Abrir desafio →
+                    </p>
+                  </Link>
                 ))}
               </section>
             )}

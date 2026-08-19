@@ -98,13 +98,17 @@ export default function ConteudoViewer({
               Desafio{desafios.length > 1 ? 's' : ''} da aula
             </h2>
             {desafios.map(d => (
-              <div key={d.id} className="bg-white/5 border border-curso-azul/30 rounded-2xl p-5">
+              <Link
+                key={d.id}
+                href={`/admin/cursos/desafios/${d.id}`}
+                className="group block bg-white/5 border border-curso-azul/30 rounded-2xl p-5 hover:border-curso-azul/60 transition-colors"
+              >
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[10px] font-jetbrains uppercase tracking-widest text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
                     {TIPO_LABELS[d.tipo] ?? d.tipo}
                   </span>
                 </div>
-                <h3 className="text-white font-bold mb-2">{d.titulo}</h3>
+                <h3 className="text-white font-bold mb-2 group-hover:text-curso-ciano transition-colors">{d.titulo}</h3>
                 <div
                   className={proseDesafio}
                   dangerouslySetInnerHTML={{ __html: d.enunciado }}
@@ -112,7 +116,10 @@ export default function ConteudoViewer({
                 <p className="text-white/50 text-xs mt-3">
                   Faça no caderno, no computador ou no celular e mostre ao professor na próxima aula.
                 </p>
-              </div>
+                <p className="text-curso-ciano text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  Abrir desafio →
+                </p>
+              </Link>
             ))}
           </section>
         )}
