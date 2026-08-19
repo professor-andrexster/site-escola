@@ -60,30 +60,62 @@ export async function POST(request: Request) {
     'Cada pergunta deve ter exatamente 4 alternativas curtas e claras (a, b, c, d), com apenas uma correta. ' +
     'Varie os assuntos dentro do tema e o nível de dificuldade.'
 
-  let res: Response
-  try {
-    res = await fetch(
-      // gemini-flash-latest e um apelido do Google que acompanha o modelo
-      // flash atual: nao fica preso a uma versao que o free tier abandona.
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            responseMimeType: 'application/json',
-            responseSchema: RESPONSE_SCHEMA,
-          },
-        }),
-      }
-    )
-  } catch {
-    return NextResponse.json({ error: 'Falha ao conectar com o serviço de IA.' }, { status: 502 })
+  /**
+   * Modelos em ordem de preferência.
+   *
+   * `gemini-flash-latest` resolve hoje para o 3.7, que vive sobrecarregado:
+   * devolvia 503 "high demand" depois de 20 a 50 segundos, de forma
+   * consistente, enquanto os flash-lite respondiam em 2 a 4 segundos com a
+   * mesma qualidade para pergunta de múltipla escolha de ensino médio.
+   *
+   * A lista é reserva, não capricho: 503 é sobrecarga temporária do lado do
+   * Google, e um modelo só significa que a geração cai junto com ele. Os
+   * apelidos com `-latest` evitam ficar preso a uma versão que sai do ar.
+   */
+  const MODELOS = ['gemini-flash-lite-latest', 'gemini-3.5-flash-lite', 'gemini-3.5-flash']
+
+  const corpo = JSON.stringify({
+    contents: [{ parts: [{ text: prompt }] }],
+    generationConfig: {
+      responseMimeType: 'application/json',
+      responseSchema: RESPONSE_SCHEMA,
+    },
+  })
+
+  let res: Response | null = null
+  let ultimoStatus = 0
+
+  for (const modelo of MODELOS) {
+    try {
+      res = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
+        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo }
+      )
+    } catch {
+      ultimoStatus = 0
+      continue
+    }
+    if (res.ok) break
+
+    ultimoStatus = res.status
+    // 503 e 429 são "tente de novo": vale passar para o próximo modelo. Erro
+    // 4xx de outra natureza é problema do pedido ou da chave, e repetir em
+    // outro modelo só gastaria o tempo de quem está esperando.
+    if (res.status !== 503 && res.status !== 429) break
+    res = null
   }
 
-  if (!res.ok) {
-    return NextResponse.json({ error: `Erro ao gerar perguntas (status ${res.status}).` }, { status: 502 })
+  if (!res || !res.ok) {
+    console.error('[gerar-perguntas] nenhum modelo respondeu', { ultimoStatus })
+    return NextResponse.json(
+      {
+        error:
+          ultimoStatus === 503 || ultimoStatus === 429
+            ? 'O serviço de IA está congestionado neste momento. Tente de novo em alguns minutos, ou escreva as perguntas manualmente abaixo.'
+            : 'Não foi possível gerar as perguntas agora. Tente de novo ou escreva manualmente abaixo.',
+      },
+      { status: 502 }
+    )
   }
 
   const data = await res.json()
