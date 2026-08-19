@@ -128,11 +128,11 @@ export default function IdeiasBoard({
             return (
               <div key={ideia.id} className="panel p-4 flex flex-col gap-2.5">
                 <div className="flex items-start justify-between gap-2">
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLASS[ideia.status]}`}>
+                  <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${STATUS_CLASS[ideia.status]}`}>
                     {STATUS_LABEL[ideia.status]}
                   </span>
                   {trilha && (
-                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
+                    <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
                       {trilha.icone} {trilha.nome}
                     </span>
                   )}
@@ -144,7 +144,7 @@ export default function IdeiasBoard({
                 {ideia.dor && <p className="text-xs text-gray-500 line-clamp-2">{ideia.dor}</p>}
 
                 <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-100">
-                  <span className="text-[11px] text-gray-500">
+                  <span className="text-xs text-gray-500">
                     {autor?.nome_completo ?? 'Aluno'}{autor?.turma ? ` · ${autor.turma}` : ''}
                   </span>
                   <div className="flex items-center gap-3">
@@ -227,7 +227,7 @@ export default function IdeiasBoard({
         </div>
       )}
 
-      {podeModerar && <p className="text-[11px] text-gray-500 mt-4">Como professor(a)/direção, mude o status de uma ideia abrindo os detalhes dela.</p>}
+      {podeModerar && <p className="text-xs text-gray-500 mt-4">Como professor(a)/direção, mude o status de uma ideia abrindo os detalhes dela.</p>}
     </div>
   )
 }

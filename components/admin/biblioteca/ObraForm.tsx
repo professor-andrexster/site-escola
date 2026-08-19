@@ -204,7 +204,7 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
             type="button"
             onClick={buscarIsbn}
             disabled={buscandoIsbn}
-            className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0"
+            className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0 foco-painel"
           >
             <Search className="w-4 h-4" />
             {buscandoIsbn ? 'Buscando...' : 'Buscar'}
@@ -237,7 +237,7 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
             type="button"
             onClick={adicionarAutor}
             disabled={adicionandoAutor}
-            className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0"
+            className="px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0 foco-painel"
           >
             Adicionar
           </button>

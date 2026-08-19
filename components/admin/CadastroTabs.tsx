@@ -108,7 +108,7 @@ function FormAluno() {
           placeholder="Como está na chamada"
           className={inputClass}
         />
-        <p className="text-[11px] text-gray-500 mt-1">
+        <p className="text-xs text-gray-500 mt-1">
           Escreva igual ao da secretaria — é assim que sua conta acha seu cadastro na escola.
         </p>
       </div>
@@ -152,7 +152,7 @@ function FormAluno() {
           placeholder="email@do-responsavel.com"
           className={inputClass}
         />
-        <p className="text-[11px] text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu e-mail.</p>
+        <p className="text-xs text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu e-mail.</p>
       </div>
 
       <CampoSenha id="aluno-senha" label="Senha *" valor={senha} onChange={setSenha} placeholder="Mínimo 6 caracteres" />
@@ -161,7 +161,7 @@ function FormAluno() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2"
+        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2 foco-painel"
       >
         {loading ? 'Criando conta...' : 'Criar Minha Conta'}
       </button>
@@ -277,7 +277,7 @@ function FormProfessor() {
       <button
         type="submit"
         disabled={loading}
-        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2"
+        className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm mt-2 foco-painel"
       >
         {loading ? 'Enviando...' : 'Enviar Cadastro'}
       </button>

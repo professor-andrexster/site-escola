@@ -193,7 +193,7 @@ export default function LeitorForm({ leitor }: { leitor?: BibliotecaLeitor }) {
               type="button"
               onClick={buscarPorMatricula}
               disabled={buscandoMatricula}
-              className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0"
+              className="flex items-center gap-1.5 px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-semibold hover:bg-gray-200 transition-colors disabled:opacity-50 flex-shrink-0 foco-painel"
             >
               <Search className="w-4 h-4" />
               {buscandoMatricula ? 'Buscando...' : 'Buscar'}

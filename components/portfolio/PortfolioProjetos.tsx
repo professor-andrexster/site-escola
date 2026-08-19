@@ -71,7 +71,7 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                 <div className="flex items-center justify-between mb-2 gap-2">
                   <h3 className="font-semibold text-gray-900 text-sm">{p.titulo}</h3>
                   {trilha && (
-                    <span className={`flex-shrink-0 inline-flex items-center gap-1 text-[10px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
+                    <span className={`flex-shrink-0 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
                       {trilha.icone} {trilha.nome}
                     </span>
                   )}
@@ -80,7 +80,7 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                 {p.tags && p.tags.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {p.tags.map(tag => (
-                      <span key={tag} className="text-[10px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{tag}</span>
+                      <span key={tag} className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full">{tag}</span>
                     ))}
                   </div>
                 )}

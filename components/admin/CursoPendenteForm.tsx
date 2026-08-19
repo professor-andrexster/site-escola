@@ -96,7 +96,7 @@ export default function CursoPendenteForm({ curso, autorNome }: CursoPendenteFor
           <button
             onClick={handleAprovar}
             disabled={loading}
-            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 foco-painel"
           >
             <CheckCircle2 className="w-4 h-4" />
             Aprovar
@@ -104,7 +104,7 @@ export default function CursoPendenteForm({ curso, autorNome }: CursoPendenteFor
           <button
             onClick={handleRejeitar}
             disabled={loading}
-            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 foco-painel"
           >
             <XCircle className="w-4 h-4" />
             Rejeitar

@@ -68,7 +68,7 @@ export default async function LeadsPage() {
                     <form action={marcarLido.bind(null, lead.id)}>
                       <button
                         type="submit"
-                        className="text-xs px-3 py-1.5 rounded-lg border border-escola-azul text-escola-azul hover:bg-escola-azul-claro transition-colors"
+                        className="text-xs px-3 py-1.5 rounded-lg border border-escola-azul text-escola-azul hover:bg-escola-azul-claro transition-colors foco-painel"
                       >
                         Marcar lido
                       </button>
@@ -77,7 +77,7 @@ export default async function LeadsPage() {
                   <form action={deletarLead.bind(null, lead.id)}>
                     <button
                       type="submit"
-                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                      className="text-xs px-3 py-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors foco-painel"
                     >
                       Excluir
                     </button>

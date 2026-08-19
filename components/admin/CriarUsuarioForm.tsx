@@ -102,7 +102,7 @@ export default function CriarUsuarioForm({ rolesPermitidos, rolesListados }: Cri
           <UserPlus className="w-4 h-4 text-escola-azul" />
           Criar Novo Usuário
         </h2>
-        <button onClick={fechar} className="text-gray-500 hover:text-gray-600">
+        <button onClick={fechar} className="text-gray-500 hover:text-gray-600 foco-painel">
           <X className="w-5 h-5" />
         </button>
       </div>
@@ -264,7 +264,7 @@ export default function CriarUsuarioForm({ rolesPermitidos, rolesListados }: Cri
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm"
+          className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm foco-painel"
         >
           {loading ? 'Criando...' : 'Criar Usuário'}
         </button>

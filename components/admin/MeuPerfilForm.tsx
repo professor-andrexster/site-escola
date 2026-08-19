@@ -206,7 +206,7 @@ export default function MeuPerfilForm({ aluno }: { aluno: Partial<Aluno> }) {
               type="button"
               onClick={handleRemoverFoto}
               disabled={uploadandoFoto}
-              className="text-xs text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
+              className="text-xs text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50 foco-painel"
             >
               <X className="w-3 h-3 inline mr-0.5" />
               Remover

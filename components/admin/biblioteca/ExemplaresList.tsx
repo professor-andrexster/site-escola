@@ -173,7 +173,7 @@ export default function ExemplaresList({ obraId, exemplaresIniciais }: { obraId:
           <button
             type="submit"
             disabled={salvando}
-            className="bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul/90 transition-colors disabled:opacity-50"
+            className="bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul/90 transition-colors disabled:opacity-50 foco-painel"
           >
             {salvando ? 'Salvando...' : 'Criar Exemplar(es)'}
           </button>

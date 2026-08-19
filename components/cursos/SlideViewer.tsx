@@ -215,7 +215,7 @@ export default function SlideViewer({
         {isLastSlide ? (
           <button
             onClick={concluirAula}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-curso-azul hover:bg-curso-azul-claro text-white font-bold text-sm transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-curso-azul hover:bg-curso-azul-claro text-white font-bold text-sm transition-colors foco-curso"
           >
             <CircleCheck className="w-4 h-4" />
             {concluida

@@ -187,7 +187,7 @@ export default function FilaDesafioFinal({
                       {new Date(e.enviadoEm).toLocaleDateString('pt-BR')}
                     </p>
                   </div>
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 flex items-center gap-1 flex-shrink-0">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 flex items-center gap-1 flex-shrink-0">
                     <Clock className="w-3 h-3" /> {ROTULO[e.status]}
                   </span>
                 </div>
@@ -252,7 +252,7 @@ export default function FilaDesafioFinal({
                   <p className="text-sm text-gray-800 truncate">{e.aluno?.nome_completo ?? 'Aluno'}</p>
                   {e.feedback && <p className="text-xs text-gray-500 truncate">{e.feedback}</p>}
                 </div>
-                <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0 ${
+                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0 ${
                   e.status === 'aprovado' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'
                 }`}>
                   {e.status === 'aprovado' ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}

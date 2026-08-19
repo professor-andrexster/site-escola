@@ -171,7 +171,7 @@ export default function AlunoProjetosManager({
                     <p className="font-semibold text-gray-900 text-sm">{p.titulo}</p>
                     {p.destaque && <Star className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />}
                     {trilha && (
-                      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
+                      <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
                         {trilha.icone} {trilha.nome}
                       </span>
                     )}

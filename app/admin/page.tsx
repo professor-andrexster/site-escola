@@ -107,7 +107,7 @@ export default function AdminLoginPage() {
                   <button
                     type="button"
                     onClick={esquecer}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-escola-vermelho transition-colors"
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-escola-vermelho transition-colors foco-painel"
                   >
                     <X className="w-3 h-3" />
                     Não é você?
@@ -180,7 +180,7 @@ export default function AdminLoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm"
+              className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm foco-painel"
             >
               {loading ? 'Entrando...' : 'Entrar'}
             </button>

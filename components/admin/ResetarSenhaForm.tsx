@@ -91,7 +91,7 @@ export default function ResetarSenhaForm({ alunoId, alunoNome, userId }: Resetar
         <button
           onClick={handleResetarSenha}
           disabled={loading}
-          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50"
+          className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-semibold transition-colors disabled:opacity-50 foco-painel"
         >
           {loading ? 'Gerando...' : 'Gerar Nova Senha'}
         </button>

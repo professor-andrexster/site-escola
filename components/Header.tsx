@@ -138,7 +138,7 @@ export default function Header() {
               <Lock className="w-3.5 h-3.5" />
             </Link>
             <button
-              className="md:hidden p-2 rounded text-escola-azul hover:bg-escola-azul/10"
+              className="md:hidden p-2 rounded text-escola-azul hover:bg-escola-azul/10 foco-painel"
               onClick={() => setMobileOpen(!mobileOpen)}
               aria-label="Menu"
             >

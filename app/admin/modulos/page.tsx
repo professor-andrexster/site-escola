@@ -155,7 +155,7 @@ export default async function ModulosPage() {
                         />
                       </div>
                       {p.pct < 100 && (
-                        <p className="flex items-center gap-1.5 text-white/50 text-[11px] mt-2">
+                        <p className="flex items-center gap-1.5 text-white/50 text-xs mt-2">
                           <Lock className="w-3 h-3" />
                           Projeto do módulo libera ao concluir as aulas
                         </p>

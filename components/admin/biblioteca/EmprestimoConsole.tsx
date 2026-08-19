@@ -224,7 +224,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
                   </p>
                 </div>
               </div>
-              <button onClick={limparTudo} className="text-xs text-gray-500 hover:text-escola-vermelho flex items-center gap-1">
+              <button onClick={limparTudo} className="text-xs text-gray-500 hover:text-escola-vermelho flex items-center gap-1 foco-painel">
                 <X className="w-3.5 h-3.5" />
                 Trocar leitor
               </button>
@@ -288,7 +288,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
               <button
                 onClick={confirmarEmprestimo}
                 disabled={confirmando}
-                className="w-full mt-4 bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul/90 transition-colors disabled:opacity-50 text-sm"
+                className="w-full mt-4 bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul/90 transition-colors disabled:opacity-50 text-sm foco-painel"
               >
                 {confirmando ? 'Registrando...' : `Confirmar Empréstimo (${carrinho.length})`}
               </button>

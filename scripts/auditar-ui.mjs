@@ -110,7 +110,15 @@ for (const arq of arquivos) {
     const ehEtiqueta = /uppercase|tracking-/.test(volta)
     const ehMono = /font-mono|font-jetbrains/.test(volta)
     const ehToken = /^\s*[a-zA-Z]+:\s*'$/.test(texto.slice(Math.max(0, m.index - 20), m.index))
+    // Pílula (rounded-full com padding curto) é etiqueta de uma ou duas
+    // palavras, não texto corrido: o piso dela é 11px, não 12.
+    const ehPilula = /rounded-full/.test(volta) || /px-2 py-[01]/.test(volta)
+    // Marcador: caixa de tamanho fixo com conteúdo centralizado — a letra da
+    // alternativa, o número do passo, as iniciais do avatar. Um caractere.
+    const ehMarcador = /w-\d+ h-\d+/.test(volta) && /items-center/.test(volta)
+    if (ehMarcador && px >= 10) continue
     if (ehEtiqueta || ehMono || ehToken) continue
+    if (ehPilula && px >= 11) continue
     aviso(`${arq}: text-[${px}px] em texto corrido — mínimo 12px`)
   }
 }
@@ -122,7 +130,10 @@ for (const arq of arquivos) {
   const texto = readFileSync(arq, 'utf8')
   const botoes = texto.match(/<button[^>]*className="[^"]*"/g) ?? []
   for (const b of botoes) {
-    if (!/focus:|focus-visible:/.test(b) && /hover:/.test(b)) semFoco++
+    // foco-painel e foco-curso são as utilitárias do globals.css que aplicam
+    // o anel; contam como foco declarado.
+    const temFoco = /focus:|focus-visible:|foco-painel|foco-curso/.test(b)
+    if (!temFoco && /hover:/.test(b)) { semFoco++; if (semFoco <= 5) console.log('    ' + arq) }
   }
 }
 if (semFoco) console.log(`  ${semFoco} botão(ões) com hover e sem foco — navegação por teclado fica sem retorno`)

@@ -105,7 +105,7 @@ export default function DesafioForm() {
 
       <button
         onClick={usarModelo}
-        className="inline-flex items-center gap-2 text-sm font-semibold text-escola-azul bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg transition-colors"
+        className="inline-flex items-center gap-2 text-sm font-semibold text-escola-azul bg-blue-50 hover:bg-blue-100 px-3.5 py-2 rounded-lg transition-colors foco-painel"
       >
         <Sparkles className="w-4 h-4" />
         Usar modelo CTRL + ALT + CHAGAS
@@ -219,7 +219,7 @@ export default function DesafioForm() {
       <button
         onClick={salvar}
         disabled={saving || !titulo.trim()}
-        className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
+        className="px-5 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel"
       >
         {saving ? 'Criando...' : 'Criar Desafio'}
       </button>

@@ -150,7 +150,7 @@ export default function StaffPerfilForm({ profile }: { profile: Profile }) {
       <button
         onClick={handleSalvar}
         disabled={salvando}
-        className="flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors hover:bg-escola-azul/90 disabled:opacity-60"
+        className="flex items-center gap-2 bg-escola-azul text-white px-5 py-2.5 rounded-lg text-sm font-semibold transition-colors hover:bg-escola-azul/90 disabled:opacity-60 foco-painel"
       >
         <Save className="w-4 h-4" />
         {salvando ? 'Salvando...' : 'Salvar Alterações'}

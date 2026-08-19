@@ -114,7 +114,7 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 w-full foco-painel"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           Sair da Conta

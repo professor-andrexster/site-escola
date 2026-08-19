@@ -89,7 +89,7 @@ export default function AlunoAcessoPainel({ perfil }: AlunoAcessoPainelProps) {
             <button
               onClick={revogar}
               disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 bg-red-50 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 bg-red-50 rounded-lg text-xs font-semibold hover:bg-red-100 transition-colors disabled:opacity-50 foco-painel"
             >
               <ShieldOff className="w-3.5 h-3.5" />
               Revogar Acesso
@@ -98,7 +98,7 @@ export default function AlunoAcessoPainel({ perfil }: AlunoAcessoPainelProps) {
             <button
               onClick={aprovar}
               disabled={loading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50 foco-painel"
             >
               <ShieldCheck className="w-3.5 h-3.5" />
               Aprovar Acesso

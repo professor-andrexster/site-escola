@@ -136,7 +136,7 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-gray-500 mt-2">A bolinha verde marca a alternativa correta.</p>
+            <p className="text-xs text-gray-500 mt-2">A bolinha verde marca a alternativa correta.</p>
           </div>
         ))}
       </div>
@@ -152,7 +152,7 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
         <button
           onClick={salvar}
           disabled={salvando}
-          className="inline-flex items-center gap-1.5 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 bg-escola-azul text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel"
         >
           <Save className="w-4 h-4" />
           {salvando ? 'Salvando...' : 'Salvar Prova'}

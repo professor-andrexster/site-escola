@@ -200,7 +200,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={revelar}
             disabled={loading}
-            className="inline-flex items-center gap-2 bg-escola-azul text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-escola-azul text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel"
           >
             <Eye className="w-4 h-4" />
             Revelar Resposta
@@ -209,7 +209,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={proxima}
             disabled={loading}
-            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-green-700 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-green-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-green-700 transition-colors disabled:opacity-50 foco-painel"
           >
             Próxima Pergunta
             <ArrowRight className="w-4 h-4" />
@@ -220,7 +220,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={encerrar}
             disabled={loading}
-            className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50"
+            className="inline-flex items-center gap-2 bg-red-600 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-red-700 transition-colors disabled:opacity-50 foco-painel"
           >
             <Square className="w-4 h-4" />
             Encerrar e Ver Ranking
@@ -236,7 +236,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={encerrar}
             disabled={loading}
-            className="ml-auto inline-flex items-center gap-1.5 text-gray-500 hover:text-red-600 text-xs font-semibold transition-colors"
+            className="ml-auto inline-flex items-center gap-1.5 text-gray-500 hover:text-red-600 text-xs font-semibold transition-colors foco-painel"
           >
             <Square className="w-3.5 h-3.5" />
             Encerrar quiz agora

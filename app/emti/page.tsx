@@ -364,7 +364,7 @@ export default async function EmtiPage() {
                     </li>
                   ))}
                 </ul>
-                <span className={`inline-flex items-center gap-1.5 self-start text-[10px] font-medium px-2.5 py-1 rounded-full ${trilhaBgLight(trilha.cor)} ${trilhaText(trilha.cor)}`}>
+                <span className={`inline-flex items-center gap-1.5 self-start text-[11px] font-medium px-2.5 py-1 rounded-full ${trilhaBgLight(trilha.cor)} ${trilhaText(trilha.cor)}`}>
                   <BadgeCheck className="w-3.5 h-3.5" /> Certificado ao concluir
                 </span>
               </div>

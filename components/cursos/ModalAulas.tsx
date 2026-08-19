@@ -64,7 +64,7 @@ export default function ModalAulas({ isOpen, onClose, titulo, descricao, categor
           </div>
           <button
             onClick={handleClose}
-            className="flex-shrink-0 ml-4 text-escola-cinza hover:text-escola-vermelho transition-colors"
+            className="flex-shrink-0 ml-4 text-escola-cinza hover:text-escola-vermelho transition-colors foco-curso"
             aria-label="Fechar"
           >
             <X className="w-6 h-6" />
@@ -121,7 +121,7 @@ export default function ModalAulas({ isOpen, onClose, titulo, descricao, categor
         <div className="mt-6 flex gap-3 justify-end">
           <button
             onClick={handleClose}
-            className="px-4 py-2 rounded-lg border border-escola-cinza-claro text-escola-azul hover:bg-white transition-colors"
+            className="px-4 py-2 rounded-lg border border-escola-cinza-claro text-escola-azul hover:bg-white transition-colors foco-curso"
           >
             Fechar
           </button>

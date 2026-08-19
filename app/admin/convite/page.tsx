@@ -106,7 +106,7 @@ export default function ConvitePage() {
                   placeholder="000.000.000-00"
                   className={inputClass}
                 />
-                <p className="text-[11px] text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu email.</p>
+                <p className="text-xs text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu email.</p>
               </div>
 
               <div>
@@ -144,7 +144,7 @@ export default function ConvitePage() {
               <button
                 type="submit"
                 disabled={enviando}
-                className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm"
+                className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm foco-painel"
               >
                 {enviando ? 'Ativando...' : 'Ativar Minha Conta'}
               </button>

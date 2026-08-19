@@ -44,9 +44,9 @@ function PerguntaFields({ value, onChange }: { value: PerguntaForm; onChange: (u
         {LETRAS.map(letra => (
           <div key={letra}>
             <label className="flex items-center gap-1.5 text-xs font-medium text-gray-600 mb-1">
-              <span className={`w-4 h-4 rounded text-white text-[10px] font-bold flex items-center justify-center ${CORES[letra]}`}>{LABELS[letra]}</span>
+              <span className={`w-4 h-4 rounded text-white text-[11px] font-bold flex items-center justify-center ${CORES[letra]}`}>{LABELS[letra]}</span>
               Alternativa {LABELS[letra]} *
-              {value.resposta_correta === letra && <span className="text-green-600 text-[10px]">(Correta)</span>}
+              {value.resposta_correta === letra && <span className="text-green-600 text-xs">(Correta)</span>}
             </label>
             <div className="flex gap-1.5">
               <input
@@ -308,7 +308,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
                     const isCorrect = pergunta.resposta_correta === letra
                     return (
                       <div key={letra} className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs ${isCorrect ? 'bg-green-50 border border-green-200' : 'bg-gray-50'}`}>
-                        <span className={`w-5 h-5 rounded flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0 ${CORES[letra]}`}>
+                        <span className={`w-5 h-5 rounded flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0 ${CORES[letra]}`}>
                           {LABELS[letra]}
                         </span>
                         <span className={`truncate ${isCorrect ? 'text-green-700 font-medium' : 'text-gray-600'}`}>
@@ -371,7 +371,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
           <button
             onClick={gerarComIA}
             disabled={gerando || !materiaIA.trim()}
-            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 whitespace-nowrap"
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 whitespace-nowrap foco-painel"
           >
             {gerando ? 'Gerando...' : 'Gerar'}
           </button>
@@ -393,7 +393,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
             <button
               onClick={addPergunta}
               disabled={saving}
-              className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel"
             >
               {saving ? 'Adicionando...' : 'Adicionar Pergunta'}
             </button>

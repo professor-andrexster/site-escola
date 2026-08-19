@@ -90,10 +90,10 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   <p className="text-xs text-gray-500 mt-0.5">Matrícula {a.matricula} · {a.turma}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {a.user_id
-                      ? <span className="inline-flex items-center gap-1 text-[11px] text-green-600"><UserCheck className="w-3 h-3" /> Tem conta</span>
-                      : <span className="text-[11px] text-gray-300">Sem conta</span>}
+                      ? <span className="inline-flex items-center gap-1 text-xs text-green-600"><UserCheck className="w-3 h-3" /> Tem conta</span>
+                      : <span className="text-xs text-gray-300">Sem conta</span>}
                     {!a.cpf && (
-                      <span className="inline-flex items-center gap-1 text-[11px] text-amber-600"><AlertTriangle className="w-3 h-3" /> Falta CPF</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="w-3 h-3" /> Falta CPF</span>
                     )}
                   </div>
                 </div>

@@ -128,6 +128,25 @@
 }
 
 @layer components {
+  /*
+   * Foco de teclado visível.
+   *
+   * Quem navega por Tab — por limitação motora ou por velocidade — precisa ver
+   * onde está. A auditoria encontrou 55 botões com estado de hover e nenhum
+   * estado de foco: para quem usa mouse a tela respondia, para quem usa teclado
+   * ela ficava muda.
+   *
+   * São duas classes porque os dois temas exigem cores opostas: o anel azul
+   * some no fundo escuro do player, e o ciano some no painel claro. O
+   * offset-2 afasta o anel da borda para ele não se confundir com ela.
+   */
+  .foco-painel {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-escola-azul focus-visible:ring-offset-2;
+  }
+  .foco-curso {
+    @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-curso-ciano focus-visible:ring-offset-2 focus-visible:ring-offset-curso-tinta;
+  }
+
   /* ── Cartao padrao do painel administrativo ──
      Um lugar so pra definir "como e um cartao" (Adam Wathan, disciplina de
      escala): antes cada tela repetia bg-white + border + rounded a mao, com

@@ -113,8 +113,8 @@ export default function DesafioWorkspace({
     <div className="space-y-6">
       <div className="panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          {!desafio.publicado && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}
-          {desafio.turma_alvo && <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">{desafio.turma_alvo}</span>}
+          {!desafio.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}
+          {desafio.turma_alvo && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">{desafio.turma_alvo}</span>}
           <span className="ml-auto text-sm font-semibold text-escola-azul">{desafio.pontos_total} pts</span>
         </div>
         <h1 className="font-playfair text-2xl font-bold text-gray-900">{desafio.titulo}</h1>
@@ -160,7 +160,7 @@ export default function DesafioWorkspace({
           </div>
 
           <button onClick={criarEquipe} disabled={criando}
-            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50">
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel">
             {criando ? 'Criando...' : 'Criar equipe'}
           </button>
         </div>
@@ -352,7 +352,7 @@ function FaseParticipante({
           )}
 
           <button onClick={enviar} disabled={saving}
-            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50">
+            className="px-4 py-2 bg-escola-azul text-white rounded-lg text-sm font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 foco-painel">
             {saving ? 'Enviando...' : 'Enviar entrega'}
           </button>
         </div>
@@ -441,7 +441,7 @@ function FaseAvaliacao({
             <input type="text" value={feedback} onChange={(e) => setFeedback(e.target.value)} placeholder="Feedback"
               className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30" />
             <button onClick={salvar} disabled={saving}
-              className="px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 flex-shrink-0">
+              className="px-3 py-1.5 bg-escola-azul text-white rounded-lg text-xs font-semibold hover:bg-escola-azul-medio transition-colors disabled:opacity-50 flex-shrink-0 foco-painel">
               {saving ? '...' : 'Salvar'}
             </button>
           </div>

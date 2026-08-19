@@ -94,7 +94,7 @@ export default function ProvaFinal({ cursoId, totalPerguntas }: { cursoId: strin
             <button
               onClick={comecar}
               disabled={loading}
-              className="inline-flex items-center gap-2 bg-curso-ciano text-curso-tinta px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+              className="inline-flex items-center gap-2 bg-curso-ciano text-curso-tinta px-5 py-2.5 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 foco-curso"
             >
               {loading ? 'Carregando...' : 'Fazer a Prova'}
               <ChevronRight className="w-4 h-4" />
@@ -133,7 +133,7 @@ export default function ProvaFinal({ cursoId, totalPerguntas }: { cursoId: strin
         <button
           onClick={comecar}
           disabled={loading}
-          className="inline-flex items-center gap-2 bg-white/10 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-white/20 transition-colors disabled:opacity-50"
+          className="inline-flex items-center gap-2 bg-white/10 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-white/20 transition-colors disabled:opacity-50 foco-curso"
         >
           <RotateCcw className="w-4 h-4" />
           Tentar Novamente
@@ -191,7 +191,7 @@ export default function ProvaFinal({ cursoId, totalPerguntas }: { cursoId: strin
       <button
         onClick={enviar}
         disabled={loading}
-        className="mt-6 w-full bg-curso-ciano text-curso-tinta py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50"
+        className="mt-6 w-full bg-curso-ciano text-curso-tinta py-3 rounded-xl text-sm font-bold hover:opacity-90 transition-opacity disabled:opacity-50 foco-curso"
       >
         {loading ? 'Corrigindo...' : 'Enviar Respostas'}
       </button>

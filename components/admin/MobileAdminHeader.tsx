@@ -153,7 +153,7 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
               </Link>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all w-full"
+                className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all w-full foco-painel"
               >
                 <LogOut className="w-4 h-4 flex-shrink-0" />
                 Sair da Conta

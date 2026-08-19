@@ -4,7 +4,7 @@ import { ROLE_COLORS } from '@/lib/roles'
 import type { Profile } from '@/types/database'
 
 const TAMANHOS = {
-  sm: { caixa: 'w-7 h-7', texto: 'text-[10px]', px: 28 },
+  sm: { caixa: 'w-7 h-7', texto: 'text-xs', px: 28 },
   md: { caixa: 'w-9 h-9', texto: 'text-xs', px: 36 },
   lg: { caixa: 'w-16 h-16', texto: 'text-lg', px: 64 },
   xl: { caixa: 'w-24 h-24', texto: 'text-2xl', px: 96 },

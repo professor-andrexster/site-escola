@@ -128,7 +128,7 @@ export default function VitrineCursos({
                             <span className="text-[10px] text-escola-cinza font-mono uppercase tracking-wide">{curso.nivel}</span>
                           </div>
                           <h3 className="font-playfair font-bold text-escola-azul text-base mb-1.5">{curso.titulo}</h3>
-                          <p className="text-[11px] text-escola-cinza mb-2">por {curso.autor_nome}</p>
+                          <p className="text-xs text-escola-cinza mb-2">por {curso.autor_nome}</p>
                           {curso.descricao && <p className="text-xs text-escola-cinza mb-3 line-clamp-2">{curso.descricao}</p>}
                           <div className="flex items-center justify-between text-xs mt-auto pt-2 border-t border-escola-cinza-claro">
                             <span className="text-escola-cinza font-mono">{curso.totalAulas} aula{curso.totalAulas !== 1 ? 's' : ''}</span>

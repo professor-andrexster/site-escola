@@ -110,7 +110,7 @@ export default function RedefinirSenhaPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm"
+                className="w-full bg-escola-azul text-white font-semibold py-3 rounded-xl hover:bg-escola-azul-medio transition-colors disabled:opacity-50 text-sm foco-painel"
               >
                 {loading ? 'Salvando...' : 'Salvar Nova Senha'}
               </button>

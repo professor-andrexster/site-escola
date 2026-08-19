@@ -122,7 +122,7 @@ export default function ConvidarBibliotecariaForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-600 text-white font-semibold py-3 rounded-xl hover:bg-amber-700 transition-colors disabled:opacity-50 text-sm"
+            className="w-full bg-amber-600 text-white font-semibold py-3 rounded-xl hover:bg-amber-700 transition-colors disabled:opacity-50 text-sm foco-painel"
           >
             {loading ? 'Enviando convite...' : 'Enviar Convite'}
           </button>

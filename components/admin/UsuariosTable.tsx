@@ -259,7 +259,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
               <p className="text-gray-500 text-xs mt-0.5 truncate">Alternativo: {p.email_alternativo}</p>
             )}
             {p.criado_via && (
-              <p className="text-gray-300 text-[11px] mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
+              <p className="text-gray-300 text-xs mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
             )}
           </div>
 
@@ -340,7 +340,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
                       <span className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${config.dot}`} />
                       <span className="min-w-0">
                         <span className="block text-xs font-bold text-gray-900">{config.label}</span>
-                        <span className="block text-[11px] text-gray-500 leading-snug mt-0.5">{config.desc}</span>
+                        <span className="block text-xs text-gray-500 leading-snug mt-0.5">{config.desc}</span>
                       </span>
                     </button>
                   )
