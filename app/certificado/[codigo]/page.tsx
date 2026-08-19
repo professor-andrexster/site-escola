@@ -1,4 +1,6 @@
 import './certificado.css'
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import { certificadoPorCodigo } from '@/lib/db/cursos'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -7,6 +9,41 @@ import BotaoImprimirCertificado from '@/components/cursos/BotaoImprimirCertifica
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
+
+const RAIZ_UPLOADS = process.env.UPLOAD_ROOT ?? path.join(process.cwd(), 'data', 'uploads')
+
+function slugDoNome(nome: string): string {
+  return nome
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLowerCase()
+}
+
+/**
+ * A assinatura digitalizada de quem responde pelo curso, se já houver arquivo.
+ *
+ * Fica no UPLOAD_ROOT, não no `public/`, de propósito: assim trocar a assinatura
+ * é copiar um PNG, sem rebuild nem deploy. O caminho é por responsável —
+ * `assinaturas/<nome-em-slug>.png` — e cai para `assinaturas/padrao.png` quando
+ * não houver a específica. Hoje todos os cursos têm o mesmo autor, mas o dia em
+ * que outro professor emitir certificado a assinatura não pode ir errada.
+ *
+ * Sem arquivo, o espaço continua reservado e a linha de assinatura fica em
+ * branco — que é como o certificado sai para assinar à mão.
+ */
+function assinaturaDe(nome: string | null): string | null {
+  const candidatos = [...(nome ? [slugDoNome(nome)] : []), 'padrao']
+  for (const base of candidatos) {
+    for (const ext of ['png', 'webp', 'jpg']) {
+      if (existsSync(path.join(RAIZ_UPLOADS, 'assinaturas', `${base}.${ext}`))) {
+        return `/arquivos/assinaturas/${base}.${ext}`
+      }
+    }
+  }
+  return null
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ codigo: string }> }): Promise<Metadata> {
   const { codigo } = await params
@@ -40,6 +77,8 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
       </div>
     )
   }
+
+  const assinatura = assinaturaDe(cert.autor_nome ?? null)
 
   const dataEmissao = (cert.emitido_em ?? new Date()).toLocaleDateString('pt-BR', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -79,6 +118,18 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
 
             <div className="flex items-end justify-center gap-12 sm:gap-20 mb-10">
               <div className="text-center">
+                {/* Altura fixa: o espaço da assinatura existe com ou sem arquivo,
+                    para o resto do certificado não se mexer quando ela entrar. */}
+                <div className="h-16 flex items-end justify-center">
+                  {assinatura && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={assinatura}
+                      alt={`Assinatura de ${cert.autor_nome ?? 'responsável pelo curso'}`}
+                      className="max-h-16 w-auto object-contain"
+                    />
+                  )}
+                </div>
                 <div className="w-44 border-t border-escola-cinza pt-2">
                   <p className="font-serif text-sm text-escola-preto">{cert.autor_nome ?? 'E.E. Dr. João Beraldo'}</p>
                   <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza/60">
