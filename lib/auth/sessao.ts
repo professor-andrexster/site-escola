@@ -118,12 +118,28 @@ export async function entrarComSenha(
  * Nao diz se o e-mail existe: quem chama ja responde a mesma frase generica
  * nos dois casos, e aqui a ausencia da conta tambem nao vira erro.
  */
+/**
+ * Dispara a redefinicao de senha.
+ *
+ * O retorno distingue os tres desfechos porque os dois primeiros eram
+ * indistinguiveis no log: quando nao havia conta, a funcao devolvia `{}`
+ * exatamente como no envio bem-sucedido, e a rota nao registrava nada.
+ *
+ * Isso escondeu um problema por semanas. Um aluno pedia a redefinicao pelo
+ * e-mail institucional, que nao era o e-mail da conta dele; nenhuma conta era
+ * encontrada, nenhum token nascia, nenhum e-mail saia — e nao ficava registro
+ * nenhum de que ele havia tentado. Do lado dele, "o link nunca chega".
+ */
 export async function enviarRedefinicaoDeSenha(
   email: string,
   redirectTo: string
-): Promise<{ erro?: { mensagem: string; status?: number } }> {
+): Promise<{
+  desfecho: 'enviado' | 'conta_inexistente' | 'falha_no_envio'
+  destino?: string
+  erro?: { mensagem: string; status?: number }
+}> {
   const conta = await contas.contaPorEmail(email)
-  if (!conta) return {}
+  if (!conta) return { desfecho: 'conta_inexistente' }
 
   const token = sortearToken()
   await criarTokenDeSenha(conta.id, token)
@@ -133,9 +149,9 @@ export async function enviarRedefinicaoDeSenha(
       email: conta.email,
       link: `${redirectTo}?token=${token}`,
     })
-    return {}
+    return { desfecho: 'enviado', destino: conta.email }
   } catch (erro) {
-    return { erro: { mensagem: (erro as Error).message } }
+    return { desfecho: 'falha_no_envio', erro: { mensagem: (erro as Error).message } }
   }
 }
 

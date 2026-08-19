@@ -17,6 +17,9 @@ export type AcaoLog =
   | 'senha_redefinida_cpf'
   | 'senha_redefinida_admin'
   | 'recuperacao_recusada'
+  // Envio bem-sucedido tambem e registrado: sem isso, um pedido que nao gera
+  // e-mail nenhum fica indistinguivel de um que gera.
+  | 'recuperacao_enviada'
   | 'recuperacao_falhou'
   | 'usuario_criado_direcao'
   | 'aluno_aprovado_professor'

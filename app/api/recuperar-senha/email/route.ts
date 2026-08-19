@@ -30,10 +30,27 @@ export async function POST(request: Request) {
 
   if (email) {
     const origin = enderecoPublico(request)
-    const { erro: error } = await enviarRedefinicaoDeSenha(
-      email,
-      `${origin}/admin/redefinir-senha`
-    )
+    const r = await enviarRedefinicaoDeSenha(email, `${origin}/admin/redefinir-senha`)
+    const error = r.erro
+
+    // Registra TAMBÉM o sucesso e a conta inexistente. Antes só a falha de
+    // envio virava log, então "pedido que não gerou e-mail nenhum" não deixava
+    // rastro — e foi assim que o caso de um aluno passou semanas invisível.
+    if (r.desfecho === 'enviado') {
+      await registrar({
+        acao: 'recuperacao_enviada',
+        // Só o domínio: basta para diagnosticar caixa que não recebe, sem
+        // gravar o endereço inteiro no log de auditoria.
+        detalhes: { dominio: (r.destino ?? '').split('@')[1] ?? null },
+        ip,
+      })
+    } else if (r.desfecho === 'conta_inexistente') {
+      await registrar({
+        acao: 'recuperacao_recusada',
+        detalhes: { motivo: 'sem_conta_para_o_email_resolvido' },
+        ip,
+      })
+    }
 
     // O aluno continua vendo a mensagem genérica — não revelamos se o cadastro
     // existe. Mas o motivo real da falha precisa ficar registrado: sem isto,

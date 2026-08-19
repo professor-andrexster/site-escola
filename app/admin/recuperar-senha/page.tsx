@@ -55,7 +55,21 @@ function PorEmail() {
       </div>
 
       {erro && <div className="bg-red-50 border border-red-200 text-red-700 rounded-xl px-4 py-3 text-sm">{erro}</div>}
-      {mensagem && <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm">{mensagem}</div>}
+      {mensagem && (
+        <div className="bg-green-50 border border-green-200 text-green-800 rounded-xl px-4 py-3 text-sm space-y-2">
+          <p>{mensagem}</p>
+          {/* Sem revelar se a conta existe, avisa onde procurar: o link vai
+              para o e-mail DA CONTA, que costuma ser o pessoal, e não para o
+              institucional que o aluno digitou. Foi exatamente aí que um aluno
+              ficou semanas esperando na caixa errada. */}
+          <p className="text-green-900/70 text-xs leading-relaxed">
+            O link vai para o e-mail cadastrado na sua conta, que pode ser
+            diferente do institucional (@aluno.mg.gov.br). Confira também a
+            caixa de spam ou lixo eletrônico. Se não chegar em alguns minutos,
+            procure a secretaria.
+          </p>
+        </div>
+      )}
 
       <button
         type="submit"
