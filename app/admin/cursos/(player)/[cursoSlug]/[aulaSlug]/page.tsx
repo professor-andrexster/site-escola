@@ -34,10 +34,18 @@ export default async function AulaPlayerPage({ params }: Params) {
 
   const progresso = await progressoDaAula(user.id, aula.id)
 
-  // Aula em slides (cursos importados de pptx) usa o SlideViewer
+  // Os desafios da aula valem para os dois formatos, então são buscados antes
+  // de escolher o visualizador. Sem gabarito: coluna bloqueada para alunos.
+  const desafios = await desafiosDaAula(aula.id)
+
+  // Aula em slides (cursos importados de pptx) usa o SlideViewer, que também
+  // mostra o texto e os desafios abaixo dos slides.
   if (aula.slides_urls && aula.slides_urls.length > 0) {
     return (
       <SlideViewer
+        conteudo={aula.conteudo ?? null}
+        duracaoMin={aula.duracao_estimada_min}
+        desafios={desafios ?? []}
         cursoSlug={curso.slug}
         cursoTitulo={curso.titulo}
         aulaId={aula.id}
@@ -50,9 +58,7 @@ export default async function AulaPlayerPage({ params }: Params) {
     )
   }
 
-  // Aula em texto: busca os desafios (sem gabarito, coluna bloqueada para alunos)
-  const desafios = await desafiosDaAula(aula.id)
-
+  // Aula em texto
   return (
     <ConteudoViewer
       cursoSlug={curso.slug}

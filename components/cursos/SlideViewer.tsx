@@ -4,7 +4,16 @@ import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, X, CircleCheck } from 'lucide-react'
+import { ChevronLeft, ChevronRight, X, CircleCheck, BookOpen, Target, Clock } from 'lucide-react'
+import { proseAula, proseDesafio } from './proseAula'
+
+export interface DesafioDaAula {
+  id: string
+  titulo: string
+  enunciado: string
+  tipo: string
+  ordem: number
+}
 
 interface SlideViewerProps {
   cursoSlug: string
@@ -15,6 +24,14 @@ interface SlideViewerProps {
   initialSlideAtual: number
   initialConcluida: boolean
   nextAulaSlug: string | null
+  /**
+   * Texto da aula e desafios. Ficavam de fora: a aula com slides so exibia as
+   * imagens, e o material escrito — 696 mil caracteres em 148 aulas, mais 168
+   * desafios — nunca chegava ao aluno.
+   */
+  conteudo: string | null
+  duracaoMin: number | null
+  desafios: DesafioDaAula[]
 }
 
 export default function SlideViewer({
@@ -26,6 +43,9 @@ export default function SlideViewer({
   initialSlideAtual,
   initialConcluida,
   nextAulaSlug,
+  conteudo,
+  duracaoMin,
+  desafios,
 }: SlideViewerProps) {
   const router = useRouter()
 
@@ -186,6 +206,52 @@ export default function SlideViewer({
           </button>
         )}
       </div>
+
+      {/* ------------------------------------------------ material da aula
+          Fica abaixo dos slides, não no lugar deles: o slide é o apoio da
+          explicação e o texto é o que a pessoa relê depois. Antes o texto
+          simplesmente não existia nesta tela. */}
+      {(conteudo || desafios.length > 0) && (
+        <div className="bg-curso-tinta border-t border-white/10">
+          <article className="max-w-3xl mx-auto px-4 py-8">
+            {conteudo && (
+              <>
+                <div className="flex items-center gap-2 mb-4">
+                  <BookOpen className="w-5 h-5 text-curso-ciano flex-shrink-0" />
+                  <h2 className="text-white font-black text-lg font-geom">Material da aula</h2>
+                  {duracaoMin ? (
+                    <span className="ms-auto inline-flex items-center gap-1 text-white/40 text-xs font-jetbrains">
+                      <Clock className="w-3.5 h-3.5" />
+                      ~{duracaoMin} min
+                    </span>
+                  ) : null}
+                </div>
+                <div className={proseAula} dangerouslySetInnerHTML={{ __html: conteudo }} />
+              </>
+            )}
+
+            {desafios.length > 0 && (
+              <section className="mt-10 space-y-4">
+                <h2 className="text-white font-black text-lg font-geom flex items-center gap-2">
+                  <Target className="w-5 h-5 text-curso-ciano" />
+                  Desafio{desafios.length > 1 ? 's' : ''} da aula
+                </h2>
+                {desafios.map(d => (
+                  <div key={d.id} className="bg-white/5 border border-white/10 rounded-2xl p-5">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h3 className="text-white font-bold">{d.titulo}</h3>
+                      <span className="flex-shrink-0 text-[10px] font-jetbrains uppercase tracking-widest text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
+                        {d.tipo}
+                      </span>
+                    </div>
+                    <div className={proseDesafio} dangerouslySetInnerHTML={{ __html: d.enunciado }} />
+                  </div>
+                ))}
+              </section>
+            )}
+          </article>
+        </div>
+      )}
     </div>
   )
 }

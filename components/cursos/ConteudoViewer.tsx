@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { ArrowLeft, ArrowRight, CircleCheck, Clock, Target } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { proseAula, proseDesafio } from './proseAula'
 
 export interface DesafioAula {
   id: string
@@ -32,19 +33,6 @@ const TIPO_LABELS: Record<string, string> = {
   dissertativo: 'Para escrever',
 }
 
-// Estilo do HTML da aula (tema escuro do player) via seletores arbitrários
-const proseClasses = [
-  '[&_h2]:text-white [&_h2]:font-black [&_h2]:text-xl md:[&_h2]:text-2xl [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:font-geom',
-  '[&_h3]:text-white [&_h3]:font-bold [&_h3]:text-base md:[&_h3]:text-lg [&_h3]:mt-6 [&_h3]:mb-2',
-  '[&_p]:text-white/70 [&_p]:leading-relaxed [&_p]:mb-4 [&_p]:text-[15px]',
-  '[&_ul]:list-disc [&_ul]:pl-6 [&_ul]:mb-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_ol]:mb-4',
-  '[&_li]:text-white/70 [&_li]:mb-1.5 [&_li]:text-[15px]',
-  '[&_strong]:text-white [&_em]:text-white/80',
-  '[&_code]:font-jetbrains [&_code]:text-curso-ciano [&_code]:bg-white/5 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px]',
-  '[&_pre]:bg-black/50 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:mb-4 [&_pre]:overflow-x-auto',
-  '[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white/80',
-  '[&_blockquote]:border-l-2 [&_blockquote]:border-curso-azul [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-white/60 [&_blockquote]:italic',
-].join(' ')
 
 export default function ConteudoViewer({
   cursoSlug,
@@ -100,7 +88,7 @@ export default function ConteudoViewer({
 
       {/* Conteúdo da aula */}
       <article className="max-w-3xl mx-auto px-4 py-8">
-        <div className={proseClasses} dangerouslySetInnerHTML={{ __html: conteudo }} />
+        <div className={proseAula} dangerouslySetInnerHTML={{ __html: conteudo }} />
 
         {/* Desafios da aula */}
         {desafios.length > 0 && (
@@ -118,7 +106,7 @@ export default function ConteudoViewer({
                 </div>
                 <h3 className="text-white font-bold mb-2">{d.titulo}</h3>
                 <div
-                  className="[&_p]:text-white/70 [&_p]:text-sm [&_p]:leading-relaxed [&_p]:mb-2 [&_ul]:list-disc [&_ul]:pl-5 [&_li]:text-white/70 [&_li]:text-sm [&_code]:font-jetbrains [&_code]:text-curso-ciano [&_pre]:bg-black/50 [&_pre]:rounded-lg [&_pre]:p-3 [&_pre]:overflow-x-auto [&_pre]:text-sm [&_pre]:text-white/80 text-white/70 text-sm leading-relaxed"
+                  className={proseDesafio}
                   dangerouslySetInnerHTML={{ __html: d.enunciado }}
                 />
                 <p className="text-white/30 text-xs mt-3">
