@@ -35,9 +35,23 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Informe a matéria/tema.' }, { status: 400 })
   }
 
+  // A chave vivia nas variáveis da Vercel e não veio na migração para este
+  // servidor. A mensagem fala com quem está na tela — um professor —, e não
+  // com quem mantém o sistema: nome de variável não diz nada para ele, e o
+  // caminho manual continua aberto enquanto a chave não é configurada.
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    return NextResponse.json({ error: 'Geração por IA não configurada (GEMINI_API_KEY ausente).' }, { status: 500 })
+    return NextResponse.json(
+      {
+        error:
+          'A geração automática de perguntas ainda não está configurada neste servidor. ' +
+          'Peça à direção para cadastrar a chave de IA. Enquanto isso, você pode adicionar ' +
+          'as perguntas manualmente logo abaixo.',
+      },
+      // 503: o serviço existe e está indisponível por configuração. 500 sugere
+      // defeito, e faz procurar bug onde falta ajuste.
+      { status: 503 }
+    )
   }
 
   const qtd = Math.min(Math.max(Number(quantidade) || 10, 1), 20)
