@@ -1,5 +1,6 @@
 import { getProfileOrRedirect } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
+import RolagemAoTopo from '@/components/admin/RolagemAoTopo'
 import MobileAdminHeader from '@/components/admin/MobileAdminHeader'
 
 // Mesmo enquadramento do catálogo de cursos: os módulos são a camada de cima
@@ -11,7 +12,8 @@ export default async function ModulosLayout({ children }: { children: React.Reac
       <AdminSidebar profile={profile} userEmail={user.email} />
       <div className="flex-1 flex flex-col min-w-0">
         <MobileAdminHeader profile={profile} userEmail={user.email} />
-        <main className="flex-1 overflow-auto bg-curso-tinta">{children}</main>
+        <main className="flex-1 overflow-auto bg-curso-tinta">
+        <RolagemAoTopo />{children}</main>
       </div>
     </div>
   )
