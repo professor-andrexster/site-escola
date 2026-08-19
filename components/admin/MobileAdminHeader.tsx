@@ -109,7 +109,7 @@ export default function MobileAdminHeader({ profile, userEmail }: Props) {
             <nav className="flex-1 px-3 py-fluid-2xs space-y-fluid-2xs">
               {groups.map((group) => (
                 <div key={group.label}>
-                  <p className="text-white/25 text-[10px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
+                  <p className="text-white/55 text-[11px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
                     {group.label}
                   </p>
                   <ul className="space-y-0.5">

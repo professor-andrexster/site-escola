@@ -133,7 +133,7 @@ export default async function ModulosPage() {
                             <span className={completo ? 'text-white/70' : 'text-white/50'}>
                               {cu.titulo}
                             </span>
-                            <span className="text-white/25 text-xs font-jetbrains ms-auto flex-shrink-0">
+                            <span className="text-white/55 text-xs font-jetbrains ms-auto flex-shrink-0">
                               {cu.carga_horaria}h
                             </span>
                           </li>

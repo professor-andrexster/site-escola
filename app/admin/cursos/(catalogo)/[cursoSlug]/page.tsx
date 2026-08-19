@@ -247,7 +247,7 @@ function AulasQueFaltam({
               <span className="text-white/70 text-sm group-hover:text-white transition-colors flex-1 min-w-0 truncate">
                 {a.titulo}
               </span>
-              <span className="text-curso-ciano text-xs flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <span className="text-curso-ciano/90 group-hover:text-curso-ciano text-xs flex-shrink-0 transition-colors">
                 continuar
               </span>
             </Link>

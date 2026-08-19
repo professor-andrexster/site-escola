@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "ui:auditar": "node scripts/auditar-ui.mjs",
-    "ui:corrigir": "node scripts/auditar-ui.mjs --corrigir"
+    "ui:corrigir": "node scripts/auditar-ui.mjs --corrigir",
+    "ui:telas": "node scripts/auditar-telas.mjs",
+    "ui:telas:todas": "node scripts/auditar-telas.mjs --todas"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

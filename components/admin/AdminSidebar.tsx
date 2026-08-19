@@ -62,14 +62,16 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
         <span className={cn('mt-2 text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
           {ROLE_LABELS[profile.role]}
         </span>
-        <span className="mt-1.5 text-[10px] text-white/0 group-hover:text-white/55 transition-colors">Editar perfil →</span>
+        {/* Já foi `text-white/0` até o hover: a letra tinha exatamente a cor do
+            fundo, e no celular — que não tem hover — nunca aparecia. */}
+        <span className="mt-1.5 text-xs text-white/55 group-hover:text-white/85 transition-colors">Editar perfil →</span>
       </Link>
 
       {/* Navigation */}
       <nav className="flex-1 px-3 py-fluid-2xs space-y-fluid-2xs overflow-y-auto">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="text-white/25 text-[10px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
+            <p className="text-white/55 text-[11px] font-mono uppercase tracking-[0.15em] px-2 mb-1.5">
               {group.label}
             </p>
             <ul className="space-y-0.5">

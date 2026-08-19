@@ -279,7 +279,7 @@ export default function SlideViewer({
                       </span>
                     </div>
                     <div className={proseDesafio} dangerouslySetInnerHTML={{ __html: d.enunciado }} />
-                    <p className="text-curso-ciano text-xs mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <p className="text-curso-ciano/90 group-hover:text-curso-ciano text-xs mt-3 transition-colors">
                       Abrir desafio →
                     </p>
                   </Link>

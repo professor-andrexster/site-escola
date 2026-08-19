@@ -139,6 +139,40 @@ for (const arq of arquivos) {
 if (semFoco) console.log(`  ${semFoco} botão(ões) com hover e sem foco — navegação por teclado fica sem retorno`)
 else console.log('  nenhum')
 
+// ---------------------------------------------- 5. texto invisível até o hover
+//
+// Regressão real: a barra lateral tinha `text-white/0 group-hover:text-white/55`
+// no "Editar perfil →". Alfa zero é exatamente a cor do fundo — contraste 1:1 em
+// 22 rotas. A intenção era revelar no hover, mas celular não tem hover, e é por
+// celular que boa parte dos alunos entra. O texto não existia para eles.
+//
+// Esta checagem é barata e roda antes do navegador; o `auditar-telas.mjs` pega
+// o mesmo caso já renderizado, e é ele que decide. Os dois juntos porque este
+// aponta a linha exata, e aquele prova o resultado.
+console.log('\n5. Texto escondido com alfa zero, revelado só no hover')
+let invisiveis = 0
+for (const arq of arquivos) {
+  const linhas = readFileSync(arq, 'utf8').split('\n')
+  linhas.forEach((linha, i) => {
+    // Só tags que carregam texto. `<div>` com `opacity-0` costuma ser camada
+    // sobre imagem — outro assunto, e marcá-lo aqui afogaria o defeito real
+    // em ruído. O auditor de navegador vê a camada renderizada de qualquer forma.
+    if (!/<(?:p|span|a|button|h[1-6]|li|strong|em)\b/.test(linha)) return
+    const escondido = /\b(?:group-)?text-(?:white|black)\/0\b|\bopacity-0\b/.test(linha)
+    const revela = /(?:group-)?hover:(?:text-\w+\/[1-9]|opacity-(?:[1-9]|100))/.test(linha)
+    if (!escondido || !revela) return
+
+    // Um `<span>` que embrulha só um ícone não é texto: some no hover como
+    // qualquer camada decorativa, e o link continua clicável sem ele.
+    const dentro = (linhas[i + 1] ?? '').trim()
+    if (/^<[A-Z]\w*\s*\/?>$/.test(dentro)) return
+
+    invisiveis++
+    aviso(`${arq}:${i + 1} — texto só aparece no hover; no celular nunca aparece`)
+  })
+}
+if (!invisiveis) console.log('  nenhum')
+
 // -------------------------------------------------------------- resultado
 console.log(`\n${falhas ? falhas + ' falha(s)' : 'sem falhas'}`)
 process.exit(falhas ? 1 : 0)

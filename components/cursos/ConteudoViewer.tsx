@@ -116,7 +116,7 @@ export default function ConteudoViewer({
                 <p className="text-white/50 text-xs mt-3">
                   Faça no caderno, no computador ou no celular e mostre ao professor na próxima aula.
                 </p>
-                <p className="text-curso-ciano text-xs mt-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <p className="text-curso-ciano/90 group-hover:text-curso-ciano text-xs mt-2 transition-colors">
                   Abrir desafio →
                 </p>
               </Link>
