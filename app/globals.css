@@ -175,7 +175,7 @@
   }
 
   .section-label {
-    @apply font-mono text-xs font-medium uppercase tracking-widest text-escola-vermelho;
+    @apply font-mono text-xs font-medium uppercase tracking-widest text-escola-vermelho-escuro;
   }
 
   .masthead-title {

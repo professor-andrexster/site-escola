@@ -20,7 +20,7 @@
  * É assim que "fundo com a cor da mesma cor da letra" vira um erro que falha o
  * comando, em vez de um defeito que alguém encontra usando o site.
  */
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, existsSync, readdirSync } from 'node:fs'
 import { createHash, randomBytes } from 'node:crypto'
 import { chromium } from 'playwright'
 import mariadb from '../node_modules/mariadb/promise.js'
@@ -162,6 +162,30 @@ const MEDIR = () => {
   return falhas
 }
 
+/**
+ * As páginas do site aberto, lidas da árvore de `app/`.
+ *
+ * Descobrir em vez de listar à mão: página nova entra na auditoria sozinha, que
+ * é a única forma de a cobertura não envelhecer. Rota com parâmetro fica de
+ * fora — não há um valor certo para inventar aqui.
+ */
+function rotasPublicas() {
+  const raiz = new URL('../app/', import.meta.url)
+  const achadas = []
+  const varrer = (dir, prefixo) => {
+    for (const item of readdirSync(dir, { withFileTypes: true })) {
+      if (item.name === 'page.tsx') achadas.push(prefixo || '/')
+      if (!item.isDirectory()) continue
+      if (item.name === 'admin' || item.name === 'api' || item.name.includes('[')) continue
+      // Route group — `(site)` não aparece na URL.
+      const parte = item.name.startsWith('(') ? '' : `/${item.name}`
+      varrer(new URL(`${item.name}/`, dir), prefixo + parte)
+    }
+  }
+  varrer(raiz, '')
+  return [...new Set(achadas)].sort()
+}
+
 async function rotasDeCurso(c) {
   const cursos = await c.query('SELECT slug FROM cursos WHERE publicado = 1 ORDER BY slug')
   const rotas = ['/admin/cursos', '/admin/modulos', '/admin/cursos/desafios', '/admin/meu-perfil']
@@ -188,7 +212,7 @@ try {
   const rotas = argRota
     ? [argRota]
     : process.argv.includes('--todas')
-      ? [...(await rotasDeCurso(c)), '/', '/cursos', '/admin']
+      ? [...(await rotasDeCurso(c)), ...rotasPublicas(), '/admin']
       : await rotasDeCurso(c)
 
   sessao = await abrirSessaoDe(c, process.env.AUDITOR_EMAIL ?? 'andre@escolaestadualdrjoaoberaldo.com')

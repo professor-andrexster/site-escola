@@ -133,7 +133,7 @@ export default async function EmtiPage() {
             {diferenciais.map((d, i) => (
               <div key={d.num} className={`px-5 py-6 text-center ${i > 0 ? 'border-l border-white/15' : ''}`}>
                 <div className="font-playfair font-black text-3xl md:text-4xl leading-none mb-1">{d.num}</div>
-                <div className="font-mono text-[10px] uppercase tracking-widest text-white/65">{d.label}</div>
+                <div className="font-mono text-[10px] uppercase tracking-widest text-white">{d.label}</div>
               </div>
             ))}
           </div>
@@ -178,15 +178,15 @@ export default async function EmtiPage() {
             <AnimateOnScroll delay={1}>
               <div className="bg-escola-azul text-white p-6 mb-4">
                 <div className="flex items-center gap-2 mb-4">
-                  <Clock className="w-4 h-4 text-escola-vermelho" />
+                  <Clock className="w-4 h-4 text-escola-vermelho-claro" />
                   <h3 className="font-mono text-xs uppercase tracking-widest text-white/60">Horário do EMTI</h3>
                 </div>
                 <div className="space-y-3">
                   {horario.map((h, i) => (
                     <div key={h.periodo} className={`pb-3 ${i < horario.length - 1 ? 'border-b border-white/10' : ''}`}>
                       <div className="flex justify-between items-baseline mb-1">
-                        <span className="font-mono text-[10px] uppercase tracking-wider text-white/50">{h.periodo}</span>
-                        <span className="font-playfair font-bold text-escola-vermelho text-sm">{h.horario}</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-white/70">{h.periodo}</span>
+                        <span className="font-playfair font-bold text-escola-vermelho-claro text-sm">{h.horario}</span>
                       </div>
                       <p className="font-serif text-white/65 text-xs leading-relaxed">{h.desc}</p>
                     </div>
@@ -212,7 +212,7 @@ export default async function EmtiPage() {
       <section className="bg-escola-azul py-14 border-t-2 border-escola-vermelho">
         <div className="container mx-auto px-4 max-w-5xl">
           <AnimateOnScroll>
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-2">
               Formação técnica integrada
             </p>
             <div className="w-10 h-px bg-escola-vermelho mb-5" />
@@ -226,10 +226,10 @@ export default async function EmtiPage() {
               <AnimateOnScroll key={m.titulo} delay={(i % 4) as 0|1|2|3}>
                 <div className="bg-escola-azul p-6 hover:bg-escola-azul-medio transition-colors group">
                   <div className="w-9 h-9 border border-escola-vermelho/60 flex items-center justify-center mb-4 group-hover:border-escola-vermelho transition-colors">
-                    <m.Icon className="w-4 h-4 text-escola-vermelho" />
+                    <m.Icon className="w-4 h-4 text-escola-vermelho-claro" />
                   </div>
                   <h3 className="font-playfair font-bold text-white text-sm mb-2">{m.titulo}</h3>
-                  <p className="font-serif text-white/50 text-xs leading-relaxed">{m.desc}</p>
+                  <p className="font-serif text-white/70 text-xs leading-relaxed">{m.desc}</p>
                 </div>
               </AnimateOnScroll>
             ))}
@@ -314,7 +314,7 @@ export default async function EmtiPage() {
       <section className="bg-escola-azul py-14 border-t-2 border-escola-vermelho">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <AnimateOnScroll>
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/45 mb-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70 mb-4">
               Matrículas
             </p>
             <h2 className="font-playfair text-white font-black text-2xl md:text-3xl mb-4">

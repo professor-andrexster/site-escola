@@ -35,6 +35,10 @@ const config: Config = {
           marinho: '#0d1f35',
           vermelho: '#c0392b',
           'vermelho-escuro': '#96281b',
+          // O vermelho da marca sobre o azul da marca dá 2.14:1: as duas cores
+          // institucionais juntas são ilegíveis. Este é o vermelho para fundo
+          // escuro — mesma família, 5.9:1 sobre o azul.
+          'vermelho-claro': '#f4a49a',
           creme: '#f7f4ef',
           'creme-escuro': '#ede9e0',
           preto: '#0a0a0a',

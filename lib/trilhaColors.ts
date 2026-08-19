@@ -21,12 +21,12 @@ const BG_LIGHT: Record<string, string> = {
 }
 
 const TEXT: Record<string, string> = {
-  'green-600': 'text-green-600',
-  'orange-600': 'text-orange-600',
-  'gray-600': 'text-gray-600',
-  'pink-600': 'text-pink-600',
-  'blue-600': 'text-blue-600',
-  'yellow-400': 'text-yellow-600',
+  'green-600': 'text-green-700',
+  'orange-600': 'text-orange-700',
+  'gray-600': 'text-gray-700',
+  'pink-600': 'text-pink-700',
+  'blue-600': 'text-blue-700',
+  'yellow-400': 'text-yellow-800',
 }
 
 const BORDER: Record<string, string> = {

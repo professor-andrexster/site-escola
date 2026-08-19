@@ -12,7 +12,7 @@ export default function HeroCursosSEO() {
               <Image src="/logo.jpg" alt="E.E. Dr. João Beraldo" width={80} height={80} className="w-full h-full object-cover" priority />
             </div>
           </div>
-          <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/50 mb-3">E.E. Dr. João Beraldo · EMTI</p>
+          <p className="font-mono text-xs uppercase tracking-[0.3em] text-white/70 mb-3">E.E. Dr. João Beraldo · EMTI</p>
           <h1 className="font-playfair text-4xl md:text-5xl font-black mb-4">
             Cursos Profissionalizantes do Ensino Médio Integral
           </h1>

@@ -12,7 +12,7 @@ export default function CursosEmtiBanner() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-center">
           {/* Texto */}
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-3">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-3">
               EMTI · Ensino Médio em Tempo Integral
             </p>
             <div className="w-10 h-px bg-escola-vermelho mb-5" />
@@ -27,19 +27,19 @@ export default function CursosEmtiBanner() {
 
             <div className="grid grid-cols-3 gap-4 mb-9 max-w-lg">
               <div>
-                <GraduationCap className="w-6 h-6 text-escola-vermelho mb-2" />
+                <GraduationCap className="w-6 h-6 text-escola-vermelho-claro mb-2" />
                 <p className="font-playfair text-white font-bold text-xl leading-none">16</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50 mt-1">Cursos</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/70 mt-1">Cursos</p>
               </div>
               <div>
-                <Code2 className="w-6 h-6 text-escola-vermelho mb-2" />
+                <Code2 className="w-6 h-6 text-escola-vermelho-claro mb-2" />
                 <p className="font-playfair text-white font-bold text-xl leading-none">100%</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50 mt-1">Prático</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/70 mt-1">Prático</p>
               </div>
               <div>
-                <Rocket className="w-6 h-6 text-escola-vermelho mb-2" />
+                <Rocket className="w-6 h-6 text-escola-vermelho-claro mb-2" />
                 <p className="font-playfair text-white font-bold text-xl leading-none">3 anos</p>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/50 mt-1">de trilha</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/70 mt-1">de trilha</p>
               </div>
             </div>
 

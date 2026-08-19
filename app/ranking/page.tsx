@@ -18,7 +18,7 @@ export default async function RankingPublicoPage() {
       <PageLayout>
         <div className="bg-escola-azul text-white py-12 border-b-2 border-escola-vermelho">
           <div className="container mx-auto px-4">
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-2">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-2">
               E.E. Dr. João Beraldo
             </p>
             <div className="flex items-center gap-3">
@@ -39,9 +39,9 @@ export default async function RankingPublicoPage() {
   }
 
   const medalColors = [
-    { icon: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200', num: 'text-yellow-600' },
+    { icon: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200', num: 'text-yellow-800' },
     { icon: 'text-gray-500',   bg: 'bg-gray-50',   border: 'border-gray-200',   num: 'text-gray-500' },
-    { icon: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-200',  num: 'text-amber-600' },
+    { icon: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-200',  num: 'text-amber-800' },
   ]
 
   return (
@@ -49,7 +49,7 @@ export default async function RankingPublicoPage() {
       {/* Header */}
       <div className="bg-escola-azul text-white py-12 border-b-2 border-escola-vermelho">
         <div className="container mx-auto px-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-2">
             E.E. Dr. João Beraldo · Carlos Chagas, MG
           </p>
           <div className="flex items-center gap-3 mb-2">

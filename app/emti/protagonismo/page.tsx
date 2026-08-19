@@ -30,7 +30,7 @@ export default async function ProtagonismoPage() {
               <Award className="w-5 h-5 text-escola-vermelho" />
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/45 mb-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70 mb-2">
                 Pilares do EMTI
               </p>
               <h1 className="font-playfair text-white font-black text-3xl md:text-4xl leading-tight mb-3">
@@ -120,7 +120,7 @@ export default async function ProtagonismoPage() {
               </div>
 
               <div className="bg-escola-azul text-white p-5">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/45 mb-3">Dúvidas?</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-3">Dúvidas?</p>
                 <p className="font-serif text-white/70 text-sm leading-relaxed mb-4">
                   Quer saber mais sobre o programa de Protagonismo Juvenil? Fale com a escola.
                 </p>

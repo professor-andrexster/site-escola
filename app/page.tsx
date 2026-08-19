@@ -65,10 +65,10 @@ export default async function HomePage() {
                   <div className="font-playfair font-black text-3xl md:text-4xl text-white leading-none mb-1">
                     {stat.valor}
                   </div>
-                  <div className="font-mono text-[10px] uppercase tracking-widest text-escola-vermelho mb-0.5">
+                  <div className="font-mono text-[10px] uppercase tracking-widest text-escola-vermelho-claro mb-0.5">
                     {stat.label}
                   </div>
-                  <div className="font-serif text-xs text-white/45">{stat.desc}</div>
+                  <div className="font-serif text-xs text-white/70">{stat.desc}</div>
                 </div>
               </AnimateOnScroll>
             ))}
@@ -120,7 +120,7 @@ export default async function HomePage() {
                             {curso.categoria}
                           </span>
                         )}
-                        <span className="font-mono text-[10px] uppercase tracking-widest text-escola-cinza/60">
+                        <span className="font-mono text-[10px] uppercase tracking-widest text-escola-cinza">
                           · {curso.nivel}
                         </span>
                       </div>
@@ -147,7 +147,7 @@ export default async function HomePage() {
           <AnimateOnScroll>
             <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-2">
+                <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-2">
                   Curso técnico integrado
                 </p>
                 <div className="w-10 h-px bg-escola-vermelho mb-4" />
@@ -155,7 +155,7 @@ export default async function HomePage() {
                   Tecnologia da Informação
                 </h2>
               </div>
-              <Link href="/emti" className="font-mono text-xs uppercase tracking-widest text-white/50 hover:text-white transition-colors flex-shrink-0 mb-1">
+              <Link href="/emti" className="font-mono text-xs uppercase tracking-widest text-white/70 hover:text-white transition-colors flex-shrink-0 mb-1">
                 Ver o programa →
               </Link>
             </div>
@@ -166,7 +166,7 @@ export default async function HomePage() {
               <AnimateOnScroll key={item.titulo} delay={(i % 4) as 0|1|2|3}>
                 <div className="bg-escola-azul p-7 hover:bg-escola-azul-medio transition-colors group">
                   <div className="w-9 h-9 border border-escola-vermelho flex items-center justify-center mb-5">
-                    <item.Icon className="w-4 h-4 text-escola-vermelho" />
+                    <item.Icon className="w-4 h-4 text-escola-vermelho-claro" />
                   </div>
                   <h3 className="font-playfair text-white font-bold text-base mb-2 group-hover:text-escola-creme transition-colors">
                     {item.titulo}

@@ -27,7 +27,7 @@ export default async function NoticiasPage({
       {/* Header */}
       <div className="bg-escola-azul text-white py-12 border-b-2 border-escola-vermelho">
         <div className="container mx-auto px-4">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho mb-2">
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-escola-vermelho-claro mb-2">
             Escola Estadual · Carlos Chagas, MG
           </p>
           <h1 className="font-playfair text-4xl md:text-5xl font-black">JBInforma</h1>

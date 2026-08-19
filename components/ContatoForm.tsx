@@ -22,7 +22,7 @@ export default function ContatoForm() {
     <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="nome">
-          Nome <span className="text-red-500">*</span>
+          Nome <span className="text-red-700">*</span>
         </label>
         <input
           id="nome"
@@ -36,7 +36,7 @@ export default function ContatoForm() {
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="email">
-          E-mail <span className="text-red-500">*</span>
+          E-mail <span className="text-red-700">*</span>
         </label>
         <input
           id="email"

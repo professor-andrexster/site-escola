@@ -196,7 +196,7 @@ export default function AdminLoginPage() {
           </div>
         </div>
 
-        <p className="text-center text-white/20 text-xs mt-6 font-mono">
+        <p className="text-center text-white/60 text-xs mt-6 font-mono">
           Escola Estadual Dr. João Beraldo · Carlos Chagas, MG
         </p>
       </div>

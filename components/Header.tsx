@@ -55,7 +55,7 @@ export default function Header() {
           <span className="capitalize hidden sm:block">{formatDate()}</span>
           <div className="flex items-center gap-4">
             <span>Carlos Chagas — MG</span>
-            <span className="text-white/50">|</span>
+            <span className="text-white/70">|</span>
             <span>INEP 31146579</span>
           </div>
         </div>
@@ -82,7 +82,7 @@ export default function Header() {
           </Link>
 
           <div className="hidden lg:block text-right">
-            <p className="font-playfair italic text-escola-azul/50 text-sm">
+            <p className="font-playfair italic text-escola-azul/80 text-sm">
               "Formando protagonistas para o mundo"
             </p>
           </div>
@@ -204,7 +204,7 @@ export default function Header() {
             <div className="ml-auto px-4 py-3 flex items-center gap-2">
               <a href="https://www.instagram.com/escolajoaoberaldo" target="_blank" rel="noopener noreferrer"
                 className="text-white/60 hover:text-white text-xs font-mono transition-colors">IG</a>
-              <span className="text-white/20">|</span>
+              <span className="text-white/60">|</span>
               <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" rel="noopener noreferrer"
                 className="text-white/60 hover:text-white text-xs font-mono transition-colors">YT</a>
             </div>

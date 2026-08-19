@@ -51,7 +51,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
       {/* Hero */}
       <div className="bg-escola-azul text-white">
         <div className="container mx-auto px-4 py-12 max-w-5xl text-center">
-          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/50 mb-3">JB2026 · Vitrine</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70 mb-3">JB2026 · Vitrine</p>
           <h1 className="font-playfair text-3xl md:text-4xl font-black mb-3">Projetos dos Alunos JB2026</h1>
           <p className="text-white/60 text-sm md:text-base max-w-2xl mx-auto">
             Trabalhos reais criados pelos alunos do EMTI em Excel & Dados, Hardware, Software, Design Digital e Programação.

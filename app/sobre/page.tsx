@@ -82,7 +82,7 @@ export default function SobrePage() {
             ].map(([val, label], i) => (
               <div key={label} className={`px-5 py-4 text-center flex-1 min-w-[120px] ${i > 0 ? 'border-l border-white/15' : ''}`}>
                 <div className="font-playfair font-black text-xl leading-none">{val}</div>
-                <div className="font-mono text-[9px] uppercase tracking-widest text-white/55 mt-0.5">{label}</div>
+                <div className="font-mono text-[9px] uppercase tracking-widest text-white mt-0.5">{label}</div>
               </div>
             ))}
           </div>
@@ -188,7 +188,7 @@ export default function SobrePage() {
       <section className="bg-escola-azul py-12 border-t-2 border-escola-vermelho">
         <div className="container mx-auto px-4 text-center max-w-2xl">
           <AnimateOnScroll>
-            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/45 mb-4">
+            <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70 mb-4">
               Próximo passo
             </p>
             <h2 className="font-playfair text-white font-black text-2xl md:text-3xl mb-6">

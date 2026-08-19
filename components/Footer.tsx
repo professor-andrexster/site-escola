@@ -17,7 +17,7 @@ export default function Footer() {
                 <Image src="/logo.jpg" alt="Logo" fill sizes="48px" className="object-cover" />
               </div>
               <div>
-                <p className="font-mono text-[10px] text-escola-vermelho uppercase tracking-widest">Escola Estadual</p>
+                <p className="font-mono text-[10px] text-escola-vermelho-claro uppercase tracking-widest">Escola Estadual</p>
                 <h3 className="font-playfair font-black text-white text-lg leading-tight" style={{ fontVariant: 'small-caps' }}>
                   Dr. João Beraldo
                 </h3>
@@ -30,11 +30,11 @@ export default function Footer() {
             </p>
             <div className="flex gap-4">
               <a href="https://www.instagram.com/escolajoaoberaldo" target="_blank" rel="noopener noreferrer"
-                className="font-mono text-xs text-white/50 hover:text-white transition-colors uppercase tracking-wider">Instagram</a>
+                className="font-mono text-xs text-white/70 hover:text-white transition-colors uppercase tracking-wider">Instagram</a>
               <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" rel="noopener noreferrer"
-                className="font-mono text-xs text-white/50 hover:text-white transition-colors uppercase tracking-wider">YouTube</a>
+                className="font-mono text-xs text-white/70 hover:text-white transition-colors uppercase tracking-wider">YouTube</a>
               <a href="https://www.facebook.com/share/1GrYbrPEvJ/" target="_blank" rel="noopener noreferrer"
-                className="font-mono text-xs text-white/50 hover:text-white transition-colors uppercase tracking-wider">Facebook</a>
+                className="font-mono text-xs text-white/70 hover:text-white transition-colors uppercase tracking-wider">Facebook</a>
             </div>
           </div>
 
@@ -89,10 +89,10 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-mono text-xs text-white/50 text-center sm:text-left">
+          <p className="font-mono text-xs text-white/70 text-center sm:text-left">
             © {year} E.E. Dr. João Beraldo — Todos os direitos reservados
           </p>
-          <p className="font-mono text-xs text-white/20">
+          <p className="font-mono text-xs text-white/60">
             SRE Teófilo Otoni · INEP 31146579
           </p>
         </div>

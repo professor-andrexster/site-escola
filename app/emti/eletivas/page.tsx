@@ -97,7 +97,7 @@ export default function EletivasPage() {
               <Pencil className="w-5 h-5 text-escola-vermelho" />
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/45 mb-2">
+              <p className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70 mb-2">
                 Pilares do EMTI · Eletivas
               </p>
               <h1 className="font-playfair text-white font-black text-3xl md:text-5xl leading-tight mb-4">
@@ -312,7 +312,7 @@ export default function EletivasPage() {
 
               {/* Box contato */}
               <div className="bg-escola-azul text-white p-5">
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/45 mb-3">
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/70 mb-3">
                   Dúvidas?
                 </p>
                 <p className="font-serif text-white/70 text-sm leading-relaxed mb-4">
