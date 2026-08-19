@@ -40,7 +40,7 @@ export default function LeitoresTable({ leitores }: { leitores: BibliotecaLeitor
     <div>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             value={busca}
@@ -66,7 +66,7 @@ export default function LeitoresTable({ leitores }: { leitores: BibliotecaLeitor
 
       {filtrados.length === 0 ? (
         <div className="panel p-10 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {leitores.length === 0 ? 'Nenhum leitor cadastrado ainda.' : 'Nenhum leitor encontrado com esses filtros.'}
           </p>
         </div>
@@ -81,10 +81,10 @@ export default function LeitoresTable({ leitores }: { leitores: BibliotecaLeitor
                 href={`/admin/biblioteca/leitores/${l.id}`}
                 className="flex items-center gap-3 px-4 py-3 hover:bg-gray-50 transition-colors"
               >
-                <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 text-sm truncate">{l.nome_completo}</p>
-                  <p className="text-xs text-gray-400 truncate">
+                  <p className="text-xs text-gray-500 truncate">
                     {cfg.label}{l.turma && ` · Turma ${l.turma}`}{l.matricula && ` · Matrícula ${l.matricula}`}
                   </p>
                 </div>

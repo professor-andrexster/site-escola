@@ -119,7 +119,7 @@ export default function TabelaEntregas({ entregas: inicial }: { entregas: Entreg
       </div>
 
       {visiveis.length === 0 ? (
-        <p className="text-gray-400 text-sm py-8 text-center">Nada nesta aba.</p>
+        <p className="text-gray-500 text-sm py-8 text-center">Nada nesta aba.</p>
       ) : (
         <div className="space-y-3">
           {visiveis.map(e => {
@@ -142,7 +142,7 @@ export default function TabelaEntregas({ entregas: inicial }: { entregas: Entreg
 
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-gray-900 truncate">{e.aluno}</p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-500 mt-0.5">
                       {e.turma && <>Turma {e.turma} · </>}
                       {e.origem}
                       {e.carga ? ` · ${e.carga}h` : ''}
@@ -192,7 +192,7 @@ export default function TabelaEntregas({ entregas: inicial }: { entregas: Entreg
 
                 {e.comentario && (
                   <p className="text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2 mt-3">
-                    <span className="text-gray-400 text-xs block mb-0.5">Comentário do aluno</span>
+                    <span className="text-gray-500 text-xs block mb-0.5">Comentário do aluno</span>
                     {e.comentario}
                   </p>
                 )}

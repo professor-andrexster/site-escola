@@ -165,7 +165,7 @@ function PorCPF() {
           <button
             type="button"
             onClick={() => setMostrar(!mostrar)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
             aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
           >
             {mostrar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -207,7 +207,7 @@ export default function RecuperarSenhaPage() {
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Recuperar Senha</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
+          <p className="text-white/55 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
         </div>
 
         <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
@@ -216,7 +216,7 @@ export default function RecuperarSenhaPage() {
               onClick={() => setAba('email')}
               className={cn(
                 'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-                aba === 'email' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+                aba === 'email' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
               )}
             >
               <Mail className="w-4 h-4" />
@@ -226,7 +226,7 @@ export default function RecuperarSenhaPage() {
               onClick={() => setAba('cpf')}
               className={cn(
                 'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-                aba === 'cpf' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+                aba === 'cpf' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
               )}
             >
               <BookOpen className="w-4 h-4" />
@@ -238,7 +238,7 @@ export default function RecuperarSenhaPage() {
         </div>
 
         <p className="text-center mt-4">
-          <Link href="/admin" className="text-white/40 hover:text-white text-sm transition-colors">
+          <Link href="/admin" className="text-white/55 hover:text-white text-sm transition-colors">
             ← Voltar ao login
           </Link>
         </p>

@@ -67,7 +67,7 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
   }
 
   if (carregando) {
-    return <div className="panel p-6 text-sm text-gray-400">Carregando prova...</div>
+    return <div className="panel p-6 text-sm text-gray-500">Carregando prova...</div>
   }
 
   return (
@@ -78,10 +78,10 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
           <h3 className="font-bold text-gray-900">Prova final</h3>
         </div>
         {perguntas.length > 0 && (
-          <span className="text-xs text-gray-400">{perguntas.length} {perguntas.length === 1 ? 'questão' : 'questões'}</span>
+          <span className="text-xs text-gray-500">{perguntas.length} {perguntas.length === 1 ? 'questão' : 'questões'}</span>
         )}
       </div>
-      <p className="text-xs text-gray-400 mb-5">
+      <p className="text-xs text-gray-500 mb-5">
         O aluno faz a prova depois de concluir todas as aulas. Com 70% de acerto, o certificado sai automaticamente.
         Sem perguntas cadastradas, o curso não oferece certificado.
       </p>
@@ -123,7 +123,7 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
                       onChange={() => atualizar(i, 'resposta_correta', letra)}
                       className="accent-green-600"
                     />
-                    <span className={`text-xs font-mono uppercase font-bold ${p.resposta_correta === letra ? 'text-green-600' : 'text-gray-400'}`}>
+                    <span className={`text-xs font-mono uppercase font-bold ${p.resposta_correta === letra ? 'text-green-600' : 'text-gray-500'}`}>
                       {letra})
                     </span>
                   </label>
@@ -136,7 +136,7 @@ export default function CursoProvaEditor({ cursoId }: { cursoId: string }) {
                 </div>
               ))}
             </div>
-            <p className="text-[11px] text-gray-400 mt-2">A bolinha verde marca a alternativa correta.</p>
+            <p className="text-[11px] text-gray-500 mt-2">A bolinha verde marca a alternativa correta.</p>
           </div>
         ))}
       </div>

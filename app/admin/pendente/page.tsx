@@ -26,7 +26,7 @@ export default function PendentePage() {
           </Link>
           <Link
             href="/"
-            className="block mt-3 text-gray-400 hover:text-gray-600 text-sm transition-colors"
+            className="block mt-3 text-gray-500 hover:text-gray-600 text-sm transition-colors"
           >
             Ver o site da escola →
           </Link>

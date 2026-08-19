@@ -107,11 +107,11 @@ export default async function QuizRankingSection() {
                       {i + 1}º lugar
                     </div>
                     <p className="font-playfair font-bold text-white text-lg leading-tight truncate">{p.nome}</p>
-                    <p className="font-mono text-white/40 text-xs">{p.turma}</p>
+                    <p className="font-mono text-white/55 text-xs">{p.turma}</p>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <div className={`font-mono font-black text-2xl ${cor.num}`}>{p.pontuacao_total}</div>
-                    <div className="font-mono text-white/30 text-[10px]">pts</div>
+                    <div className="font-mono text-white/50 text-[10px]">pts</div>
                   </div>
                 </div>
               )
@@ -124,12 +124,12 @@ export default async function QuizRankingSection() {
           <div className="border border-white/10 divide-y divide-white/5">
             {resto.map((p, i) => (
               <div key={p.id} className="flex items-center gap-4 px-5 py-3 hover:bg-white/5 transition-colors">
-                <span className="font-mono text-white/30 text-sm w-6 text-center flex-shrink-0">{i + 4}</span>
+                <span className="font-mono text-white/50 text-sm w-6 text-center flex-shrink-0">{i + 4}</span>
                 <div className="flex-1 min-w-0">
                   <span className="font-serif text-white text-sm font-medium">{p.nome}</span>
-                  <span className="font-mono text-white/30 text-xs ml-2">{p.turma}</span>
+                  <span className="font-mono text-white/50 text-xs ml-2">{p.turma}</span>
                 </div>
-                <span className="font-mono font-bold text-white/80 text-sm">{p.pontuacao_total} <span className="text-white/30 font-normal text-xs">pts</span></span>
+                <span className="font-mono font-bold text-white/80 text-sm">{p.pontuacao_total} <span className="text-white/50 font-normal text-xs">pts</span></span>
               </div>
             ))}
           </div>
@@ -137,7 +137,7 @@ export default async function QuizRankingSection() {
 
         {/* Rodapé */}
         <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-serif text-white/40 text-sm">
+          <p className="font-serif text-white/55 text-sm">
             {participantes.length} aluno{participantes.length !== 1 ? 's' : ''} concluíram este quiz
           </p>
           <Link href="/ranking" className="font-mono text-xs uppercase tracking-widest text-white/50 hover:text-white transition-colors inline-flex items-center gap-1">

@@ -29,7 +29,7 @@ export default async function DesafioFinalPage({ params }: { params: Promise<{ i
     <div className="max-w-3xl">
       <Link
         href={`/admin/cursos/gerenciar/${id}`}
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar ao curso
@@ -41,7 +41,7 @@ export default async function DesafioFinalPage({ params }: { params: Promise<{ i
       </h1>
 
       {desafio ? (
-        <p className="text-sm text-gray-400 mb-6">
+        <p className="text-sm text-gray-500 mb-6">
           Aprovar o envio emite o certificado de {curso.carga_horaria ?? '—'} horas em nome do aluno.
         </p>
       ) : (

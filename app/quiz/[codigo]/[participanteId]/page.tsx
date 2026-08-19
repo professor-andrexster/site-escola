@@ -49,7 +49,7 @@ export default async function QuizJogarPage({
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <p className="text-xl font-bold mb-2">Quiz sem perguntas</p>
-          <p className="text-gray-400">O professor ainda não adicionou perguntas.</p>
+          <p className="text-gray-500">O professor ainda não adicionou perguntas.</p>
         </div>
       </div>
     )

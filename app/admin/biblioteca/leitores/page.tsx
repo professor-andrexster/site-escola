@@ -18,7 +18,7 @@ export default async function LeitoresPage() {
             <Users className="w-6 h-6 text-escola-azul" />
             Leitores
           </h1>
-          <p className="text-sm text-gray-400 mt-1">{leitores?.length ?? 0} leitor(es) cadastrado(s).</p>
+          <p className="text-sm text-gray-500 mt-1">{leitores?.length ?? 0} leitor(es) cadastrado(s).</p>
         </div>
         <Link
           href="/admin/biblioteca/leitores/novo"

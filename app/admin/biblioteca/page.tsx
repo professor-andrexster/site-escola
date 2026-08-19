@@ -76,7 +76,7 @@ export default async function BibliotecaPainelPage() {
         <Library className="w-7 h-7 text-escola-azul" />
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Biblioteca</h1>
-          <p className="text-sm text-gray-400">Situação de hoje, {hoje.toLocaleDateString('pt-BR')}</p>
+          <p className="text-sm text-gray-500">Situação de hoje, {hoje.toLocaleDateString('pt-BR')}</p>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default async function BibliotecaPainelPage() {
         <div className="empty-state p-10 mb-8">
           <BookOpen className="w-10 h-10 text-gray-300 mx-auto mb-3" />
           <p className="text-gray-600 font-medium mb-1">O acervo ainda está vazio.</p>
-          <p className="text-gray-400 text-sm mb-4">Comece cadastrando uma obra e seus exemplares.</p>
+          <p className="text-gray-500 text-sm mb-4">Comece cadastrando uma obra e seus exemplares.</p>
           <Link href="/admin/biblioteca/acervo/novo" className="inline-flex items-center gap-2 bg-escola-azul text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-escola-azul/90 transition-colors">
             <Plus className="w-4 h-4" />
             Cadastrar Primeira Obra
@@ -103,23 +103,23 @@ export default async function BibliotecaPainelPage() {
       <div className="panel p-6 mb-8">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
           <Link href="/admin/biblioteca/acervo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <Search className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <Search className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Consultar</span>
           </Link>
           <Link href="/admin/biblioteca/emprestimo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <ScanLine className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <ScanLine className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Emprestar</span>
           </Link>
           <Link href="/admin/biblioteca/devolucao" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <RotateCcw className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <RotateCcw className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Devolver</span>
           </Link>
           <Link href="/admin/biblioteca/acervo/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <Plus className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <Plus className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Cadastrar Livro</span>
           </Link>
           <Link href="/admin/biblioteca/leitores/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-blue-50 transition-all group">
-            <UserPlus className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <UserPlus className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Cadastrar Leitor</span>
           </Link>
         </div>
@@ -132,7 +132,7 @@ export default async function BibliotecaPainelPage() {
             <AlertTriangle className="w-4 h-4 text-escola-vermelho" />
             Atrasos
           </h2>
-          <p className="text-xs text-gray-400 mb-4">
+          <p className="text-xs text-gray-500 mb-4">
             {atrasados.length === 0 ? 'Nenhum atraso no momento.' : `${atrasados.length} exemplar(es) atrasado(s), os mais antigos primeiro.`}
           </p>
           {atrasados.length > 0 && (
@@ -165,14 +165,14 @@ export default async function BibliotecaPainelPage() {
             <Trophy className="w-4 h-4 text-yellow-500" />
             Leitores Mais Assíduos do Mês
           </h2>
-          <p className="text-xs text-gray-400 mb-4">{assiduos.length === 0 ? 'Nenhum empréstimo este mês ainda.' : 'Quem mais pegou livro emprestado.'}</p>
+          <p className="text-xs text-gray-500 mb-4">{assiduos.length === 0 ? 'Nenhum empréstimo este mês ainda.' : 'Quem mais pegou livro emprestado.'}</p>
           {assiduos.length > 0 && (
             <div className="space-y-2">
               {assiduos.map((a, i) => (
                 <div key={i} className="flex items-center justify-between px-3 py-2">
                   <div className="min-w-0">
                     <p className="text-sm font-medium text-gray-800 truncate">{a.nome}</p>
-                    {a.turma && <p className="text-xs text-gray-400">Turma {a.turma}</p>}
+                    {a.turma && <p className="text-xs text-gray-500">Turma {a.turma}</p>}
                   </div>
                   <span className="text-xs font-bold text-gray-500 flex-shrink-0">{a.total} livro(s)</span>
                 </div>
@@ -187,7 +187,7 @@ export default async function BibliotecaPainelPage() {
             <CalendarClock className="w-4 h-4 text-escola-azul" />
             Devoluções Previstas (Próximos 7 Dias)
           </h2>
-          <p className="text-xs text-gray-400 mb-4">{devolucoesProximas.length === 0 ? 'Nada previsto para os próximos dias.' : `${devolucoesProximas.length} devolução(ões) prevista(s).`}</p>
+          <p className="text-xs text-gray-500 mb-4">{devolucoesProximas.length === 0 ? 'Nada previsto para os próximos dias.' : `${devolucoesProximas.length} devolução(ões) prevista(s).`}</p>
           {devolucoesProximas.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {devolucoesProximas.map(e => {
@@ -198,7 +198,7 @@ export default async function BibliotecaPainelPage() {
                   <div key={e.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <div className="min-w-0">
                       <p className="text-sm text-gray-800 truncate">{leitor?.nome_completo}</p>
-                      <p className="text-xs text-gray-400 truncate">{obra?.titulo}</p>
+                      <p className="text-xs text-gray-500 truncate">{obra?.titulo}</p>
                     </div>
                     <span className="text-xs text-gray-500 flex-shrink-0 ml-2">{new Date(e.data_prevista + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
                   </div>

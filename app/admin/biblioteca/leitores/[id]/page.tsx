@@ -17,7 +17,7 @@ export default async function LeitorDetalhePage({ params }: { params: Promise<{ 
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/biblioteca/leitores" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors">
+      <Link href="/admin/biblioteca/leitores" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar para leitores
       </Link>
@@ -29,7 +29,7 @@ export default async function LeitorDetalhePage({ params }: { params: Promise<{ 
           Histórico de Empréstimos
         </h2>
         {emprestimos.length === 0 ? (
-          <p className="text-sm text-gray-400">Nenhum empréstimo registrado ainda.</p>
+          <p className="text-sm text-gray-500">Nenhum empréstimo registrado ainda.</p>
         ) : (
           <div className="space-y-2">
             {emprestimos.map(e => {
@@ -37,7 +37,7 @@ export default async function LeitorDetalhePage({ params }: { params: Promise<{ 
               return (
                 <div key={e.id} className="flex items-center justify-between text-sm border-b border-gray-50 last:border-0 py-2">
                   <span className="text-gray-700">{obra?.titulo ?? 'Obra'}</span>
-                  <span className="text-xs text-gray-400">{e.situacao}</span>
+                  <span className="text-xs text-gray-500">{e.situacao}</span>
                 </div>
               )
             })}

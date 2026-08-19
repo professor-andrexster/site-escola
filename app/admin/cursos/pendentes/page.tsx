@@ -29,7 +29,7 @@ export default async function CursosPendentesPage() {
     <div>
       <Link
         href="/admin/cursos/gerenciar"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar para cursos
@@ -39,13 +39,13 @@ export default async function CursosPendentesPage() {
         <Clock className="w-6 h-6 text-amber-500" />
         Cursos Pendentes de Aprovação
       </h1>
-      <p className="text-sm text-gray-400 mb-6">Professores criam cursos como rascunho. Você aprova aqui para publicar.</p>
+      <p className="text-sm text-gray-500 mb-6">Professores criam cursos como rascunho. Você aprova aqui para publicar.</p>
 
       {cursos.length === 0 && (
         <div className="panel p-10 text-center">
           <CheckCircle2 className="w-12 h-12 text-green-500 mx-auto mb-3" />
           <p className="text-gray-600 font-semibold">Todos os cursos foram aprovados!</p>
-          <p className="text-sm text-gray-400 mt-1">Não há cursos pendentes no momento.</p>
+          <p className="text-sm text-gray-500 mt-1">Não há cursos pendentes no momento.</p>
         </div>
       )}
 

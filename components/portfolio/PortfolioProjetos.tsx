@@ -84,7 +84,7 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                     ))}
                   </div>
                 )}
-                <div className="flex items-center justify-between text-xs text-gray-400">
+                <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{p.criado_em ? formatDate(p.criado_em) : ''}</span>
                   {p.link_externo && (
                     <a href={p.link_externo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">

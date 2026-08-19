@@ -142,7 +142,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
       {/* Barra de status */}
       <div className="flex items-center justify-between gap-4 mb-6 flex-wrap">
         <div>
-          <p className="text-xs text-gray-400 font-mono uppercase tracking-wider">Comando do professor</p>
+          <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">Comando do professor</p>
           <h1 className="text-xl font-bold text-gray-900">{quiz.titulo}</h1>
         </div>
         <div className="flex items-center gap-3">
@@ -160,7 +160,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
 
       {/* Pergunta */}
       <div className="panel p-6 mb-4">
-        <p className="text-xs text-gray-400 font-mono mb-2">
+        <p className="text-xs text-gray-500 font-mono mb-2">
           Pergunta {currentIndex + 1} de {perguntas.length}
         </p>
         <p className="text-gray-900 text-xl md:text-2xl font-bold leading-snug">{pergunta.enunciado}</p>
@@ -228,7 +228,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
         )}
 
         {!revelada && (
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-500">
             Os alunos não veem certo ou errado até você revelar. Revele quando o tempo zerar ou quando todos responderem.
           </p>
         )}
@@ -236,7 +236,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           <button
             onClick={encerrar}
             disabled={loading}
-            className="ml-auto inline-flex items-center gap-1.5 text-gray-400 hover:text-red-600 text-xs font-semibold transition-colors"
+            className="ml-auto inline-flex items-center gap-1.5 text-gray-500 hover:text-red-600 text-xs font-semibold transition-colors"
           >
             <Square className="w-3.5 h-3.5" />
             Encerrar quiz agora

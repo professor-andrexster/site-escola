@@ -43,7 +43,7 @@ export default function PaginasEditor({ pagina, label, initialData }: PaginasEdi
         className="w-full flex items-center justify-between px-6 py-4 hover:bg-gray-50 transition-colors"
       >
         <span className="font-semibold text-gray-900">{label}</span>
-        {open ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+        {open ? <ChevronUp className="w-4 h-4 text-gray-500" /> : <ChevronDown className="w-4 h-4 text-gray-500" />}
       </button>
       {open && (
         <div className="border-t border-gray-100 p-6 space-y-4">

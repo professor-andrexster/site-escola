@@ -59,7 +59,7 @@ function PerguntaFields({ value, onChange }: { value: PerguntaForm; onChange: (u
               <button
                 onClick={() => onChange(f => ({ ...f, resposta_correta: letra }))}
                 title="Marcar como correta"
-                className={`px-2 rounded-lg border transition-colors ${value.resposta_correta === letra ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-400 hover:border-green-400 hover:text-green-500'}`}
+                className={`px-2 rounded-lg border transition-colors ${value.resposta_correta === letra ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500'}`}
               >
                 <Check className="w-4 h-4" />
               </button>
@@ -295,7 +295,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
                 <button onClick={() => movePergunta(i, 'up')} disabled={i === 0} className="text-gray-300 hover:text-gray-600 disabled:opacity-30 transition-colors">
                   <ChevronUp className="w-4 h-4" />
                 </button>
-                <span className="text-xs text-gray-400 text-center font-mono">{i + 1}</span>
+                <span className="text-xs text-gray-500 text-center font-mono">{i + 1}</span>
                 <button onClick={() => movePergunta(i, 'down')} disabled={i === perguntas.length - 1} className="text-gray-300 hover:text-gray-600 disabled:opacity-30 transition-colors">
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -319,20 +319,20 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
                     )
                   })}
                 </div>
-                <p className="text-xs text-gray-400 mt-2">{pergunta.pontos} pontos</p>
+                <p className="text-xs text-gray-500 mt-2">{pergunta.pontos} pontos</p>
               </div>
 
               <div className="flex flex-col gap-1 flex-shrink-0">
                 <button
                   onClick={() => startEdit(pergunta)}
-                  className="p-1.5 rounded-lg text-gray-400 hover:bg-blue-50 hover:text-escola-azul transition-colors"
+                  className="p-1.5 rounded-lg text-gray-500 hover:bg-blue-50 hover:text-escola-azul transition-colors"
                 >
                   <Pencil className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => deletePergunta(pergunta.id)}
                   disabled={deletingId === pergunta.id}
-                  className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50"
+                  className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-500 transition-colors disabled:opacity-50"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -376,7 +376,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
             {gerando ? 'Gerando...' : 'Gerar'}
           </button>
         </div>
-        <p className="text-xs text-gray-400">
+        <p className="text-xs text-gray-500">
           As perguntas geradas são adicionadas à lista acima e podem ser editadas ou removidas livremente.
         </p>
       </div>

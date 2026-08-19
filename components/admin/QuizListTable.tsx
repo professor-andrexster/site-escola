@@ -181,18 +181,18 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                   </span>
                 </div>
                 <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                  <span className="text-xs text-gray-500 flex items-center gap-1">
                     <Users className="w-3 h-3" />
                     Turma: <strong className="text-gray-600">{quiz.turma_alvo}</strong>
                   </span>
-                  <span className="text-xs text-gray-400">{quiz.quiz_perguntas?.length ?? 0} perguntas</span>
-                  <span className="text-xs text-gray-400">{quiz.quiz_participantes?.length ?? 0} participantes</span>
+                  <span className="text-xs text-gray-500">{quiz.quiz_perguntas?.length ?? 0} perguntas</span>
+                  <span className="text-xs text-gray-500">{quiz.quiz_participantes?.length ?? 0} participantes</span>
                   <div className="flex items-center gap-1">
                     <span className="font-mono text-xs font-bold text-escola-azul tracking-widest">{quiz.codigo}</span>
                     <button
                       onClick={() => copyLink(quiz.codigo)}
                       title="Copiar link"
-                      className="p-0.5 text-gray-400 hover:text-escola-azul transition-colors"
+                      className="p-0.5 text-gray-500 hover:text-escola-azul transition-colors"
                     >
                       <Copy className="w-3 h-3" />
                     </button>
@@ -297,7 +297,7 @@ export default function QuizListTable({ quizzes: initial }: QuizListTableProps) 
                 <button
                   onClick={() => deleteQuiz(quiz.id)}
                   disabled={isLoading}
-                  className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                  className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                   title="Deletar"
                 >
                   <Trash2 className="w-4 h-4" />

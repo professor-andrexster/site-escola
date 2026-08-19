@@ -118,7 +118,7 @@ export default function IdeiasBoard({
 
       {ideiasFiltradas.length === 0 ? (
         <div className="empty-state p-12">
-          <p className="text-gray-400 text-sm">Nenhuma ideia por aqui ainda. Que tal ser o primeiro?</p>
+          <p className="text-gray-500 text-sm">Nenhuma ideia por aqui ainda. Que tal ser o primeiro?</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -141,19 +141,19 @@ export default function IdeiasBoard({
                 <Link href={`/admin/ideias/${ideia.id}`} className="font-semibold text-gray-900 text-sm hover:text-escola-azul transition-colors">
                   {ideia.titulo}
                 </Link>
-                {ideia.dor && <p className="text-xs text-gray-400 line-clamp-2">{ideia.dor}</p>}
+                {ideia.dor && <p className="text-xs text-gray-500 line-clamp-2">{ideia.dor}</p>}
 
                 <div className="flex items-center justify-between mt-1 pt-2 border-t border-gray-100">
-                  <span className="text-[11px] text-gray-400">
+                  <span className="text-[11px] text-gray-500">
                     {autor?.nome_completo ?? 'Aluno'}{autor?.turma ? ` · ${autor.turma}` : ''}
                   </span>
                   <div className="flex items-center gap-3">
-                    <Link href={`/admin/ideias/${ideia.id}`} className="inline-flex items-center gap-1 text-gray-400 hover:text-escola-azul text-xs">
+                    <Link href={`/admin/ideias/${ideia.id}`} className="inline-flex items-center gap-1 text-gray-500 hover:text-escola-azul text-xs">
                       <MessageCircle className="w-3.5 h-3.5" />
                     </Link>
                     <button
                       onClick={() => votar(ideia.id, ideia.votei)}
-                      className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${ideia.votei ? 'text-escola-vermelho' : 'text-gray-400 hover:text-escola-vermelho'}`}
+                      className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${ideia.votei ? 'text-escola-vermelho' : 'text-gray-500 hover:text-escola-vermelho'}`}
                     >
                       <Heart className={`w-3.5 h-3.5 ${ideia.votei ? 'fill-escola-vermelho' : ''}`} />
                       {ideia.votos}
@@ -171,7 +171,7 @@ export default function IdeiasBoard({
           <div className="bg-white rounded-xl shadow-elevation-high max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-playfair text-lg font-bold text-gray-900">Nova Ideia</h2>
-              <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-400 hover:text-gray-600">
+              <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-500 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </div>
             </div>
@@ -227,7 +227,7 @@ export default function IdeiasBoard({
         </div>
       )}
 
-      {podeModerar && <p className="text-[11px] text-gray-400 mt-4">Como professor(a)/direção, mude o status de uma ideia abrindo os detalhes dela.</p>}
+      {podeModerar && <p className="text-[11px] text-gray-500 mt-4">Como professor(a)/direção, mude o status de uma ideia abrindo os detalhes dela.</p>}
     </div>
   )
 }

@@ -84,7 +84,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
 
         {/* Participante atual */}
         <div className="bg-white/5 rounded-xl px-4 py-3 mb-4">
-          <p className="text-white/40 text-xs mb-1">Você está conectado como</p>
+          <p className="text-white/55 text-xs mb-1">Você está conectado como</p>
           <p className="text-white font-semibold">{participante.nome}</p>
           <p className="text-white/60 text-sm">{participante.turma}</p>
         </div>

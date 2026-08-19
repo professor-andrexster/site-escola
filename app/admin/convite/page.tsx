@@ -78,12 +78,12 @@ export default function ConvitePage() {
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Convite de Acesso</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">Biblioteca · E.E. Dr. João Beraldo</p>
+          <p className="text-white/55 text-sm font-mono mt-1">Biblioteca · E.E. Dr. João Beraldo</p>
         </div>
 
         <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           {carregando ? (
-            <p className="p-6 text-sm text-gray-400 text-center">Verificando o convite...</p>
+            <p className="p-6 text-sm text-gray-500 text-center">Verificando o convite...</p>
           ) : erroConvite ? (
             <div className="p-6 text-center space-y-3">
               <p className="text-sm text-gray-600">{erroConvite}</p>
@@ -106,7 +106,7 @@ export default function ConvitePage() {
                   placeholder="000.000.000-00"
                   className={inputClass}
                 />
-                <p className="text-[11px] text-gray-400 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu email.</p>
+                <p className="text-[11px] text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu email.</p>
               </div>
 
               <div>
@@ -121,7 +121,7 @@ export default function ConvitePage() {
                   <button
                     type="button"
                     onClick={() => setMostrar(!mostrar)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                     aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {mostrar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

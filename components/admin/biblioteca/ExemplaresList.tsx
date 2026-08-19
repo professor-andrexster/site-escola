@@ -181,7 +181,7 @@ export default function ExemplaresList({ obraId, exemplaresIniciais }: { obraId:
       )}
 
       {exemplares.length === 0 ? (
-        <p className="text-sm text-gray-400 text-center py-6">Nenhum exemplar cadastrado ainda.</p>
+        <p className="text-sm text-gray-500 text-center py-6">Nenhum exemplar cadastrado ainda.</p>
       ) : (
         <div className="space-y-2">
           {exemplares.map(ex => {
@@ -189,7 +189,7 @@ export default function ExemplaresList({ obraId, exemplaresIniciais }: { obraId:
             return (
               <div key={ex.id} className="flex items-center gap-3 border border-gray-100 rounded-lg px-3 py-2">
                 <span className="font-mono text-xs text-gray-500 w-28 flex-shrink-0">{ex.tombo}</span>
-                <span className="text-xs text-gray-400 flex-1 truncate">
+                <span className="text-xs text-gray-500 flex-1 truncate">
                   {[ex.estante, ex.prateleira].filter(Boolean).join(' · ') || 'Sem localização'}
                   {ex.consulta_local ? ' · Consulta local' : ''}
                 </span>

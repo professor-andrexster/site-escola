@@ -31,7 +31,7 @@ export default async function CursosPage() {
           <Image src="/cursos/simbolo-transparente.png" alt="" width={44} height={44} className="flex-shrink-0" />
           <div>
             <h1 className="text-2xl md:text-3xl font-black text-white font-geom">Cursos</h1>
-            <p className="text-white/40 text-sm">por Professor André Gomes</p>
+            <p className="text-white/55 text-sm">por Professor André Gomes</p>
           </div>
         </div>
         {podeGerenciar && (
@@ -48,7 +48,7 @@ export default async function CursosPage() {
       {cursos.length === 0 ? (
         <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center">
           <GraduationCap className="w-10 h-10 text-white/20 mx-auto mb-3" />
-          <p className="text-white/40">Nenhum curso publicado ainda.</p>
+          <p className="text-white/55">Nenhum curso publicado ainda.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

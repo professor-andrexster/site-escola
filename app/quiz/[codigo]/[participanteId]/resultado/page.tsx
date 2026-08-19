@@ -66,7 +66,7 @@ export default async function ResultadoPage({
           <div className="px-6 py-6 border-b border-gray-100">
             <div className="text-center mb-4">
               <div className="text-5xl font-mono font-black text-escola-azul">{participante.pontuacao_total}</div>
-              <p className="text-gray-400 text-sm mt-1">pontos totais</p>
+              <p className="text-gray-500 text-sm mt-1">pontos totais</p>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
@@ -76,7 +76,7 @@ export default async function ResultadoPage({
               </div>
               <div className="bg-gray-50 rounded-xl p-3 text-center">
                 <div className="text-2xl font-bold text-gray-700">{totalPerguntas}</div>
-                <div className="text-xs text-gray-400">perguntas</div>
+                <div className="text-xs text-gray-500">perguntas</div>
               </div>
               <div className="bg-blue-50 rounded-xl p-3 text-center">
                 <div className="text-2xl font-bold text-escola-azul">{percentual}%</div>
@@ -94,7 +94,7 @@ export default async function ResultadoPage({
               </div>
               <div className="flex items-center gap-1">
                 <span className="text-2xl font-black text-escola-azul">#{posicao}</span>
-                <span className="text-gray-400 text-sm">no ranking</span>
+                <span className="text-gray-500 text-sm">no ranking</span>
               </div>
             </div>
 
@@ -107,7 +107,7 @@ export default async function ResultadoPage({
                       p.id === participanteId ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
                     }`}
                   >
-                    <Medal className={`w-4 h-4 flex-shrink-0 ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-400' : 'text-amber-600'}`} />
+                    <Medal className={`w-4 h-4 flex-shrink-0 ${i === 0 ? 'text-yellow-500' : i === 1 ? 'text-gray-500' : 'text-amber-600'}`} />
                     <span className="flex-1 truncate font-medium text-gray-700">{p.nome}</span>
                     <span className="font-mono font-bold text-escola-azul">{p.pontuacao_total}</span>
                   </div>
@@ -136,7 +136,7 @@ export default async function ResultadoPage({
                 </div>
                 <div className="flex items-center gap-1">
                   <span className="text-2xl font-black text-escola-azul">#{posicaoGeral + 1}</span>
-                  <span className="text-gray-400 text-sm">de {rankingGeral.length}</span>
+                  <span className="text-gray-500 text-sm">de {rankingGeral.length}</span>
                 </div>
               </div>
 
@@ -174,7 +174,7 @@ export default async function ResultadoPage({
                     <span className={`flex-1 line-clamp-1 text-xs ${r.correta ? 'text-green-800' : 'text-red-800'}`}>
                       {i + 1}. {(r.quiz_perguntas as { enunciado: string } | null)?.enunciado ?? '—'}
                     </span>
-                    <span className={`font-mono text-xs font-bold ${r.correta ? 'text-green-600' : 'text-gray-400'}`}>
+                    <span className={`font-mono text-xs font-bold ${r.correta ? 'text-green-600' : 'text-gray-500'}`}>
                       +{r.pontos_obtidos}
                     </span>
                   </div>

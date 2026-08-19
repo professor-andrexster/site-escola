@@ -139,9 +139,9 @@ export default function DesafioWorkspace({
           </div>
 
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-2">Integrantes (opcional agora — quem ficar de fora pode entrar depois)</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Integrantes (opcional agora — quem ficar de fora pode entrar depois)</p>
             {alunosLivres.length === 0 ? (
-              <p className="text-xs text-gray-400">Nenhum aluno disponível{desafio.turma_alvo ? ` na turma ${desafio.turma_alvo}` : ''} (ou todos já estão em equipes).</p>
+              <p className="text-xs text-gray-500">Nenhum aluno disponível{desafio.turma_alvo ? ` na turma ${desafio.turma_alvo}` : ''} (ou todos já estão em equipes).</p>
             ) : (
               <div className="flex flex-wrap gap-2">
                 {alunosLivres.map((a) => (
@@ -170,14 +170,14 @@ export default function DesafioWorkspace({
         <div className="panel p-6">
           <h2 className="text-sm font-semibold text-gray-700 mb-3">Entrar numa equipe</h2>
           {equipesIniciais.length === 0 ? (
-            <p className="text-sm text-gray-400">O professor ainda não formou nenhuma equipe pra este desafio.</p>
+            <p className="text-sm text-gray-500">O professor ainda não formou nenhuma equipe pra este desafio.</p>
           ) : (
             <div className="space-y-2">
               {equipesIniciais.map((eq) => (
                 <div key={eq.id} className="flex items-center justify-between border border-gray-100 rounded-lg px-3 py-2.5">
                   <div>
                     <p className="text-sm font-semibold text-gray-800">{eq.nome_empresa || 'Equipe sem nome ainda'}</p>
-                    <p className="text-xs text-gray-400">{eq.equipe_membros.length} integrante(s)</p>
+                    <p className="text-xs text-gray-500">{eq.equipe_membros.length} integrante(s)</p>
                   </div>
                   <button onClick={() => entrarEquipe(eq.id)} className="text-xs font-semibold text-escola-azul hover:underline flex-shrink-0">Entrar</button>
                 </div>
@@ -208,7 +208,7 @@ export default function DesafioWorkspace({
                         {papeis.map((p) => <option key={p.id} value={p.id}>{p.nome}</option>)}
                       </select>
                     ) : (
-                      papel && <span className="text-xs text-gray-400">{papel.nome}</span>
+                      papel && <span className="text-xs text-gray-500">{papel.nome}</span>
                     )}
                   </div>
                 )
@@ -240,7 +240,7 @@ export default function DesafioWorkspace({
       {podeAvaliar && (
         <div className="space-y-4">
           <h2 className="text-sm font-semibold text-gray-700">Avaliação — {equipesIniciais.length} equipe(s)</h2>
-          {equipesIniciais.length === 0 && <p className="text-sm text-gray-400">Nenhuma equipe formada ainda.</p>}
+          {equipesIniciais.length === 0 && <p className="text-sm text-gray-500">Nenhuma equipe formada ainda.</p>}
           {equipesIniciais.map((eq) => (
             <EquipeAvaliacao key={eq.id} equipe={eq} fases={fases} onSaved={() => router.refresh()} />
           ))}
@@ -306,7 +306,7 @@ function FaseParticipante({
       <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 flex items-center gap-3 opacity-70">
         <Lock className="w-4 h-4 text-gray-300 flex-shrink-0" />
         <div>
-          <p className="text-sm font-semibold text-gray-400">{fase.titulo}</p>
+          <p className="text-sm font-semibold text-gray-500">{fase.titulo}</p>
           <p className="text-xs text-gray-300">Complete a etapa anterior primeiro</p>
         </div>
       </div>
@@ -320,10 +320,10 @@ function FaseParticipante({
           <StatusIcon status={status} />
           <div className="min-w-0">
             <p className="text-sm font-semibold text-gray-900">{fase.titulo}</p>
-            {fase.entregavel_instrucoes && <p className="text-xs text-gray-400 mt-0.5 truncate">{fase.entregavel_instrucoes}</p>}
+            {fase.entregavel_instrucoes && <p className="text-xs text-gray-500 mt-0.5 truncate">{fase.entregavel_instrucoes}</p>}
           </div>
         </div>
-        <span className="text-xs text-gray-400 flex-shrink-0">
+        <span className="text-xs text-gray-500 flex-shrink-0">
           {entrega?.nota != null ? `${entrega.nota}/${fase.pontos_max}` : `${fase.pontos_max} pts`}
         </span>
       </button>
@@ -377,7 +377,7 @@ function EquipeAvaliacao({
       <button onClick={() => setAberta(!aberta)} className="w-full flex items-center justify-between gap-3 p-4 text-left">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-gray-900">{equipe.nome_empresa || 'Equipe sem nome'}</p>
-          <p className="text-xs text-gray-400 mt-0.5 truncate">{nomes || 'sem integrantes'}</p>
+          <p className="text-xs text-gray-500 mt-0.5 truncate">{nomes || 'sem integrantes'}</p>
         </div>
         <span className="text-sm font-semibold text-escola-azul flex-shrink-0">{somaNotas} pts</span>
       </button>
@@ -426,7 +426,7 @@ function FaseAvaliacao({
     <div className="p-4">
       <div className="flex items-center justify-between gap-3 mb-2">
         <p className="text-sm font-semibold text-gray-800">{fase.titulo}</p>
-        <span className="text-xs text-gray-400">{entrega ? STATUS_LABEL[entrega.status] : 'não enviado'}</span>
+        <span className="text-xs text-gray-500">{entrega ? STATUS_LABEL[entrega.status] : 'não enviado'}</span>
       </div>
       {!entrega ? (
         <p className="text-xs text-gray-300">A equipe ainda não enviou esta etapa.</p>

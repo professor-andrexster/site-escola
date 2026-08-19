@@ -25,7 +25,7 @@ export default async function EditarAulaPage({ params }: Params) {
 
   return (
     <div>
-      <Link href={`/admin/cursos/gerenciar/${id}`} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-700 text-sm mb-4 transition-colors">
+      <Link href={`/admin/cursos/gerenciar/${id}`} className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar ao curso
       </Link>

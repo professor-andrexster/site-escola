@@ -39,7 +39,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3 mb-5">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             value={busca}
@@ -69,7 +69,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
 
       {filtrados.length === 0 && (
         <div className="panel p-10 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {alunos.length === 0 ? 'Nenhum aluno cadastrado ainda.' : 'Nenhum aluno encontrado com esses filtros.'}
           </p>
         </div>
@@ -87,7 +87,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
               <div className="flex items-start justify-between gap-3">
                 <div>
                   <p className="font-semibold text-gray-900 text-sm">{a.nome}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Matrícula {a.matricula} · {a.turma}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Matrícula {a.matricula} · {a.turma}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {a.user_id
                       ? <span className="inline-flex items-center gap-1 text-[11px] text-green-600"><UserCheck className="w-3 h-3" /> Tem conta</span>
@@ -111,7 +111,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
         <div className="hidden md:block panel overflow-hidden">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-left text-xs text-gray-400 uppercase tracking-wider">
+              <tr className="bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wider">
                 <th className="px-4 py-3 font-medium">Nome</th>
                 <th className="px-4 py-3 font-medium">Matrícula</th>
                 <th className="px-4 py-3 font-medium">Turma</th>
@@ -144,7 +144,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   <td className="px-4 py-3">
                     {a.ativo
                       ? <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Ativo</span>
-                      : <span className="inline-flex items-center gap-1 text-gray-400 text-xs font-medium"><XCircle className="w-3.5 h-3.5" /> Inativo</span>}
+                      : <span className="inline-flex items-center gap-1 text-gray-500 text-xs font-medium"><XCircle className="w-3.5 h-3.5" /> Inativo</span>}
                   </td>
                 </tr>
               ))}

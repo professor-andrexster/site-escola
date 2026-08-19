@@ -93,7 +93,7 @@ export default function QuizEditor({ quiz }: QuizEditorProps) {
               <option key={t} value={t}>{t}</option>
             ))}
           </select>
-          <p className="text-xs text-gray-400 mt-1">Alunos desta turma verão o quiz automaticamente</p>
+          <p className="text-xs text-gray-500 mt-1">Alunos desta turma verão o quiz automaticamente</p>
         </div>
 
         <div>
@@ -109,7 +109,7 @@ export default function QuizEditor({ quiz }: QuizEditorProps) {
             onChange={(e) => setTempo(Number(e.target.value))}
             className="w-full accent-escola-azul mt-2"
           />
-          <div className="flex justify-between text-xs text-gray-400 mt-1">
+          <div className="flex justify-between text-xs text-gray-500 mt-1">
             <span>10s</span>
             <span>2 min</span>
           </div>

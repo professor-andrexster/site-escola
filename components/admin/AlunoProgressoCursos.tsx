@@ -12,14 +12,14 @@ export default function AlunoProgressoCursos({ progresso }: { progresso: Progres
       </h2>
 
       {comAulas.length === 0 ? (
-        <p className="text-sm text-gray-400">Nenhum curso publicado com aulas no momento.</p>
+        <p className="text-sm text-gray-500">Nenhum curso publicado com aulas no momento.</p>
       ) : (
         <div className="space-y-3">
           {comAulas.map(c => (
             <div key={c.id}>
               <div className="flex items-center justify-between mb-1">
                 <span className="text-sm text-gray-700 font-medium truncate">{c.titulo}</span>
-                <span className="text-xs text-gray-400 flex-shrink-0 ml-2">
+                <span className="text-xs text-gray-500 flex-shrink-0 ml-2">
                   {c.aulasConcluidas}/{c.totalAulas} aulas · {c.percentual}%
                 </span>
               </div>

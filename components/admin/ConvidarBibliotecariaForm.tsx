@@ -66,7 +66,7 @@ export default function ConvidarBibliotecariaForm() {
           <Mail className="w-4 h-4 text-amber-600" />
           Convidar Bibliotecária
         </h2>
-        <button onClick={() => { setOpen(false); reset() }} className="text-gray-400 hover:text-gray-600">
+        <button onClick={() => { setOpen(false); reset() }} className="text-gray-500 hover:text-gray-600">
           <X className="w-5 h-5" />
         </button>
       </div>

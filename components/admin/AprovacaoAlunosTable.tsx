@@ -95,7 +95,7 @@ export default function AprovacaoAlunosTable({ pendentes: initial, viewerRole }:
                 {p.matricula && <span className="ms-2">Matrícula: {p.matricula}</span>}
                 {p.disciplina && <span>Disciplina: <strong>{p.disciplina}</strong></span>}
               </p>
-              <p className="text-gray-400 text-xs mt-0.5">{p.email}</p>
+              <p className="text-gray-500 text-xs mt-0.5">{p.email}</p>
               {/* O aluno nao digita mais matricula nem CPF, entao a conta pode
                   ter criado uma ficha nova em vez de casar com uma da
                   secretaria. Quem aprova precisa ver essa diferenca. */}
@@ -123,14 +123,14 @@ export default function AprovacaoAlunosTable({ pendentes: initial, viewerRole }:
                 <button
                   onClick={() => rejeitar(p.id, p.nome_completo)}
                   disabled={isLoading}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 rounded-lg text-xs hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-gray-500 rounded-lg text-xs hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                 >
                   <X className="w-3.5 h-3.5" />
                   Rejeitar
                 </button>
               </div>
             ) : (
-              <p className="flex items-center gap-1.5 text-xs text-gray-400 flex-shrink-0">
+              <p className="flex items-center gap-1.5 text-xs text-gray-500 flex-shrink-0">
                 <Lock className="w-3.5 h-3.5" />
                 Só a gestão aprova
               </p>

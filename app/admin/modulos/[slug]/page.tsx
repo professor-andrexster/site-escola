@@ -45,7 +45,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
       <Link
         href="/admin/modulos"
-        className="inline-flex items-center gap-1.5 text-sm text-white/40 hover:text-white transition-colors mb-5"
+        className="inline-flex items-center gap-1.5 text-sm text-white/55 hover:text-white transition-colors mb-5"
       >
         <ArrowLeft className="w-4 h-4" />
         Todos os módulos
@@ -84,13 +84,13 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
                 <p className="text-white font-semibold truncate group-hover:text-curso-ciano transition-colors">
                   {cu.titulo}
                 </p>
-                <p className="text-white/40 text-xs mt-0.5">
+                <p className="text-white/55 text-xs mt-0.5">
                   {p ? `${p.concluidas} de ${p.aulas} aulas` : `${cu.carga_horaria}h`}
                   {' · '}{cu.carga_horaria}h
                 </p>
               </div>
 
-              <span className="text-white/30 text-xs font-jetbrains flex-shrink-0">
+              <span className="text-white/50 text-xs font-jetbrains flex-shrink-0">
                 {p?.completo ? 'concluído' : 'continuar'}
               </span>
             </Link>
@@ -147,7 +147,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
                 motiva mais que um cadeado sem contexto. */}
             <h3 className="text-white font-bold mb-2">{desafio.titulo}</h3>
             <div className="flex items-start gap-3">
-              <Lock className="w-4 h-4 text-white/30 flex-shrink-0 mt-0.5" />
+              <Lock className="w-4 h-4 text-white/50 flex-shrink-0 mt-0.5" />
               <div>
                 <p className="text-white/60 text-sm">
                   Conclua as aulas dos {progresso.cursos.length} cursos para liberar este projeto e

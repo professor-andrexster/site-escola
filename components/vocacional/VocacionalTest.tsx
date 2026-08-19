@@ -104,7 +104,7 @@ export default function VocacionalTest() {
             <GraduationCap className="w-6 h-6 text-white" />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Teste Vocacional</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">EMTI · Trilhas de Tecnologia</p>
+          <p className="text-white/55 text-sm font-mono mt-1">EMTI · Trilhas de Tecnologia</p>
         </div>
 
         {/* Etapa: matrícula */}
@@ -143,7 +143,7 @@ export default function VocacionalTest() {
             <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden mb-5">
               <div className="h-full bg-yellow-400 transition-all duration-300" style={{ width: `${progresso}%` }} />
             </div>
-            <p className="text-white/40 text-xs font-mono mb-4">
+            <p className="text-white/55 text-xs font-mono mb-4">
               Pergunta {perguntaAtual + 1} de {PERGUNTAS.length}
             </p>
             <p className="text-white font-playfair text-lg font-bold mb-6 leading-snug">
@@ -192,7 +192,7 @@ export default function VocacionalTest() {
                       <div className={`h-full ${trilhaBg(t.cor)}`} style={{ width: `${t.pontuacao}%` }} />
                     </div>
                   </div>
-                  <span className="text-white/40 text-xs font-mono">{t.pontuacao}%</span>
+                  <span className="text-white/55 text-xs font-mono">{t.pontuacao}%</span>
                 </div>
               ))}
             </div>

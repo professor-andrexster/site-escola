@@ -102,7 +102,7 @@ export default function CriarUsuarioForm({ rolesPermitidos, rolesListados }: Cri
           <UserPlus className="w-4 h-4 text-escola-azul" />
           Criar Novo Usuário
         </h2>
-        <button onClick={fechar} className="text-gray-400 hover:text-gray-600">
+        <button onClick={fechar} className="text-gray-500 hover:text-gray-600">
           <X className="w-5 h-5" />
         </button>
       </div>

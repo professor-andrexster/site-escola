@@ -86,7 +86,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                   )}
                 </div>
                 {destaqueAtual.descricao && <p className="text-sm text-gray-500 mb-3 flex-1">{destaqueAtual.descricao}</p>}
-                <div className="flex items-center justify-between text-xs text-gray-400">
+                <div className="flex items-center justify-between text-xs text-gray-500">
                   <span>{alunoDestaque?.nome.split(' ')[0]} · {alunoDestaque?.serie}</span>
                   {alunoDestaque && (
                     <Link href={`/portfolio/${alunoDestaque.matricula}`} className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">
@@ -97,11 +97,11 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
               </div>
               {destaques.length > 1 && (
                 <div className="flex md:flex-col items-center justify-center gap-2 p-3 border-t md:border-t-0 md:border-l border-gray-100">
-                  <button onClick={() => setDestaqueIdx((destaqueIdx - 1 + destaques.length) % destaques.length)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400">
+                  <button onClick={() => setDestaqueIdx((destaqueIdx - 1 + destaques.length) % destaques.length)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500">
                     <ChevronLeft className="w-4 h-4" />
                   </button>
-                  <span className="text-xs text-gray-400 font-mono">{destaqueIdx + 1}/{destaques.length}</span>
-                  <button onClick={() => setDestaqueIdx((destaqueIdx + 1) % destaques.length)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400">
+                  <span className="text-xs text-gray-500 font-mono">{destaqueIdx + 1}/{destaques.length}</span>
+                  <button onClick={() => setDestaqueIdx((destaqueIdx + 1) % destaques.length)} className="p-1.5 rounded-full hover:bg-gray-100 text-gray-500">
                     <ChevronRight className="w-4 h-4" />
                   </button>
                 </div>
@@ -130,7 +130,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
         {/* Grid */}
         {visiveis.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
-            <p className="text-gray-400 text-sm">Nenhum projeto encontrado nessa trilha ainda.</p>
+            <p className="text-gray-500 text-sm">Nenhum projeto encontrado nessa trilha ainda.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -160,7 +160,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                         </span>
                       )}
                     </div>
-                    <p className="text-xs text-gray-400 mb-2">{aluno?.nome.split(' ')[0]} · {aluno?.serie}</p>
+                    <p className="text-xs text-gray-500 mb-2">{aluno?.nome.split(' ')[0]} · {aluno?.serie}</p>
                     {p.tags && p.tags.length > 0 && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {p.tags.slice(0, 3).map(tag => (
@@ -184,7 +184,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
             <button
               onClick={() => setPagina(p => Math.max(0, p - 1))}
               disabled={pagina === 0}
-              className="p-2 rounded-lg border border-gray-200 text-gray-400 disabled:opacity-40 hover:border-escola-azul/30"
+              className="p-2 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-40 hover:border-escola-azul/30"
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -192,7 +192,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
             <button
               onClick={() => setPagina(p => Math.min(totalPaginas - 1, p + 1))}
               disabled={pagina >= totalPaginas - 1}
-              className="p-2 rounded-lg border border-gray-200 text-gray-400 disabled:opacity-40 hover:border-escola-azul/30"
+              className="p-2 rounded-lg border border-gray-200 text-gray-500 disabled:opacity-40 hover:border-escola-azul/30"
             >
               <ChevronRight className="w-4 h-4" />
             </button>

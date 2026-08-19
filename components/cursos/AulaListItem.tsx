@@ -29,21 +29,21 @@ export default function AulaListItem({ aula, numero, status, href }: AulaListIte
       href={href}
       className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-xl p-4 hover:border-curso-azul/50 hover:bg-white/[0.07] transition-all"
     >
-      <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-black/30 flex items-center justify-center text-white/40 text-xs font-jetbrains font-bold">
+      <span className="flex-shrink-0 w-8 h-8 rounded-lg bg-black/30 flex items-center justify-center text-white/55 text-xs font-jetbrains font-bold">
         {String(numero).padStart(2, '0')}
       </span>
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold truncate">{aula.titulo}</p>
-        {aula.descricao && <p className="text-white/40 text-xs mt-0.5 line-clamp-1">{aula.descricao}</p>}
+        {aula.descricao && <p className="text-white/55 text-xs mt-0.5 line-clamp-1">{aula.descricao}</p>}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {aula.duracao_estimada_min && (
-          <span className="hidden sm:flex items-center gap-1 text-white/30 text-xs font-jetbrains">
+          <span className="hidden sm:flex items-center gap-1 text-white/50 text-xs font-jetbrains">
             <Clock className="w-3 h-3" />
             {aula.duracao_estimada_min} min
           </span>
         )}
-        <span className="hidden md:inline text-xs font-jetbrains text-white/30">{STATUS_LABEL[status]}</span>
+        <span className="hidden md:inline text-xs font-jetbrains text-white/50">{STATUS_LABEL[status]}</span>
         {STATUS_ICON[status]}
       </div>
     </Link>

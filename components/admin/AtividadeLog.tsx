@@ -87,7 +87,7 @@ export default function AtividadeLog({ registros }: { registros: RegistroLog[] }
       </div>
 
       {visiveis.length === 0 ? (
-        <div className="panel p-8 text-center text-gray-400 text-sm">
+        <div className="panel p-8 text-center text-gray-500 text-sm">
           Nenhuma atividade registrada ainda.
         </div>
       ) : (
@@ -103,9 +103,9 @@ export default function AtividadeLog({ registros }: { registros: RegistroLog[] }
                 <span className="text-gray-700 truncate">
                   {r.nome ?? ''}
                   {r.nome && detalhe ? ' · ' : ''}
-                  <span className="text-gray-400">{detalhe}</span>
+                  <span className="text-gray-500">{detalhe}</span>
                 </span>
-                <span className="ml-auto flex-shrink-0 text-xs text-gray-400 font-mono">
+                <span className="ml-auto flex-shrink-0 text-xs text-gray-500 font-mono">
                   {r.criado_em
                     ? new Date(r.criado_em).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })
                     : '—'}

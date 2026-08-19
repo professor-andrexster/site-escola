@@ -186,7 +186,7 @@ export default function MeuPerfilForm({ aluno }: { aluno: Partial<Aluno> }) {
           <label
             className={`inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors ${
               uploadandoFoto
-                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
                 : 'bg-escola-azul text-white hover:bg-escola-azul/90 cursor-pointer'
             }`}
           >
@@ -206,7 +206,7 @@ export default function MeuPerfilForm({ aluno }: { aluno: Partial<Aluno> }) {
               type="button"
               onClick={handleRemoverFoto}
               disabled={uploadandoFoto}
-              className="text-xs text-gray-400 hover:text-red-600 transition-colors disabled:opacity-50"
+              className="text-xs text-gray-500 hover:text-red-600 transition-colors disabled:opacity-50"
             >
               <X className="w-3 h-3 inline mr-0.5" />
               Remover
@@ -224,7 +224,7 @@ export default function MeuPerfilForm({ aluno }: { aluno: Partial<Aluno> }) {
               Turma <span className="font-semibold text-gray-700">{aluno.turma}</span>
             </span>
           </div>
-          <p className="text-xs text-gray-400 mt-3">
+          <p className="text-xs text-gray-500 mt-3">
             Nome, matrícula e turma são mantidos pela secretaria. Se algum estiver errado, fale com
             a direção. A foto salva sozinha, sem precisar clicar em Salvar.
           </p>

@@ -210,7 +210,7 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
             {buscandoIsbn ? 'Buscando...' : 'Buscar'}
           </button>
         </div>
-        <p className="text-xs text-gray-400 mt-1">Busca online preenche os campos abaixo, sempre editáveis antes de salvar.</p>
+        <p className="text-xs text-gray-500 mt-1">Busca online preenche os campos abaixo, sempre editáveis antes de salvar.</p>
       </div>
 
       <div>
@@ -355,7 +355,7 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
             </div>
           ) : (
             <div className="w-20 h-28 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50 flex-shrink-0">
-              <Upload className="w-4 h-4 text-gray-400" />
+              <Upload className="w-4 h-4 text-gray-500" />
             </div>
           )}
           <div className="flex-1">
@@ -374,7 +374,7 @@ export default function ObraForm({ obra, autoresIniciais = [], editoraNomeInicia
       <div>
         <label className={labelClass}>Observações internas</label>
         <textarea value={observacoesInternas} onChange={e => setObservacoesInternas(e.target.value)} rows={2} className={inputClass} />
-        <p className="text-xs text-gray-400 mt-1">Só a equipe da biblioteca vê isso, não aparece na consulta pública.</p>
+        <p className="text-xs text-gray-500 mt-1">Só a equipe da biblioteca vê isso, não aparece na consulta pública.</p>
       </div>
 
       <div

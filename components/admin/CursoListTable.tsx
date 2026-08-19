@@ -86,7 +86,7 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
                   {curso.publicado ? 'Publicado' : 'Rascunho'}
                 </span>
               </div>
-              <p className="text-xs text-gray-400 mt-1">{curso.aulas?.length ?? 0} aula(s) · {curso.categoria ?? 'Sem categoria'}</p>
+              <p className="text-xs text-gray-500 mt-1">{curso.aulas?.length ?? 0} aula(s) · {curso.categoria ?? 'Sem categoria'}</p>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               <button
@@ -107,7 +107,7 @@ export default function CursoListTable({ cursos: initial }: CursoListTableProps)
               <button
                 onClick={() => deleteCurso(curso.id)}
                 disabled={isLoading}
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                 title="Deletar"
               >
                 <Trash2 className="w-4 h-4" />

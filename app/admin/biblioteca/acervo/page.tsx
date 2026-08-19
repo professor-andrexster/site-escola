@@ -29,7 +29,7 @@ export default async function AcervoPage() {
             <Library className="w-6 h-6 text-escola-azul" />
             Acervo
           </h1>
-          <p className="text-sm text-gray-400 mt-1">{linhas.length} obra(s) cadastrada(s).</p>
+          <p className="text-sm text-gray-500 mt-1">{linhas.length} obra(s) cadastrada(s).</p>
         </div>
         <Link
           href="/admin/biblioteca/acervo/novo"

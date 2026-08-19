@@ -40,7 +40,7 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
             <p className="text-white font-playfair font-bold text-sm leading-tight group-hover:text-white/80 transition-colors">
               Dr. João Beraldo
             </p>
-            <p className="text-white/30 text-[10px] font-mono uppercase tracking-wider">Painel Escolar</p>
+            <p className="text-white/50 text-[10px] font-mono uppercase tracking-wider">Painel Escolar</p>
           </div>
         </Link>
       </div>
@@ -58,11 +58,11 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
           className="shadow-elevation-medium ring-2 ring-white/10 group-hover:ring-white/25 transition-all"
         />
         <p className="text-white text-sm font-semibold mt-3 leading-tight truncate max-w-full">{profile.nome_completo}</p>
-        <p className="text-white/40 text-xs truncate max-w-full">{userEmail}</p>
+        <p className="text-white/55 text-xs truncate max-w-full">{userEmail}</p>
         <span className={cn('mt-2 text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded', ROLE_COLORS[profile.role])}>
           {ROLE_LABELS[profile.role]}
         </span>
-        <span className="mt-1.5 text-[10px] text-white/0 group-hover:text-white/40 transition-colors">Editar perfil →</span>
+        <span className="mt-1.5 text-[10px] text-white/0 group-hover:text-white/55 transition-colors">Editar perfil →</span>
       </Link>
 
       {/* Navigation */}
@@ -107,14 +107,14 @@ export default function AdminSidebar({ profile, userEmail }: AdminSidebarProps) 
         <Link
           href="/"
           target="_blank"
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-white hover:bg-white/[0.06] transition-all duration-150"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-white hover:bg-white/[0.06] transition-all duration-150"
         >
           <Globe className="w-4 h-4 flex-shrink-0" />
           Ver Site Público
         </Link>
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 w-full"
+          className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-white/55 hover:text-red-400 hover:bg-red-500/10 transition-all duration-150 w-full"
         >
           <LogOut className="w-4 h-4 flex-shrink-0" />
           Sair da Conta

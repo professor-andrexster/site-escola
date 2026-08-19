@@ -21,7 +21,7 @@ export default async function FuncionariosPage() {
             <Users className="w-6 h-6 text-escola-azul" />
             Funcionários
           </h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Professores, monitores, bibliotecários e contas de aluno do fundamental.
             Bibliotecária entra por convite; contas de aluno do médio, pelo autocadastro ou pela tela Alunos.
           </p>

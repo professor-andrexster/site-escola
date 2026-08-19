@@ -100,7 +100,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ matr
                       <span className="text-gray-700 font-medium flex items-center gap-1.5">
                         <span>{p.trilha?.icone}</span> {p.trilha?.nome}
                       </span>
-                      <span className="text-gray-400 text-xs font-mono">{p.pontuacao}%</span>
+                      <span className="text-gray-500 text-xs font-mono">{p.pontuacao}%</span>
                     </div>
                     <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
                       <div className={`h-full ${trilhaBg(p.trilha?.cor_tailwind)}`} style={{ width: `${p.pontuacao}%` }} />
@@ -118,7 +118,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ matr
               <PortfolioProjetos projetos={projetos} />
             ) : (
               <div className="bg-white border border-gray-200 rounded-xl p-10 text-center">
-                <p className="text-gray-400 text-sm">Nenhum projeto publicado ainda.</p>
+                <p className="text-gray-500 text-sm">Nenhum projeto publicado ainda.</p>
               </div>
             )}
           </section>
@@ -127,7 +127,7 @@ export default async function PortfolioPage({ params }: { params: Promise<{ matr
         {/* Footer do portfólio */}
         <div className="border-t border-gray-200 bg-white">
           <div className="container mx-auto px-4 py-6 max-w-4xl text-center">
-            <p className="text-xs text-gray-400 font-mono uppercase tracking-wider">
+            <p className="text-xs text-gray-500 font-mono uppercase tracking-wider">
               Aluno(a) da E.E. Dr. João Beraldo · Carlos Chagas-MG · EMTI
             </p>
           </div>

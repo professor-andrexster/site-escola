@@ -41,16 +41,16 @@ export default function CursoCard({ curso, totalAulas, aulasConcluidas }: CursoC
           <p className="text-curso-ciano text-[10px] font-jetbrains uppercase tracking-widest mb-1">{curso.categoria}</p>
         )}
         <h3 className="text-white font-bold leading-snug mb-1">{curso.titulo}</h3>
-        <p className="text-white/40 text-xs mb-3 line-clamp-2">{curso.descricao}</p>
+        <p className="text-white/55 text-xs mb-3 line-clamp-2">{curso.descricao}</p>
 
         <div className="flex items-center justify-between text-xs">
-          <span className="text-white/40 font-jetbrains">{totalAulas} aula{totalAulas !== 1 ? 's' : ''}</span>
+          <span className="text-white/55 font-jetbrains">{totalAulas} aula{totalAulas !== 1 ? 's' : ''}</span>
           {iniciado ? (
             <span className="text-curso-ciano font-semibold font-jetbrains">
               {aulasConcluidas}/{totalAulas} concluídas
             </span>
           ) : (
-            <span className="text-white/30 font-jetbrains">Começar</span>
+            <span className="text-white/50 font-jetbrains">Começar</span>
           )}
         </div>
         {iniciado && (

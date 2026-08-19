@@ -155,7 +155,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
           value={nome}
           onChange={(e) => setNome(e.target.value)}
           disabled={somenteLeitura}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
         />
       </div>
 
@@ -167,7 +167,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             value={matricula}
             onChange={(e) => setMatricula(e.target.value.toUpperCase())}
             disabled={somenteLeitura}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           />
         </div>
         <div>
@@ -176,7 +176,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             value={turma}
             onChange={(e) => setTurma(e.target.value)}
             disabled={somenteLeitura}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           >
             {TURMAS.map(t => <option key={t} value={t}>{t}</option>)}
           </select>
@@ -191,7 +191,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             value={nascimento}
             onChange={(e) => setNascimento(e.target.value)}
             disabled={somenteLeitura}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           />
         </div>
         <div>
@@ -203,9 +203,9 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             onChange={(e) => setCpf(formatarCPF(e.target.value))}
             placeholder="000.000.000-00"
             disabled={somenteLeitura}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           />
-          <p className="text-xs text-gray-400 mt-1">Necessário para o aluno criar a conta e recuperar a senha.</p>
+          <p className="text-xs text-gray-500 mt-1">Necessário para o aluno criar a conta e recuperar a senha.</p>
         </div>
       </div>
 
@@ -217,7 +217,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             value={telefone}
             onChange={(e) => setTelefone(e.target.value)}
             disabled={somenteLeitura}
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           />
         </div>
         <div>
@@ -228,7 +228,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             onChange={(e) => setEmail(e.target.value)}
             disabled={somenteLeitura}
             placeholder="aluno@escola.com"
-            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+            className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
           />
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
           value={responsavel}
           onChange={(e) => setResponsavel(e.target.value)}
           disabled={somenteLeitura}
-          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-400"
+          className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30 disabled:bg-gray-50 disabled:text-gray-500"
         />
       </div>
 
@@ -262,7 +262,7 @@ export default function AlunoEditForm({ aluno, somenteLeitura = false }: { aluno
             </div>
           ) : (
             <div className="w-24 h-24 rounded-lg border-2 border-dashed border-gray-300 flex items-center justify-center bg-gray-50">
-              <Upload className="w-4 h-4 text-gray-400" />
+              <Upload className="w-4 h-4 text-gray-500" />
             </div>
           )}
           <div className="flex-1">

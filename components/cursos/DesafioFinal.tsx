@@ -126,7 +126,7 @@ export default function DesafioFinal({
         <Award className="w-5 h-5 text-escola-azul" />
         <h2 className="font-playfair text-xl font-bold text-gray-900">{desafio.titulo}</h2>
       </div>
-      <p className="text-xs text-gray-400 mb-4">
+      <p className="text-xs text-gray-500 mb-4">
         Este é o desafio final: quando o professor aprovar, seu certificado é emitido.
       </p>
 
@@ -167,7 +167,7 @@ export default function DesafioFinal({
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
             Arquivo do projeto
             {desafio.formatos_aceitos && (
-              <span className="normal-case font-normal text-gray-400"> — {desafio.formatos_aceitos}</span>
+              <span className="normal-case font-normal text-gray-500"> — {desafio.formatos_aceitos}</span>
             )}
           </label>
           <label className="inline-flex items-center gap-2 px-4 py-2.5 border-2 border-dashed border-gray-300 rounded-xl text-sm text-gray-500 hover:border-escola-azul hover:text-escola-azul cursor-pointer transition-colors">
@@ -203,7 +203,7 @@ export default function DesafioFinal({
 
         <div>
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
-            Quer contar algo para o professor? <span className="normal-case font-normal text-gray-400">(opcional)</span>
+            Quer contar algo para o professor? <span className="normal-case font-normal text-gray-500">(opcional)</span>
           </label>
           <textarea
             value={comentario}

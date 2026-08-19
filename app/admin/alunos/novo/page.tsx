@@ -89,13 +89,13 @@ export default function NovoAlunoPage() {
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/alunos" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors">
+      <Link href="/admin/alunos" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar para listagem
       </Link>
 
       <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-1">Novo Aluno</h1>
-      <p className="text-sm text-gray-400 mb-6">Preencha os dados do aluno para incluí-lo na base.</p>
+      <p className="text-sm text-gray-500 mb-6">Preencha os dados do aluno para incluí-lo na base.</p>
 
       {erroGeral && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg px-4 py-3 mb-4">
@@ -139,9 +139,9 @@ export default function NovoAlunoPage() {
               type="text"
               value="Gerada automaticamente"
               disabled
-              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400"
+              className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Quando a secretaria informar o número oficial, edite o aluno e substitua.
             </p>
           </div>
@@ -149,7 +149,7 @@ export default function NovoAlunoPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1.5">Turno</label>
-          <input type="text" value="Integral" disabled className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-400" />
+          <input type="text" value="Integral" disabled className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-gray-50 text-gray-500" />
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -161,7 +161,7 @@ export default function NovoAlunoPage() {
               onChange={(e) => setField('data_nascimento', e.target.value)}
               className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30"
             />
-            <p className="text-xs text-gray-400 mt-1">
+            <p className="text-xs text-gray-500 mt-1">
               Ajuda o sistema a ligar esta ficha à conta quando o aluno se cadastrar sozinho.
             </p>
           </div>

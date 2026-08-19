@@ -17,7 +17,7 @@ export default async function MeuPerfilPage() {
     <div>
       <Link
         href="/admin/dashboard"
-        className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors"
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
         Voltar para dashboard
@@ -27,7 +27,7 @@ export default async function MeuPerfilPage() {
         <User className="w-6 h-6 text-escola-azul" />
         Meu Perfil
       </h1>
-      <p className="text-sm text-gray-400 mb-6">
+      <p className="text-sm text-gray-500 mb-6">
         {profile.role === 'aluno' ? 'Atualize seus dados de contato e responsável' : 'Atualize sua foto e seus dados'}
       </p>
 
@@ -74,7 +74,7 @@ async function MeusCertificados({ userId }: { userId: string }) {
         <Award className="w-5 h-5 text-escola-azul" />
         Meus Certificados
       </h2>
-      <p className="text-sm text-gray-400 mb-4">
+      <p className="text-sm text-gray-500 mb-4">
         {certificados.length > 0
           ? `${certificados.length} ${certificados.length === 1 ? 'certificado emitido' : 'certificados emitidos'} · ${certificados.reduce((s, c) => s + c.carga_horaria, 0)}h no total`
           : 'Conclua o projeto final de um curso ou de um módulo para receber o primeiro.'}
@@ -105,7 +105,7 @@ async function MeusCertificados({ userId }: { userId: string }) {
 
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{c.curso_titulo}</p>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-500 mt-0.5">
                   {c.carga_horaria}h · código <span className="font-mono">{c.codigo}</span>
                   {c.emitido_em && ` · emitido em ${new Date(c.emitido_em).toLocaleDateString('pt-BR')}`}
                 </p>

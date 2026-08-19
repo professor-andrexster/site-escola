@@ -194,14 +194,14 @@ export default function QuizPlayer({
       {/* Header */}
       <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
         <div>
-          <p className="text-white/40 text-xs">{quizTitulo}</p>
+          <p className="text-white/55 text-xs">{quizTitulo}</p>
           <p className="text-white text-sm font-semibold">
-            Pergunta {currentIndex + 1} <span className="text-white/40">de {perguntas.length}</span>
+            Pergunta {currentIndex + 1} <span className="text-white/55">de {perguntas.length}</span>
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-right">
-            <p className="text-white/40 text-xs">Pontos</p>
+            <p className="text-white/55 text-xs">Pontos</p>
             <p className="text-white font-mono font-bold">{runningScore}</p>
           </div>
           <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg transition-colors ${

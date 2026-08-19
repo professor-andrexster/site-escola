@@ -35,7 +35,7 @@ export default async function DesafioPage({ params }: Props) {
 
   return (
     <div className="max-w-4xl mx-auto">
-      <Link href="/admin/desafios" className="inline-flex items-center gap-1.5 text-gray-400 hover:text-gray-700 text-sm mb-4 transition-colors">
+      <Link href="/admin/desafios" className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar aos desafios
       </Link>

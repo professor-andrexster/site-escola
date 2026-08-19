@@ -21,13 +21,13 @@ export default async function AlunoProjetosPage({ params }: { params: Promise<{ 
 
   return (
     <div className="max-w-3xl">
-      <Link href={`/admin/alunos/${id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors">
+      <Link href={`/admin/alunos/${id}`} className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar para perfil
       </Link>
 
       <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-1">Projetos de {aluno.nome}</h1>
-      <p className="text-sm text-gray-400 mb-6">Gerencie os projetos exibidos no portfólio público.</p>
+      <p className="text-sm text-gray-500 mb-6">Gerencie os projetos exibidos no portfólio público.</p>
 
       <AlunoProjetosManager
         alunoId={id}

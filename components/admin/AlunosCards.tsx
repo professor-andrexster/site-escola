@@ -40,7 +40,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
       {/* Filtros */}
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             value={busca}
@@ -70,7 +70,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
 
       {filtrados.length === 0 && (
         <div className="panel p-10 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {alunos.length === 0 ? 'Nenhum aluno cadastrado ainda.' : 'Nenhum aluno encontrado com esses filtros.'}
           </p>
         </div>
@@ -91,7 +91,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
                   <h3 className="font-semibold text-gray-900 text-sm group-hover:text-escola-azul transition-colors">
                     {a.nome}
                   </h3>
-                  <p className="text-xs text-gray-400 mt-0.5">Matrícula {a.matricula}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">Matrícula {a.matricula}</p>
                 </div>
                 {a.ativo ? (
                   <CheckCircle2 className="w-4 h-4 text-green-500 flex-shrink-0" />

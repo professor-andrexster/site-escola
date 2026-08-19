@@ -62,7 +62,7 @@ export default async function DashboardPage() {
           <div className="flex items-center gap-4 min-w-0">
             <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="lg" className="hidden sm:flex" />
             <div className="min-w-0">
-              <p className="text-gray-400 text-sm font-mono">Bem-vindo de volta,</p>
+              <p className="text-gray-500 text-sm font-mono">Bem-vindo de volta,</p>
               <h1 className="text-fluid-3xl font-black text-gray-900 font-playfair truncate">{profile.nome_completo}</h1>
               <p className="text-gray-500 text-sm mt-0.5">{profile.turma}</p>
             </div>
@@ -153,7 +153,7 @@ export default async function DashboardPage() {
                 <div key={p.id} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                   <div>
                     <p className="font-medium text-gray-900 text-sm">{p.quizzes?.titulo ?? 'Quiz'}</p>
-                    <p className="text-gray-400 text-xs">{new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
+                    <p className="text-gray-500 text-xs">{new Date(p.created_at).toLocaleDateString('pt-BR')}</p>
                   </div>
                   <div className="text-right">
                     <p className="font-mono font-bold text-escola-azul">{p.pontuacao_total} pts</p>
@@ -162,7 +162,7 @@ export default async function DashboardPage() {
               ))}
             </div>
           ) : (
-            <p className="text-gray-400 text-sm text-center py-6">Você ainda não participou de nenhum quiz.</p>
+            <p className="text-gray-500 text-sm text-center py-6">Você ainda não participou de nenhum quiz.</p>
           )}
           <Link href="/ranking" className="block mt-4 text-center text-escola-azul text-sm font-semibold hover:underline">
             Ver ranking geral →
@@ -194,7 +194,7 @@ export default async function DashboardPage() {
         <div className="flex items-center gap-4 min-w-0">
           <Avatar nome={profile.nome_completo} avatarUrl={profile.avatar_url} role={profile.role} tamanho="lg" className="hidden sm:flex" />
           <div className="min-w-0">
-            <p className="text-gray-400 text-sm font-mono">Bem-vindo,</p>
+            <p className="text-gray-500 text-sm font-mono">Bem-vindo,</p>
             <h1 className="text-fluid-3xl font-black text-gray-900 font-playfair truncate">{profile.nome_completo}</h1>
             {profile.disciplina && <p className="text-gray-500 text-sm mt-0.5">{profile.disciplina}</p>}
           </div>
@@ -243,22 +243,22 @@ export default async function DashboardPage() {
         </h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Link href="/admin/quiz/novo" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-            <Gamepad2 className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <Gamepad2 className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Novo Quiz</span>
           </Link>
           <Link href="/ranking" target="_blank" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-            <Trophy className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+            <Trophy className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
             <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Ver Ranking</span>
           </Link>
           {isGestao(profile.role) && (
             <Link href="/admin/usuarios" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-              <Users className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+              <Users className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
               <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Usuários</span>
             </Link>
           )}
           {podeAprovarAlunos && (
             <Link href="/admin/aprovacoes" className="flex flex-col items-center gap-2 p-4 border-2 border-dashed border-gray-200 rounded-xl hover:border-escola-azul hover:bg-escola-azul/5 hover:shadow-elevation-low hover:-translate-y-0.5 transition-all duration-200 ease-out group">
-              <UserCheck className="w-6 h-6 text-gray-400 group-hover:text-escola-azul" />
+              <UserCheck className="w-6 h-6 text-gray-500 group-hover:text-escola-azul" />
               <span className="text-xs font-semibold text-gray-500 group-hover:text-escola-azul text-center">Aprovações</span>
             </Link>
           )}

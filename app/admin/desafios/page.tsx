@@ -35,7 +35,7 @@ export default async function DesafiosPage() {
       {!desafios || desafios.length === 0 ? (
         <div className="empty-state p-12">
           <Rocket className="w-8 h-8 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">Nenhum desafio publicado ainda.</p>
+          <p className="text-gray-500 text-sm">Nenhum desafio publicado ainda.</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -51,7 +51,7 @@ export default async function DesafiosPage() {
               </div>
               <h2 className="font-playfair text-lg font-bold text-gray-900">{d.titulo}</h2>
               {d.subtitulo && <p className="text-sm text-gray-500 mt-0.5">{d.subtitulo}</p>}
-              <div className="flex items-center gap-4 mt-4 text-xs text-gray-400">
+              <div className="flex items-center gap-4 mt-4 text-xs text-gray-500">
                 <span>{(d.desafio_fases as unknown[])?.length ?? 0} fases</span>
                 <span className="inline-flex items-center gap-1"><Users className="w-3.5 h-3.5" />{(d.equipes as unknown[])?.length ?? 0} equipes</span>
                 <span className="ml-auto font-semibold text-escola-azul">{d.pontos_total} pts</span>

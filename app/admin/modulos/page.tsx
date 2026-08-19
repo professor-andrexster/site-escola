@@ -61,7 +61,7 @@ export default async function ModulosPage() {
         <Layers className="w-8 h-8 text-curso-ciano flex-shrink-0" />
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-white font-geom">Módulos</h1>
-          <p className="text-white/40 text-sm">
+          <p className="text-white/55 text-sm">
             Trilhas de cursos com certificado próprio. Comece no Fácil e avance.
           </p>
         </div>
@@ -84,7 +84,7 @@ export default async function ModulosPage() {
               <span className={`text-[11px] font-jetbrains uppercase tracking-widest px-2.5 py-1 rounded-full border ${cor.borda} ${cor.fundo} ${cor.texto}`}>
                 {nivel}
               </span>
-              <span className="text-white/30 text-xs">
+              <span className="text-white/50 text-xs">
                 {doNivel.length} {doNivel.length === 1 ? 'módulo' : 'módulos'} ·{' '}
                 {doNivel.reduce((s, m) => s + (m.carga_horaria ?? 0), 0)}h
               </span>
@@ -111,7 +111,7 @@ export default async function ModulosPage() {
                           Certificado
                         </span>
                       ) : (
-                        <span className="flex-shrink-0 text-white/30 text-xs font-jetbrains">
+                        <span className="flex-shrink-0 text-white/50 text-xs font-jetbrains">
                           {m.carga_horaria}h
                         </span>
                       )}
@@ -143,7 +143,7 @@ export default async function ModulosPage() {
 
                     <div>
                       <div className="flex items-center justify-between text-xs mb-1.5">
-                        <span className="text-white/40">
+                        <span className="text-white/55">
                           {p.feito} de {p.total} aulas
                         </span>
                         <span className="text-white/60 font-jetbrains">{p.pct}%</span>
@@ -155,7 +155,7 @@ export default async function ModulosPage() {
                         />
                       </div>
                       {p.pct < 100 && (
-                        <p className="flex items-center gap-1.5 text-white/30 text-[11px] mt-2">
+                        <p className="flex items-center gap-1.5 text-white/50 text-[11px] mt-2">
                           <Lock className="w-3 h-3" />
                           Projeto do módulo libera ao concluir as aulas
                         </p>

@@ -76,13 +76,13 @@ export default function AdminLoginPage() {
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Dr. João Beraldo</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">Painel Escolar</p>
+          <p className="text-white/55 text-sm font-mono mt-1">Painel Escolar</p>
         </div>
 
         {/* Card */}
         <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           <div className="bg-gray-50 border-b border-gray-100 px-6 py-4 flex items-center gap-2">
-            <Lock className="w-4 h-4 text-gray-400" />
+            <Lock className="w-4 h-4 text-gray-500" />
             <span className="text-sm font-semibold text-gray-700">Acesso ao Painel</span>
           </div>
 
@@ -107,7 +107,7 @@ export default function AdminLoginPage() {
                   <button
                     type="button"
                     onClick={esquecer}
-                    className="flex items-center gap-1 text-xs text-gray-400 hover:text-escola-vermelho transition-colors"
+                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-escola-vermelho transition-colors"
                   >
                     <X className="w-3 h-3" />
                     Não é você?
@@ -143,7 +143,7 @@ export default function AdminLoginPage() {
                 <button
                   type="button"
                   onClick={() => setMostrarSenha(!mostrarSenha)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                   aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
                 >
                   {mostrarSenha ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -166,7 +166,7 @@ export default function AdminLoginPage() {
                 />
                 <span className="text-sm text-gray-700">Lembrar meu acesso neste computador</span>
               </label>
-              <p className="text-xs text-gray-400 mt-1 ml-6">
+              <p className="text-xs text-gray-500 mt-1 ml-6">
                 Só marque em computador pessoal. Nunca em computador compartilhado, como o do laboratório ou da biblioteca.
               </p>
             </div>

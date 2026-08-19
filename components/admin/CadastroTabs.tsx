@@ -35,7 +35,7 @@ function CampoSenha({ id, label, valor, onChange, placeholder }: {
         <button
           type="button"
           onClick={() => setMostrar(!mostrar)}
-          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
           aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
         >
           {mostrar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -108,7 +108,7 @@ function FormAluno() {
           placeholder="Como está na chamada"
           className={inputClass}
         />
-        <p className="text-[11px] text-gray-400 mt-1">
+        <p className="text-[11px] text-gray-500 mt-1">
           Escreva igual ao da secretaria — é assim que sua conta acha seu cadastro na escola.
         </p>
       </div>
@@ -152,7 +152,7 @@ function FormAluno() {
           placeholder="email@do-responsavel.com"
           className={inputClass}
         />
-        <p className="text-[11px] text-gray-400 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu e-mail.</p>
+        <p className="text-[11px] text-gray-500 mt-1">Ajuda a recuperar sua conta se você perder o acesso ao seu e-mail.</p>
       </div>
 
       <CampoSenha id="aluno-senha" label="Senha *" valor={senha} onChange={setSenha} placeholder="Mínimo 6 caracteres" />
@@ -295,7 +295,7 @@ export default function CadastroTabs() {
           onClick={() => setAba('aluno')}
           className={cn(
             'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-            aba === 'aluno' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+            aba === 'aluno' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
           )}
         >
           <BookOpen className="w-4 h-4" />
@@ -305,7 +305,7 @@ export default function CadastroTabs() {
           onClick={() => setAba('professor')}
           className={cn(
             'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-            aba === 'professor' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-400 hover:text-gray-600'
+            aba === 'professor' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
           )}
         >
           <Briefcase className="w-4 h-4" />

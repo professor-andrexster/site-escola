@@ -47,7 +47,7 @@ export default async function NoticiaPage({ params }: Props) {
             <Image src={noticia.imagem_url} alt={noticia.titulo} fill sizes="(max-width: 896px) 100vw, 896px" className="object-cover" priority />
           </div>
         )}
-        <time className="text-gray-400 text-sm">{formatDate(noticia.created_at)}</time>
+        <time className="text-gray-500 text-sm">{formatDate(noticia.created_at)}</time>
         <h1 className="font-playfair text-3xl md:text-5xl font-bold text-gray-900 mt-2 mb-4">
           {noticia.titulo}
         </h1>

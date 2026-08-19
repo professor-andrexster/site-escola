@@ -61,7 +61,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
 
   return (
     <div className="p-4 md:p-8 max-w-4xl mx-auto">
-      <Link href="/admin/cursos" className="inline-flex items-center gap-1.5 text-white/40 hover:text-white text-sm mb-6 transition-colors">
+      <Link href="/admin/cursos" className="inline-flex items-center gap-1.5 text-white/55 hover:text-white text-sm mb-6 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar aos cursos
       </Link>
@@ -86,7 +86,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
 
       <div className="flex items-center justify-between mb-6 gap-4">
         <div className="flex-1">
-          <div className="flex items-center justify-between text-xs text-white/40 font-jetbrains mb-1.5">
+          <div className="flex items-center justify-between text-xs text-white/55 font-jetbrains mb-1.5">
             <span>{totalConcluidas} de {listaAulas.length} aulas concluídas</span>
             <span>{progressoPct}%</span>
           </div>
@@ -226,7 +226,7 @@ function AulasQueFaltam({
   return (
     <div className="bg-white/5 border border-white/10 rounded-2xl p-5">
       <p className="flex items-center gap-2 text-white/60 text-sm mb-3">
-        <Lock className="w-4 h-4 text-white/30 flex-shrink-0" />
+        <Lock className="w-4 h-4 text-white/50 flex-shrink-0" />
         {aulas.length === 1 ? (
           <>Falta <strong className="text-white">1 aula</strong> para liberar {oQueLibera}.</>
         ) : (
@@ -256,10 +256,10 @@ function AulasQueFaltam({
       </ul>
 
       {resto > 0 && (
-        <p className="text-white/30 text-xs mt-2 ps-3">e mais {resto}.</p>
+        <p className="text-white/50 text-xs mt-2 ps-3">e mais {resto}.</p>
       )}
 
-      <p className="text-white/30 text-xs mt-3 ps-3">
+      <p className="text-white/50 text-xs mt-3 ps-3">
         A aula é marcada como concluída quando você chega no último slide.
       </p>
     </div>

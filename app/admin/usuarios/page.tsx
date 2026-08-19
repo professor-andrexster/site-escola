@@ -20,7 +20,7 @@ export default async function UsuariosPage() {
       <div className="flex items-center justify-between mb-6 gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Administradores</h1>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-sm text-gray-500 mt-1">
             Diretora, vice diretora e admin. Acesso total ao sistema. Professores e monitores são
             criados em Funcionários; contas de aluno, na tela Alunos ou pelo autocadastro.
           </p>

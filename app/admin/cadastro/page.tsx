@@ -14,13 +14,13 @@ export default function CadastroPage() {
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Criar Conta</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
+          <p className="text-white/55 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
         </div>
 
         <CadastroTabs />
 
         <p className="text-center mt-4">
-          <Link href="/admin" className="text-white/40 hover:text-white text-sm transition-colors">
+          <Link href="/admin" className="text-white/55 hover:text-white text-sm transition-colors">
             ← Voltar ao login
           </Link>
         </p>

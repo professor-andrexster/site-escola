@@ -128,21 +128,21 @@ export default function IdeiaDetail({
         </div>
 
         <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-1">{ideia.titulo}</h1>
-        <p className="text-xs text-gray-400 mb-5">
+        <p className="text-xs text-gray-500 mb-5">
           por {autor?.nome_completo ?? 'Aluno'}{autor?.turma ? ` · ${autor.turma}` : ''}
         </p>
 
         <div className="grid sm:grid-cols-3 gap-4 text-sm">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Dor</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Dor</p>
             <p className="text-gray-700">{ideia.dor || '—'}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Lacuna</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Lacuna</p>
             <p className="text-gray-700">{ideia.lacuna || '—'}</p>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-gray-400 mb-1">Inovação</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Inovação</p>
             <p className="text-gray-700">{ideia.inovacao || '—'}</p>
           </div>
         </div>
@@ -151,14 +151,14 @@ export default function IdeiaDetail({
       <div className="panel p-6">
         <h2 className="text-sm font-semibold text-gray-700 mb-4">Comentários ({comentarios.length})</h2>
         <div className="space-y-3 mb-4">
-          {comentarios.length === 0 && <p className="text-sm text-gray-400">Nenhum comentário ainda.</p>}
+          {comentarios.length === 0 && <p className="text-sm text-gray-500">Nenhum comentário ainda.</p>}
           {comentarios.map((c) => {
             const cAutor = one(c.autor)
             return (
               <div key={c.id} className="border-b border-gray-100 pb-3 last:border-0 last:pb-0">
                 <p className="text-xs font-semibold text-gray-700">
                   {cAutor?.nome_completo ?? 'Alguém'}
-                  {cAutor?.role && cAutor.role !== 'aluno' && <span className="text-gray-400 font-normal"> · {cAutor.role}</span>}
+                  {cAutor?.role && cAutor.role !== 'aluno' && <span className="text-gray-500 font-normal"> · {cAutor.role}</span>}
                 </p>
                 <p className="text-sm text-gray-600 mt-0.5">{c.corpo}</p>
               </div>

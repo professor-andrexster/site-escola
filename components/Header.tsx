@@ -55,7 +55,7 @@ export default function Header() {
           <span className="capitalize hidden sm:block">{formatDate()}</span>
           <div className="flex items-center gap-4">
             <span>Carlos Chagas — MG</span>
-            <span className="text-white/30">|</span>
+            <span className="text-white/50">|</span>
             <span>INEP 31146579</span>
           </div>
         </div>
@@ -108,17 +108,17 @@ export default function Header() {
                     <UserCircle className="w-4 h-4 text-escola-azul" />
                     <div>
                       <p className="font-semibold">Criar Conta</p>
-                      <p className="text-xs text-gray-400">Professores e equipe</p>
+                      <p className="text-xs text-gray-500">Professores e equipe</p>
                     </div>
                   </Link>
                   <Link
                     href="/admin"
                     className="flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-blue-50 hover:text-escola-azul transition-colors border-b border-gray-100"
                   >
-                    <LogIn className="w-4 h-4 text-gray-400" />
+                    <LogIn className="w-4 h-4 text-gray-500" />
                     <div>
                       <p className="font-semibold">Entrar no Painel</p>
-                      <p className="text-xs text-gray-400">Já tem conta?</p>
+                      <p className="text-xs text-gray-500">Já tem conta?</p>
                     </div>
                   </Link>
                   <Link
@@ -128,7 +128,7 @@ export default function Header() {
                     <Gamepad2 className="w-4 h-4 text-purple-500" />
                     <div>
                       <p className="font-semibold">Participar do Quiz</p>
-                      <p className="text-xs text-gray-400">Tenho um código</p>
+                      <p className="text-xs text-gray-500">Tenho um código</p>
                     </div>
                   </Link>
                 </div>
@@ -262,7 +262,7 @@ export default function Header() {
 
           {/* Área do Aluno — mobile */}
           <div className="border-t border-white/20 mt-1">
-            <p className="px-5 pt-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-white/30">Área do Aluno</p>
+            <p className="px-5 pt-3 pb-1 text-[10px] font-mono uppercase tracking-widest text-white/50">Área do Aluno</p>
             <Link
               href="/admin/cadastro"
               onClick={() => setMobileOpen(false)}

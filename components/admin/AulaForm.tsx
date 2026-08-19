@@ -202,7 +202,7 @@ export default function AulaForm({ cursoId, cursoSlug, aula }: AulaFormProps) {
           </div>
           <div>
             <span className="text-sm font-medium text-gray-700">Publicada (visível na vitrine pública do curso)</span>
-            <p className="text-xs text-gray-400 mt-1">Já vem ativada — a aula aparece automaticamente na página do curso ao salvar.</p>
+            <p className="text-xs text-gray-500 mt-1">Já vem ativada — a aula aparece automaticamente na página do curso ao salvar.</p>
           </div>
         </label>
       </div>

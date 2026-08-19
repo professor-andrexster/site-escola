@@ -104,7 +104,7 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
         {/* Autor — travado */}
         {autorNome && (
           <div className="flex items-center gap-2 px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg">
-            <User className="w-4 h-4 text-gray-400 flex-shrink-0" />
+            <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
             <span className="text-sm text-gray-500">Autor:</span>
             <span className="text-sm font-semibold text-gray-800">{autorNome}</span>
           </div>
@@ -125,7 +125,7 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
           <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">/noticias/</span>
+            <span className="text-gray-500 text-sm">/noticias/</span>
             <input
               type="text"
               value={slug}
@@ -173,7 +173,7 @@ export default function NoticiaEditor({ noticia, isMonitor = false, autorNome }:
             onChange={(e) => e.target.files?.[0] && uploadImagem(e.target.files[0])}
             className="block text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-escola-azul-claro file:text-escola-azul hover:file:bg-blue-200 cursor-pointer"
           />
-          {uploading && <p className="text-xs text-gray-400 mt-1">Fazendo upload...</p>}
+          {uploading && <p className="text-xs text-gray-500 mt-1">Fazendo upload...</p>}
           {imagemUrl && (
             <div className="mt-3">
               <img src={imagemUrl} alt="Preview" className="w-full max-w-sm h-40 object-cover rounded-lg border border-gray-200" />

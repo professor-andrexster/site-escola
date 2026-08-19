@@ -146,7 +146,7 @@ export default function DesafioForm() {
 
       <div className="panel p-6">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-sm font-semibold text-gray-700">Fases <span className="text-gray-400 font-normal">— total {pontosTotal} pts</span></h2>
+          <h2 className="text-sm font-semibold text-gray-700">Fases <span className="text-gray-500 font-normal">— total {pontosTotal} pts</span></h2>
           <button onClick={() => setFases((p) => [...p, { ...FASE_VAZIA }])} className="inline-flex items-center gap-1 text-xs font-semibold text-escola-azul hover:underline">
             <Plus className="w-3.5 h-3.5" /> Adicionar fase
           </button>
@@ -155,7 +155,7 @@ export default function DesafioForm() {
           {fases.map((f, i) => (
             <div key={i} className="border border-gray-200 rounded-lg p-4 space-y-2.5">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-gray-400 flex-shrink-0">#{i + 1}</span>
+                <span className="text-xs font-mono text-gray-500 flex-shrink-0">#{i + 1}</span>
                 <input type="text" value={f.titulo} onChange={(e) => atualizarFase(i, 'titulo', e.target.value)}
                   placeholder="Título da fase"
                   className="flex-1 border border-gray-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul/30" />

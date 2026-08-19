@@ -40,7 +40,7 @@ export default async function RankingPublicoPage() {
 
   const medalColors = [
     { icon: 'text-yellow-500', bg: 'bg-yellow-50', border: 'border-yellow-200', num: 'text-yellow-600' },
-    { icon: 'text-gray-400',   bg: 'bg-gray-50',   border: 'border-gray-200',   num: 'text-gray-500' },
+    { icon: 'text-gray-500',   bg: 'bg-gray-50',   border: 'border-gray-200',   num: 'text-gray-500' },
     { icon: 'text-amber-600',  bg: 'bg-amber-50',  border: 'border-amber-200',  num: 'text-amber-600' },
   ]
 

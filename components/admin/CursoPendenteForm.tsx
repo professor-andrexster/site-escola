@@ -87,7 +87,7 @@ export default function CursoPendenteForm({ curso, autorNome }: CursoPendenteFor
           {curso.descricao && (
             <p className="text-sm text-gray-500 mt-2 line-clamp-2">{curso.descricao}</p>
           )}
-          <p className="text-xs text-gray-400 mt-2">
+          <p className="text-xs text-gray-500 mt-2">
             Criado em {new Date(curso.criado_em || '').toLocaleDateString('pt-BR')}
           </p>
         </div>

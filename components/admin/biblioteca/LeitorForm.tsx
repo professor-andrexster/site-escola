@@ -199,7 +199,7 @@ export default function LeitorForm({ leitor }: { leitor?: BibliotecaLeitor }) {
               {buscandoMatricula ? 'Buscando...' : 'Buscar'}
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-1">Busca na base de alunos da secretaria e preenche os dados abaixo.</p>
+          <p className="text-xs text-gray-500 mt-1">Busca na base de alunos da secretaria e preenche os dados abaixo.</p>
         </div>
       )}
 

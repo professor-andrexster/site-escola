@@ -33,13 +33,13 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
 
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/alunos" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors">
+      <Link href="/admin/alunos" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar para listagem
       </Link>
 
       <h1 className="font-playfair text-2xl font-bold text-gray-900 mb-1">{aluno.nome}</h1>
-      <p className="text-sm text-gray-400 mb-6">Matrícula {aluno.matricula} · {aluno.turma}</p>
+      <p className="text-sm text-gray-500 mb-6">Matrícula {aluno.matricula} · {aluno.turma}</p>
 
       <AlunoAcessoPainel perfil={perfilAcesso} />
 
@@ -53,7 +53,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
               <FolderKanban className="w-4 h-4 text-escola-azul" />
               Projetos do portfólio
             </p>
-            <p className="text-xs text-gray-400 mt-1">{projetosCount ?? 0} projeto(s) cadastrado(s)</p>
+            <p className="text-xs text-gray-500 mt-1">{projetosCount ?? 0} projeto(s) cadastrado(s)</p>
           </div>
         </Link>
 
@@ -67,7 +67,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
               <ExternalLink className="w-4 h-4 text-escola-azul" />
               Ver portfólio público
             </p>
-            <p className="text-xs text-gray-400 mt-1">escolaestadualdrjoaoberaldo.com/portfolio/{aluno.matricula}</p>
+            <p className="text-xs text-gray-500 mt-1">escolaestadualdrjoaoberaldo.com/portfolio/{aluno.matricula}</p>
           </div>
         </Link>
       </div>
@@ -82,7 +82,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
                 <div key={i} className="flex items-center gap-3 text-sm">
                   <span className="w-6 text-center">{trilha?.icone}</span>
                   <span className="flex-1 text-gray-700">{trilha?.nome}</span>
-                  <span className="text-gray-400 text-xs">{p.pontuacao}%</span>
+                  <span className="text-gray-500 text-xs">{p.pontuacao}%</span>
                 </div>
               )
             })}

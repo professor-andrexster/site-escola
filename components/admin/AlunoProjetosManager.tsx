@@ -158,7 +158,7 @@ export default function AlunoProjetosManager({
 
       {projetos.length === 0 ? (
         <div className="panel p-10 text-center">
-          <p className="text-gray-400 text-sm">Nenhum projeto cadastrado ainda.</p>
+          <p className="text-gray-500 text-sm">Nenhum projeto cadastrado ainda.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -176,7 +176,7 @@ export default function AlunoProjetosManager({
                       </span>
                     )}
                   </div>
-                  {p.descricao && <p className="text-xs text-gray-400 mb-1">{p.descricao}</p>}
+                  {p.descricao && <p className="text-xs text-gray-500 mb-1">{p.descricao}</p>}
                   {p.link_externo && (
                     <a href={p.link_externo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-xs text-escola-azul hover:underline">
                       {p.link_externo} <ExternalLink className="w-3 h-3" />
@@ -205,7 +205,7 @@ export default function AlunoProjetosManager({
           <div className="bg-white rounded-xl shadow-elevation-high max-w-lg w-full max-h-[90vh] overflow-y-auto p-5">
             <div className="flex items-center justify-between mb-4">
               <h2 className="font-playfair text-lg font-bold text-gray-900">{form.id ? 'Editar Projeto' : 'Novo Projeto'}</h2>
-              <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-400 hover:text-gray-600">
+              <div role="button" tabIndex={0} onClick={() => setModalAberto(false)} onKeyDown={(e) => { if (e.key === 'Enter') setModalAberto(false) }} className="p-1 cursor-pointer text-gray-500 hover:text-gray-600">
                 <X className="w-5 h-5" />
               </div>
             </div>
@@ -262,7 +262,7 @@ export default function AlunoProjetosManager({
                 <label className="block text-sm font-medium text-gray-700 mb-1.5">Imagem (opcional)</label>
                 <input type="file" accept="image/*" onChange={(e) => e.target.files?.[0] && uploadImagem(e.target.files[0])}
                   className="block text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-escola-azul-claro file:text-escola-azul hover:file:bg-blue-200 cursor-pointer" />
-                {uploading && <p className="text-xs text-gray-400 mt-1">Fazendo upload...</p>}
+                {uploading && <p className="text-xs text-gray-500 mt-1">Fazendo upload...</p>}
                 {form.imagem_url && (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={form.imagem_url} alt="Preview" className="mt-2 w-full max-w-xs h-32 object-cover rounded-lg border border-gray-200" />

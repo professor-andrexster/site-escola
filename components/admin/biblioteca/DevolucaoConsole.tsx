@@ -141,7 +141,7 @@ export default function DevolucaoConsole() {
         <RotateCcw className="w-6 h-6 text-escola-azul" />
         Devolução
       </h1>
-      <p className="text-sm text-gray-400 mb-6">Leia o código de barras, digite o tombo, ou busque pelo leitor mais abaixo.</p>
+      <p className="text-sm text-gray-500 mb-6">Leia o código de barras, digite o tombo, ou busque pelo leitor mais abaixo.</p>
 
       {sucesso && (
         <div className="bg-green-50 border border-green-200 text-green-700 rounded-xl px-4 py-3 text-sm mb-4 flex items-start gap-2">
@@ -156,7 +156,7 @@ export default function DevolucaoConsole() {
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Tombo ou código de barras</label>
           <form onSubmit={buscarExemplar} className="flex gap-2">
             <div className="relative flex-1">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
               <input
                 ref={codigoRef}
                 value={codigo}
@@ -166,12 +166,12 @@ export default function DevolucaoConsole() {
               />
             </div>
           </form>
-          {buscando && <p className="text-xs text-gray-400 mt-2">Buscando...</p>}
+          {buscando && <p className="text-xs text-gray-500 mt-2">Buscando...</p>}
         </div>
       ) : (
         <div className="panel p-5 mb-6">
           <p className="font-semibold text-gray-900">{item.obraTitulo}</p>
-          <p className="text-xs text-gray-400 font-mono mt-0.5">{item.tombo}</p>
+          <p className="text-xs text-gray-500 font-mono mt-0.5">{item.tombo}</p>
           <p className="text-sm text-gray-600 mt-2">Com: <strong>{item.leitorNome}</strong></p>
           <p className="text-sm text-gray-600">Devolução prevista: {new Date(item.dataPrevista + 'T12:00:00').toLocaleDateString('pt-BR')}</p>
 
@@ -219,7 +219,7 @@ export default function DevolucaoConsole() {
       <div className="panel p-5">
         <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Ou busque pelo leitor</label>
         <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             value={termoLeitor}
             onChange={e => setTermoLeitor(e.target.value)}
@@ -235,7 +235,7 @@ export default function DevolucaoConsole() {
                 onClick={() => selecionarLeitor(l.id, l.nome_completo)}
                 className="w-full text-left px-3 py-2 rounded-lg hover:bg-gray-50 text-sm transition-colors"
               >
-                {l.nome_completo} {l.turma && <span className="text-gray-400">· Turma {l.turma}</span>}
+                {l.nome_completo} {l.turma && <span className="text-gray-500">· Turma {l.turma}</span>}
               </button>
             ))}
           </div>
@@ -245,7 +245,7 @@ export default function DevolucaoConsole() {
           <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
             <p className="text-xs text-gray-500">Com {nomeLeitorAtual}:</p>
             {emprestimosLeitor.length === 0 ? (
-              <p className="text-sm text-gray-400">Nenhum empréstimo em aberto.</p>
+              <p className="text-sm text-gray-500">Nenhum empréstimo em aberto.</p>
             ) : (
               emprestimosLeitor.map(e => {
                 const diasAtraso = calcularDiasAtraso(e.data_prevista)
@@ -253,7 +253,7 @@ export default function DevolucaoConsole() {
                   <div key={e.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <div>
                       <p className="text-sm text-gray-800">{e.biblioteca_exemplares?.biblioteca_obras?.titulo}</p>
-                      <p className={`text-xs ${diasAtraso > 0 ? 'text-red-600 font-semibold' : 'text-gray-400'}`}>
+                      <p className={`text-xs ${diasAtraso > 0 ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
                         {diasAtraso > 0 ? `Atrasado há ${diasAtraso} dia(s)` : `Devolução ${new Date(e.data_prevista + 'T12:00:00').toLocaleDateString('pt-BR')}`}
                       </p>
                     </div>

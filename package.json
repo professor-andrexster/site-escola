@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "ui:auditar": "node scripts/auditar-ui.mjs",
+    "ui:corrigir": "node scripts/auditar-ui.mjs --corrigir"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

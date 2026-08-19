@@ -37,7 +37,7 @@ export default function ObrasTable({ obras, categorias }: ObrasTableProps) {
     <div>
       <div className="flex flex-col sm:flex-row gap-3 mb-6">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
           <input
             type="text"
             value={busca}
@@ -58,7 +58,7 @@ export default function ObrasTable({ obras, categorias }: ObrasTableProps) {
 
       {filtradas.length === 0 ? (
         <div className="panel p-10 text-center">
-          <p className="text-gray-400 text-sm">
+          <p className="text-gray-500 text-sm">
             {obras.length === 0 ? 'Nenhuma obra cadastrada ainda.' : 'Nenhuma obra encontrada com esses filtros.'}
           </p>
         </div>
@@ -80,13 +80,13 @@ export default function ObrasTable({ obras, categorias }: ObrasTableProps) {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 text-sm truncate">{o.titulo}</p>
-                <p className="text-xs text-gray-400 truncate">
+                <p className="text-xs text-gray-500 truncate">
                   {o.autores.length > 0 ? o.autores.join(', ') : 'Autor não informado'}
                   {o.categoriaNome && ` · ${o.categoriaNome}`}
                 </p>
               </div>
               <div className="flex-shrink-0 text-right">
-                <p className={`text-xs font-semibold ${o.exemplaresDisponiveis > 0 ? 'text-green-600' : 'text-gray-400'}`}>
+                <p className={`text-xs font-semibold ${o.exemplaresDisponiveis > 0 ? 'text-green-600' : 'text-gray-500'}`}>
                   {o.exemplaresDisponiveis}/{o.totalExemplares} disponível
                 </p>
               </div>

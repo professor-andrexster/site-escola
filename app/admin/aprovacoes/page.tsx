@@ -21,7 +21,7 @@ export default async function AprovacoesPage() {
     <div>
       <div className="mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Aprovações</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-gray-500 mt-1">
           Cadastro de aluno é aprovado por professor ou gestão. Cadastro de professor só por gestão.
         </p>
       </div>

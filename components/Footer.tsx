@@ -40,7 +40,7 @@ export default function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-widest text-white/40 mb-4">Navegação</h4>
+            <h4 className="font-mono text-[10px] uppercase tracking-widest text-white/55 mb-4">Navegação</h4>
             <ul className="space-y-2.5">
               {[
                 { href: '/', label: 'Início' },
@@ -60,7 +60,7 @@ export default function Footer() {
 
           {/* Contact */}
           <div>
-            <h4 className="font-mono text-[10px] uppercase tracking-widest text-white/40 mb-4">Contato</h4>
+            <h4 className="font-mono text-[10px] uppercase tracking-widest text-white/55 mb-4">Contato</h4>
             <address className="font-serif text-sm not-italic space-y-2.5">
               <p className="leading-relaxed">
                 Av. Gabriel Passos, 393<br />
@@ -80,7 +80,7 @@ export default function Footer() {
                   escola.146579.secretaria@<br />educacao.mg.gov.br
                 </a>
               </p>
-              <p className="text-xs text-white/40 pt-1">
+              <p className="text-xs text-white/55 pt-1">
                 Seg–Sex: 7h às 22h
               </p>
             </address>
@@ -89,7 +89,7 @@ export default function Footer() {
 
         {/* Bottom bar */}
         <div className="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <p className="font-mono text-xs text-white/30 text-center sm:text-left">
+          <p className="font-mono text-xs text-white/50 text-center sm:text-left">
             © {year} E.E. Dr. João Beraldo — Todos os direitos reservados
           </p>
           <p className="font-mono text-xs text-white/20">

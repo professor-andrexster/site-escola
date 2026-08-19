@@ -35,7 +35,7 @@ export default async function EntregasPage() {
         <Award className="w-6 h-6 text-escola-azul" />
         Entregas e Certificados
       </h1>
-      <p className="text-sm text-gray-400 mb-6">
+      <p className="text-sm text-gray-500 mb-6">
         Todos os projetos finais entregues — de curso e de módulo. Aprovar emite o certificado na
         hora; a coluna da direita leva ao documento para imprimir.
       </p>

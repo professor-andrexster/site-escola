@@ -9,7 +9,7 @@ export const dynamic = 'force-dynamic'
 export default function NovaObraPage() {
   return (
     <div className="max-w-2xl">
-      <Link href="/admin/biblioteca/acervo" className="inline-flex items-center gap-1.5 text-sm text-gray-400 hover:text-escola-azul mb-4 transition-colors">
+      <Link href="/admin/biblioteca/acervo" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-escola-azul mb-4 transition-colors">
         <ArrowLeft className="w-4 h-4" />
         Voltar para o acervo
       </Link>

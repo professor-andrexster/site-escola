@@ -103,9 +103,9 @@ export default function NoticiasTable({
               <tr key={noticia.id} className="hover:bg-gray-50 transition-colors">
                 <td className="px-4 py-3">
                   <p className="font-medium text-gray-900 line-clamp-1">{noticia.titulo}</p>
-                  <p className="text-gray-400 text-xs mt-0.5">/{noticia.slug}</p>
+                  <p className="text-gray-500 text-xs mt-0.5">/{noticia.slug}</p>
                   {noticia.autor_nome && (
-                    <p className="text-gray-400 text-xs mt-0.5">por {noticia.autor_nome}</p>
+                    <p className="text-gray-500 text-xs mt-0.5">por {noticia.autor_nome}</p>
                   )}
                 </td>
                 <td className="px-4 py-3 text-center hidden lg:table-cell">
@@ -127,7 +127,7 @@ export default function NoticiasTable({
                   <button
                     onClick={() => togglePublicado(noticia.id, noticia.titulo, noticia.publicado)}
                     title={noticia.publicado ? 'Tirar do ar' : 'Publicar'}
-                    className={`p-1.5 rounded-lg transition-colors ${noticia.publicado ? 'text-escola-verde bg-escola-verde-claro hover:bg-green-200' : 'text-gray-400 bg-gray-100 hover:bg-gray-200'}`}
+                    className={`p-1.5 rounded-lg transition-colors ${noticia.publicado ? 'text-escola-verde bg-escola-verde-claro hover:bg-green-200' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}
                   >
                     {noticia.publicado ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
                   </button>
@@ -137,7 +137,7 @@ export default function NoticiasTable({
                     <button
                       onClick={() => toggleDestaque(noticia.id, noticia.titulo, noticia.destaque_home)}
                       title={noticia.destaque_home ? 'Remover destaque' : 'Colocar em destaque'}
-                      className={`p-1.5 rounded-lg transition-colors ${noticia.destaque_home ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100' : 'text-gray-400 bg-gray-100 hover:bg-gray-200'}`}
+                      className={`p-1.5 rounded-lg transition-colors ${noticia.destaque_home ? 'text-yellow-600 bg-yellow-50 hover:bg-yellow-100' : 'text-gray-500 bg-gray-100 hover:bg-gray-200'}`}
                     >
                       <Star className={`w-4 h-4 ${noticia.destaque_home ? 'fill-yellow-500' : ''}`} />
                     </button>

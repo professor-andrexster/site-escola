@@ -251,12 +251,12 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
           {/* Info */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-gray-900 truncate">{p.nome_completo}</p>
-            <p className="text-gray-400 text-xs truncate">{p.email}</p>
+            <p className="text-gray-500 text-xs truncate">{p.email}</p>
             {p.cpf && <p className="text-gray-500 text-xs mt-0.5 font-mono">CPF: {formatarCPF(p.cpf)}</p>}
             {p.turma && <p className="text-gray-500 text-xs mt-0.5">Turma: <strong>{p.turma}</strong></p>}
             {p.disciplina && <p className="text-gray-500 text-xs mt-0.5">{p.disciplina}</p>}
             {p.email_alternativo && (
-              <p className="text-gray-400 text-xs mt-0.5 truncate">Alternativo: {p.email_alternativo}</p>
+              <p className="text-gray-500 text-xs mt-0.5 truncate">Alternativo: {p.email_alternativo}</p>
             )}
             {p.criado_via && (
               <p className="text-gray-300 text-[11px] mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
@@ -316,7 +316,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
 
         {/* Nível de acesso */}
         <div className="mt-3">
-          <p className="text-xs text-gray-400 mb-2 font-mono uppercase tracking-wider">Nível de Acesso</p>
+          <p className="text-xs text-gray-500 mb-2 font-mono uppercase tracking-wider">Nível de Acesso</p>
 
           {p.aprovado ? (
             isChanging ? (
@@ -352,11 +352,11 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
                 <div className="flex items-center gap-2 min-w-0">
                   <span className={`w-2 h-2 rounded-full flex-shrink-0 ${cfg.dot}`} />
                   <span className="text-sm font-semibold text-gray-800 flex-shrink-0">{cfg.label}</span>
-                  <span className="text-xs text-gray-400 truncate">{cfg.desc}</span>
+                  <span className="text-xs text-gray-500 truncate">{cfg.desc}</span>
                 </div>
                 <button
                   onClick={() => setChangingRoleId(p.id)}
-                  className="text-xs text-gray-400 hover:text-escola-azul underline flex-shrink-0 transition-colors"
+                  className="text-xs text-gray-500 hover:text-escola-azul underline flex-shrink-0 transition-colors"
                 >
                   Mudar nível
                 </button>
@@ -435,7 +435,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
           <button
             onClick={() => rejeitar(p.id)}
             disabled={isLoading}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-gray-400 rounded-lg text-xs hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 ml-auto"
+            className="flex items-center gap-1.5 px-3 py-1.5 text-gray-500 rounded-lg text-xs hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50 ml-auto"
           >
             <X className="w-3.5 h-3.5" />
             {p.aprovado ? 'Remover' : 'Rejeitar'}
@@ -463,7 +463,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
       {/* Legenda dos níveis: um painel só, cor reduzida a um ponto por papel */}
       <div className="@container">
         <div className="panel p-fluid-xs">
-          <p className="text-xs text-gray-400 font-mono uppercase tracking-wider mb-4">O que cada nível de acesso faz</p>
+          <p className="text-xs text-gray-500 font-mono uppercase tracking-wider mb-4">O que cada nível de acesso faz</p>
           <div className="grid grid-cols-1 @sm:grid-cols-2 @3xl:grid-cols-4 gap-x-8 gap-y-4">
             {(Object.entries(ROLE_CONFIG) as [Profile['role'], typeof ROLE_CONFIG[Profile['role']]][]).map(([role, config]) => (
               <div key={role} className="flex items-start gap-2.5">

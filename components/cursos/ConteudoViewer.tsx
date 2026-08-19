@@ -68,17 +68,17 @@ export default function ConteudoViewer({
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">
           <Link
             href={`/admin/cursos/${cursoSlug}`}
-            className="text-white/40 hover:text-white transition-colors flex-shrink-0"
+            className="text-white/55 hover:text-white transition-colors flex-shrink-0"
             title="Voltar ao curso"
           >
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="min-w-0">
-            <p className="text-white/40 text-[11px] font-jetbrains uppercase tracking-widest truncate">{cursoTitulo}</p>
+            <p className="text-white/55 text-[11px] font-jetbrains uppercase tracking-widest truncate">{cursoTitulo}</p>
             <h1 className="text-white font-bold text-sm md:text-base truncate">{aulaTitulo}</h1>
           </div>
           {duracaoMin && (
-            <span className="ml-auto flex-shrink-0 inline-flex items-center gap-1.5 text-white/40 text-xs font-jetbrains">
+            <span className="ml-auto flex-shrink-0 inline-flex items-center gap-1.5 text-white/55 text-xs font-jetbrains">
               <Clock className="w-3.5 h-3.5" />
               ~{duracaoMin} min
             </span>
@@ -109,7 +109,7 @@ export default function ConteudoViewer({
                   className={proseDesafio}
                   dangerouslySetInnerHTML={{ __html: d.enunciado }}
                 />
-                <p className="text-white/30 text-xs mt-3">
+                <p className="text-white/50 text-xs mt-3">
                   Faça no caderno, no computador ou no celular e mostre ao professor na próxima aula.
                 </p>
               </div>

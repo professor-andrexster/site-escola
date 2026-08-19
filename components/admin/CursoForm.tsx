@@ -119,7 +119,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Slug (URL)</label>
           <div className="flex items-center gap-2">
-            <span className="text-gray-400 text-sm">/admin/cursos/</span>
+            <span className="text-gray-500 text-sm">/admin/cursos/</span>
             <input
               type="text"
               value={slug}
@@ -183,7 +183,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
             className="w-32 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul"
             placeholder="Ex: 20"
           />
-          <p className="text-xs text-gray-400 mt-1">
+          <p className="text-xs text-gray-500 mt-1">
             Vai impressa no certificado. Se ficar vazia, o certificado usa a soma da duração das aulas.
           </p>
         </div>
@@ -196,8 +196,8 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
             onChange={(e) => e.target.files?.[0] && uploadCapa(e.target.files[0])}
             className="block text-sm text-gray-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-escola-azul-claro file:text-escola-azul hover:file:bg-blue-200 cursor-pointer"
           />
-          <p className="text-xs text-gray-400 mt-1">Obrigatória — é a imagem que os alunos veem na vitrine de cursos.</p>
-          {uploading && <p className="text-xs text-gray-400 mt-1">Fazendo upload...</p>}
+          <p className="text-xs text-gray-500 mt-1">Obrigatória — é a imagem que os alunos veem na vitrine de cursos.</p>
+          {uploading && <p className="text-xs text-gray-500 mt-1">Fazendo upload...</p>}
           {capaUrl && (
             <div className="mt-3">
               <img src={capaUrl} alt="Preview" className="w-full max-w-sm h-40 object-cover rounded-lg border border-gray-200" />
@@ -218,7 +218,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
           <div>
             <span className="text-sm font-medium text-gray-700">Publicado (visível na vitrine pública de cursos)</span>
             {isDirecao ? (
-              <p className="text-xs text-gray-400 mt-1">Já vem ativado — o curso aparece automaticamente em /cursos ao salvar.</p>
+              <p className="text-xs text-gray-500 mt-1">Já vem ativado — o curso aparece automaticamente em /cursos ao salvar.</p>
             ) : (
               <p className="text-xs text-amber-600 mt-1">Apenas direção pode publicar cursos. Este curso ficará pendente de aprovação.</p>
             )}

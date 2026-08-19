@@ -93,10 +93,10 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
         return (
           <div key={aula.id} className="panel p-4 flex items-center gap-3">
             <div className="flex flex-col flex-shrink-0">
-              <button onClick={() => move(i, -1)} disabled={i === 0 || isLoading} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20">
+              <button onClick={() => move(i, -1)} disabled={i === 0 || isLoading} className="p-0.5 text-gray-500 hover:text-gray-700 disabled:opacity-20">
                 <ArrowUp className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => move(i, 1)} disabled={i === aulas.length - 1 || isLoading} className="p-0.5 text-gray-400 hover:text-gray-700 disabled:opacity-20">
+              <button onClick={() => move(i, 1)} disabled={i === aulas.length - 1 || isLoading} className="p-0.5 text-gray-500 hover:text-gray-700 disabled:opacity-20">
                 <ArrowDown className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -105,7 +105,7 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
             </span>
             <div className="flex-1 min-w-0">
               <p className="font-medium text-gray-900 text-sm truncate">{aula.titulo}</p>
-              <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+              <p className="text-xs text-gray-500 flex items-center gap-1 mt-0.5">
                 <ImageIcon className="w-3 h-3" />
                 {aula.slides_urls?.length ?? 0} slide(s)
               </p>
@@ -134,7 +134,7 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
               <button
                 onClick={() => deleteAula(aula.id)}
                 disabled={isLoading}
-                className="p-1.5 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
+                className="p-1.5 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors disabled:opacity-50"
                 title="Deletar"
               >
                 <Trash2 className="w-4 h-4" />

@@ -150,7 +150,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
         <ScanLine className="w-6 h-6 text-escola-azul" />
         Empréstimo
       </h1>
-      <p className="text-sm text-gray-400 mb-6 flex items-center gap-1.5">
+      <p className="text-sm text-gray-500 mb-6 flex items-center gap-1.5">
         <Keyboard className="w-3.5 h-3.5" />
         Funciona todo por teclado: busque o leitor, leia o código de barras ou tombo, aperte Enter para cada exemplar.
       </p>
@@ -172,7 +172,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
         <div className="panel p-5">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Leitor</label>
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               ref={buscaRef}
               value={termoBusca}
@@ -181,7 +181,7 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
               className="w-full pl-9 pr-3 py-3 border-2 border-gray-200 rounded-xl text-sm focus:outline-none focus:border-escola-azul transition-colors"
             />
           </div>
-          {buscando && <p className="text-xs text-gray-400 mt-2">Buscando...</p>}
+          {buscando && <p className="text-xs text-gray-500 mt-2">Buscando...</p>}
           {resultados.length > 0 && (
             <div className="mt-3 space-y-1">
               {resultados.map(l => {
@@ -192,10 +192,10 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
                     onClick={() => selecionarLeitor(l.id)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 text-left transition-colors border border-transparent hover:border-gray-200"
                   >
-                    <Icon className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                    <Icon className="w-4 h-4 text-gray-500 flex-shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-gray-900 truncate">{l.nome_completo}</p>
-                      <p className="text-xs text-gray-400">{l.turma ? `Turma ${l.turma}` : l.tipo_leitor}{l.matricula ? ` · ${l.matricula}` : ''}</p>
+                      <p className="text-xs text-gray-500">{l.turma ? `Turma ${l.turma}` : l.tipo_leitor}{l.matricula ? ` · ${l.matricula}` : ''}</p>
                     </div>
                     {l.situacao !== 'ativo' && (
                       <span className="text-xs font-semibold text-red-600 flex-shrink-0">{l.situacao}</span>
@@ -218,13 +218,13 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
                 )}
                 <div>
                   <p className="font-semibold text-gray-900">{leitorAtual.leitor.nome_completo}</p>
-                  <p className="text-xs text-gray-400">
+                  <p className="text-xs text-gray-500">
                     {leitorAtual.leitor.turma ? `Turma ${leitorAtual.leitor.turma}` : leitorAtual.leitor.tipo_leitor}
                     {' · '}{leitorAtual.emprestimosAbertos.length} livro(s) com o leitor agora
                   </p>
                 </div>
               </div>
-              <button onClick={limparTudo} className="text-xs text-gray-400 hover:text-escola-vermelho flex items-center gap-1">
+              <button onClick={limparTudo} className="text-xs text-gray-500 hover:text-escola-vermelho flex items-center gap-1">
                 <X className="w-3.5 h-3.5" />
                 Trocar leitor
               </button>
@@ -258,9 +258,9 @@ export default function EmprestimoConsole({ role }: { role: Profile['role'] }) {
                   <div key={c.id} className="flex items-center justify-between bg-gray-50 rounded-lg px-3 py-2">
                     <div>
                       <p className="text-sm text-gray-800">{c.obraTitulo}</p>
-                      <p className="text-xs text-gray-400 font-mono">{c.tombo}</p>
+                      <p className="text-xs text-gray-500 font-mono">{c.tombo}</p>
                     </div>
-                    <button onClick={() => removerDoCarrinho(c.id)} className="text-gray-400 hover:text-escola-vermelho">
+                    <button onClick={() => removerDoCarrinho(c.id)} className="text-gray-500 hover:text-escola-vermelho">
                       <X className="w-4 h-4" />
                     </button>
                   </div>

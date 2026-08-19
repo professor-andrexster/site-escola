@@ -146,7 +146,7 @@ export default function ProvaFinal({ cursoId, totalPerguntas }: { cursoId: strin
     <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-white font-bold font-geom text-lg">Prova final</h3>
-        <span className="text-white/40 text-xs font-jetbrains">{respondidas}/{perguntas.length} respondidas</span>
+        <span className="text-white/55 text-xs font-jetbrains">{respondidas}/{perguntas.length} respondidas</span>
       </div>
 
       <div className="space-y-6">

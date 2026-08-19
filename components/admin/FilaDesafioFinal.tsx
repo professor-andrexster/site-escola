@@ -126,7 +126,7 @@ export default function FilaDesafioFinal({
             <UserPlus className="w-4 h-4 text-escola-azul" />
             Quem pode corrigir este curso
           </h3>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-gray-500 mb-3">
             Você corrige sempre. Convide outro professor para dividir a correção — ele corrige,
             mas não convida mais ninguém.
           </p>
@@ -137,7 +137,7 @@ export default function FilaDesafioFinal({
                 <li key={a.id} className="flex items-center justify-between gap-3 text-sm bg-gray-50 rounded-lg px-3 py-2">
                   <span className="text-gray-700">
                     {a.perfil?.nome_completo ?? 'Professor removido'}
-                    <span className="text-gray-400 text-xs ml-2">{a.perfil?.email}</span>
+                    <span className="text-gray-500 text-xs ml-2">{a.perfil?.email}</span>
                   </span>
                   <button
                     onClick={() => void desconvidar(a.id)}
@@ -163,7 +163,7 @@ export default function FilaDesafioFinal({
               ))}
             </select>
           ) : (
-            <p className="text-xs text-gray-400">Não há outros professores para convidar.</p>
+            <p className="text-xs text-gray-500">Não há outros professores para convidar.</p>
           )}
         </section>
       )}
@@ -174,7 +174,7 @@ export default function FilaDesafioFinal({
         </h3>
 
         {pendentes.length === 0 ? (
-          <div className="empty-state p-8 text-sm text-gray-400">Nenhum envio esperando correção.</div>
+          <div className="empty-state p-8 text-sm text-gray-500">Nenhum envio esperando correção.</div>
         ) : (
           <div className="space-y-3">
             {pendentes.map(e => (
@@ -182,7 +182,7 @@ export default function FilaDesafioFinal({
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
                     <p className="font-semibold text-gray-900">{e.aluno?.nome_completo ?? 'Aluno'}</p>
-                    <p className="text-xs text-gray-400">
+                    <p className="text-xs text-gray-500">
                       {e.aluno?.turma ?? 'sem turma'} · enviado em{' '}
                       {new Date(e.enviadoEm).toLocaleDateString('pt-BR')}
                     </p>
@@ -250,7 +250,7 @@ export default function FilaDesafioFinal({
               <div key={e.id} className="panel px-4 py-3 flex items-center justify-between gap-3">
                 <div className="min-w-0">
                   <p className="text-sm text-gray-800 truncate">{e.aluno?.nome_completo ?? 'Aluno'}</p>
-                  {e.feedback && <p className="text-xs text-gray-400 truncate">{e.feedback}</p>}
+                  {e.feedback && <p className="text-xs text-gray-500 truncate">{e.feedback}</p>}
                 </div>
                 <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 flex-shrink-0 ${
                   e.status === 'aprovado' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-600'

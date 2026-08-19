@@ -58,12 +58,12 @@ export default function RedefinirSenhaPage() {
             <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" priority />
           </div>
           <h1 className="font-playfair text-white font-black text-2xl">Nova Senha</h1>
-          <p className="text-white/40 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
+          <p className="text-white/55 text-sm font-mono mt-1">E.E. Dr. João Beraldo</p>
         </div>
 
         <div className="bg-white border border-gray-100 rounded-2xl shadow-elevation-high overflow-hidden">
           {!pronto ? (
-            <p className="p-6 text-sm text-gray-400 text-center">Verificando o link...</p>
+            <p className="p-6 text-sm text-gray-500 text-center">Verificando o link...</p>
           ) : !token ? (
             <div className="p-6 text-center space-y-3">
               <p className="text-sm text-gray-600">
@@ -87,7 +87,7 @@ export default function RedefinirSenhaPage() {
                   <button
                     type="button"
                     onClick={() => setMostrar(!mostrar)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-600"
                     aria-label={mostrar ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     {mostrar ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}

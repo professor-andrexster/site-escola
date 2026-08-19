@@ -160,7 +160,7 @@ export default function SlideViewer({
           <p className="text-curso-ciano text-[10px] uppercase tracking-widest font-jetbrains truncate">{cursoTitulo}</p>
           <p className="text-white text-sm font-semibold truncate">{aulaTitulo}</p>
         </div>
-        <span className="text-white/40 text-xs font-jetbrains flex-shrink-0">
+        <span className="text-white/55 text-xs font-jetbrains flex-shrink-0">
           {currentSlide + 1} / {totalSlides}
         </span>
       </div>
@@ -210,7 +210,7 @@ export default function SlideViewer({
           Anterior
         </button>
 
-        {saving && <span className="text-white/30 text-xs font-jetbrains hidden sm:block">salvando...</span>}
+        {saving && <span className="text-white/50 text-xs font-jetbrains hidden sm:block">salvando...</span>}
 
         {isLastSlide ? (
           <button
@@ -246,7 +246,7 @@ export default function SlideViewer({
                   <BookOpen className="w-5 h-5 text-curso-ciano flex-shrink-0" />
                   <h2 className="text-white font-black text-lg font-geom">Material da aula</h2>
                   {duracaoMin ? (
-                    <span className="ms-auto inline-flex items-center gap-1 text-white/40 text-xs font-jetbrains">
+                    <span className="ms-auto inline-flex items-center gap-1 text-white/55 text-xs font-jetbrains">
                       <Clock className="w-3.5 h-3.5" />
                       ~{duracaoMin} min
                     </span>

@@ -25,7 +25,7 @@ export default async function AdminNoticiasPage() {
             {isMonitor ? 'Minhas Notícias' : 'Notícias'}
           </h1>
           {isMonitor && (
-            <p className="text-sm text-gray-400 mt-1">Você pode publicar suas próprias matérias no site.</p>
+            <p className="text-sm text-gray-500 mt-1">Você pode publicar suas próprias matérias no site.</p>
           )}
         </div>
         <Link
@@ -47,7 +47,7 @@ export default async function AdminNoticiasPage() {
       {isDirecao && logs && logs.length > 0 && (
         <div className="mt-10">
           <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
-            <Clock className="w-4 h-4 text-gray-400" />
+            <Clock className="w-4 h-4 text-gray-500" />
             Log de Atividades
           </h2>
           <div className="panel overflow-hidden">
@@ -81,11 +81,11 @@ export default async function AdminNoticiasPage() {
                           {log.noticia_titulo ?? '—'}
                         </Link>
                       ) : (
-                        <span className="text-gray-400">{log.noticia_titulo ?? '—'}</span>
+                        <span className="text-gray-500">{log.noticia_titulo ?? '—'}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-gray-500 hidden md:table-cell">{log.autor_nome ?? '—'}</td>
-                    <td className="px-4 py-3 text-gray-400 hidden md:table-cell text-xs">{formatDate(log.created_at)}</td>
+                    <td className="px-4 py-3 text-gray-500 hidden md:table-cell text-xs">{formatDate(log.created_at)}</td>
                   </tr>
                 ))}
               </tbody>
