@@ -115,8 +115,10 @@ export async function portfolioPublico(matricula: string) {
   })
   if (!aluno) return null
 
+  // Este é o portfólio PÚBLICO do aluno: entra só o que foi aprovado. O aluno
+  // vê os próprios rascunhos em Meu Portfólio, que é outra tela.
   const projetos = await prisma.projetos.findMany({
-    where: { aluno_id: aluno.id },
+    where: { aluno_id: aluno.id, status: 'aprovado' },
     include: { trilhas: { select: { nome: true, icone: true, cor_tailwind: true } } },
     orderBy: { criado_em: 'desc' },
   })

@@ -40,8 +40,12 @@ async function autorizado(
         ? null
         : 'Só professor envia material de curso.'
 
+    // Imagem de projeto do portfólio: qualquer conta aprovada envia a do
+    // próprio projeto. A barreira que importa é a revisão do professor, que
+    // decide o que vai para a vitrine pública — travar o upload só impediria o
+    // aluno de montar o rascunho dele.
     case 'projeto':
-      return isGestao(autor.role) ? null : 'Só a direção mexe no portfólio.'
+      return null
 
     // Desafio final de curso: qualquer conta aprovada envia o próprio trabalho.
     // Quem pode avaliar é outra história, conferida na rota de avaliação.

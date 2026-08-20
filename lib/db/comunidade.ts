@@ -200,7 +200,13 @@ export async function contarProjetosDoAluno(alunoId: string): Promise<number> {
 /** Projetos em destaque para a home e a vitrine publica. */
 export async function projetosPublicos(opcoes: { apenasDestaque?: boolean; limite?: number } = {}) {
   const linhas = await prisma.projetos.findMany({
-    where: opcoes.apenasDestaque ? { destaque: true } : {},
+    // Só o que passou pela revisão vai para o site aberto. Rascunho e projeto
+    // devolvido são trabalho em andamento do aluno — publicá-los seria expor,
+    // com o nome dele e o da escola, algo que ninguém conferiu.
+    where: {
+      status: 'aprovado',
+      ...(opcoes.apenasDestaque ? { destaque: true } : {}),
+    },
     include: {
       alunos: { select: { nome: true, matricula: true, serie: true, turma: true, foto_url: true, ativo: true } },
       trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },

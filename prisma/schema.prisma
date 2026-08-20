@@ -716,6 +716,12 @@ model projetos {
   criado_em      DateTime? @default(now())
   serie_na_epoca String?   @db.VarChar(20)
   equipe_id      String?   @db.Char(36)
+  repo_url       String?   @db.VarChar(300)
+  status         String    @default("aprovado") @db.VarChar(20)
+  motivo_recusa  String?   @db.Text
+  revisado_por   String?   @db.Char(36)
+  revisado_em    DateTime?
+  atualizado_em  DateTime?
   alunos         alunos?   @relation(fields: [aluno_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
   equipes        equipes?  @relation(fields: [equipe_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
   trilhas        trilhas?  @relation(fields: [trilha_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
@@ -723,6 +729,7 @@ model projetos {
   @@index([aluno_id], map: "projetos_aluno_id_fkey")
   @@index([equipe_id], map: "projetos_equipe_id_fkey")
   @@index([trilha_id], map: "projetos_trilha_id_fkey")
+  @@index([status, criado_em], map: "idx_projetos_status")
 }
 
 model quiz_participantes {
