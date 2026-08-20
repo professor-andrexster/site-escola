@@ -62,7 +62,10 @@ export default function ConteudoViewer({
   }
 
   return (
-    <div className="min-h-screen">
+    // O fundo do tema de curso precisa estar AQUI: o layout do player é só
+    // `<>{children}</>`, então sem esta cor a aula caía no creme do body e o
+    // texto, que é branco, ficava ilegível. O SlideViewer já trazia a sua.
+    <div className="min-h-screen bg-curso-tinta">
       {/* Barra superior */}
       <div className="sticky top-0 z-10 bg-curso-tinta/95 backdrop-blur border-b border-white/10">
         <div className="max-w-3xl mx-auto px-4 py-3 flex items-center gap-3">

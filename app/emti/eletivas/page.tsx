@@ -227,7 +227,7 @@ export default function EletivasPage() {
                   </li>
                 ))}
               </ul>
-              <p className="font-mono text-[10px] text-escola-cinza/50 mt-4 uppercase tracking-wider">
+              <p className="font-mono text-[10px] text-escola-cinza mt-4 uppercase tracking-wider">
                 * Inspirados nos últimos anos do ENEM. Os temas variam a cada semestre.
               </p>
             </AnimateOnScroll>

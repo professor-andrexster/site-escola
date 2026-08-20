@@ -60,9 +60,9 @@ export default function ContatoPage() {
             <div className="pt-2">
               <h3 className="font-semibold text-gray-700 text-sm mb-2">Redes Sociais</h3>
               <div className="flex gap-3">
-                <a href="https://www.instagram.com/escolajoaoberaldo" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-escola-azul transition-colors text-sm">Instagram</a>
-                <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-escola-azul transition-colors text-sm">YouTube</a>
-                <a href="https://www.facebook.com/share/1GrYbrPEvJ/" target="_blank" rel="noopener noreferrer" className="text-gray-500 hover:text-escola-azul transition-colors text-sm">Facebook</a>
+                <a href="https://www.instagram.com/escolajoaoberaldo" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-escola-azul transition-colors text-sm">Instagram</a>
+                <a href="https://youtube.com/@joaoberaldocarloschagas" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-escola-azul transition-colors text-sm">YouTube</a>
+                <a href="https://www.facebook.com/share/1GrYbrPEvJ/" target="_blank" rel="noopener noreferrer" className="text-gray-600 hover:text-escola-azul transition-colors text-sm">Facebook</a>
               </div>
             </div>
           </div>

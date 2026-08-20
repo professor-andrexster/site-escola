@@ -97,7 +97,16 @@ const MEDIR = () => {
     for (let n = el; n; n = n.parentElement) {
       const cs = getComputedStyle(n)
       const c = rgba(cs.backgroundColor)
-      if (cs.backgroundImage !== 'none') return { cor: null, imagem: true }
+      const img = cs.backgroundImage
+
+      // Gradiente não tem uma cor única para comparar — aprovar seria mentira,
+      // reprovar seria ruído. Já uma TEXTURA (`url(...)`) é sobreposta a uma cor
+      // sólida, e essa cor é a resposta certa. Tratar as duas como a mesma coisa
+      // custou caro: o body do site tem uma textura em url(), e por causa dela a
+      // auditoria pulava TODA a página — foi assim que a tela de aula ficou com
+      // letra branca sobre fundo creme sem nada acusar.
+      if (img !== 'none' && !img.startsWith('url(')) return { cor: null, imagem: true }
+
       if (!c || c[3] === 0) continue
       camadas.push(c)
       if (c[3] === 1) break
@@ -106,6 +115,31 @@ const MEDIR = () => {
     let base = camadas[camadas.length - 1].slice(0, 3)
     for (let i = camadas.length - 2; i >= 0; i--) base = sobre(camadas[i], base)
     return { cor: base, imagem: false }
+  }
+
+  /**
+   * Há uma imagem cobrindo o que está atrás deste texto?
+   *
+   * O herói do site é uma `<img>` posicionada sob o texto, não um
+   * `background-image` — então a cadeia de fundos chega até o creme do body e
+   * diz "branco sobre creme, 1.1:1", quando na tela o texto está sobre uma foto
+   * escurecida e se lê perfeitamente. Sobre foto não existe uma cor única para
+   * comparar; é o mesmo caso do gradiente, e a resposta é a mesma: não opinar.
+   */
+  const temMidiaAtras = el => {
+    const r = el.getBoundingClientRect()
+    for (let n = el.parentElement; n; n = n.parentElement) {
+      for (const m of n.querySelectorAll('img, video, canvas')) {
+        if (m.contains(el)) continue
+        const mr = m.getBoundingClientRect()
+        if (mr.left <= r.left && mr.top <= r.top && mr.right >= r.right && mr.bottom >= r.bottom) {
+          return true
+        }
+      }
+      const c = rgba(getComputedStyle(n).backgroundColor)
+      if (c && c[3] === 1) break
+    }
+    return false
   }
 
   const caminho = el => {
@@ -120,6 +154,7 @@ const MEDIR = () => {
   }
 
   const falhas = []
+  let pulados = 0
   for (const el of document.querySelectorAll('body *')) {
     // Só nós que de fato pintam texto próprio: com filho-elemento a cor
     // medida seria a do container, não a da letra que se vê.
@@ -135,9 +170,10 @@ const MEDIR = () => {
     const frente = rgba(cs.color)
     if (!frente) continue
     const fundo = fundoEfetivo(el)
-    // Sobre imagem ou gradiente não há uma cor de fundo única para comparar;
+    // Sobre gradiente ou foto não há uma cor de fundo única para comparar;
     // marcar isso como falha seria ruído, e como aprovação seria mentira.
-    if (fundo.imagem) continue
+    if (fundo.imagem) { pulados++; continue }
+    if (temMidiaAtras(el)) { pulados++; continue }
 
     const cor = frente[3] < 1 ? sobre(frente, fundo.cor) : frente.slice(0, 3)
     const px = parseFloat(cs.fontSize)
@@ -159,7 +195,7 @@ const MEDIR = () => {
       })
     }
   }
-  return falhas
+  return { falhas, pulados }
 }
 
 /**
@@ -263,6 +299,9 @@ try {
 
   const porTexto = new Map()
   let totalFalhas = 0
+  // Quantos nós ficaram sem veredicto por estarem sobre foto ou gradiente. O
+  // número aparece no fim: cobertura que o comando NÃO deu tem de ser visível.
+  let pulados = 0
 
   for (const rota of rotas) {
     const pagina = await contexto.newPage()
@@ -274,7 +313,9 @@ try {
         await pagina.close()
         continue
       }
-      falhas = await pagina.evaluate(MEDIR)
+      const medida = await pagina.evaluate(MEDIR)
+      falhas = medida.falhas
+      pulados += medida.pulados
     } catch (e) {
       console.log(`  ERR  ${rota} — ${e.message.split('\n')[0]}`)
       await pagina.close()
@@ -295,7 +336,8 @@ try {
     }
   }
 
-  console.log(`\n== ${porTexto.size} defeito(s) distinto(s), ${totalFalhas} ocorrência(s) ==\n`)
+  console.log(`\n== ${porTexto.size} defeito(s) distinto(s), ${totalFalhas} ocorrência(s) ==`)
+  console.log(`   ${pulados} nó(s) sem veredicto: texto sobre foto ou gradiente\n`)
   const ordenado = [...porTexto.values()].sort((a, b) => a.contraste - b.contraste)
   for (const f of ordenado) {
     const igual = f.cor === f.fundo ? '  <-- LETRA DA MESMA COR DO FUNDO' : ''

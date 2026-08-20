@@ -16,6 +16,14 @@ export const proseAula = [
   '[&_pre]:bg-black/50 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:mb-4 [&_pre]:overflow-x-auto',
   '[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white/80',
   '[&_blockquote]:border-l-2 [&_blockquote]:border-curso-azul [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-white/60 [&_blockquote]:italic',
+  // A tabela vinha com grade e fundo próprios no HTML da aula, desenhados para
+  // um tema claro: cabeçalho `#f0f0f0` e texto herdado escuro, que no player
+  // escuro sumia. As cores saíram do conteúdo e passaram para cá, onde o tema
+  // manda. A rolagem horizontal é para a tabela larga não empurrar a página.
+  '[&_table]:w-full [&_table]:my-5 [&_table]:border-collapse [&_table]:text-[14px]',
+  '[&_th]:bg-white/[0.07] [&_th]:text-white [&_th]:font-bold [&_th]:text-left [&_th]:p-2.5 [&_th]:border [&_th]:border-white/15',
+  '[&_td]:text-white/70 [&_td]:p-2.5 [&_td]:border [&_td]:border-white/10 [&_td]:align-top',
+  '[&_tr:nth-child(even)_td]:bg-white/[0.02]',
 ].join(' ')
 
 /** Estilo do enunciado de desafio, menor que o da aula. */
