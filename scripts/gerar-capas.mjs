@@ -52,6 +52,7 @@ const SIGLAS = {
   'montagem-e-manutencao': 'MONTAGEM',
   'formatacao-de-computadores': 'FORMATAR',
   'do-codigo-ao-ar': 'GIT',
+  'python-do-zero': 'PYTHON',
 }
 
 /** Cor por categoria, mantida do gerador antigo para não trocar a identidade. */
