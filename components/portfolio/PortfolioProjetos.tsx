@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
-import { ExternalLink } from 'lucide-react'
+import { ExternalLink, Github } from 'lucide-react'
 import { trilhaBgLight, trilhaText, trilhaBorder } from '@/lib/trilhaColors'
 import { formatDate } from '@/lib/utils'
 
@@ -11,6 +11,7 @@ interface ProjetoComTrilha {
   descricao: string | null
   imagem_url: string | null
   link_externo: string | null
+  repo_url?: string | null
   tags: string[] | null
   destaque: boolean
   criado_em: string | null
@@ -84,13 +85,23 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                     ))}
                   </div>
                 )}
-                <div className="flex items-center justify-between text-xs text-gray-500">
+                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-gray-600">
                   <span>{p.criado_em ? formatDate(p.criado_em) : ''}</span>
-                  {p.link_externo && (
-                    <a href={p.link_externo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">
-                      Ver projeto <ExternalLink className="w-3 h-3" />
-                    </a>
-                  )}
+                  {/* Os dois links, quando existem: o site mostra o resultado, o
+                      repositório mostra COMO foi feito — e é o segundo que
+                      interessa a quem avalia trabalho de programação. */}
+                  <span className="inline-flex items-center gap-3">
+                    {p.repo_url && (
+                      <a href={p.repo_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">
+                        <Github className="w-3 h-3" /> Código
+                      </a>
+                    )}
+                    {p.link_externo && (
+                      <a href={p.link_externo} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-escola-azul font-medium hover:underline">
+                        Ver projeto <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </span>
                 </div>
               </div>
             </div>
