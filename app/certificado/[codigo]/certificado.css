@@ -1,8 +1,22 @@
-/* So vale nesta rota: o Next injeta este CSS apenas no segmento do
-   certificado, entao o A4 deitado nao vaza pra impressao de outras telas. */
+/* Só vale nesta rota: o Next injeta este CSS apenas no segmento do
+   certificado, então o A4 deitado não vaza pra impressão de outras telas. */
 @media print {
   @page {
     size: A4 landscape;
-    margin: 10mm;
+    /* Margem pequena e simétrica: a moldura azul é a borda visível do
+       documento, e margem grande a empurraria para o meio da folha. */
+    margin: 8mm;
+  }
+
+  html,
+  body {
+    height: 100%;
+  }
+
+  /* A moldura ocupa a folha inteira. Sem isto ela sairia com a altura do
+     conteúdo e a metade de baixo da página ficaria vazia. */
+  .folha-certificado {
+    height: 100%;
+    page-break-inside: avoid;
   }
 }

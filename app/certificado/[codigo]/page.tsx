@@ -85,67 +85,92 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
   })
 
   return (
-    <div className="min-h-screen bg-escola-creme flex flex-col items-center justify-center gap-6 p-4 py-10 print:p-0 print:bg-white">
-      {/* Moldura no formato de folha deitada, pronta pra imprimir em A4 */}
-      <div className="w-full max-w-4xl bg-white shadow-elevation-high print:shadow-none">
-        <div className="border-8 border-escola-azul p-1.5">
-          <div className="border border-escola-vermelho px-6 py-10 sm:px-14 sm:py-14 text-center">
+    <div className="min-h-screen bg-escola-creme flex flex-col items-center justify-center gap-6 p-4 py-10 print:p-0 print:bg-white print:block">
+      {/*
+        A folha é A4 DEITADA: 297 x 210 mm.
 
-            <div className="relative w-20 h-20 mx-auto rounded-full overflow-hidden ring-1 ring-escola-cinza-claro mb-4">
-              <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="80px" className="object-cover" />
+        Na tela, `aspect-[297/210]` mostra exatamente a proporção que vai sair
+        da impressora — o que se vê aqui é o que sai no papel, sem surpresa ao
+        imprimir. Na impressão, a moldura ocupa a página inteira e a margem fica
+        por conta do `@page`.
+      */}
+      <div className="folha-certificado w-full max-w-[297mm] aspect-[297/210] bg-white shadow-elevation-high print:shadow-none print:w-full print:max-w-none print:h-full print:aspect-auto">
+        <div className="h-full border-[6px] border-escola-azul p-1.5">
+          <div className="h-full border border-escola-vermelho px-8 sm:px-16 py-6 sm:py-8 text-center flex flex-col">
+
+            {/* Cabeçalho: brasão e instituição lado a lado, porque em paisagem
+                a altura é o recurso escasso e empilhar custa caro. */}
+            <div className="flex items-center justify-center gap-4 flex-shrink-0">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden ring-1 ring-escola-cinza-claro flex-shrink-0">
+                <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" />
+              </div>
+              <div className="text-start">
+                <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-escola-cinza leading-tight">
+                  E.E. Dr. João Beraldo
+                </p>
+                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-escola-cinza leading-tight">
+                  Ensino Médio em Tempo Integral · Carlos Chagas, MG
+                </p>
+              </div>
             </div>
-            <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-escola-cinza">
-              E.E. Dr. João Beraldo
-            </p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-escola-cinza/60 mb-8">
-              Ensino Médio em Tempo Integral · Carlos Chagas, MG
-            </p>
 
-            <h1 className="font-playfair text-4xl sm:text-5xl font-black text-escola-azul mb-8">
-              Certificado
-            </h1>
+            {/* O miolo cresce e encolhe conforme o nome e o título do curso;
+                o cabeçalho e o rodapé ficam ancorados. */}
+            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
+              <h1 className="font-playfair text-3xl sm:text-5xl font-black text-escola-azul mb-3 sm:mb-5">
+                Certificado
+              </h1>
 
-            <p className="font-serif text-escola-cinza mb-2">Certificamos que</p>
-            <p className="font-playfair text-2xl sm:text-3xl font-bold text-escola-preto mb-4 leading-snug">
-              {cert.aluno_nome}
-            </p>
-            <p className="font-serif text-escola-cinza leading-relaxed max-w-xl mx-auto mb-10">
-              concluiu com aproveitamento o curso{' '}
-              <strong className="text-escola-preto">{cert.curso_titulo}</strong>,
-              com carga horária de <strong className="text-escola-preto">{cert.carga_horaria} hora{cert.carga_horaria === 1 ? '' : 's'}</strong>,
-              obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na avaliação final.
-            </p>
+              <p className="font-serif text-escola-cinza text-sm mb-1">Certificamos que</p>
+              <p className="font-playfair text-xl sm:text-3xl font-bold text-escola-preto mb-2 sm:mb-3 leading-snug text-balance">
+                {cert.aluno_nome}
+              </p>
+              <p className="font-serif text-escola-cinza leading-relaxed max-w-3xl mx-auto text-sm sm:text-base">
+                concluiu com aproveitamento o curso{' '}
+                <strong className="text-escola-preto">{cert.curso_titulo}</strong>,
+                com carga horária de <strong className="text-escola-preto">{cert.carga_horaria} hora{cert.carga_horaria === 1 ? '' : 's'}</strong>,
+                obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na avaliação final.
+              </p>
+            </div>
 
-            <div className="flex items-end justify-center gap-12 sm:gap-20 mb-10">
-              <div className="text-center">
-                {/* Altura fixa: o espaço da assinatura existe com ou sem arquivo,
-                    para o resto do certificado não se mexer quando ela entrar. */}
-                <div className="h-16 flex items-end justify-center">
+            {/* Rodapé: data à esquerda, assinatura ao centro, validação à
+                direita. Em paisagem sobra largura, e distribuir nas três
+                colunas evita a pilha central que estica a folha para baixo. */}
+            <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-3 items-end gap-4 sm:gap-6">
+              <p className="font-serif text-xs text-escola-cinza text-center sm:text-start order-2 sm:order-1">
+                Carlos Chagas,<br className="hidden sm:inline" /> {dataEmissao}.
+              </p>
+
+              <div className="order-1 sm:order-2">
+                {/* Altura fixa: o espaço da assinatura existe com ou sem
+                    arquivo, para o resto do certificado não se mexer quando
+                    ela entrar. */}
+                <div className="h-14 flex items-end justify-center">
                   {assinatura && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={assinatura}
                       alt={`Assinatura de ${cert.autor_nome ?? 'responsável pelo curso'}`}
-                      className="max-h-16 w-auto object-contain"
+                      className="max-h-14 w-auto object-contain"
                     />
                   )}
                 </div>
-                <div className="w-44 border-t border-escola-cinza pt-2">
-                  <p className="font-serif text-sm text-escola-preto">{cert.autor_nome ?? 'E.E. Dr. João Beraldo'}</p>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza/60">
+                <div className="border-t border-escola-cinza pt-1.5 mx-auto max-w-[220px]">
+                  <p className="font-serif text-sm text-escola-preto leading-tight">
+                    {cert.autor_nome ?? 'E.E. Dr. João Beraldo'}
+                  </p>
+                  <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">
                     {cert.autor_nome ? 'Responsável pelo curso' : 'Instituição'}
                   </p>
                 </div>
               </div>
+
+              <p className="font-mono text-[10px] text-escola-cinza leading-relaxed text-center sm:text-end order-3">
+                Código de validação<br />
+                <strong className="font-mono text-escola-cinza text-[11px]">{cert.codigo}</strong><br />
+                escolaestadualdrjoaoberaldo.com/certificado/{cert.codigo}
+              </p>
             </div>
-
-            <p className="font-serif text-sm text-escola-cinza mb-6">Carlos Chagas, {dataEmissao}.</p>
-
-            <p className="font-mono text-[10px] text-escola-cinza/60 leading-relaxed">
-              Código de validação: <strong className="text-escola-cinza">{cert.codigo}</strong>
-              <br />
-              Confira a autenticidade em escolaestadualdrjoaoberaldo.com/certificado/{cert.codigo}
-            </p>
           </div>
         </div>
       </div>
