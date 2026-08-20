@@ -86,7 +86,7 @@ export default function AprovacaoAlunosTable({ pendentes: initial, viewerRole }:
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <p className="font-semibold text-gray-900 truncate">{p.nome_completo}</p>
-                <span className="flex-shrink-0 text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-gray-100 text-gray-500">
+                <span className="flex-shrink-0 text-[10px] font-mono uppercase tracking-widest px-2 py-0.5 rounded bg-gray-100 text-gray-600">
                   {ROLE_LABELS[p.role]}
                 </span>
               </div>

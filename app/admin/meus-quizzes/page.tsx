@@ -30,7 +30,7 @@ export default async function MeusQuizzesPage() {
           <div className="text-xs text-gray-500 font-mono uppercase mt-1">pontos totais</div>
         </div>
         <div className="panel p-4 text-center">
-          <div className="text-2xl font-black text-yellow-500">{melhorPontuacao}</div>
+          <div className="text-2xl font-black text-yellow-700">{melhorPontuacao}</div>
           <div className="text-xs text-gray-500 font-mono uppercase mt-1">melhor score</div>
         </div>
       </div>
@@ -54,7 +54,7 @@ export default async function MeusQuizzesPage() {
             return (
               <div key={p.id} className="panel p-5 flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-escola-azul/10 flex items-center justify-center flex-shrink-0">
-                  {i === 0 ? <Trophy className="w-5 h-5 text-yellow-500" /> : <Medal className="w-5 h-5 text-escola-azul" />}
+                  {i === 0 ? <Trophy className="w-5 h-5 text-yellow-600" /> : <Medal className="w-5 h-5 text-escola-azul" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-gray-900 truncate">{p.quizzes?.titulo ?? 'Quiz'}</p>

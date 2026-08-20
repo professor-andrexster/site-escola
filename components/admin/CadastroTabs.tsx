@@ -295,7 +295,7 @@ export default function CadastroTabs() {
           onClick={() => setAba('aluno')}
           className={cn(
             'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-            aba === 'aluno' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
+            aba === 'aluno' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
           )}
         >
           <BookOpen className="w-4 h-4" />
@@ -305,7 +305,7 @@ export default function CadastroTabs() {
           onClick={() => setAba('professor')}
           className={cn(
             'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-            aba === 'professor' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
+            aba === 'professor' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
           )}
         >
           <Briefcase className="w-4 h-4" />

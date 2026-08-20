@@ -90,10 +90,10 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   <p className="text-xs text-gray-500 mt-0.5">Matrícula {a.matricula} · {a.turma}</p>
                   <div className="flex items-center gap-3 mt-1">
                     {a.user_id
-                      ? <span className="inline-flex items-center gap-1 text-xs text-green-600"><UserCheck className="w-3 h-3" /> Tem conta</span>
-                      : <span className="text-xs text-gray-300">Sem conta</span>}
+                      ? <span className="inline-flex items-center gap-1 text-xs text-green-700"><UserCheck className="w-3 h-3" /> Tem conta</span>
+                      : <span className="text-xs text-gray-600">Sem conta</span>}
                     {!a.cpf && (
-                      <span className="inline-flex items-center gap-1 text-xs text-amber-600"><AlertTriangle className="w-3 h-3" /> Falta CPF</span>
+                      <span className="inline-flex items-center gap-1 text-xs text-amber-700"><AlertTriangle className="w-3 h-3" /> Falta CPF</span>
                     )}
                   </div>
                 </div>
@@ -132,10 +132,10 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {a.user_id
-                        ? <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium"><UserCheck className="w-3.5 h-3.5" /> Tem conta</span>
-                        : <span className="text-gray-300 text-xs">Sem conta</span>}
+                        ? <span className="inline-flex items-center gap-1 text-green-700 text-xs font-medium"><UserCheck className="w-3.5 h-3.5" /> Tem conta</span>
+                        : <span className="text-gray-600 text-xs">Sem conta</span>}
                       {!a.cpf && (
-                        <span className="inline-flex items-center gap-1 text-amber-600 text-xs" title="Sem CPF o aluno não consegue criar a conta">
+                        <span className="inline-flex items-center gap-1 text-amber-700 text-xs" title="Sem CPF o aluno não consegue criar a conta">
                           <AlertTriangle className="w-3.5 h-3.5" /> Falta CPF
                         </span>
                       )}
@@ -143,7 +143,7 @@ export default function AlunosTable({ alunos }: AlunosTableProps) {
                   </td>
                   <td className="px-4 py-3">
                     {a.ativo
-                      ? <span className="inline-flex items-center gap-1 text-green-600 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Ativo</span>
+                      ? <span className="inline-flex items-center gap-1 text-green-700 text-xs font-medium"><CheckCircle2 className="w-3.5 h-3.5" /> Ativo</span>
                       : <span className="inline-flex items-center gap-1 text-gray-500 text-xs font-medium"><XCircle className="w-3.5 h-3.5" /> Inativo</span>}
                   </td>
                 </tr>

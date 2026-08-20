@@ -10,7 +10,8 @@
     "ui:auditar": "node scripts/auditar-ui.mjs",
     "ui:corrigir": "node scripts/auditar-ui.mjs --corrigir",
     "ui:telas": "node scripts/auditar-telas.mjs",
-    "ui:telas:todas": "node scripts/auditar-telas.mjs --todas"
+    "ui:telas:todas": "node scripts/auditar-telas.mjs --todas",
+    "ui:painel": "node scripts/auditar-telas.mjs --painel"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

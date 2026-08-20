@@ -115,7 +115,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
               {/* Status Badges */}
               <div className="flex items-center gap-2 flex-wrap">
                 {a.user_id ? (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-green-600 bg-green-50 px-2 py-1 rounded">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-green-700 bg-green-50 px-2 py-1 rounded">
                     <UserCheck className="w-3 h-3" />
                     Tem conta
                   </span>
@@ -125,7 +125,7 @@ export default function AlunosCards({ alunos }: AlunosCardsProps) {
                   </span>
                 )}
                 {!a.cpf && (
-                  <span className="inline-flex items-center gap-1 text-[11px] text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                  <span className="inline-flex items-center gap-1 text-[11px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
                     <AlertTriangle className="w-3 h-3" />
                     Falta CPF
                   </span>

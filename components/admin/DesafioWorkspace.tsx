@@ -113,7 +113,7 @@ export default function DesafioWorkspace({
     <div className="space-y-6">
       <div className="panel p-6">
         <div className="flex flex-wrap items-center gap-2 mb-2">
-          {!desafio.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}
+          {!desafio.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Rascunho</span>}
           {desafio.turma_alvo && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">{desafio.turma_alvo}</span>}
           <span className="ml-auto text-sm font-semibold text-escola-azul">{desafio.pontos_total} pts</span>
         </div>

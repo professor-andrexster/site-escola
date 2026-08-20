@@ -216,7 +216,7 @@ export default function RecuperarSenhaPage() {
               onClick={() => setAba('email')}
               className={cn(
                 'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-                aba === 'email' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
+                aba === 'email' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
               )}
             >
               <Mail className="w-4 h-4" />
@@ -226,7 +226,7 @@ export default function RecuperarSenhaPage() {
               onClick={() => setAba('cpf')}
               className={cn(
                 'flex items-center justify-center gap-2 py-4 text-sm font-semibold transition-colors',
-                aba === 'cpf' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-500 hover:text-gray-600'
+                aba === 'cpf' ? 'bg-white text-escola-azul' : 'bg-gray-100 text-gray-600 hover:text-gray-800'
               )}
             >
               <BookOpen className="w-4 h-4" />

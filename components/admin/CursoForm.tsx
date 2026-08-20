@@ -220,7 +220,7 @@ export default function CursoForm({ curso, isDirecao = false }: CursoFormProps) 
             {isDirecao ? (
               <p className="text-xs text-gray-500 mt-1">Já vem ativado — o curso aparece automaticamente em /cursos ao salvar.</p>
             ) : (
-              <p className="text-xs text-amber-600 mt-1">Apenas direção pode publicar cursos. Este curso ficará pendente de aprovação.</p>
+              <p className="text-xs text-amber-700 mt-1">Apenas direção pode publicar cursos. Este curso ficará pendente de aprovação.</p>
             )}
           </div>
         </label>

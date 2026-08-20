@@ -259,7 +259,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
               <p className="text-gray-500 text-xs mt-0.5 truncate">Alternativo: {p.email_alternativo}</p>
             )}
             {p.criado_via && (
-              <p className="text-gray-300 text-xs mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
+              <p className="text-gray-600 text-xs mt-0.5">{ORIGEM_LABELS[p.criado_via] ?? p.criado_via}</p>
             )}
           </div>
 
@@ -398,7 +398,7 @@ export default function UsuariosTable({ profiles: initial, rolesDaTela }: Usuari
             <button
               onClick={() => aprovar(p.id)}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 bg-green-700 text-white rounded-lg text-xs font-semibold hover:bg-green-800 transition-colors disabled:opacity-50"
             >
               <Check className="w-3.5 h-3.5" />
               Aprovar Acesso

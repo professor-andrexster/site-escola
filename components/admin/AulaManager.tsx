@@ -111,7 +111,7 @@ export default function AulaManager({ cursoId, aulas: initial }: AulaManagerProp
               </p>
             </div>
             <span className={`text-xs font-medium px-2 py-0.5 rounded-full border flex-shrink-0 ${
-              aula.publicado ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-500 border-gray-200'
+              aula.publicado ? 'bg-green-100 text-green-700 border-green-200' : 'bg-gray-100 text-gray-600 border-gray-200'
             }`}>
               {aula.publicado ? 'Publicada' : 'Rascunho'}
             </span>

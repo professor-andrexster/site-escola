@@ -51,7 +51,7 @@ export default function ConvidarBibliotecariaForm() {
     return (
       <button
         onClick={() => setOpen(true)}
-        className="flex items-center gap-2 px-4 py-2.5 bg-amber-600 text-white rounded-xl text-sm font-semibold hover:bg-amber-700 transition-colors"
+        className="flex items-center gap-2 px-4 py-2.5 bg-amber-700 text-white rounded-xl text-sm font-semibold hover:bg-amber-800 transition-colors"
       >
         <Mail className="w-4 h-4" />
         Convidar Bibliotecária
@@ -63,7 +63,7 @@ export default function ConvidarBibliotecariaForm() {
     <div className="panel p-5 mb-6">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-semibold text-gray-900 flex items-center gap-2">
-          <Mail className="w-4 h-4 text-amber-600" />
+          <Mail className="w-4 h-4 text-amber-700" />
           Convidar Bibliotecária
         </h2>
         <button onClick={() => { setOpen(false); reset() }} className="text-gray-500 hover:text-gray-600">
@@ -83,7 +83,7 @@ export default function ConvidarBibliotecariaForm() {
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(linkManual)}
-              className="text-amber-600 hover:text-amber-800 flex-shrink-0"
+              className="text-amber-700 hover:text-amber-900 flex-shrink-0"
               title="Copiar"
             >
               <Copy className="w-4 h-4" />
@@ -122,7 +122,7 @@ export default function ConvidarBibliotecariaForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-600 text-white font-semibold py-3 rounded-xl hover:bg-amber-700 transition-colors disabled:opacity-50 text-sm foco-painel"
+            className="w-full bg-amber-700 text-white font-semibold py-3 rounded-xl hover:bg-amber-800 transition-colors disabled:opacity-50 text-sm foco-painel"
           >
             {loading ? 'Enviando convite...' : 'Enviar Convite'}
           </button>

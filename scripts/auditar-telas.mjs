@@ -186,6 +186,29 @@ function rotasPublicas() {
   return [...new Set(achadas)].sort()
 }
 
+/**
+ * As telas do painel — as de gestão, não as de curso.
+ *
+ * Auditar com sessão de PROFESSOR e não de admin é de propósito: a navegação e
+ * várias telas mudam por papel, e é o professor quem passa o dia aqui. Rota que
+ * o papel não alcança volta redirecionada, e o relatório mostra isso em vez de
+ * fingir que passou.
+ */
+function rotasDoPainel() {
+  const raiz = new URL('../app/admin/', import.meta.url)
+  const achadas = []
+  const varrer = (dir, prefixo) => {
+    for (const item of readdirSync(dir, { withFileTypes: true })) {
+      if (item.name === 'page.tsx') achadas.push(prefixo)
+      if (!item.isDirectory() || item.name.includes('[')) continue
+      const parte = item.name.startsWith('(') ? '' : `/${item.name}`
+      varrer(new URL(`${item.name}/`, dir), prefixo + parte)
+    }
+  }
+  varrer(raiz, '/admin')
+  return [...new Set(achadas)].sort()
+}
+
 async function rotasDeCurso(c) {
   const cursos = await c.query('SELECT slug FROM cursos WHERE publicado = 1 ORDER BY slug')
   const rotas = ['/admin/cursos', '/admin/modulos', '/admin/cursos/desafios', '/admin/meu-perfil']
@@ -209,13 +232,20 @@ let falhou = false
 
 try {
   const argRota = process.argv.slice(2).find(a => a.startsWith('/'))
+  const soPainel = process.argv.includes('--painel')
   const rotas = argRota
     ? [argRota]
-    : process.argv.includes('--todas')
-      ? [...(await rotasDeCurso(c)), ...rotasPublicas(), '/admin']
-      : await rotasDeCurso(c)
+    : soPainel
+      ? rotasDoPainel()
+      : process.argv.includes('--todas')
+        ? [...(await rotasDeCurso(c)), ...rotasPublicas(), ...rotasDoPainel()]
+        : await rotasDeCurso(c)
 
-  sessao = await abrirSessaoDe(c, process.env.AUDITOR_EMAIL ?? 'andre@escolaestadualdrjoaoberaldo.com')
+  // O painel muda por papel: auditá-lo como admin esconderia o que o professor
+  // de fato vê. As telas de curso continuam com a conta de sempre.
+  const perfil = process.env.AUDITOR_EMAIL
+    ?? (soPainel ? 'tarso@escolaestadualdrjoaoberaldo.com' : 'andre@escolaestadualdrjoaoberaldo.com')
+  sessao = await abrirSessaoDe(c, perfil)
 
   // O cache do servidor já tem um Chromium, de build mais novo que o desta
   // versão do Playwright. Reaproveitar evita baixar 170 MB de navegador só

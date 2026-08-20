@@ -46,7 +46,7 @@ export default async function DesafiosPage() {
               className="panel p-5 hover:border-escola-azul transition-colors"
             >
               <div className="flex items-center justify-between gap-2 mb-2">
-                {!d.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">Rascunho</span>}
+                {!d.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Rascunho</span>}
                 {d.turma_alvo && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul ml-auto">{d.turma_alvo}</span>}
               </div>
               <h2 className="font-playfair text-lg font-bold text-gray-900">{d.titulo}</h2>
