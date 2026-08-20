@@ -295,9 +295,14 @@ try {
     existsSync(CHROMIUM_DO_SERVIDOR) ? { executablePath: CHROMIUM_DO_SERVIDOR } : {}
   )
   const contexto = await navegador.newContext({ viewport: { width: 1440, height: 900 } })
+  // O domínio do cookie sai da BASE_URL: com ele fixo em 127.0.0.1 a auditoria
+  // contra o domínio público entrava deslogada e media a tela de login em vez
+  // da tela pedida — passando "sem falhas" sobre páginas que nem abriu.
+  const alvo = new URL(BASE)
   await contexto.addCookies([{
     name: 'jb_sessao', value: sessao.token,
-    domain: '127.0.0.1', path: '/', httpOnly: true, sameSite: 'Lax',
+    domain: alvo.hostname, path: '/', httpOnly: true,
+    secure: alvo.protocol === 'https:', sameSite: 'Lax',
   }])
 
   console.log(`AUDITORIA DE CONTRASTE NO NAVEGADOR\n${rotas.length} rotas · sessão de ${sessao.usuario.email}\n`)

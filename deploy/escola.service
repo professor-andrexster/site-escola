@@ -26,12 +26,17 @@ ExecStart=/usr/bin/node server.js
 Restart=on-failure
 RestartSec=5
 
-# O processo só precisa escrever na pasta de uploads.
+# O processo escreve em dois lugares: a pasta de uploads e o cache do Next.
+#
+# O `.next` faltava aqui, e o efeito não era óbvio: as páginas com `revalidate`
+# continuavam servindo, porque o Next mantém o cache em memória — mas ele tenta
+# gravar em disco a cada revalidação, apanha um EROFS e recomeça. Eram 535 erros
+# no journal em vinte minutos, e revalidação repetida batendo no banco à toa.
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/www/escola/data/uploads
+ReadWritePaths=/var/www/escola/data/uploads /srv/escola/app/.next
 
 [Install]
 WantedBy=multi-user.target
