@@ -420,6 +420,8 @@ model cursos {
   carga_horaria         Int?
   modulo_id             String?                 @db.Char(36)
   ordem_no_modulo       Int                     @default(0)
+  trilha_id             String?                 @db.Char(36)
+  ordem_na_trilha       Int?
   aulas                 aulas[]
   certificados          certificados[]
   curso_avaliadores     curso_avaliadores[]
@@ -427,10 +429,12 @@ model cursos {
   curso_prova_perguntas curso_prova_perguntas[]
   modulos               modulos?                @relation(fields: [modulo_id], references: [id], onUpdate: Restrict, map: "cursos_modulo_fkey")
   usuarios              usuarios?               @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "fk_cursos_author")
+  trilhas               trilhas?                @relation(fields: [trilha_id], references: [id], map: "fk_cursos_trilha")
   progresso_aulas       progresso_aulas[]
 
   @@index([criado_por], map: "fk_cursos_author")
   @@index([modulo_id], map: "cursos_modulo_fkey")
+  @@index([trilha_id, ordem_na_trilha], map: "idx_cursos_trilha")
 }
 
 model desafio_fases {
@@ -808,6 +812,10 @@ model trilhas {
   descricao          String?              @db.Text
   icone              String?              @db.VarChar(10)
   cor_tailwind       String?              @db.VarChar(30)
+  slug               String?              @unique(map: "uq_trilhas_slug") @db.VarChar(80)
+  ordem              Int                  @default(0)
+  publicada          Boolean              @default(true)
+  cursos             cursos[]
   ideias             ideias[]
   perfis_vocacionais perfis_vocacionais[]
   projetos           projetos[]

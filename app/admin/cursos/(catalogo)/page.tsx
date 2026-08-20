@@ -1,4 +1,6 @@
 import { catalogoDoPainel } from '@/lib/db/cursos'
+import { trilhasPublicadas, progressoNaTrilha } from '@/lib/db/trilhas'
+import TrilhaCard from '@/components/cursos/TrilhaCard'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
@@ -14,10 +16,25 @@ export const dynamic = 'force-dynamic'
 export default async function CursosPage() {
   const { user, profile } = await getProfileOrRedirect()
 
-  const [cursos, progressos] = await Promise.all([
+  const [cursos, progressos, trilhas] = await Promise.all([
     catalogoDoPainel(),
     progressoCursosPorUsuario(user.id),
+    trilhasPublicadas(),
   ])
+
+  // Quantos cursos de cada trilha o aluno já fechou. O critério é o mesmo do
+  // resto do sistema: todas as aulas publicadas do curso concluídas.
+  const idsDasTrilhas = trilhas.flatMap(t => t.cursos.map(c => c.id))
+  const porCurso = await progressoNaTrilha(idsDasTrilhas, user.id)
+  const concluidosPorTrilha = new Map(
+    trilhas.map(t => [
+      t.id,
+      t.cursos.filter(c => {
+        const p = porCurso.get(c.id)
+        return p && p.total > 0 && p.feitas >= p.total
+      }).length,
+    ])
+  )
 
   const aulasPorCurso = new Map(progressos.map(p => [p.id, p.totalAulas]))
   const concluidasPorCurso = new Map(progressos.map(p => [p.id, p.aulasConcluidas]))
@@ -44,6 +61,27 @@ export default async function CursosPage() {
           </Link>
         )}
       </div>
+
+      {/* As trilhas vêm primeiro: quem chega quer saber por onde começar, e a
+          grade de 17 cursos soltos não responde isso. A lista completa segue
+          abaixo, para quem já sabe o que procura. */}
+      {trilhas.length > 0 && (
+        <section className="mb-10">
+          <h2 className="text-white font-bold text-lg font-geom mb-1">Trilhas</h2>
+          <p className="text-white/60 text-sm mb-4">
+            Cada trilha é uma sequência: um curso prepara o seguinte.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {trilhas.map(t => (
+              <TrilhaCard key={t.id} trilha={t} concluidos={concluidosPorTrilha.get(t.id) ?? 0} />
+            ))}
+          </div>
+        </section>
+      )}
+
+      {trilhas.length > 0 && cursos.length > 0 && (
+        <h2 className="text-white font-bold text-lg font-geom mb-4">Todos os cursos</h2>
+      )}
 
       {cursos.length === 0 ? (
         <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center">

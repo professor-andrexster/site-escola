@@ -162,6 +162,11 @@ const MEDIR = () => {
       .filter(n => n.nodeType === 3).map(n => n.textContent.trim()).join(' ').trim()
     if (!texto) continue
 
+    // Emoji tem cor própria e ignora a `color` do CSS: medir um "💻" é medir
+    // uma cor que a tela não usa. Só entra o que tem letra ou número — texto
+    // que de fato se pinta com a cor computada.
+    if (!/[\p{L}\p{N}]/u.test(texto)) continue
+
     const cs = getComputedStyle(el)
     if (cs.visibility === 'hidden' || cs.display === 'none' || +cs.opacity === 0) continue
     const r = el.getBoundingClientRect()
