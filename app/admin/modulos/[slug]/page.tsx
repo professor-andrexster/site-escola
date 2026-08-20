@@ -74,7 +74,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
             >
               <span
                 className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-xs font-jetbrains font-bold ${
-                  p?.completo ? 'bg-green-400/20 text-green-300' : 'bg-white/10 text-white/50'
+                  p?.completo ? 'bg-green-400/20 text-green-300' : 'bg-white/10 text-white/70'
                 }`}
               >
                 {p?.completo ? <Check className="w-4 h-4" /> : i + 1}
@@ -153,7 +153,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
                   Conclua as aulas dos {progresso.cursos.length} cursos para liberar este projeto e
                   o certificado de {modulo.carga_horaria}h do módulo.
                 </p>
-                <p className="text-white/35 text-xs mt-1">
+                <p className="text-white/60 text-xs mt-1">
                   Faltam {progresso.totalAulas - progresso.aulasConcluidas} aulas.
                 </p>
               </div>
