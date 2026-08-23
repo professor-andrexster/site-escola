@@ -78,8 +78,10 @@ try {
   const cursos = await c.query(`
     SELECT c.id, c.slug, c.titulo, c.publicado, c.carga_horaria AS atual, c.carga_min, c.modulo_id,
            COALESCE(SUM(CHAR_LENGTH(COALESCE(a.conteudo, ''))), 0) AS chars,
+           -- Todo desafio do curso conta: o de aula e o de fecho da parte, que
+           -- não tem aula_id e por isso ficava de fora da conta sem aparecer.
            (SELECT COUNT(*) FROM curso_desafios d
-             WHERE d.curso_id = c.id AND d.aula_id IS NOT NULL) AS exercicios,
+             WHERE d.curso_id = c.id AND d.vale_certificado = 0) AS exercicios,
            (SELECT COUNT(*) FROM curso_desafios d
              WHERE d.curso_id = c.id AND d.vale_certificado = 1) AS projetos
       FROM cursos c
