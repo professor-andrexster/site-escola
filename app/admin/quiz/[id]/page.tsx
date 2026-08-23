@@ -35,7 +35,7 @@ export default async function EditQuizPage({ params }: { params: Promise<{ id: s
           </div>
           <Link
             href={`/admin/quiz/${id}/ranking`}
-            className="inline-flex items-center gap-2 bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-yellow-600 transition-colors"
+            className="inline-flex items-center gap-2 bg-amber-700 text-white px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-amber-800 transition-colors"
           >
             <Trophy className="w-4 h-4" />
             Ranking

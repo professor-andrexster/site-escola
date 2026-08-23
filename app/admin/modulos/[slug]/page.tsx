@@ -172,7 +172,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
           </div>
           <Link
             href={`/certificado/${certificado.codigo}`}
-            className="inline-flex items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 transition-colors flex-shrink-0"
+            className="inline-flex items-center gap-2 bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-800 transition-colors flex-shrink-0"
           >
             <Award className="w-4 h-4" />
             Ver Certificado

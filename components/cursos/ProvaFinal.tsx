@@ -114,7 +114,7 @@ export default function ProvaFinal({ cursoId, totalPerguntas }: { cursoId: strin
           <p className="text-white/60 text-sm mb-5">Seu certificado foi emitido. Ele é seu: imprima ou compartilhe o link.</p>
           <Link
             href={`/certificado/${resultado.codigo}`}
-            className="inline-flex items-center gap-2 bg-green-500 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-green-600 transition-colors"
+            className="inline-flex items-center gap-2 bg-green-700 text-white px-6 py-3 rounded-xl text-sm font-bold hover:bg-green-800 transition-colors"
           >
             <Award className="w-4 h-4" />
             Ver Meu Certificado

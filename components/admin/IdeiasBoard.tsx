@@ -133,7 +133,7 @@ export default function IdeiasBoard({
                   </span>
                   {trilha && (
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
-                      {trilha.icone} {trilha.nome}
+                      {trilha.nome}
                     </span>
                   )}
                 </div>
@@ -208,7 +208,7 @@ export default function IdeiasBoard({
                 <select value={form.trilha_id} onChange={(e) => setForm((p) => ({ ...p, trilha_id: e.target.value }))}
                   className="w-full px-3 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul/30">
                   <option value="">Sem trilha</option>
-                  {trilhas.map((t) => <option key={t.id} value={t.id}>{t.icone} {t.nome}</option>)}
+                  {trilhas.map((t) => <option key={t.id} value={t.id}>{t.nome}</option>)}
                 </select>
               </div>
             </div>

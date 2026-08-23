@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import type { Trilha } from '@/lib/db/trilhas'
+import { iconeDaTrilha } from '@/lib/trilhaIcones'
 
 /**
  * O cartão de entrada de uma trilha.
@@ -33,6 +34,7 @@ interface Props {
 
 export default function TrilhaCard({ trilha, concluidos }: Props) {
   const cor = CORES[trilha.cor ?? ''] ?? PADRAO
+  const Icone = iconeDaTrilha(trilha)
   const pct = trilha.cursos.length ? Math.round((concluidos / trilha.cursos.length) * 100) : 0
   const proximo = trilha.cursos[Math.min(concluidos, trilha.cursos.length - 1)]
 
@@ -42,7 +44,7 @@ export default function TrilhaCard({ trilha, concluidos }: Props) {
       className={`group flex flex-col bg-white/5 border border-white/10 ${cor.anel} rounded-2xl p-5 transition-colors`}
     >
       <div className="flex items-center gap-3 mb-3">
-        {trilha.icone && <span className="text-2xl leading-none flex-shrink-0">{trilha.icone}</span>}
+        <Icone className="w-6 h-6 flex-shrink-0 opacity-80" strokeWidth={1.5} aria-hidden />
         <div className="min-w-0">
           <h2 className="text-white font-black text-lg font-geom truncate">{trilha.nome}</h2>
           <p className={`text-xs font-jetbrains ${cor.texto}`}>

@@ -8,10 +8,10 @@ import { Plus, Trash2, ChevronUp, ChevronDown, Check, Pencil, Sparkles } from 'l
 const LETRAS = ['a', 'b', 'c', 'd'] as const
 const LABELS = { a: 'A', b: 'B', c: 'C', d: 'D' }
 const CORES = {
-  a: 'bg-red-500',
-  b: 'bg-blue-500',
-  c: 'bg-yellow-400',
-  d: 'bg-green-500',
+  a: 'bg-rose-700',
+  b: 'bg-sky-700',
+  c: 'bg-amber-700',
+  d: 'bg-emerald-700',
 }
 
 const EMPTY_FORM = {
@@ -59,7 +59,7 @@ function PerguntaFields({ value, onChange }: { value: PerguntaForm; onChange: (u
               <button
                 onClick={() => onChange(f => ({ ...f, resposta_correta: letra }))}
                 title="Marcar como correta"
-                className={`px-2 rounded-lg border transition-colors ${value.resposta_correta === letra ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-gray-500 hover:border-green-400 hover:text-green-500'}`}
+                className={`px-2 rounded-lg border transition-colors ${value.resposta_correta === letra ? 'bg-emerald-700 border-emerald-700 text-white' : 'border-gray-300 text-gray-500 hover:border-emerald-600 hover:text-emerald-700'}`}
               >
                 <Check className="w-4 h-4" />
               </button>

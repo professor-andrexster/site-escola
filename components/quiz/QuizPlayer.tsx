@@ -2,14 +2,23 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Clock, Hourglass, CheckCircle2 } from 'lucide-react'
+import { Clock, Hourglass, CheckCircle2, Check, X } from 'lucide-react'
 import type { QuizPergunta } from '@/types/database'
 
+/**
+ * As quatro alternativas.
+ *
+ * Eram vermelho, azul, amarelo e verde puros — a paleta de aplicativo de quiz,
+ * que ao lado do azul-marinho e do vermelho tijolo da escola parecia de outro
+ * produto. Os tons fechados mantêm o que a cor faz aqui (distinguir A de B num
+ * relance, na projeção da sala) e ainda deixam o texto branco legível sobre
+ * eles, o que o amarelo puro nunca permitiu.
+ */
 const CORES = [
-  { bg: 'bg-red-500', hover: 'hover:bg-red-600' },
-  { bg: 'bg-blue-500', hover: 'hover:bg-blue-600' },
-  { bg: 'bg-yellow-400', hover: 'hover:bg-yellow-500', dark: true },
-  { bg: 'bg-green-500', hover: 'hover:bg-green-600' },
+  { bg: 'bg-rose-700', hover: 'hover:bg-rose-800' },
+  { bg: 'bg-sky-700', hover: 'hover:bg-sky-800' },
+  { bg: 'bg-amber-700', hover: 'hover:bg-amber-800' },
+  { bg: 'bg-emerald-700', hover: 'hover:bg-emerald-800' },
 ]
 
 type RespostaStatus = 'answered' | 'timeout' | 'already' | null
@@ -179,7 +188,7 @@ export default function QuizPlayer({
 
   const revelada = respostaRevelada
   const timerPercent = (timeLeft / tempoPorPergunta) * 100
-  const timerColor = timeLeft <= 5 ? 'bg-red-500' : timeLeft <= 10 ? 'bg-yellow-400' : 'bg-green-400'
+  const timerColor = timeLeft <= 5 ? 'bg-rose-600' : timeLeft <= 10 ? 'bg-amber-600' : 'bg-emerald-600'
   const tempoEsgotado = timeLeft <= 0
 
   const alternativasTexto = [
@@ -205,7 +214,7 @@ export default function QuizPlayer({
             <p className="text-white font-mono font-bold">{runningScore}</p>
           </div>
           <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg transition-colors ${
-            answered || tempoEsgotado ? 'bg-gray-600' : timeLeft <= 5 ? 'bg-red-500 animate-pulse' : 'bg-gray-600'
+            answered || tempoEsgotado ? 'bg-gray-600' : timeLeft <= 5 ? 'bg-rose-700 animate-pulse' : 'bg-gray-600'
           }`}>
             {answered ? '✓' : tempoEsgotado ? '0' : timeLeft}
           </div>
@@ -268,12 +277,12 @@ export default function QuizPlayer({
                 disabled={bloqueado}
                 className={`${bgClass} text-white rounded-xl p-4 text-left font-semibold transition-all flex items-center gap-3 disabled:cursor-default`}
               >
-                <span className={`w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center flex-shrink-0 text-sm uppercase font-black ${cor.dark ? 'text-gray-800' : ''}`}>
+                <span className={`w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center flex-shrink-0 text-sm uppercase font-black`}>
                   {key.toUpperCase()}
                 </span>
-                <span className={`text-sm md:text-base flex-1 ${cor.dark && !bloqueado ? 'text-gray-900' : ''}`}>{text}</span>
-                {revelada && isCorrect && <span className="ml-auto text-xl">✓</span>}
-                {revelada && isSelected && !isCorrect && <span className="ml-auto text-xl">✗</span>}
+                <span className={`text-sm md:text-base flex-1`}>{text}</span>
+                {revelada && isCorrect && <Check className="ml-auto w-5 h-5 flex-shrink-0" aria-label="correta" />}
+                {revelada && isSelected && !isCorrect && <X className="ml-auto w-5 h-5 flex-shrink-0" aria-label="errada" />}
               </button>
             )
           })}

@@ -2,7 +2,7 @@ import { buscarPorCodigo, participante as buscarParticipante, respostasComPergun
          rankingDoQuiz, contarPerguntas, rankingGeral as buscarRankingGeral } from '@/lib/db/quiz'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { Trophy, Home, RotateCcw, Medal, TrendingUp, Star, ThumbsUp, BookOpen, Dumbbell } from 'lucide-react'
+import { Trophy, Home, RotateCcw, Medal, TrendingUp, Star, ThumbsUp, BookOpen, Dumbbell, Check, X } from 'lucide-react'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -168,8 +168,8 @@ export default async function ResultadoPage({
               <div className="space-y-2">
                 {respostas.map((r, i) => (
                   <div key={r.id} className={`flex items-center gap-2 text-sm rounded-lg px-3 py-2 ${r.correta ? 'bg-green-50' : 'bg-red-50'}`}>
-                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${r.correta ? 'bg-green-500' : 'bg-red-400'}`}>
-                      {r.correta ? '✓' : '✗'}
+                    <span className={`w-5 h-5 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0 ${r.correta ? 'bg-emerald-700' : 'bg-rose-700'}`}>
+                      {r.correta ? <Check className="w-3 h-3" aria-label="acertou" /> : <X className="w-3 h-3" aria-label="errou" />}
                     </span>
                     <span className={`flex-1 line-clamp-1 text-xs ${r.correta ? 'text-green-800' : 'text-red-800'}`}>
                       {i + 1}. {(r.quiz_perguntas as { enunciado: string } | null)?.enunciado ?? '—'}

@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { GraduationCap, ArrowRight, Sparkles } from 'lucide-react'
 import { trilhaBg } from '@/lib/trilhaColors'
 import { PERGUNTAS } from '@/lib/vocacional/perguntas'
+import { iconeDaTrilha } from '@/lib/trilhaIcones'
 
 const RESPOSTAS = [
   { label: 'Sim', valor: 1, classe: 'bg-green-600 hover:bg-green-500' },
@@ -185,7 +186,7 @@ export default function VocacionalTest() {
             <div className="space-y-3 mb-6">
               {resultado.slice(0, 3).map((t, i) => (
                 <div key={t.nome} className="flex items-center gap-3 bg-gray-800 rounded-xl p-4 border border-white/5">
-                  <div className="text-2xl">{t.icone}</div>
+                  <IconeTrilha trilha={t} />
                   <div className="flex-1">
                     <p className="text-white font-semibold text-sm">{i + 1}º · {t.nome}</p>
                     <div className="w-full h-1.5 bg-gray-700 rounded-full overflow-hidden mt-1.5">
@@ -209,4 +210,10 @@ export default function VocacionalTest() {
       </div>
     </div>
   )
+}
+
+/** O ícone da trilha em traço — antes era o emoji que vinha do banco. */
+function IconeTrilha({ trilha }: { trilha: { nome: string } }) {
+  const Icone = iconeDaTrilha(trilha)
+  return <Icone className="w-6 h-6 text-white/70 flex-shrink-0" strokeWidth={1.5} aria-hidden />
 }

@@ -73,7 +73,7 @@ export default function PortfolioProjetos({ projetos }: { projetos: ProjetoComTr
                   <h3 className="font-semibold text-gray-900 text-sm">{p.titulo}</h3>
                   {trilha && (
                     <span className={`flex-shrink-0 inline-flex items-center gap-1 text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
-                      {trilha.icone} {trilha.nome}
+                      {trilha.nome}
                     </span>
                   )}
                 </div>

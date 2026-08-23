@@ -112,7 +112,7 @@ export default function IdeiaDetail({
             )}
             {trilha && (
               <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
-                {trilha.icone} {trilha.nome}
+                {trilha.nome}
               </span>
             )}
           </div>

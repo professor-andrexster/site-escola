@@ -66,19 +66,28 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
         Voltar aos cursos
       </Link>
 
-      <div className="relative aspect-[21/9] rounded-2xl overflow-hidden bg-black mb-6">
+      {/*
+        A capa fica AO LADO do texto, não atrás dele.
+
+        Ela já traz a sigla, o título e a categoria desenhados — sobrepor o
+        mesmo título por cima escrevia tudo duas vezes na mesma área, e o
+        gradiente ainda tinha de apagar a arte para o texto caber. Ao lado, a
+        capa é lida como o cartaz do curso e o texto respira.
+      */}
+      <div className="flex flex-col sm:flex-row gap-5 md:gap-6 mb-8">
         {curso.capa_url && (
-          <Image src={curso.capa_url} alt={curso.titulo} fill sizes="800px" className="object-cover opacity-70" />
+          <div className="relative w-full sm:w-80 aspect-video rounded-xl overflow-hidden bg-black/40 ring-1 ring-white/10 flex-shrink-0">
+            <Image src={curso.capa_url} alt="" fill sizes="(max-width: 640px) 100vw, 320px" className="object-cover" />
+          </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-curso-tinta via-curso-tinta/40 to-transparent" />
-        <div className="absolute bottom-0 left-0 right-0 p-5 md:p-8">
+        <div className="min-w-0 flex flex-col justify-center">
           {curso.categoria && (
-            <p className="text-curso-ciano text-xs font-jetbrains uppercase tracking-widest mb-2">{curso.categoria}</p>
+            <p className="text-curso-ciano text-xs font-jetbrains uppercase tracking-widest mb-1.5">{curso.categoria}</p>
           )}
-          <h1 className="text-2xl md:text-4xl font-black text-white font-geom mb-2">{curso.titulo}</h1>
-          <p className="text-white/60 text-sm max-w-2xl mb-3">{curso.descricao}</p>
+          <h1 className="text-2xl md:text-3xl font-black text-white font-geom mb-2 text-balance">{curso.titulo}</h1>
+          <p className="text-white/70 text-sm max-w-2xl mb-4 leading-relaxed">{curso.descricao}</p>
           <div className="flex items-center gap-2">
-            <Image src="/cursos/avatar.png" alt="" width={28} height={28} className="rounded-full ring-1 ring-white/20" />
+            <Image src="/cursos/avatar.png" alt="" width={26} height={26} className="rounded-full ring-1 ring-white/15" />
             <span className="text-white/70 text-xs font-semibold">por {curso.autor_nome}</span>
           </div>
         </div>
@@ -163,7 +172,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
               </div>
               <Link
                 href={`/certificado/${certificado.codigo}`}
-                className="inline-flex items-center gap-2 bg-green-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-600 transition-colors flex-shrink-0"
+                className="inline-flex items-center gap-2 bg-green-700 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-green-800 transition-colors flex-shrink-0"
               >
                 <Award className="w-4 h-4" />
                 Ver Certificado

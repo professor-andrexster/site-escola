@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { ChevronLeft, ChevronRight, ExternalLink, Sparkles } from 'lucide-react'
 import type { Trilha } from '@/types/database'
 import { trilhaBg, trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
+import { iconeDaTrilha } from '@/lib/trilhaIcones'
 
 interface ProjetoVitrine {
   id: string
@@ -45,6 +46,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
   const destaqueAtual = destaques[destaqueIdx]
   const alunoDestaque = destaqueAtual ? one(destaqueAtual.alunos) : null
   const trilhaDestaque = destaqueAtual ? one(destaqueAtual.trilhas) : null
+  const IconeDestaque = iconeDaTrilha(trilhaDestaque ?? {})
 
   return (
     <div className="bg-gray-50">
@@ -73,7 +75,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={destaqueAtual.imagem_url} alt={destaqueAtual.titulo} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-4xl">{trilhaDestaque?.icone}</span>
+                  <IconeDestaque className="w-12 h-12 text-gray-500" strokeWidth={1} aria-hidden />
                 )}
               </div>
               <div className="p-5 flex-1 flex flex-col">
@@ -81,7 +83,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                   <h3 className="font-playfair text-lg font-bold text-gray-900">{destaqueAtual.titulo}</h3>
                   {trilhaDestaque && (
                     <span className={`text-[11px] font-medium px-2 py-0.5 rounded-full whitespace-nowrap ${trilhaBgLight(trilhaDestaque.cor_tailwind)} ${trilhaText(trilhaDestaque.cor_tailwind)}`}>
-                      {trilhaDestaque.icone} {trilhaDestaque.nome}
+                      {trilhaDestaque.nome}
                     </span>
                   )}
                 </div>
@@ -122,7 +124,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                   : 'bg-white text-gray-500 border-gray-200 hover:border-escola-azul/30'
               }`}
             >
-              {nome === 'Todos' ? 'Todos' : `${trilhas.find(t => t.nome === nome)?.icone ?? ''} ${nome}`}
+              {nome}
             </button>
           ))}
         </div>
