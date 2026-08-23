@@ -6,7 +6,7 @@ import type { Ideia, IdeiaComentario } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 
 type PerfilResumo = { nome_completo: string; turma?: string | null; role?: string }
-type TrilhaResumo = { nome: string; icone: string | null; cor_tailwind: string | null }
+type TrilhaResumo = { nome: string; cor_tailwind: string | null }
 type ComentarioComAutor = IdeiaComentario & { autor: PerfilResumo | PerfilResumo[] | null }
 
 function one<T>(v: T | T[] | null): T | null {

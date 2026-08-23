@@ -21,7 +21,7 @@ export type Nivel = (typeof NIVEIS)[number]
 
 const CAMPOS_MODULO = {
   id: true, nome: true, slug: true, descricao: true, nivel: true,
-  ordem: true, carga_horaria: true, capa_url: true,
+  ordem: true, carga_horaria: true, carga_min: true, capa_url: true,
 } as const
 
 /** Modulos publicados, na ordem, com os cursos de cada um. */
@@ -33,7 +33,7 @@ export async function modulosPublicados() {
       cursos: {
         where: { publicado: true },
         select: {
-          id: true, titulo: true, slug: true, carga_horaria: true,
+          id: true, titulo: true, slug: true, carga_horaria: true, carga_min: true,
           capa_url: true, ordem_no_modulo: true,
         },
         orderBy: { ordem_no_modulo: 'asc' },
@@ -52,7 +52,7 @@ export async function moduloPorSlug(slug: string) {
         where: { publicado: true },
         select: {
           id: true, titulo: true, slug: true, descricao: true,
-          carga_horaria: true, capa_url: true, ordem_no_modulo: true,
+          carga_horaria: true, carga_min: true, capa_url: true, ordem_no_modulo: true,
         },
         orderBy: { ordem_no_modulo: 'asc' },
       },
@@ -124,7 +124,7 @@ export async function progressoDoModulo(moduloId: string, userId: string) {
 export async function certificadoDoModulo(moduloId: string, userId: string) {
   return prisma.certificados.findFirst({
     where: { modulo_id: moduloId, user_id: userId },
-    select: { codigo: true, nota: true, carga_horaria: true },
+    select: { codigo: true, nota: true, carga_horaria: true, carga_min: true },
   })
 }
 
@@ -278,8 +278,8 @@ export async function painelDeEntregas(opcoes: { userId?: string } = {}) {
       curso_desafios: {
         select: {
           id: true, titulo: true,
-          cursos: { select: { titulo: true, slug: true, carga_horaria: true } },
-          modulos: { select: { nome: true, slug: true, carga_horaria: true, nivel: true } },
+          cursos: { select: { titulo: true, slug: true, carga_horaria: true, carga_min: true } },
+          modulos: { select: { nome: true, slug: true, carga_horaria: true, carga_min: true, nivel: true } },
         },
       },
     },
@@ -296,7 +296,7 @@ export async function painelDeEntregas(opcoes: { userId?: string } = {}) {
   // de impressao junto — que e o que a tela precisa mostrar.
   const certs = await prisma.certificados.findMany({
     where: { user_id: { in: Array.from(new Set(envios.map(e => e.user_id))) } },
-    select: { codigo: true, user_id: true, curso_id: true, modulo_id: true, carga_horaria: true, emitido_em: true },
+    select: { codigo: true, user_id: true, curso_id: true, modulo_id: true, carga_horaria: true, carga_min: true, emitido_em: true },
   })
   const certDeCurso = new Map(certs.filter(c => c.curso_id).map(c => [`${c.user_id}:${c.curso_id}`, c]))
   const certDeModulo = new Map(certs.filter(c => c.modulo_id).map(c => [`${c.user_id}:${c.modulo_id}`, c]))
@@ -348,7 +348,7 @@ export async function certificadosDoAluno(userId: string) {
   return prisma.certificados.findMany({
     where: { user_id: userId },
     select: {
-      codigo: true, curso_titulo: true, carga_horaria: true,
+      codigo: true, curso_titulo: true, carga_horaria: true, carga_min: true,
       emitido_em: true, curso_id: true, modulo_id: true,
     },
     orderBy: { emitido_em: 'desc' },

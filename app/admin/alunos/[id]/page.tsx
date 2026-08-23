@@ -80,7 +80,7 @@ export default async function AlunoDetalhePage({ params }: { params: Promise<{ i
               const trilha = Array.isArray(p.trilhas) ? p.trilhas[0] : p.trilhas
               return (
                 <div key={i} className="flex items-center gap-3 text-sm">
-                  <span className="w-6 text-center">{trilha?.icone}</span>
+                  
                   <span className="flex-1 text-gray-700">{trilha?.nome}</span>
                   <span className="text-gray-500 text-xs">{p.pontuacao}%</span>
                 </div>

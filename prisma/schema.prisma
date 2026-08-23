@@ -327,6 +327,7 @@ model certificados {
   emitido_em    DateTime? @default(now())
   modulo_id     String?   @db.Char(36)
   modulo_titulo String?   @db.VarChar(120)
+  carga_min     Int?
   cursos        cursos?   @relation(fields: [curso_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
   modulos       modulos?  @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "certificados_modulo_fkey")
   usuarios      usuarios  @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict)
@@ -422,6 +423,7 @@ model cursos {
   ordem_no_modulo       Int                     @default(0)
   trilha_id             String?                 @db.Char(36)
   ordem_na_trilha       Int?
+  carga_min             Int?
   aulas                 aulas[]
   certificados          certificados[]
   curso_avaliadores     curso_avaliadores[]
@@ -942,6 +944,7 @@ model modulos {
   publicado      Boolean          @default(false)
   criado_em      DateTime?        @default(now()) @db.DateTime(0)
   atualizado_em  DateTime?        @default(now()) @db.DateTime(0)
+  carga_min      Int?
   certificados   certificados[]
   curso_desafios curso_desafios[]
   cursos         cursos[]

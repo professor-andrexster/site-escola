@@ -6,7 +6,9 @@ import type { Projeto, Trilha } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 import { enviarArquivo } from '@/lib/enviarArquivo'
 
-type ProjetoComTrilha = Projeto & { trilhas: Trilha | Trilha[] | null }
+/** Só o que esta tela usa de uma trilha. */
+type TrilhaResumo = { id: string; nome: string; cor_tailwind: string | null }
+type ProjetoComTrilha = Projeto & { trilhas: TrilhaResumo | TrilhaResumo[] | null }
 
 interface FormState {
   id: string | null
@@ -32,7 +34,7 @@ const FORM_VAZIO: FormState = {
   imagem_url: '',
 }
 
-function trilhaDe(p: ProjetoComTrilha): Trilha | null {
+function trilhaDe(p: ProjetoComTrilha): TrilhaResumo | null {
   return Array.isArray(p.trilhas) ? p.trilhas[0] ?? null : p.trilhas
 }
 
@@ -41,7 +43,7 @@ export default function AlunoProjetosManager({
 }: {
   alunoId: string
   serieAtual: string
-  trilhas: Trilha[]
+  trilhas: TrilhaResumo[]
   projetosIniciais: ProjetoComTrilha[]
 }) {
   const [projetos, setProjetos] = useState(projetosIniciais)

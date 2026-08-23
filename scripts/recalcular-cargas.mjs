@@ -34,6 +34,16 @@ const env = Object.fromEntries(
     .map(l => { const i = l.indexOf('='); return [l.slice(0, i), l.slice(i + 1).replace(/^["']|["']$/g, '')] })
 )
 
+/**
+ * O ajuste medido em sala.
+ *
+ * A estimativa por leitura vinha 7 vezes acima do tempo real: uma aula que o
+ * aluno fez em 5 minutos aparecia como 35. A fórmula continua a mesma — o que
+ * muda é este fator, calibrado por medição e não por chute, e ele vale para
+ * tudo que a plataforma calcular daqui para frente.
+ */
+const FATOR_PLATAFORMA = 1 / 7
+
 const PALAVRAS_POR_MIN = 180
 const CARACTERES_POR_PALAVRA = 6
 const FATOR_LEITURA = 2
@@ -42,12 +52,16 @@ const MIN_PROJETO_DE_CURSO = 60
 /** O projeto de módulo é maior que o de curso: reúne o que vários cursos deram. */
 const MIN_PROJETO_DE_MODULO = 120
 
-function horasDoCurso({ chars, exercicios, projetos }) {
+function minutosDoCurso({ chars, exercicios, projetos }) {
   const palavras = chars / CARACTERES_POR_PALAVRA
   const leitura = (palavras / PALAVRAS_POR_MIN) * FATOR_LEITURA
-  const minutos = leitura + exercicios * MIN_POR_EXERCICIO + projetos * MIN_PROJETO_DE_CURSO
-  return Math.max(1, Math.round(minutos / 60))
+  const minutos = (leitura + exercicios * MIN_POR_EXERCICIO + projetos * MIN_PROJETO_DE_CURSO) * FATOR_PLATAFORMA
+  // Múltiplos de 5, piso de 10: estimativa não tem precisão de minuto.
+  return Math.max(10, Math.round(minutos / 5) * 5)
 }
+
+/** A hora cheia, para as telas e relatórios que ainda leem `carga_horaria`. */
+const emHoras = min => Math.max(1, Math.round(min / 60))
 
 const url = new URL(env.DATABASE_URL)
 const pool = mariadb.createPool({
@@ -62,7 +76,7 @@ try {
   // para curso que saiu do ar na fusão, e ele precisa de uma carga honesta
   // tanto quanto os outros.
   const cursos = await c.query(`
-    SELECT c.id, c.slug, c.titulo, c.publicado, c.carga_horaria AS atual, c.modulo_id,
+    SELECT c.id, c.slug, c.titulo, c.publicado, c.carga_horaria AS atual, c.carga_min, c.modulo_id,
            COALESCE(SUM(CHAR_LENGTH(COALESCE(a.conteudo, ''))), 0) AS chars,
            (SELECT COUNT(*) FROM curso_desafios d
              WHERE d.curso_id = c.id AND d.aula_id IS NOT NULL) AS exercicios,
@@ -82,50 +96,52 @@ try {
 
   let antes = 0, depois = 0
   for (const curso of cursos) {
-    const nova = horasDoCurso({
+    const min = minutosDoCurso({
       chars: Number(curso.chars),
       exercicios: Number(curso.exercicios),
       projetos: Number(curso.projetos),
     })
-    novaCarga.set(curso.id, nova)
-    if (curso.publicado) { antes += curso.atual ?? 0; depois += nova }
+    const nova = emHoras(min)
+    novaCarga.set(curso.id, min)
+    if (curso.publicado) { antes += curso.atual ?? 0; depois += min }
 
-    const mudou = nova !== curso.atual
+    const mudou = nova !== curso.atual || min !== curso.carga_min
     if (mudou) {
-      backup.cursos.push({ id: curso.id, slug: curso.slug, carga_horaria: curso.atual })
-      if (APLICAR) await c.query('UPDATE cursos SET carga_horaria = ? WHERE id = ?', [nova, curso.id])
+      backup.cursos.push({ id: curso.id, slug: curso.slug, carga_horaria: curso.atual, carga_min: curso.carga_min })
+      if (APLICAR) await c.query('UPDATE cursos SET carga_horaria = ?, carga_min = ? WHERE id = ?', [nova, min, curso.id])
     }
     console.log(
       '  ' + (curso.publicado ? '' : '· ') + curso.titulo.slice(0, curso.publicado ? 38 : 36).padEnd(curso.publicado ? 38 : 36) +
       String((curso.atual ?? 0) + 'h').padStart(5) +
-      String(nova + 'h').padStart(7) +
-      (mudou ? String((nova - (curso.atual ?? 0)) + 'h').padStart(10) : '         =')
+      String(min + 'min').padStart(9) +
+      String('(' + nova + 'h)').padStart(7)
     )
   }
   console.log('  ' + '-'.repeat(66))
-  console.log('  ' + 'total dos publicados'.padEnd(38) + String(antes + 'h').padStart(5) + String(depois + 'h').padStart(7))
+  console.log('  ' + 'total dos publicados'.padEnd(38) + String(antes + 'h').padStart(5) + String(Math.round(depois / 60) + 'h').padStart(9))
   console.log('  (· = curso despublicado; entra porque tem certificado emitido)')
 
   // Módulo = soma dos cursos publicados dele, mais o projeto do módulo.
   console.log('\nMÓDULOS\n')
   const modulos = await c.query(`
-    SELECT m.id, m.nome, m.carga_horaria AS atual,
+    SELECT m.id, m.nome, m.carga_horaria AS atual, m.carga_min,
            (SELECT COUNT(*) FROM curso_desafios d WHERE d.modulo_id = m.id) AS projetos
       FROM modulos m ORDER BY m.ordem`)
 
   for (const m of modulos) {
     const doModulo = cursos.filter(x => x.modulo_id === m.id && x.publicado)
     const soma = doModulo.reduce((s, x) => s + (novaCarga.get(x.id) ?? 0), 0)
-    const nova = Math.max(1, soma + Math.round((Number(m.projetos) * MIN_PROJETO_DE_MODULO) / 60))
-    const mudou = nova !== m.atual
+    const min = Math.max(10, soma + Math.round(Number(m.projetos) * MIN_PROJETO_DE_MODULO * FATOR_PLATAFORMA))
+    const nova = emHoras(min)
+    const mudou = nova !== m.atual || min !== m.carga_min
     if (mudou) {
-      backup.modulos.push({ id: m.id, nome: m.nome, carga_horaria: m.atual })
-      if (APLICAR) await c.query('UPDATE modulos SET carga_horaria = ? WHERE id = ?', [nova, m.id])
+      backup.modulos.push({ id: m.id, nome: m.nome, carga_horaria: m.atual, carga_min: m.carga_min })
+      if (APLICAR) await c.query('UPDATE modulos SET carga_horaria = ?, carga_min = ? WHERE id = ?', [nova, min, m.id])
     }
     console.log(
       '  ' + m.nome.slice(0, 34).padEnd(36) +
-      String((m.atual ?? 0) + 'h').padStart(5) + String(nova + 'h').padStart(7) +
-      `   (${doModulo.length} curso${doModulo.length === 1 ? '' : 's'} = ${soma}h + projeto)`
+      String((m.atual ?? 0) + 'h').padStart(5) + String(min + 'min').padStart(9) +
+      `   (${doModulo.length} curso${doModulo.length === 1 ? '' : 's'} = ${soma}min + projeto)`
     )
   }
 
@@ -134,29 +150,30 @@ try {
   // dois números diferentes para o mesmo curso.
   console.log('\nCERTIFICADOS JÁ EMITIDOS\n')
   const certificados = await c.query(
-    'SELECT id, codigo, aluno_nome, curso_titulo, curso_id, modulo_id, carga_horaria FROM certificados'
+    'SELECT id, codigo, aluno_nome, curso_titulo, curso_id, modulo_id, carga_horaria, carga_min FROM certificados'
   )
 
   for (const cert of certificados) {
     let nova = null
     if (cert.curso_id) nova = novaCarga.get(cert.curso_id) ?? null
     else if (cert.modulo_id) {
-      const [m] = await c.query('SELECT carga_horaria FROM modulos WHERE id = ?', [cert.modulo_id])
-      nova = m?.carga_horaria ?? null
+      const [m] = await c.query('SELECT carga_min FROM modulos WHERE id = ?', [cert.modulo_id])
+      nova = m?.carga_min ?? null
     }
 
     if (nova === null) {
       console.log(`  ${cert.codigo}  ${cert.curso_titulo.slice(0, 30).padEnd(32)} SEM ORIGEM — mantido em ${cert.carga_horaria}h`)
       continue
     }
-    const mudou = nova !== cert.carga_horaria
+    const horas = emHoras(nova)
+    const mudou = horas !== cert.carga_horaria || nova !== cert.carga_min
     if (mudou) {
-      backup.certificados.push({ id: cert.id, codigo: cert.codigo, carga_horaria: cert.carga_horaria })
-      if (APLICAR) await c.query('UPDATE certificados SET carga_horaria = ? WHERE id = ?', [nova, cert.id])
+      backup.certificados.push({ id: cert.id, codigo: cert.codigo, carga_horaria: cert.carga_horaria, carga_min: cert.carga_min })
+      if (APLICAR) await c.query('UPDATE certificados SET carga_horaria = ?, carga_min = ? WHERE id = ?', [horas, nova, cert.id])
     }
     console.log(
       `  ${cert.codigo}  ${cert.curso_titulo.slice(0, 30).padEnd(32)}` +
-      String(cert.carga_horaria + 'h').padStart(5) + String(nova + 'h').padStart(7) +
+      String(cert.carga_horaria + 'h').padStart(5) + String(nova + 'min').padStart(9) +
       `   ${cert.aluno_nome.split(' ')[0]}`
     )
   }
@@ -177,7 +194,7 @@ try {
     if (!aulas.length) continue
 
     // O projeto final não é aula: sai do bolo antes de dividir.
-    const minutosDeAula = novaCarga.get(curso.id) * 60 - Number(curso.projetos) * MIN_PROJETO_DE_CURSO
+    const minutosDeAula = novaCarga.get(curso.id) - Number(curso.projetos) * MIN_PROJETO_DE_CURSO * FATOR_PLATAFORMA
     const totalChars = aulas.reduce((s, a) => s + Number(a.chars), 0) || 1
 
     let ajustadas = 0
@@ -185,7 +202,7 @@ try {
       const fatia = (Number(aula.chars) / totalChars) * minutosDeAula
       // Múltiplos de 5 e piso de 10: minuto quebrado numa estimativa passa uma
       // precisão que ela não tem.
-      const nova = Math.max(10, Math.round(fatia / 5) * 5)
+      const nova = Math.max(3, Math.round(fatia))
       if (nova === aula.atual) continue
       backup.aulas.push({ id: aula.id, titulo: aula.titulo, duracao_estimada_min: aula.atual })
       ajustadas++
@@ -193,11 +210,11 @@ try {
     }
     const soma = aulas.reduce((s, a) => {
       const fatia = (Number(a.chars) / totalChars) * minutosDeAula
-      return s + Math.max(10, Math.round(fatia / 5) * 5)
+      return s + Math.max(3, Math.round(fatia))
     }, 0)
     console.log(
       '  ' + curso.titulo.slice(0, 36).padEnd(38) +
-      `${ajustadas}/${aulas.length} aula(s) ajustada(s) · somam ${Math.round(soma / 60 * 10) / 10}h de ${novaCarga.get(curso.id)}h`
+      `${ajustadas}/${aulas.length} aula(s) · somam ${soma}min de ${novaCarga.get(curso.id)}min`
     )
   }
 

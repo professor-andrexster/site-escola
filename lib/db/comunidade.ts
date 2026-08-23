@@ -56,7 +56,7 @@ export async function quadroDeIdeias() {
     prisma.ideias.findMany({
       include: {
         profiles: { select: { id: true, nome_completo: true, turma: true } },
-        trilhas: { select: { id: true, nome: true, icone: true, cor_tailwind: true } },
+        trilhas: { select: { id: true, nome: true, cor_tailwind: true } },
       },
       orderBy: { created_at: 'desc' },
     }),
@@ -110,8 +110,19 @@ export async function listarPaginasEditaveis(chaves?: string[]) {
 
 // ------------------------------------------------------------- trilhas
 
-export async function listarTrilhas(): Promise<Trilha[]> {
-  return prisma.trilhas.findMany({ orderBy: { nome: 'asc' } })
+/**
+ * As trilhas, com os campos que as telas de fato usam.
+ *
+ * Antes era `findMany` sem `select`, o que trazia a linha inteira — inclusive o
+ * `icone`, que nenhuma tela lê mais. O emoji continuava viajando do servidor
+ * para o navegador no payload de /projetos, invisível e inútil. Selecionar o
+ * que se usa também evita que um campo novo vaze sozinho no futuro.
+ */
+export async function listarTrilhas() {
+  return prisma.trilhas.findMany({
+    orderBy: { nome: 'asc' },
+    select: { id: true, nome: true, descricao: true, cor_tailwind: true, slug: true },
+  })
 }
 
 // ------------------------------------------------------------ projetos
@@ -209,7 +220,7 @@ export async function projetosPublicos(opcoes: { apenasDestaque?: boolean; limit
     },
     include: {
       alunos: { select: { nome: true, matricula: true, serie: true, turma: true, foto_url: true, ativo: true } },
-      trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+      trilhas: { select: { nome: true, cor_tailwind: true } },
     },
     // Destaque primeiro, e dentro dele o mais recente — a mesma ordem dupla
     // que a vitrine usava no PostgREST.
@@ -236,7 +247,7 @@ export async function fichaDaIdeia(id: string) {
       where: { id },
       include: {
         profiles: { select: { id: true, nome_completo: true, turma: true } },
-        trilhas: { select: { id: true, nome: true, icone: true, cor_tailwind: true } },
+        trilhas: { select: { id: true, nome: true, cor_tailwind: true } },
       },
     }),
     prisma.ideia_comentarios.findMany({
@@ -321,7 +332,7 @@ export async function criarIdeia(dados: {
     },
     include: {
       profiles: { select: { nome_completo: true, turma: true } },
-      trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+      trilhas: { select: { nome: true, cor_tailwind: true } },
     },
   })
   const { profiles, trilhas, ...ideia } = i
@@ -362,7 +373,7 @@ export async function comentariosDaIdeia(ideiaId: string) {
 export async function perfilVocacional(alunoId: string) {
   return prisma.perfis_vocacionais.findMany({
     where: { aluno_id: alunoId },
-    include: { trilhas: { select: { nome: true, icone: true, cor_tailwind: true } } },
+    include: { trilhas: { select: { nome: true, cor_tailwind: true } } },
     orderBy: { pontuacao: 'desc' },
   })
 }

@@ -108,7 +108,7 @@ export async function portfolioPublico(matricula: string) {
       perfis_vocacionais: {
         select: {
           pontuacao: true,
-          trilhas: { select: { nome: true, icone: true, cor_tailwind: true } },
+          trilhas: { select: { nome: true, cor_tailwind: true } },
         },
       },
     },
@@ -119,7 +119,7 @@ export async function portfolioPublico(matricula: string) {
   // vê os próprios rascunhos em Meu Portfólio, que é outra tela.
   const projetos = await prisma.projetos.findMany({
     where: { aluno_id: aluno.id, status: 'aprovado' },
-    include: { trilhas: { select: { nome: true, icone: true, cor_tailwind: true } } },
+    include: { trilhas: { select: { nome: true, cor_tailwind: true } } },
     orderBy: { criado_em: 'desc' },
   })
 

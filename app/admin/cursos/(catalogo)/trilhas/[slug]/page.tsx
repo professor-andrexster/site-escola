@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Check, Play, Lock, Clock, Layers } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { trilhaPorSlug, progressoNaTrilha } from '@/lib/db/trilhas'
+import { iconeDaTrilha } from '@/lib/trilhaIcones'
+import { formatarDuracao } from '@/lib/duracao'
 import type { Metadata } from 'next'
 
 export const dynamic = 'force-dynamic'
@@ -31,6 +33,7 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
 
   const progresso = await progressoNaTrilha(trilha.cursos.map(c => c.id), user.id)
   const cor = CORES[trilha.cor ?? ''] ?? CORES['gray-600']
+  const Icone = iconeDaTrilha(trilha)
 
   const estados = trilha.cursos.map(c => {
     const p = progresso.get(c.id)
@@ -56,11 +59,11 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
       </Link>
 
       <div className="flex items-start gap-4 mb-3">
-        {trilha.icone && <span className="text-4xl leading-none flex-shrink-0">{trilha.icone}</span>}
+        <Icone className="w-9 h-9 flex-shrink-0 text-white/80 mt-0.5" strokeWidth={1.25} aria-hidden />
         <div className="min-w-0">
           <h1 className="text-2xl md:text-3xl font-black text-white font-geom">{trilha.nome}</h1>
           <p className={`text-sm font-jetbrains ${cor.texto}`}>
-            {trilha.cursos.length} cursos · {trilha.cargaTotal} horas
+            {trilha.cursos.length} cursos · {formatarDuracao(trilha.cargaTotalMin)}
           </p>
         </div>
       </div>
@@ -126,10 +129,10 @@ export default async function TrilhaPage({ params }: { params: Promise<{ slug: s
                     {curso.titulo}
                   </p>
                   <p className="flex flex-wrap items-center gap-x-3 gap-y-0.5 text-white/60 text-xs mt-1">
-                    {curso.cargaHoraria != null && (
+                    {curso.cargaMin != null && (
                       <span className="inline-flex items-center gap-1">
                         <Clock className="w-3 h-3" />
-                        {curso.cargaHoraria}h
+                        {formatarDuracao(curso.cargaMin)}
                       </span>
                     )}
                     {total > 0 && <span>{feitas}/{total} aulas</span>}

@@ -17,7 +17,6 @@ type Etapa = 'matricula' | 'perguntas' | 'salvando' | 'resultado'
 
 interface ResultadoTrilha {
   nome: string
-  icone: string | null
   cor: string | null
   pontuacao: number
 }

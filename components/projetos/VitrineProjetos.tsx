@@ -3,7 +3,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight, ExternalLink, Sparkles } from 'lucide-react'
-import type { Trilha } from '@/types/database'
+/** Só o que a vitrine usa de uma trilha — o filtro e a cor do cartão. */
+type TrilhaDaVitrine = { id: string; nome: string; cor_tailwind: string | null }
 import { trilhaBg, trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 import { iconeDaTrilha } from '@/lib/trilhaIcones'
 
@@ -16,7 +17,7 @@ interface ProjetoVitrine {
   tags: string[] | null
   destaque: boolean
   criado_em: string
-  trilhas: { nome: string; icone: string | null; cor_tailwind: string | null } | { nome: string; icone: string | null; cor_tailwind: string | null }[] | null
+  trilhas: { nome: string; cor_tailwind: string | null } | { nome: string; cor_tailwind: string | null }[] | null
   alunos: { nome: string; matricula: string; serie: string; turma: string; ativo: boolean } | { nome: string; matricula: string; serie: string; turma: string; ativo: boolean }[] | null
 }
 
@@ -26,7 +27,7 @@ function one<T>(v: T | T[] | null): T | null {
 
 const POR_PAGINA = 12
 
-export default function VitrineProjetos({ projetos, trilhas }: { projetos: ProjetoVitrine[]; trilhas: Trilha[] }) {
+export default function VitrineProjetos({ projetos, trilhas }: { projetos: ProjetoVitrine[]; trilhas: TrilhaDaVitrine[] }) {
   const [filtro, setFiltro] = useState('Todos')
   const [pagina, setPagina] = useState(0)
   const [destaqueIdx, setDestaqueIdx] = useState(0)
@@ -150,7 +151,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                       // eslint-disable-next-line @next/next/no-img-element
                       <img src={p.imagem_url} alt={p.titulo} className="w-full h-full object-cover" />
                     ) : (
-                      <span className="text-3xl">{trilha?.icone}</span>
+                      <IconeDoCartao trilha={trilha} />
                     )}
                   </div>
                   <div className="p-4 flex-1 flex flex-col">
@@ -158,7 +159,7 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
                       <h3 className="font-semibold text-gray-900 text-sm">{p.titulo}</h3>
                       {trilha && (
                         <span className={`flex-shrink-0 text-[11px] font-medium px-2 py-0.5 rounded-full ${trilhaBgLight(trilha.cor_tailwind)} ${trilhaText(trilha.cor_tailwind)}`}>
-                          {trilha.icone}
+                          {trilha.nome}
                         </span>
                       )}
                     </div>
@@ -203,4 +204,10 @@ export default function VitrineProjetos({ projetos, trilhas }: { projetos: Proje
       </div>
     </div>
   )
+}
+
+/** Projeto sem imagem: o ícone da trilha, em traço, no lugar do emoji antigo. */
+function IconeDoCartao({ trilha }: { trilha: { nome: string } | null }) {
+  const Icone = iconeDaTrilha(trilha ?? {})
+  return <Icone className="w-9 h-9 text-white/80" strokeWidth={1.25} aria-hidden />
 }

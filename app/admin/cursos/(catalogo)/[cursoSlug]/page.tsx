@@ -9,6 +9,7 @@ import ProvaFinal from '@/components/cursos/ProvaFinal'
 import DesafioFinal from '@/components/cursos/DesafioFinal'
 import { desafioFinalDoCurso, envioDoAluno } from '@/lib/db/desafio-curso'
 import type { Metadata } from 'next'
+import { formatarDuracao } from '@/lib/duracao'
 
 export const dynamic = 'force-dynamic'
 
@@ -168,7 +169,7 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
             <div className="bg-white/5 border border-green-400/30 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="text-center sm:text-start">
                 <p className="text-white font-bold font-geom">Curso concluído com nota {certificado.nota}</p>
-                <p className="text-white/50 text-sm mt-0.5">Certificado de {certificado.carga_horaria}h emitido em seu nome.</p>
+                <p className="text-white/50 text-sm mt-0.5">Certificado de {formatarDuracao(certificado.carga_min ?? certificado.carga_horaria * 60)} emitido em seu nome.</p>
               </div>
               <Link
                 href={`/certificado/${certificado.codigo}`}

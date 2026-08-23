@@ -262,7 +262,7 @@ export async function cursoParaAluno(slug: string, userId: string) {
     prisma.curso_prova_perguntas.count({ where: { curso_id: curso.id } }),
     prisma.certificados.findFirst({
       where: { curso_id: curso.id, user_id: userId },
-      select: { codigo: true, nota: true, carga_horaria: true },
+      select: { codigo: true, nota: true, carga_horaria: true, carga_min: true },
     }),
   ])
 
@@ -438,7 +438,7 @@ export async function dadosDaProva(cursoId: string, userId: string) {
   const [curso, aulas, perguntas, certificado] = await Promise.all([
     prisma.cursos.findUnique({
       where: { id: cursoId },
-      select: { id: true, titulo: true, autor_nome: true, carga_horaria: true, publicado: true },
+      select: { id: true, titulo: true, autor_nome: true, carga_horaria: true, carga_min: true, publicado: true },
     }),
     prisma.aulas.findMany({
       where: { curso_id: cursoId, publicado: true },

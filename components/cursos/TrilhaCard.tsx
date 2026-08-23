@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { ArrowRight, Check } from 'lucide-react'
 import type { Trilha } from '@/lib/db/trilhas'
 import { iconeDaTrilha } from '@/lib/trilhaIcones'
+import { formatarDuracao } from '@/lib/duracao'
 
 /**
  * O cartão de entrada de uma trilha.
@@ -48,7 +49,7 @@ export default function TrilhaCard({ trilha, concluidos }: Props) {
         <div className="min-w-0">
           <h2 className="text-white font-black text-lg font-geom truncate">{trilha.nome}</h2>
           <p className={`text-xs font-jetbrains ${cor.texto}`}>
-            {trilha.cursos.length} curso{trilha.cursos.length === 1 ? '' : 's'} · {trilha.cargaTotal}h
+            {trilha.cursos.length} curso{trilha.cursos.length === 1 ? '' : 's'} · {formatarDuracao(trilha.cargaTotalMin)}
           </p>
         </div>
       </div>

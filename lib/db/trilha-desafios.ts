@@ -147,11 +147,11 @@ export async function desafioParaTela(id: string) {
       aulas: { select: { slug: true, titulo: true } },
       cursos: {
         select: {
-          id: true, titulo: true, slug: true, carga_horaria: true,
+          id: true, titulo: true, slug: true, carga_horaria: true, carga_min: true,
           modulos: { select: { nome: true, slug: true, nivel: true } },
         },
       },
-      modulos: { select: { id: true, nome: true, slug: true, nivel: true, carga_horaria: true } },
+      modulos: { select: { id: true, nome: true, slug: true, nivel: true, carga_horaria: true, carga_min: true } },
     },
   })
 }

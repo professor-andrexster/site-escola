@@ -7,7 +7,7 @@ import type { Ideia, Trilha } from '@/types/database'
 import { trilhaBgLight, trilhaText } from '@/lib/trilhaColors'
 
 type PerfilResumo = { nome_completo: string; turma: string | null }
-type TrilhaResumo = { nome: string; icone: string | null; cor_tailwind: string | null }
+type TrilhaResumo = { nome: string; cor_tailwind: string | null }
 
 export type IdeiaComExtras = Ideia & {
   autor: PerfilResumo | PerfilResumo[] | null

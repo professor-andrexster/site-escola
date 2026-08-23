@@ -15,7 +15,7 @@ interface ProjetoComTrilha {
   tags: string[] | null
   destaque: boolean
   criado_em: string | null
-  trilhas: { nome: string; icone: string | null; cor_tailwind: string | null } | { nome: string; icone: string | null; cor_tailwind: string | null }[] | null
+  trilhas: { nome: string; cor_tailwind: string | null } | { nome: string; cor_tailwind: string | null }[] | null
 }
 
 function getTrilha(p: ProjetoComTrilha) {

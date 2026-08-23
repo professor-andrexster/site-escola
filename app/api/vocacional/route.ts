@@ -33,7 +33,6 @@ export async function POST(request: Request) {
     .map(t => ({
       trilhaId: t.id,
       nome: t.nome,
-      icone: t.icone,
       cor: t.cor_tailwind,
       pontuacao: pontuacaoDe(t.nome),
     }))

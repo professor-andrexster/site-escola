@@ -8,6 +8,7 @@ import {
 import { envioDoAluno } from '@/lib/db/desafio-curso'
 import DesafioFinal from '@/components/cursos/DesafioFinal'
 import type { Metadata } from 'next'
+import { formatarDuracao } from '@/lib/duracao'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +53,7 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
       </Link>
 
       <span className={`inline-block text-[11px] font-jetbrains uppercase tracking-widest px-2.5 py-1 rounded-full border mb-3 ${CORES[modulo.nivel] ?? ''}`}>
-        {modulo.nivel} · {modulo.carga_horaria}h
+        {modulo.nivel} · {formatarDuracao(modulo.carga_min ?? (modulo.carga_horaria ?? 0) * 60)}
       </span>
 
       <h1 className="text-2xl md:text-3xl font-black text-white font-geom mb-2">{modulo.nome}</h1>
@@ -85,8 +86,8 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
                   {cu.titulo}
                 </p>
                 <p className="text-white/55 text-xs mt-0.5">
-                  {p ? `${p.concluidas} de ${p.aulas} aulas` : `${cu.carga_horaria}h`}
-                  {' · '}{cu.carga_horaria}h
+                  {p ? `${p.concluidas} de ${p.aulas} aulas` : formatarDuracao(cu.carga_min ?? (cu.carga_horaria ?? 0) * 60)}
+                  {' · '}{formatarDuracao(cu.carga_min ?? (cu.carga_horaria ?? 0) * 60)}
                 </p>
               </div>
 

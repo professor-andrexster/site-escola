@@ -4,6 +4,7 @@ import { getProfileOrRedirect } from '@/lib/profile'
 import { modulosPublicados, NIVEIS } from '@/lib/db/modulos'
 import { prisma } from '@/lib/db'
 import type { Metadata } from 'next'
+import { formatarDuracao } from '@/lib/duracao'
 
 export const metadata: Metadata = { title: 'Módulos' }
 export const dynamic = 'force-dynamic'
@@ -86,7 +87,7 @@ export default async function ModulosPage() {
               </span>
               <span className="text-white/50 text-xs">
                 {doNivel.length} {doNivel.length === 1 ? 'módulo' : 'módulos'} ·{' '}
-                {doNivel.reduce((s, m) => s + (m.carga_horaria ?? 0), 0)}h
+                {formatarDuracao(doNivel.reduce((s, m) => s + (m.carga_min ?? (m.carga_horaria ?? 0) * 60), 0))}
               </span>
             </div>
 
@@ -112,7 +113,7 @@ export default async function ModulosPage() {
                         </span>
                       ) : (
                         <span className="flex-shrink-0 text-white/50 text-xs font-jetbrains">
-                          {m.carga_horaria}h
+                          {formatarDuracao(m.carga_min ?? (m.carga_horaria ?? 0) * 60)}
                         </span>
                       )}
                     </div>
@@ -134,7 +135,7 @@ export default async function ModulosPage() {
                               {cu.titulo}
                             </span>
                             <span className="text-white/55 text-xs font-jetbrains ms-auto flex-shrink-0">
-                              {cu.carga_horaria}h
+                              {formatarDuracao(cu.carga_min ?? (cu.carga_horaria ?? 0) * 60)}
                             </span>
                           </li>
                         )

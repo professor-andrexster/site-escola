@@ -18,7 +18,7 @@ export interface CursoDaTrilha {
   slug: string
   titulo: string
   capaUrl: string | null
-  cargaHoraria: number | null
+  cargaMin: number | null
   ordem: number
   /** O módulo continua ali por baixo — é dele que sai o certificado. */
   moduloNome: string | null
@@ -35,18 +35,18 @@ export interface Trilha {
   cor: string | null
   ordem: number
   cursos: CursoDaTrilha[]
-  cargaTotal: number
+  cargaTotalMin: number
 }
 
 const SELECAO = {
   id: true, slug: true, titulo: true, capa_url: true,
-  carga_horaria: true, ordem_na_trilha: true, nivel: true,
+  carga_horaria: true, carga_min: true, ordem_na_trilha: true, nivel: true,
   modulos: { select: { nome: true, slug: true, nivel: true } },
 } as const
 
 type LinhaCurso = {
   id: string; slug: string; titulo: string; capa_url: string | null
-  carga_horaria: number | null; ordem_na_trilha: number | null; nivel: string | null
+  carga_horaria: number | null; carga_min: number | null; ordem_na_trilha: number | null; nivel: string | null
   modulos: { nome: string; slug: string; nivel: string } | null
 }
 
@@ -56,7 +56,7 @@ function paraCurso(c: LinhaCurso): CursoDaTrilha {
     slug: c.slug,
     titulo: c.titulo,
     capaUrl: c.capa_url,
-    cargaHoraria: c.carga_horaria,
+    cargaMin: c.carga_min ?? (c.carga_horaria != null ? c.carga_horaria * 60 : null),
     ordem: c.ordem_na_trilha ?? 99,
     moduloNome: c.modulos?.nome ?? null,
     moduloSlug: c.modulos?.slug ?? null,
@@ -97,7 +97,7 @@ export async function trilhasPublicadas(): Promise<Trilha[]> {
         cor: t.cor_tailwind,
         ordem: t.ordem,
         cursos,
-        cargaTotal: cursos.reduce((s, c) => s + (c.cargaHoraria ?? 0), 0),
+        cargaTotalMin: cursos.reduce((s, c) => s + (c.cargaMin ?? 0), 0),
       }
     })
 }
@@ -123,7 +123,7 @@ export async function trilhaPorSlug(slug: string): Promise<Trilha | null> {
     id: t.id, slug: t.slug, nome: t.nome, descricao: t.descricao,
     icone: t.icone, cor: t.cor_tailwind, ordem: t.ordem,
     cursos,
-    cargaTotal: cursos.reduce((s, c) => s + (c.cargaHoraria ?? 0), 0),
+    cargaTotalMin: cursos.reduce((s, c) => s + (c.cargaMin ?? 0), 0),
   }
 }
 

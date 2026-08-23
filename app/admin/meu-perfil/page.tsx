@@ -7,6 +7,7 @@ import { certificadosDoAluno } from '@/lib/db/modulos'
 import { buscarPorUsuario } from '@/lib/db/alunos'
 import { alunoDoUsuario, projetosDoAluno, type StatusProjeto } from '@/lib/db/portfolio'
 import type { Metadata } from 'next'
+import { formatarDuracao } from '@/lib/duracao'
 
 export const metadata: Metadata = { title: 'Meu Perfil, Painel Escolar' }
 export const dynamic = 'force-dynamic'
@@ -172,7 +173,7 @@ async function MeusCertificados({ userId }: { userId: string }) {
       </h2>
       <p className="text-sm text-gray-500 mb-4">
         {certificados.length > 0
-          ? `${certificados.length} ${certificados.length === 1 ? 'certificado emitido' : 'certificados emitidos'} · ${certificados.reduce((s, c) => s + c.carga_horaria, 0)}h no total`
+          ? `${certificados.length} ${certificados.length === 1 ? 'certificado emitido' : 'certificados emitidos'} · ${formatarDuracao(certificados.reduce((s, c) => s + (c.carga_min ?? c.carga_horaria * 60), 0))} no total`
           : 'Conclua o projeto final de um curso ou de um módulo para receber o primeiro.'}
       </p>
 
@@ -202,7 +203,7 @@ async function MeusCertificados({ userId }: { userId: string }) {
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-gray-900 truncate">{c.curso_titulo}</p>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  {c.carga_horaria}h · código <span className="font-mono">{c.codigo}</span>
+                  {formatarDuracao(c.carga_min ?? c.carga_horaria * 60)} · código <span className="font-mono">{c.codigo}</span>
                   {c.emitido_em && ` · emitido em ${new Date(c.emitido_em).toLocaleDateString('pt-BR')}`}
                 </p>
               </div>

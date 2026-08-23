@@ -9,6 +9,7 @@ import { prisma } from '@/lib/db'
 import DesafioFinal from '@/components/cursos/DesafioFinal'
 import { proseDesafio } from '@/components/cursos/proseAula'
 import type { Metadata } from 'next'
+import { formatarDuracao } from '@/lib/duracao'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,7 +54,7 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
     ])
     liberado = p.completo || !!envio || !!cert
     faltam = p.totalAulas - p.aulasConcluidas
-    cargaCertificado = d.modulos.carga_horaria
+    cargaCertificado = d.modulos.carga_min ?? (d.modulos.carga_horaria ?? 0) * 60
     codigoCertificado = cert?.codigo ?? null
   } else if (ehFinal && d.cursos) {
     const [aulas, feitas, cert] = await Promise.all([
@@ -68,7 +69,7 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
     ])
     liberado = (aulas > 0 && feitas >= aulas) || !!envio || !!cert
     faltam = Math.max(0, aulas - feitas)
-    cargaCertificado = d.cursos.carga_horaria
+    cargaCertificado = d.cursos.carga_min ?? (d.cursos.carga_horaria ?? 0) * 60
     codigoCertificado = cert?.codigo ?? null
   }
 
@@ -98,7 +99,7 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
         {ehFinal && cargaCertificado && (
           <span className="inline-flex items-center gap-1.5 text-[11px] text-curso-ciano bg-curso-azul/10 border border-curso-azul/20 px-2.5 py-1 rounded-full">
             <Award className="w-3 h-3" />
-            Certificado de {cargaCertificado}h
+            Certificado de {formatarDuracao(cargaCertificado)}
           </span>
         )}
       </div>

@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { SearchX } from 'lucide-react'
 import BotaoImprimirCertificado from '@/components/cursos/BotaoImprimirCertificado'
 import type { Metadata } from 'next'
+import { duracaoPorExtenso } from '@/lib/duracao'
 
 export const dynamic = 'force-dynamic'
 
@@ -128,7 +129,7 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
               <p className="font-serif text-escola-cinza leading-relaxed max-w-3xl mx-auto text-sm sm:text-base">
                 concluiu com aproveitamento o curso{' '}
                 <strong className="text-escola-preto">{cert.curso_titulo}</strong>,
-                com carga horária de <strong className="text-escola-preto">{cert.carga_horaria} hora{cert.carga_horaria === 1 ? '' : 's'}</strong>,
+                com carga horária de <strong className="text-escola-preto">{duracaoPorExtenso(cert.carga_min ?? cert.carga_horaria * 60)}</strong>,
                 obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na avaliação final.
               </p>
             </div>
