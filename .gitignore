@@ -20,3 +20,4 @@ materias_ensinoMedio.png
 # Migração para MariaDB: credencial local do banco
 .env.local
 backup-cores-conteudo.json
+backup-cargas*.json
