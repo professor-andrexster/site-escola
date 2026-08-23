@@ -182,7 +182,7 @@ export default function TabelaEntregas({ entregas: inicial }: { entregas: Entreg
                     <Link
                       href={`/certificado/${e.certificado.codigo}`}
                       target="_blank"
-                      className="inline-flex items-center gap-1.5 text-xs bg-green-600 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-green-700 transition-colors ms-auto"
+                      className="inline-flex items-center gap-1.5 text-xs bg-green-700 text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-green-800 transition-colors ms-auto"
                     >
                       <Printer className="w-3.5 h-3.5" />
                       Certificado {e.certificado.codigo}
@@ -212,7 +212,7 @@ export default function TabelaEntregas({ entregas: inicial }: { entregas: Entreg
                         <button
                           onClick={() => avaliar(e, true)}
                           disabled={ocupado === e.id}
-                          className="inline-flex items-center gap-1.5 bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
+                          className="inline-flex items-center gap-1.5 bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-green-800 transition-colors disabled:opacity-50"
                         >
                           <Check className="w-4 h-4" />
                           {ocupado === e.id ? 'Emitindo...' : 'Aprovar e emitir certificado'}
