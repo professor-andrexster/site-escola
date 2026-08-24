@@ -156,6 +156,24 @@ try {
   )
 
   for (const cert of certificados) {
+    // Curso esvaziado não entra no recálculo.
+    //
+    // Quando as aulas de HTML e CSS migraram para as seis partes, os cursos
+    // antigos ficaram com zero aula — e a fórmula, medindo conteúdo que não
+    // está mais lá, derrubou a carga para o piso. O certificado da Anne passou
+    // a dizer "10 minutos" para um curso que ela fez com seis aulas.
+    //
+    // A carga do certificado descreve o que a pessoa FEZ, na época. Sem
+    // conteúdo para medir, o valor gravado é a única informação verdadeira que
+    // existe, e ele fica.
+    const [origem] = cert.curso_id
+      ? await c.query('SELECT (SELECT COUNT(*) FROM aulas a WHERE a.curso_id = c.id) AS aulas FROM cursos c WHERE c.id = ?', [cert.curso_id])
+      : [null]
+    if (origem && Number(origem.aulas) === 0) {
+      console.log(`  ${cert.codigo}  ${cert.curso_titulo.slice(0, 30).padEnd(32)}${String(cert.carga_min + 'min').padStart(9)}   mantido: curso sem aulas`)
+      continue
+    }
+
     let nova = null
     if (cert.curso_id) nova = novaCarga.get(cert.curso_id) ?? null
     else if (cert.modulo_id) {

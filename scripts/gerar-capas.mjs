@@ -53,6 +53,12 @@ const SIGLAS = {
   'formatacao-de-computadores': 'FORMATAR',
   'do-codigo-ao-ar': 'GIT',
   'python-do-zero': 'PYTHON',
+  'html-css-1-a-pagina-existe': 'HTML',
+  'html-css-2-a-pagina-ganha-cara': 'CSS',
+  'html-css-3-estrutura-que-sustenta': 'FLEX',
+  'html-css-4-layout-completo': 'GRID',
+  'html-css-5-formularios': 'FORMS',
+  'html-css-6-no-ar': 'NO AR',
 }
 
 /** Cor por categoria, mantida do gerador antigo para não trocar a identidade. */
