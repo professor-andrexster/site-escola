@@ -13,7 +13,10 @@ export const proseAula = [
   '[&_li]:text-white/70 [&_li]:mb-1.5 [&_li]:text-[15px]',
   '[&_strong]:text-white [&_em]:text-white/80',
   '[&_code]:font-jetbrains [&_code]:text-curso-ciano [&_code]:bg-white/5 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-[13px]',
-  '[&_pre]:bg-black/50 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:mb-4 [&_pre]:overflow-x-auto',
+  // A cor vai no `pre`, não só no `pre code`: conteúdo com <pre> sem <code>
+  // dentro herdava a cor do corpo do documento e saía preto sobre preto —
+  // contraste 1:1, texto invisível.
+  '[&_pre]:bg-black/50 [&_pre]:border [&_pre]:border-white/10 [&_pre]:rounded-xl [&_pre]:p-4 [&_pre]:mb-4 [&_pre]:overflow-x-auto [&_pre]:text-white/80 [&_pre]:font-jetbrains [&_pre]:text-[13px]',
   '[&_pre_code]:bg-transparent [&_pre_code]:p-0 [&_pre_code]:text-white/80',
   '[&_blockquote]:border-l-2 [&_blockquote]:border-curso-azul [&_blockquote]:pl-4 [&_blockquote]:my-4 [&_blockquote]:text-white/60 [&_blockquote]:italic',
   // A tabela vinha com grade e fundo próprios no HTML da aula, desenhados para

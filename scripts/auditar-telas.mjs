@@ -255,11 +255,17 @@ async function rotasDeCurso(c) {
   const rotas = ['/admin/cursos', '/admin/modulos', '/admin/cursos/desafios', '/admin/meu-perfil']
   for (const cur of cursos) {
     rotas.push(`/admin/cursos/${cur.slug}`)
-    const [a] = await c.query(
-      'SELECT a.slug FROM aulas a JOIN cursos c ON c.id = a.curso_id WHERE c.slug = ? AND a.publicado = 1 ORDER BY a.ordem LIMIT 1',
+    // TODAS as aulas, não só a primeira.
+    //
+    // Auditar uma aula por curso deixava a maior parte do conteúdo sem
+    // veredicto — e foi assim que uma aula com `<pre>` sem `<code>` foi parar
+    // no ar com texto preto sobre fundo preto. O conteúdo é escrito uma aula
+    // por vez; a conferência precisa ser também.
+    const aulas = await c.query(
+      'SELECT a.slug FROM aulas a JOIN cursos c ON c.id = a.curso_id WHERE c.slug = ? AND a.publicado = 1 ORDER BY a.ordem',
       [cur.slug]
     )
-    if (a) rotas.push(`/admin/cursos/${cur.slug}/${a.slug}`)
+    for (const a of aulas) rotas.push(`/admin/cursos/${cur.slug}/${a.slug}`)
   }
   const [d] = await c.query('SELECT id FROM curso_desafios ORDER BY vale_certificado DESC LIMIT 1')
   if (d) rotas.push(`/admin/cursos/desafios/${d.id}`)

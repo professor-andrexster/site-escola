@@ -59,6 +59,11 @@ const SIGLAS = {
   'html-css-4-layout-completo': 'GRID',
   'html-css-5-formularios': 'FORMS',
   'html-css-6-no-ar': 'NO AR',
+  'hw-1-as-pecas': 'PEÇAS',
+  'hw-2-a-bancada': 'MONTAR',
+  'hw-3-primeiro-boot': 'BOOT',
+  'hw-4-manutencao-e-defeito': 'DEFEITO',
+  'hw-5-sistema-e-entrega': 'SISTEMA',
 }
 
 /** Cor por categoria, mantida do gerador antigo para não trocar a identidade. */
