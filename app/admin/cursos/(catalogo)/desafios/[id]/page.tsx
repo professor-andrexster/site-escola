@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, BookOpen, Layers, Trophy, Lock, Award } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
+import { isEquipe } from '@/lib/roles'
 import { desafioParaTela } from '@/lib/db/trilha-desafios'
 import { envioDoAluno } from '@/lib/db/desafio-curso'
 import { progressoDoModulo, certificadoDoModulo } from '@/lib/db/modulos'
@@ -27,7 +28,7 @@ const CORES: Record<string, string> = {
 
 export default async function DesafioPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { user } = await getProfileOrRedirect()
+  const { user, profile } = await getProfileOrRedirect()
 
   const d = await desafioParaTela(id)
   if (!d) notFound()
@@ -42,6 +43,9 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
   // Liberação: o projeto só abre depois das aulas. No módulo, das aulas de
   // todos os cursos dele; no curso, das aulas daquele curso. Quem já entregou
   // ou já tem certificado continua vendo, para acompanhar a correção.
+  // A equipe abre o projeto sem ter feito as aulas, para conferir o enunciado
+  // e testar o envio antes de liberar para a turma.
+  const ehEquipe = isEquipe(profile.role)
   let liberado = true
   let faltam = 0
   let cargaCertificado: number | null = null
@@ -52,7 +56,7 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
       progressoDoModulo(d.modulos.id, user.id),
       certificadoDoModulo(d.modulos.id, user.id),
     ])
-    liberado = p.completo || !!envio || !!cert
+    liberado = p.completo || !!envio || !!cert || ehEquipe
     faltam = p.totalAulas - p.aulasConcluidas
     cargaCertificado = d.modulos.carga_min ?? (d.modulos.carga_horaria ?? 0) * 60
     codigoCertificado = cert?.codigo ?? null
@@ -67,7 +71,7 @@ export default async function DesafioPage({ params }: { params: Promise<{ id: st
         select: { codigo: true },
       }),
     ])
-    liberado = (aulas > 0 && feitas >= aulas) || !!envio || !!cert
+    liberado = (aulas > 0 && feitas >= aulas) || !!envio || !!cert || ehEquipe
     faltam = Math.max(0, aulas - feitas)
     cargaCertificado = d.cursos.carga_min ?? (d.cursos.carga_horaria ?? 0) * 60
     codigoCertificado = cert?.codigo ?? null

@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { usuarioAtual } from '@/lib/auth/sessao'
 import { papelEAprovacao } from '@/lib/db/perfis'
-import { desafioFinalDoCurso, enviarDesafio, envioDoAluno } from '@/lib/db/desafio-curso'
+import { desafioFinalDoCurso, enviarDesafio, envioDoAluno, podeEntregar } from '@/lib/db/desafio-curso'
+import { isEquipe } from '@/lib/roles'
 import { buscarPorSlug } from '@/lib/db/cursos'
 
 /** O desafio final do curso e o que este aluno ja enviou, se enviou. */
@@ -44,6 +45,18 @@ export async function POST(request: Request) {
   const linkUrl = texto(b.linkUrl)
   if (!arquivoUrl && !linkUrl) {
     return NextResponse.json({ error: 'Envie um arquivo ou informe o link do seu trabalho.' }, { status: 400 })
+  }
+
+  const permissao = await podeEntregar(desafioId, usuario.id, isEquipe(perfil.role))
+  if (!permissao.pode) {
+    return NextResponse.json(
+      {
+        error: permissao.faltam === 1
+          ? 'Falta 1 aula para liberar a entrega deste projeto.'
+          : `Faltam ${permissao.faltam} aulas para liberar a entrega deste projeto.`,
+      },
+      { status: 403 }
+    )
   }
 
   try {

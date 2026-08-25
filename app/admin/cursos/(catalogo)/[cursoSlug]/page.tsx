@@ -10,6 +10,7 @@ import DesafioFinal from '@/components/cursos/DesafioFinal'
 import { desafioFinalDoCurso, envioDoAluno } from '@/lib/db/desafio-curso'
 import type { Metadata } from 'next'
 import { formatarDuracao } from '@/lib/duracao'
+import { isEquipe } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,12 @@ export async function generateMetadata({ params }: { params: Promise<{ cursoSlug
 
 export default async function CursoDetalhePage({ params }: { params: Promise<{ cursoSlug: string }> }) {
   const { cursoSlug } = await params
-  const { user } = await getProfileOrRedirect()
+  const { user, profile } = await getProfileOrRedirect()
+
+  // A equipe ve o desafio final sem ter concluido as aulas: e assim que o
+  // professor confere o enunciado e testa o envio antes de liberar para a
+  // turma. Para o aluno a trava continua valendo.
+  const ehEquipe = isEquipe(profile.role)
 
   // Uma funcao de camada em vez de cinco consultas. A contagem de perguntas
   // da prova vem so como numero: o gabarito nunca sai daqui.
@@ -138,7 +144,13 @@ export default async function CursoDetalhePage({ params }: { params: Promise<{ c
             <Award className="w-5 h-5 text-curso-ciano" />
             Certificado do curso
           </h2>
-          {progressoPct === 100 || envioFinal || certificado ? (
+          {ehEquipe && progressoPct < 100 && !envioFinal && (
+            <p className="text-white/50 text-xs mb-3 border border-white/10 bg-white/5 rounded-lg px-3 py-2">
+              Você está vendo isto como equipe da escola. O aluno só chega aqui depois de concluir
+              as {listaAulas.length} aulas.
+            </p>
+          )}
+          {progressoPct === 100 || envioFinal || certificado || ehEquipe ? (
             <DesafioFinal
               desafio={desafioFinal}
               envioInicial={

@@ -30,6 +30,19 @@ export function isGestao(role: Profile['role']): boolean {
   return (GESTAO_ROLES as string[]).includes(role)
 }
 
+/**
+ * Quem faz parte da equipe da escola, e nao e aluno.
+ *
+ * Serve para liberar a PRE-VISUALIZACAO do desafio final: o aluno so ve o
+ * formulario de envio depois de concluir todas as aulas, e essa trava e
+ * proposital. Mas ela tambem trancava o professor, que precisa abrir o
+ * enunciado e testar o envio ANTES de mandar a turma fazer — e ninguem vai
+ * assistir 26 aulas para conferir se o formulario funciona.
+ */
+export function isEquipe(role: Profile['role']): boolean {
+  return (['professor', 'monitor', 'bibliotecario', ...GESTAO_ROLES] as string[]).includes(role)
+}
+
 /** Em qual tela do painel cada papel e listado. Usado para avisar a gestao
  * quando uma conta criada ou promovida vai aparecer em OUTRA tela — sem o
  * aviso, o usuario "some" e parece que a operacao falhou. */

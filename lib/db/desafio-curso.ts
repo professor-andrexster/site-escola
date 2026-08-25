@@ -76,6 +76,60 @@ export async function enviarDesafio(dados: {
   return { jaAprovado: false as const, envio }
 }
 
+/**
+ * Se este usuário já pode entregar este projeto.
+ *
+ * A trava existia só na tela: a página escondia o formulário de quem não tinha
+ * concluído as aulas, mas o POST aceitava de qualquer um. Quem soubesse o id do
+ * desafio entregava sem assistir nada, e um projeto aprovado emite certificado
+ * — então a checagem tinha de existir aqui também, e não lá.
+ *
+ * A equipe da escola passa direto, de propósito: é assim que o professor testa
+ * a entrega antes de liberar para a turma.
+ */
+export async function podeEntregar(
+  desafioId: string,
+  userId: string,
+  ehEquipe: boolean
+): Promise<{ pode: boolean; faltam: number }> {
+  if (ehEquipe) return { pode: true, faltam: 0 }
+
+  const d = await prisma.curso_desafios.findUnique({
+    where: { id: desafioId },
+    select: { curso_id: true, modulo_id: true, vale_certificado: true },
+  })
+  if (!d) return { pode: false, faltam: 0 }
+
+  // Exercício de aula não tem trava: ele se faz junto do conteúdo.
+  if (!d.vale_certificado) return { pode: true, faltam: 0 }
+
+  // Reenvio depois de recusado continua liberado: o aluno já provou o percurso
+  // uma vez, e travar aqui prenderia quem só precisa corrigir.
+  const jaEnviou = await envioDoAluno(desafioId, userId)
+  if (jaEnviou) return { pode: true, faltam: 0 }
+
+  const cursos = d.modulo_id
+    ? await prisma.cursos.findMany({
+        where: { modulo_id: d.modulo_id, publicado: true },
+        select: { aulas: { where: { publicado: true }, select: { id: true } } },
+      })
+    : d.curso_id
+      ? await prisma.cursos.findMany({
+          where: { id: d.curso_id },
+          select: { aulas: { where: { publicado: true }, select: { id: true } } },
+        })
+      : []
+
+  const idsDeAula = cursos.flatMap(c => c.aulas.map(a => a.id))
+  if (!idsDeAula.length) return { pode: true, faltam: 0 }
+
+  const feitas = await prisma.progresso_aulas.count({
+    where: { user_id: userId, aula_id: { in: idsDeAula }, concluida: true },
+  })
+  const faltam = idsDeAula.length - feitas
+  return { pode: faltam <= 0, faltam }
+}
+
 /** Fila do professor: o que está esperando correção, mais antigo primeiro. */
 export async function filaDeCorrecao(cursoId: string) {
   const envios = await prisma.curso_desafio_envios.findMany({

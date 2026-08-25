@@ -9,6 +9,7 @@ import { envioDoAluno } from '@/lib/db/desafio-curso'
 import DesafioFinal from '@/components/cursos/DesafioFinal'
 import type { Metadata } from 'next'
 import { formatarDuracao } from '@/lib/duracao'
+import { isEquipe } from '@/lib/roles'
 
 export const dynamic = 'force-dynamic'
 
@@ -26,7 +27,8 @@ const CORES: Record<string, string> = {
 
 export default async function ModuloPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
-  const { user } = await getProfileOrRedirect()
+  const { user, profile } = await getProfileOrRedirect()
+  const ehEquipe = isEquipe(profile.role)
 
   const modulo = await moduloPorSlug(slug)
   if (!modulo) notFound()
@@ -128,8 +130,14 @@ export default async function ModuloPage({ params }: { params: Promise<{ slug: s
               desafio final com certificado próprio.
             </p>
           </div>
-        ) : progresso.completo || envio || certificado ? (
+        ) : progresso.completo || envio || certificado || ehEquipe ? (
           <>
+            {ehEquipe && !progresso.completo && !envio && (
+              <p className="text-white/50 text-xs mb-3 border border-white/10 bg-white/5 rounded-lg px-3 py-2">
+                Você está vendo isto como equipe da escola. O aluno só chega aqui depois de concluir
+                os cursos do módulo.
+              </p>
+            )}
             <p className="text-white/50 text-sm mb-4">
               Este projeto vale o <strong className="text-white/80">certificado de {modulo.carga_horaria}h
               do módulo {modulo.nome}</strong>, e é somado aos certificados de cada curso.
