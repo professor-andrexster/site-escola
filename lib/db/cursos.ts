@@ -472,6 +472,16 @@ export async function emitirCertificado(dados: {
   cursoTitulo: string
   autorNome: string | null
   cargaHoraria: number
+  /**
+   * A carga em MINUTOS, que e o que o certificado imprime.
+   *
+   * `carga_horaria` e inteiro em horas: um curso de 50 minutos vira 1, e o
+   * documento sairia dizendo "1 hora". A tela do certificado ja preferia
+   * `carga_min`, mas a emissao nunca gravava esse campo — entao todo
+   * certificado novo nascia com o valor inflado, desfazendo o acerto de carga
+   * que a plataforma faz.
+   */
+  cargaMin: number | null
   nota: number
 }): Promise<{ codigo: string; jaTinha: boolean }> {
   try {
@@ -484,6 +494,7 @@ export async function emitirCertificado(dados: {
         curso_titulo: dados.cursoTitulo,
         autor_nome: dados.autorNome,
         carga_horaria: dados.cargaHoraria,
+        carga_min: dados.cargaMin,
         nota: dados.nota,
       },
     })

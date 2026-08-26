@@ -169,6 +169,8 @@ export async function emitirCertificadoDeModulo(dados: {
   moduloTitulo: string
   autorNome: string | null
   cargaHoraria: number
+  /** Minutos: e o que o documento imprime. Ver emitirCertificado(). */
+  cargaMin: number | null
   nota: number
 }): Promise<{ codigo: string; jaTinha: boolean }> {
   try {
@@ -185,6 +187,7 @@ export async function emitirCertificadoDeModulo(dados: {
         aluno_nome: dados.alunoNome,
         autor_nome: dados.autorNome,
         carga_horaria: dados.cargaHoraria,
+        carga_min: dados.cargaMin,
         nota: dados.nota,
       },
     })

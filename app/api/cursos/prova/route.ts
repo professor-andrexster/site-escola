@@ -91,6 +91,10 @@ export async function POST(request: Request) {
   const cargaHoraria = curso.carga_horaria
     ?? (minutos > 0 ? Math.max(1, Math.ceil(minutos / 60)) : aulaIds.length)
 
+  // Em minutos: e o que o documento imprime. `cargaHoraria` arredonda para
+  // cima, e um curso de 50 minutos sairia como "1 hora".
+  const cargaMin = curso.carga_min ?? (minutos > 0 ? minutos : null)
+
   // O UNIQUE (user_id, curso_id) decide corridas de dois envios simultâneos;
   // colisão de código (raríssima) também cai aqui e ganha nova tentativa.
   // Tres tentativas: a unique (usuario, curso) resolve corrida de dois envios
@@ -105,6 +109,7 @@ export async function POST(request: Request) {
         cursoTitulo: curso.titulo,
         autorNome: curso.autor_nome ?? null,
         cargaHoraria,
+        cargaMin,
         nota,
       })
       if (jaTinha) {

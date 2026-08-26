@@ -100,6 +100,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
         autorNome: null,
         codigo: gerarCodigo(),
         cargaHoraria: modulo.carga_horaria ?? 0,
+        cargaMin: modulo.carga_min ?? null,
         nota: NOTA_APROVADO,
       })
       return NextResponse.json({ ok: true, certificado: cert })
@@ -113,6 +114,10 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     // soma das durações das aulas — melhor que imprimir zero num documento.
     const carga = curso.carga_horaria ?? Math.max(1, Math.round((await duracaoTotal(cursoId!)) / 60))
 
+    // Em minutos, que é o que o documento imprime. Sem isto, um curso de 50
+    // minutos sai como "1 hora" — `carga_horaria` é inteiro e arredonda.
+    const cargaMin = curso.carga_min ?? ((await duracaoTotal(cursoId!)) || null)
+
     const cert = await emitirCertificado({
       userId: envio.user_id,
       cursoId: cursoId!,
@@ -121,6 +126,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       autorNome: curso.autor_nome ?? null,
       codigo: gerarCodigo(),
       cargaHoraria: carga,
+      cargaMin,
       nota: NOTA_APROVADO,
     })
     return NextResponse.json({ ok: true, certificado: cert })
