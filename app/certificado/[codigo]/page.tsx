@@ -88,28 +88,54 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
   return (
     <div className="min-h-screen bg-escola-creme flex flex-col items-center justify-center gap-6 p-4 py-10 print:p-0 print:bg-white print:block">
       {/*
-        A folha é A4 DEITADA: 297 x 210 mm.
+        A folha é A4 DEITADA: 297 x 210 mm. De `sm` para cima, o que se vê na
+        tela é a proporção que sai da impressora — sem surpresa ao imprimir.
 
-        Na tela, `aspect-[297/210]` mostra exatamente a proporção que vai sair
-        da impressora — o que se vê aqui é o que sai no papel, sem surpresa ao
-        imprimir. Na impressão, a moldura ocupa a página inteira e a margem fica
-        por conta do `@page`.
+        Mas a proporção só vale de `sm` para cima.
+
+        Presa também no celular, ela dava uma caixa de 253 px de altura para o
+        texto de um documento inteiro: o nome do aluno passava por cima do
+        cabeçalho, a data por cima do rodapé, e nada se lia. Com altura livre a
+        folha vira um cartão alto no telefone — deixa de parecer uma folha, mas
+        se lê, e essa é a troca certa. A impressão não depende disto: o
+        @media print fixa 281 x 194 mm em qualquer aparelho.
       */}
-      <div className="folha-certificado w-full max-w-[297mm] aspect-[297/210] bg-white shadow-elevation-high print:shadow-none print:w-full print:max-w-none print:h-full print:aspect-auto">
-        <div className="h-full border-[6px] border-escola-azul p-1.5">
+      <div className="folha-certificado relative overflow-hidden w-full max-w-[297mm] aspect-auto sm:aspect-[297/210] shadow-elevation-high print:shadow-none print:w-full print:max-w-none print:aspect-auto">
+        {/* A marca da escola gravada no papel. Três cópias da mesma silhueta —
+            sombra, luz e face — que juntas leem como alto-relevo. O CSS ao lado
+            explica a montagem e por que o tom da sombra é o piso de contraste
+            do documento. */}
+        <div className="marca-relevo" aria-hidden="true">
+          <i className="marca-sombra" />
+          <i className="marca-luz" />
+          <i className="marca-face" />
+        </div>
+
+        <div className="conteudo-certificado h-full border-[6px] border-escola-azul p-1.5">
           <div className="h-full border border-escola-vermelho px-8 sm:px-16 py-6 sm:py-8 text-center flex flex-col">
 
             {/* Cabeçalho: brasão e instituição lado a lado, porque em paisagem
                 a altura é o recurso escasso e empilhar custa caro. */}
-            <div className="flex items-center justify-center gap-4 flex-shrink-0">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden ring-1 ring-escola-cinza-claro flex-shrink-0">
-                <Image src="/logo.jpg" alt="Logo E.E. Dr. João Beraldo" fill sizes="56px" className="object-cover" />
+            <div className="flex items-center justify-center gap-3 sm:gap-4 flex-shrink-0">
+              {/* `contain`, e não `cover`: a marca é alta (1131x1600) e o corte
+                  circular anterior comia "E.E. Doutor" em cima e "Beraldo"
+                  embaixo — sobrava a faixa do meio, que sozinha não identifica
+                  a escola. O PNG com transparência assenta no papel sem trazer
+                  o retângulo branco do JPEG junto. */}
+              <div className="relative w-16 h-16 flex-shrink-0">
+                <Image
+                  src="/logo-transparente.png"
+                  alt="Brasão da E.E. Dr. João Beraldo"
+                  fill
+                  sizes="64px"
+                  className="object-contain"
+                />
               </div>
               <div className="text-start">
-                <p className="font-mono text-[11px] uppercase tracking-[0.3em] text-escola-cinza leading-tight">
+                <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.3em] text-escola-cinza leading-tight">
                   E.E. Dr. João Beraldo
                 </p>
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-escola-cinza leading-tight">
+                <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-escola-cinza leading-tight">
                   Ensino Médio em Tempo Integral · Carlos Chagas, MG
                 </p>
               </div>
@@ -117,27 +143,43 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
 
             {/* O miolo cresce e encolhe conforme o nome e o título do curso;
                 o cabeçalho e o rodapé ficam ancorados. */}
-            <div className="flex-1 flex flex-col items-center justify-center min-h-0">
-              <h1 className="font-playfair text-3xl sm:text-5xl font-black text-escola-azul mb-3 sm:mb-5">
+            <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-8 sm:py-0">
+              <h1 className="font-playfair text-3xl sm:text-5xl font-black text-escola-azul">
                 Certificado
               </h1>
+              {/* Um filete curto sob o título: dá ao bloco central um eixo
+                  visível, que é o que faltava para o texto não parecer solto
+                  no meio da folha. */}
+              <div className="w-16 h-px bg-escola-vermelho my-3 sm:my-4" />
 
               <p className="font-serif text-escola-cinza text-sm mb-1">Certificamos que</p>
-              <p className="font-playfair text-xl sm:text-3xl font-bold text-escola-preto mb-2 sm:mb-3 leading-snug text-balance">
+              <p className="font-playfair text-xl sm:text-3xl font-bold text-escola-preto mb-3 leading-snug text-balance">
                 {cert.aluno_nome}
               </p>
+
+              <p className="font-serif text-escola-cinza text-sm">
+                concluiu com aproveitamento o curso
+              </p>
+              {/* O curso ganha linha própria: ele é o assunto do documento, e
+                  no parágrafo corrido sumia no meio da frase — ainda mais com
+                  títulos longos como "Parte 3 — A estrutura que sustenta". */}
+              <p className="font-playfair text-lg sm:text-2xl font-bold text-escola-azul leading-snug text-balance max-w-3xl mx-auto mt-1 mb-3">
+                {cert.curso_titulo}
+              </p>
               <p className="font-serif text-escola-cinza leading-relaxed max-w-3xl mx-auto text-sm sm:text-base">
-                concluiu com aproveitamento o curso{' '}
-                <strong className="text-escola-preto">{cert.curso_titulo}</strong>,
-                com carga horária de <strong className="text-escola-preto">{duracaoPorExtenso(cert.carga_min ?? cert.carga_horaria * 60)}</strong>,
-                obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na avaliação final.
+                com carga horária de{' '}
+                <strong className="text-escola-preto">
+                  {duracaoPorExtenso(cert.carga_min ?? cert.carga_horaria * 60)}
+                </strong>
+                , obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na
+                avaliação final.
               </p>
             </div>
 
             {/* Rodapé: data à esquerda, assinatura ao centro, validação à
                 direita. Em paisagem sobra largura, e distribuir nas três
                 colunas evita a pilha central que estica a folha para baixo. */}
-            <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-3 items-end gap-4 sm:gap-6">
+            <div className="flex-shrink-0 grid grid-cols-1 sm:grid-cols-3 items-end gap-5 sm:gap-6">
               <p className="font-serif text-xs text-escola-cinza text-center sm:text-start order-2 sm:order-1">
                 Carlos Chagas,<br className="hidden sm:inline" /> {dataEmissao}.
               </p>
@@ -166,10 +208,23 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
                 </div>
               </div>
 
+              {/* O endereço quebrava no meio do código — ".../JB-" numa linha
+                  e "27WJUD2V" na outra — e deixava de parecer um endereço.
+                  O `<wbr>` marca o único lugar onde a quebra é aceitável, logo
+                  depois do domínio: em tela larga sai numa linha só, e onde não
+                  couber parte em dois pedaços que ainda se leem. Proibir a
+                  quebra não servia — na largura de tablet o texto vazava a
+                  folha. */}
               <p className="font-mono text-[10px] text-escola-cinza leading-relaxed text-center sm:text-end order-3">
                 Código de validação<br />
                 <strong className="font-mono text-escola-cinza text-[11px]">{cert.codigo}</strong><br />
-                escolaestadualdrjoaoberaldo.com/certificado/{cert.codigo}
+                <span className="text-[8.5px] leading-snug inline-block">
+                  escolaestadualdrjoaoberaldo.com<wbr />
+                  {/* O caminho é indivisível: sozinho, o `<wbr>` não bastava —
+                      o navegador quebra depois de hífen por conta própria, e
+                      partia o código em "JB-" e "SS4DRGRH". */}
+                  <span className="whitespace-nowrap">/certificado/{cert.codigo}</span>
+                </span>
               </p>
             </div>
           </div>

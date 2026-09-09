@@ -1,5 +1,78 @@
 /* Só vale nesta rota: o Next injeta este CSS apenas no segmento do
    certificado, então o A4 deitado não vaza pra impressão de outras telas. */
+
+/* ---------------------------------------------------------------- o papel
+   Não é branco puro. Um marfim levíssimo é o que dá ao relevo onde existir:
+   sobre branco absoluto a luz do alto-relevo não teria como aparecer, porque
+   não há nada mais claro que o fundo. Daqui saem as três tintas da marca. */
+.folha-certificado {
+  --papel: #fcfaf6;
+  --relevo-luz: #ffffff;
+  /* O tom mais escuro que a marca d'água chega a ter em qualquer pixel.
+     Ele é o piso de contraste do documento inteiro: todo texto que passa por
+     cima precisa continuar legível sobre ele, inclusive o cinza pequeno do
+     rodapé. Escurecer este valor é o jeito mais fácil de tornar o certificado
+     bonito e ilegível ao mesmo tempo. */
+  --relevo-sombra: #e4ddd0;
+  background-color: var(--papel);
+}
+
+/* ------------------------------------------------------------- o relevo
+   Alto-relevo de verdade é a leitura de DUAS bordas, não de um contorno: a
+   luz bate no lado de cima e à esquerda, a sombra cai embaixo e à direita.
+   Por isso são três cópias da mesma silhueta, e não um filtro:
+
+     1. a sombra, deslocada para baixo/direita;
+     2. a luz, deslocada para cima/esquerda;
+     3. a face, na cor do papel e sem deslocamento, que cobre o miolo das
+        duas e deixa aparecer só as duas beiradas.
+
+   O `mask` existe porque o PNG da marca é azul: pintar a silhueta é o que
+   permite dar a ela cor de papel. Usar a imagem direto traria o azul junto e
+   viraria um carimbo, não um relevo. */
+.marca-relevo {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  /* Decoração: quem usa leitor de tela já ouve o nome da escola no cabeçalho,
+     e repetir aqui só atrapalharia. */
+  z-index: 0;
+}
+
+.marca-relevo i {
+  position: absolute;
+  /* Cabe na faixa central, entre o cabeçalho e o rodapé. Maior que isto a
+     marca encosta nas duas pontas e o documento vira fundo com texto por
+     cima, em vez de texto sobre papel gravado. */
+  height: 64%;
+  aspect-ratio: 1;
+  -webkit-mask: url('/logo-transparente.png') center / contain no-repeat;
+  mask: url('/logo-transparente.png') center / contain no-repeat;
+}
+
+.marca-sombra {
+  background-color: var(--relevo-sombra);
+  transform: translate(2.5px, 2.5px);
+}
+
+.marca-luz {
+  background-color: var(--relevo-luz);
+  transform: translate(-2.5px, -2.5px);
+}
+
+.marca-face {
+  background-color: var(--papel);
+}
+
+/* O conteúdo sobe acima da marca. Sem isto o texto ficaria por baixo dela. */
+.conteudo-certificado {
+  position: relative;
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------- impressão */
 @media print {
   @page {
     size: A4 landscape;
@@ -13,10 +86,27 @@
     height: 100%;
   }
 
-  /* A moldura ocupa a folha inteira. Sem isto ela sairia com a altura do
-     conteúdo e a metade de baixo da página ficaria vazia. */
+  /* Sem isto o navegador descarta fundo e cor na impressão — e o relevo, que
+     é feito inteiro de fundo, sairia numa folha em branco. */
+  .folha-certificado,
+  .folha-certificado * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* A moldura ocupa a folha inteira.
+
+     Em milímetros, e não `height: 100%`. A porcentagem só resolve quando TODOS
+     os ancestrais têm altura definida, e aqui não têm: o `100%` caía para
+     `auto` e a moldura saía com a altura do conteúdo — 131 mm dos 194 mm
+     disponíveis, deixando um terço da página em branco embaixo. Não dava para
+     ver na tela, só na impressão.
+
+     A conta é a área útil do @page acima: 297 x 210 menos 8 mm de margem de
+     cada lado. Mexeu na margem, mexa aqui. */
   .folha-certificado {
-    height: 100%;
+    width: 281mm;
+    height: 194mm;
     page-break-inside: avoid;
   }
 }
