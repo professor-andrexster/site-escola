@@ -45,7 +45,15 @@ git pull --ff-only
 echo "   commit: $(git log --oneline -1)"
 
 echo "== Instalando dependências e buildando =="
-npm ci
+# `npm ci` puro era morto pelo OOM killer aqui. Não é folga de disco: este VPS
+# tem 3,8 G de RAM dividida entre seis servidores Next, o Docker do CRM e o
+# MariaDB, e a swap vive cheia. O `npm ci` apaga o node_modules ANTES de
+# instalar, então o kill deixava a árvore pela metade e o build seguinte nem
+# começava — foi preciso reinstalar à mão duas vezes para descobrir isso.
+#
+# `--maxsockets 2` é o que resolve: o pico vem da extração em paralelo, não do
+# tamanho da árvore. Custa ~3 min em vez de ~1, e termina.
+npm ci --no-audit --no-fund --maxsockets 2
 npx prisma generate
 npm run build
 
