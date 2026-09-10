@@ -46,6 +46,27 @@ function assinaturaDe(nome: string | null): string | null {
   return null
 }
 
+/**
+ * A marca pessoal de quem responde pelo curso, ao lado do nome dele.
+ *
+ * Mesma convenção da assinatura, e pelo mesmo motivo: o arquivo é por
+ * responsável (`marcas/<nome-em-slug>.png`), fica no UPLOAD_ROOT e trocar é
+ * copiar um PNG. Fixar a marca de um professor no código faria todo
+ * certificado sair com o símbolo dele, inclusive os de curso de outra pessoa.
+ *
+ * Sem arquivo, não aparece nada — o rodapé continua com a linha e o nome.
+ */
+function marcaDe(nome: string | null): string | null {
+  if (!nome) return null
+  const base = slugDoNome(nome)
+  for (const ext of ['png', 'webp', 'jpg']) {
+    if (existsSync(path.join(RAIZ_UPLOADS, 'marcas', `${base}.${ext}`))) {
+      return `/arquivos/marcas/${base}.${ext}`
+    }
+  }
+  return null
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ codigo: string }> }): Promise<Metadata> {
   const { codigo } = await params
   return {
@@ -80,6 +101,7 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
   }
 
   const assinatura = assinaturaDe(cert.autor_nome ?? null)
+  const marca = marcaDe(cert.autor_nome ?? null)
 
   const dataEmissao = (cert.emitido_em ?? new Date()).toLocaleDateString('pt-BR', {
     day: 'numeric', month: 'long', year: 'numeric',
@@ -198,10 +220,24 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
                     />
                   )}
                 </div>
-                <div className="border-t border-escola-cinza pt-1.5 mx-auto max-w-[220px]">
-                  <p className="font-serif text-sm text-escola-preto leading-tight">
-                    {cert.autor_nome ?? 'E.E. Dr. João Beraldo'}
-                  </p>
+                <div className="border-t border-escola-cinza pt-1.5 mx-auto max-w-[260px]">
+                  <div className="flex items-center justify-center gap-2">
+                    {marca && (
+                      // `alt` vazio de propósito: o nome do responsável vem
+                      // logo ao lado, e anunciar os dois faria o leitor de tela
+                      // repetir a mesma informação duas vezes.
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={marca}
+                        alt=""
+                        aria-hidden="true"
+                        className="w-6 h-6 flex-shrink-0 object-contain"
+                      />
+                    )}
+                    <p className="font-serif text-sm text-escola-preto leading-tight">
+                      {cert.autor_nome ?? 'E.E. Dr. João Beraldo'}
+                    </p>
+                  </div>
                   <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">
                     {cert.autor_nome ? 'Responsável pelo curso' : 'Instituição'}
                   </p>

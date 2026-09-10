@@ -51,9 +51,13 @@ echo "== Instalando dependências e buildando =="
 # instalar, então o kill deixava a árvore pela metade e o build seguinte nem
 # começava — foi preciso reinstalar à mão duas vezes para descobrir isso.
 #
-# `--maxsockets 2` é o que resolve: o pico vem da extração em paralelo, não do
-# tamanho da árvore. Custa ~3 min em vez de ~1, e termina.
-npm ci --no-audit --no-fund --maxsockets 2
+# `--maxsockets 2` reduz o pico, que vem da extração em paralelo e não do
+# tamanho da árvore. Mas sozinho não bastou: os logs do OOM mostram o npm com
+# 1,2 a 1,4 G de RSS, e com a swap 100% ocupada não existe folga nenhuma. O
+# `--max-old-space-size` põe teto no heap do V8 e é o que faz caber.
+#
+# Custa ~3 min em vez de ~1, e termina.
+NODE_OPTIONS=--max-old-space-size=768 npm ci --no-audit --no-fund --maxsockets 2
 npx prisma generate
 npm run build
 
