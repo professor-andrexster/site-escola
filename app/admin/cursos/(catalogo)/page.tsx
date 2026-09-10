@@ -68,7 +68,7 @@ export default async function CursosPage() {
       {trilhas.length > 0 && (
         <section className="mb-10">
           <h2 className="text-white font-bold text-lg font-geom mb-1">Trilhas</h2>
-          <p className="text-white/60 text-sm mb-4">
+          <p className="text-white/65 text-[16px] mb-4">
             Cada trilha é uma sequência: um curso prepara o seguinte.
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

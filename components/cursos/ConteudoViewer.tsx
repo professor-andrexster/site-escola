@@ -77,8 +77,8 @@ export default function ConteudoViewer({
             <ArrowLeft className="w-5 h-5" />
           </Link>
           <div className="min-w-0">
-            <p className="text-white/55 text-[11px] font-jetbrains uppercase tracking-widest truncate">{cursoTitulo}</p>
-            <h1 className="text-white font-bold text-sm md:text-base truncate">{aulaTitulo}</h1>
+            <p className="text-white/60 text-[13px] font-jetbrains uppercase tracking-wider truncate">{cursoTitulo}</p>
+            <h1 className="text-white font-bold text-[16px] md:text-lg truncate">{aulaTitulo}</h1>
           </div>
           {duracaoMin && (
             <span className="ml-auto flex-shrink-0 inline-flex items-center gap-1.5 text-white/55 text-xs font-jetbrains">
@@ -107,19 +107,19 @@ export default function ConteudoViewer({
                 className="group block bg-white/5 border border-curso-azul/30 rounded-2xl p-5 hover:border-curso-azul/60 transition-colors"
               >
                 <div className="flex items-center gap-2 mb-2">
-                  <span className="text-[10px] font-jetbrains uppercase tracking-widest text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
+                  <span className="text-[12px] font-jetbrains uppercase tracking-wider text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
                     {TIPO_LABELS[d.tipo] ?? d.tipo}
                   </span>
                 </div>
-                <h3 className="text-white font-bold mb-2 group-hover:text-curso-ciano transition-colors">{d.titulo}</h3>
+                <h3 className="text-white font-bold text-[17px] mb-2 group-hover:text-curso-ciano transition-colors">{d.titulo}</h3>
                 <div
                   className={proseDesafio}
                   dangerouslySetInnerHTML={{ __html: d.enunciado }}
                 />
-                <p className="text-white/50 text-xs mt-3">
+                <p className="text-white/60 text-[15px] mt-3">
                   Faça no caderno, no computador ou no celular e mostre ao professor na próxima aula.
                 </p>
-                <p className="text-curso-ciano/90 group-hover:text-curso-ciano text-xs mt-2 transition-colors">
+                <p className="text-curso-ciano/90 group-hover:text-curso-ciano text-sm mt-2 transition-colors">
                   Abrir desafio →
                 </p>
               </Link>

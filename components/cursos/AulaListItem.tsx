@@ -34,7 +34,7 @@ export default function AulaListItem({ aula, numero, status, href }: AulaListIte
       </span>
       <div className="flex-1 min-w-0">
         <p className="text-white font-semibold truncate">{aula.titulo}</p>
-        {aula.descricao && <p className="text-white/55 text-xs mt-0.5 line-clamp-1">{aula.descricao}</p>}
+        {aula.descricao && <p className="text-white/60 text-[15px] mt-0.5 line-clamp-1">{aula.descricao}</p>}
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
         {aula.duracao_estimada_min && (

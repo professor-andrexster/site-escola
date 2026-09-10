@@ -126,7 +126,7 @@ export default function DesafioFinal({
         <Award className="w-5 h-5 text-escola-azul" />
         <h2 className="font-playfair text-xl font-bold text-gray-900">{desafio.titulo}</h2>
       </div>
-      <p className="text-xs text-gray-500 mb-4">
+      <p className="text-sm text-gray-600 mb-4">
         Este é o desafio final: quando o professor aprovar, seu certificado é emitido.
       </p>
 
@@ -151,12 +151,12 @@ export default function DesafioFinal({
         </div>
       )}
 
-      <div className="text-sm text-gray-700 whitespace-pre-line leading-relaxed mb-5">
+      <div className="text-[16px] text-gray-800 whitespace-pre-line leading-relaxed mb-5">
         {desafio.enunciado}
       </div>
 
       {desafio.instrucoes_envio && (
-        <p className="text-sm text-gray-600 bg-gray-50 border border-gray-100 rounded-lg p-3 mb-5">
+        <p className="text-[15px] text-gray-700 bg-gray-50 border border-gray-100 rounded-lg p-3 mb-5">
           <strong className="block text-xs uppercase tracking-wider text-gray-500 mb-1">Como entregar</strong>
           {desafio.instrucoes_envio}
         </p>

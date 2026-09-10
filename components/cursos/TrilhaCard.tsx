@@ -55,14 +55,14 @@ export default function TrilhaCard({ trilha, concluidos }: Props) {
       </div>
 
       {trilha.descricao && (
-        <p className="text-white/60 text-sm leading-relaxed mb-4 line-clamp-2">{trilha.descricao}</p>
+        <p className="text-white/65 text-[16px] leading-relaxed mb-4 line-clamp-2">{trilha.descricao}</p>
       )}
 
       {/* A sequência é o que a trilha tem de próprio: mostrar o começo dela é
           mostrar o produto. */}
       <ol className="space-y-1.5 mb-4">
         {trilha.cursos.slice(0, 3).map((c, i) => (
-          <li key={c.id} className="flex items-center gap-2 text-sm">
+          <li key={c.id} className="flex items-center gap-2 text-[15px]">
             <span
               className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-jetbrains font-bold ${
                 i < concluidos ? 'bg-green-400/20 text-green-300' : 'bg-white/10 text-white/60'

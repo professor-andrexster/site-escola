@@ -157,7 +157,7 @@ export default function SlideViewer({
           <X className="w-5 h-5" />
         </Link>
         <div className="min-w-0 text-center flex-1">
-          <p className="text-curso-ciano text-[10px] uppercase tracking-widest font-jetbrains truncate">{cursoTitulo}</p>
+          <p className="text-curso-ciano text-[13px] uppercase tracking-wider font-jetbrains truncate">{cursoTitulo}</p>
           <p className="text-white text-sm font-semibold truncate">{aulaTitulo}</p>
         </div>
         <span className="text-white/55 text-xs font-jetbrains flex-shrink-0">
@@ -274,7 +274,7 @@ export default function SlideViewer({
                       <h3 className="text-white font-bold group-hover:text-curso-ciano transition-colors">
                         {d.titulo}
                       </h3>
-                      <span className="flex-shrink-0 text-[10px] font-jetbrains uppercase tracking-widest text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
+                      <span className="flex-shrink-0 text-[12px] font-jetbrains uppercase tracking-wider text-curso-ciano bg-curso-azul/10 px-2 py-0.5 rounded-full">
                         {d.tipo}
                       </span>
                     </div>
