@@ -31,19 +31,27 @@ interface Props {
   trilha: Trilha
   /** Quantos cursos da trilha o aluno já concluiu. */
   concluidos: number
+  /**
+   * Quando existe, o cartão abre o modal da trilha em vez de navegar.
+   *
+   * A troca de `<Link>` por `<button>` não é cosmética: um cartão que abre
+   * modal e mesmo assim é um link viraria uma aba nova no clique do meio, e
+   * anunciaria "link" para quem usa leitor de tela quando o que ele faz é
+   * abrir um diálogo na mesma página.
+   */
+  onAbrir?: () => void
 }
 
-export default function TrilhaCard({ trilha, concluidos }: Props) {
+export default function TrilhaCard({ trilha, concluidos, onAbrir }: Props) {
   const cor = CORES[trilha.cor ?? ''] ?? PADRAO
   const Icone = iconeDaTrilha(trilha)
   const pct = trilha.cursos.length ? Math.round((concluidos / trilha.cursos.length) * 100) : 0
   const proximo = trilha.cursos[Math.min(concluidos, trilha.cursos.length - 1)]
 
-  return (
-    <Link
-      href={`/admin/cursos/trilhas/${trilha.slug}`}
-      className={`group flex flex-col bg-white/5 border border-white/10 ${cor.anel} rounded-2xl p-5 transition-colors`}
-    >
+  const classe = `group flex flex-col text-start bg-white/5 border border-white/10 ${cor.anel} rounded-2xl p-5 transition-colors foco-curso`
+
+  const miolo = (
+    <>
       <div className="flex items-center gap-3 mb-3">
         <Icone className="w-6 h-6 flex-shrink-0 opacity-80" strokeWidth={1.5} aria-hidden />
         <div className="min-w-0">
@@ -96,6 +104,22 @@ export default function TrilhaCard({ trilha, concluidos }: Props) {
           <div className={`h-full rounded-full transition-all ${cor.barra}`} style={{ width: `${pct}%` }} />
         </div>
       </div>
+    </>
+  )
+
+  if (onAbrir) {
+    return (
+      <button type="button" onClick={onAbrir} className={classe} aria-haspopup="dialog">
+        {miolo}
+      </button>
+    )
+  }
+
+  // Sem `onAbrir` o cartão continua navegando para a página da trilha, que é
+  // como ele é usado fora do catálogo e continua valendo como link direto.
+  return (
+    <Link href={`/admin/cursos/trilhas/${trilha.slug}`} className={classe}>
+      {miolo}
     </Link>
   )
 }

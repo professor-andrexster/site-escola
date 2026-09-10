@@ -1,13 +1,11 @@
-import { catalogoDoPainel } from '@/lib/db/cursos'
 import { trilhasPublicadas, progressoNaTrilha } from '@/lib/db/trilhas'
-import TrilhaCard from '@/components/cursos/TrilhaCard'
+import TrilhasComModal from '@/components/cursos/TrilhasComModal'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { isGestao } from '@/lib/roles'
 import { progressoCursosPorUsuario } from '@/lib/cursosProgresso'
 import Image from 'next/image'
 import Link from 'next/link'
 import { GraduationCap, Settings } from 'lucide-react'
-import CursoCard from '@/components/cursos/CursoCard'
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = { title: 'Cursos' }
@@ -16,8 +14,10 @@ export const dynamic = 'force-dynamic'
 export default async function CursosPage() {
   const { user, profile } = await getProfileOrRedirect()
 
-  const [cursos, progressos, trilhas] = await Promise.all([
-    catalogoDoPainel(),
+  // `catalogoDoPainel()` saiu junto com a grade: sem a lista de todos os
+  // cursos na tela, ela era uma consulta ao banco por carregamento cujo
+  // resultado ninguém lia.
+  const [progressos, trilhas] = await Promise.all([
     progressoCursosPorUsuario(user.id),
     trilhasPublicadas(),
   ])
@@ -26,7 +26,12 @@ export default async function CursosPage() {
   // resto do sistema: todas as aulas publicadas do curso concluídas.
   const idsDasTrilhas = trilhas.flatMap(t => t.cursos.map(c => c.id))
   const porCurso = await progressoNaTrilha(idsDasTrilhas, user.id)
-  const concluidosPorTrilha = new Map(
+  // O modal precisa do progresso por curso já como dado simples: componente
+  // de cliente não recebe Map pelo limite servidor/cliente.
+  const progressoPorCurso = Object.fromEntries(
+    progressos.map(p => [p.id, { total: p.totalAulas, feitas: p.aulasConcluidas }])
+  )
+  const concluidosPorTrilha = Object.fromEntries(
     trilhas.map(t => [
       t.id,
       t.cursos.filter(c => {
@@ -35,9 +40,6 @@ export default async function CursosPage() {
       }).length,
     ])
   )
-
-  const aulasPorCurso = new Map(progressos.map(p => [p.id, p.totalAulas]))
-  const concluidasPorCurso = new Map(progressos.map(p => [p.id, p.aulasConcluidas]))
 
   const podeGerenciar = profile.role === 'professor' || isGestao(profile.role)
 
@@ -62,43 +64,31 @@ export default async function CursosPage() {
         )}
       </div>
 
-      {/* As trilhas vêm primeiro: quem chega quer saber por onde começar, e a
-          grade de 17 cursos soltos não responde isso. A lista completa segue
-          abaixo, para quem já sabe o que procura. */}
-      {trilhas.length > 0 && (
-        <section className="mb-10">
-          <h2 className="text-white font-bold text-lg font-geom mb-1">Trilhas</h2>
-          <p className="text-white/65 text-[16px] mb-4">
-            Cada trilha é uma sequência: um curso prepara o seguinte.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            {trilhas.map(t => (
-              <TrilhaCard key={t.id} trilha={t} concluidos={concluidosPorTrilha.get(t.id) ?? 0} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* A entrada para os cursos é a trilha, e a lista deles vive dentro do
+          modal de cada uma.
 
-      {trilhas.length > 0 && cursos.length > 0 && (
-        <h2 className="text-white font-bold text-lg font-geom mb-4">Todos os cursos</h2>
-      )}
-
-      {cursos.length === 0 ? (
+          Antes esta página mostrava as trilhas E, logo abaixo, uma grade com
+          todos os cursos publicados: a mesma informação duas vezes, e a segunda
+          sem a ordem que a trilha dá. Quem descia até a grade escolhia por capa,
+          não pela sequência — que é justamente o que a trilha existe para
+          ensinar. */}
+      {trilhas.length === 0 ? (
         <div className="border border-dashed border-white/10 rounded-2xl p-12 text-center">
           <GraduationCap className="w-10 h-10 text-white/20 mx-auto mb-3" />
           <p className="text-white/55">Nenhum curso publicado ainda.</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {cursos.map((curso) => (
-            <CursoCard
-              key={curso.id}
-              curso={curso}
-              totalAulas={aulasPorCurso.get(curso.id) ?? 0}
-              aulasConcluidas={concluidasPorCurso.get(curso.id) ?? 0}
-            />
-          ))}
-        </div>
+        <section>
+          <h2 className="text-white font-bold text-lg font-geom mb-1">Trilhas</h2>
+          <p className="text-white/65 text-[16px] mb-4">
+            Cada trilha é uma sequência: um curso prepara o seguinte. Abra uma para ver os cursos.
+          </p>
+          <TrilhasComModal
+            trilhas={trilhas}
+            progressoPorCurso={progressoPorCurso}
+            concluidosPorTrilha={concluidosPorTrilha}
+          />
+        </section>
       )}
     </div>
   )
