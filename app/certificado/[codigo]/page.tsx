@@ -4,10 +4,11 @@ import path from 'node:path'
 import { certificadoPorCodigo } from '@/lib/db/cursos'
 import Image from 'next/image'
 import Link from 'next/link'
+import { notFound } from 'next/navigation'
 import { SearchX } from 'lucide-react'
 import BotaoImprimirCertificado from '@/components/cursos/BotaoImprimirCertificado'
 import type { Metadata } from 'next'
-import { duracaoPorExtenso } from '@/lib/duracao'
+import { dadosDoCertificado } from '@/lib/certificado/dados'
 
 export const dynamic = 'force-dynamic'
 
@@ -103,12 +104,20 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
   const assinatura = assinaturaDe(cert.autor_nome ?? null)
   const marca = marcaDe(cert.autor_nome ?? null)
 
-  const dataEmissao = (cert.emitido_em ?? new Date()).toLocaleDateString('pt-BR', {
-    day: 'numeric', month: 'long', year: 'numeric',
-  })
+  /**
+   * Tudo o que o documento imprime, já formatado e sem traço, vem daqui.
+   *
+   * A tela não formata mais nada por conta própria: é essa camada que o
+   * desenho novo vai consumir quando entrar no lugar deste, e mantê-la em uso
+   * agora garante que ela está certa antes de a arte mudar.
+   */
+  const dados = await dadosDoCertificado(cert.codigo)
+  if (!dados) notFound()
+
+  const dataEmissao = dados.dataConclusao
   // O ano do selo sai da MESMA data que o rodapé imprime: se um dia a emissão
   // for retroativa, os dois contam a mesma história.
-  const anoEmissao = (cert.emitido_em ?? new Date()).getFullYear()
+  const anoEmissao = dados.anoConclusao
 
   return (
     <div className="min-h-screen bg-escola-creme flex flex-col items-center justify-center gap-6 p-4 py-10 print:p-0 print:bg-white print:block">
@@ -177,12 +186,12 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
             </div>
 
             {/* O miolo recua por conta própria, já que o pai não recua mais. */}
-            <div className="flex-1 flex flex-col min-h-0 px-8 sm:px-16 py-5 sm:py-6">
+            <div className="flex-1 flex flex-col min-h-0 overflow-hidden px-8 sm:px-16 py-5 sm:py-6">
 
             {/* O miolo cresce e encolhe conforme o nome e o título do curso;
                 o cabeçalho e o rodapé ficam ancorados. */}
             <div className="flex-1 flex flex-col items-center justify-center min-h-0 py-8 sm:py-0">
-              <h1 className="font-playfair text-3xl sm:text-5xl font-black text-escola-azul">
+              <h1 className="font-playfair text-3xl sm:text-4xl lg:text-5xl font-black text-escola-azul">
                 Certificado
               </h1>
               {/* Um filete curto sob o título: dá ao bloco central um eixo
@@ -191,8 +200,8 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
               <div className="w-16 h-px bg-escola-vermelho my-3 sm:my-4" />
 
               <p className="font-serif text-escola-cinza text-sm mb-1">Certificamos que</p>
-              <p className="font-playfair text-xl sm:text-3xl font-bold text-escola-preto mb-3 leading-snug text-balance">
-                {cert.aluno_nome}
+              <p className="font-playfair text-xl sm:text-2xl lg:text-3xl font-bold text-escola-preto mb-3 leading-snug text-balance">
+                {dados.alunoNome}
               </p>
 
               <p className="font-serif text-escola-cinza text-sm">
@@ -201,14 +210,12 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
               {/* O curso ganha linha própria: ele é o assunto do documento, e
                   no parágrafo corrido sumia no meio da frase — ainda mais com
                   títulos longos como "Parte 3 — A estrutura que sustenta". */}
-              <p className="font-playfair text-lg sm:text-2xl font-bold text-escola-azul leading-snug text-balance max-w-3xl mx-auto mt-1 mb-3">
-                {cert.curso_titulo}
+              <p className="font-playfair text-lg sm:text-xl lg:text-2xl font-bold text-escola-azul leading-snug text-balance max-w-3xl mx-auto mt-1 mb-3">
+                {dados.cursoTitulo}
               </p>
               <p className="font-serif text-escola-cinza leading-relaxed max-w-3xl mx-auto text-sm sm:text-base">
                 com carga horária de{' '}
-                <strong className="text-escola-preto">
-                  {duracaoPorExtenso(cert.carga_min ?? cert.carga_horaria * 60)}
-                </strong>
+                <strong className="text-escola-preto">{dados.cargaExtenso}</strong>
                 , obtendo nota <strong className="text-escola-preto">{cert.nota}</strong> na
                 avaliação final.
               </p>
@@ -236,27 +243,56 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
                     />
                   )}
                 </div>
-                <div className="border-t border-escola-cinza pt-1.5 mx-auto max-w-[260px]">
-                  <div className="flex items-center justify-center gap-2">
-                    {marca && (
-                      // `alt` vazio de propósito: o nome do responsável vem
-                      // logo ao lado, e anunciar os dois faria o leitor de tela
-                      // repetir a mesma informação duas vezes.
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={marca}
-                        alt=""
-                        aria-hidden="true"
-                        className="w-6 h-6 flex-shrink-0 object-contain"
-                      />
-                    )}
-                    <p className="font-serif text-sm text-escola-preto leading-tight">
-                      {cert.autor_nome ?? 'E.E. Dr. João Beraldo'}
+                {/* Duas assinaturas: a escola à esquerda, quem deu o curso à
+                    direita. Um curso da escola é assinado pelas duas partes, e
+                    o documento antes trazia só uma. Cada lado tem o nome numa
+                    linha e o cargo na outra, que é como se assina papel. */}
+                <div className="grid grid-cols-2 gap-4 sm:gap-8 mx-auto max-w-[420px]">
+                  {dados.diretora.nome && (
+                    <div className="border-t border-escola-cinza pt-1.5">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <div className="relative w-5 h-5 flex-shrink-0">
+                          <Image
+                            src="/logo-transparente.png"
+                            alt=""
+                            aria-hidden="true"
+                            fill
+                            sizes="20px"
+                            className="object-contain"
+                          />
+                        </div>
+                        <p className="font-serif text-[13px] text-escola-preto leading-tight">
+                          {dados.diretora.nome}
+                        </p>
+                      </div>
+                      <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">
+                        {dados.diretora.cargo}
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="border-t border-escola-cinza pt-1.5">
+                    <div className="flex items-center justify-center gap-1.5">
+                      {marca && (
+                        // `alt` vazio de propósito: o nome vem logo ao lado, e
+                        // anunciar os dois faria o leitor de tela repetir a
+                        // mesma informação duas vezes.
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={marca}
+                          alt=""
+                          aria-hidden="true"
+                          className="w-5 h-5 flex-shrink-0 object-contain"
+                        />
+                      )}
+                      <p className="font-serif text-[13px] text-escola-preto leading-tight">
+                        {dados.professor.nome}
+                      </p>
+                    </div>
+                    <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">
+                      {dados.professor.cargo}
                     </p>
                   </div>
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">
-                    {cert.autor_nome ? 'Responsável pelo curso' : 'Instituição'}
-                  </p>
                 </div>
               </div>
 
@@ -289,13 +325,13 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
             <div className="faixa flex-shrink-0 px-6 sm:px-10 py-1.5 sm:py-2">
               <p className="font-mono text-[8px] sm:text-[9px] text-white/75 leading-snug">
                 Código de validação{' '}
-                <strong className="font-mono text-white tracking-wider">{cert.codigo}</strong>
+                <strong className="font-mono text-white tracking-wider">{dados.codigo}</strong>
                 <span className="hidden sm:inline"> · </span>
                 {/* O caminho é indivisível: o navegador quebra depois de hífen
                     por conta própria e partiria o código em "JB-" e "SS4DRGRH". */}
                 <span className="block sm:inline">
                   escolaestadualdrjoaoberaldo.com<wbr />
-                  <span className="whitespace-nowrap">/certificado/{cert.codigo}</span>
+                  <span className="whitespace-nowrap">/certificado/{dados.codigo}</span>
                 </span>
               </p>
             </div>
