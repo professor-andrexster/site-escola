@@ -106,6 +106,9 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
   const dataEmissao = (cert.emitido_em ?? new Date()).toLocaleDateString('pt-BR', {
     day: 'numeric', month: 'long', year: 'numeric',
   })
+  // O ano do selo sai da MESMA data que o rodapé imprime: se um dia a emissão
+  // for retroativa, os dois contam a mesma história.
+  const anoEmissao = (cert.emitido_em ?? new Date()).getFullYear()
 
   return (
     <div className="min-h-screen bg-escola-creme flex flex-col items-center justify-center gap-6 p-4 py-10 print:p-0 print:bg-white print:block">
@@ -134,34 +137,47 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
         </div>
 
         <div className="conteudo-certificado h-full border-[6px] border-escola-azul p-1.5">
-          <div className="h-full border border-escola-vermelho px-8 sm:px-16 py-6 sm:py-8 text-center flex flex-col">
+          {/* Sem padding lateral aqui: as faixas sangram de ponta a ponta, e
+              quem recua é o miolo. Com padding no pai elas ficariam com uma
+              tira de papel sobrando dos dois lados. */}
+          <div className="h-full border border-escola-vermelho text-center flex flex-col overflow-hidden">
 
-            {/* Cabeçalho: brasão e instituição lado a lado, porque em paisagem
-                a altura é o recurso escasso e empilhar custa caro. */}
-            <div className="flex items-center justify-center gap-3 sm:gap-4 flex-shrink-0">
-              {/* `contain`, e não `cover`: a marca é alta (1131x1600) e o corte
+            {/* Faixa de cima: o cabeçalho institucional, em branco sobre o azul
+                da marca. Brasão e instituição lado a lado, porque em paisagem a
+                altura é o recurso escasso e empilhar custa caro. */}
+            <div className="faixa flex items-center justify-center gap-3 sm:gap-4 flex-shrink-0 px-6 sm:px-10 py-2.5 sm:py-3">
+              {/* O disco claro não é enfeite: o brasão é AZUL, e sobre a faixa
+                  azul ele praticamente desaparecia — o mesmo defeito de fundo e
+                  figura da mesma cor que já apareceu nos cursos. O disco devolve
+                  o contraste e ainda lê como um botão de brasão.
+
+                  `contain`, e não `cover`: a marca é alta (1131x1600) e o corte
                   circular anterior comia "E.E. Doutor" em cima e "Beraldo"
                   embaixo — sobrava a faixa do meio, que sozinha não identifica
-                  a escola. O PNG com transparência assenta no papel sem trazer
-                  o retângulo branco do JPEG junto. */}
-              <div className="relative w-16 h-16 flex-shrink-0">
-                <Image
-                  src="/logo-transparente.png"
-                  alt="Brasão da E.E. Dr. João Beraldo"
-                  fill
-                  sizes="64px"
-                  className="object-contain"
-                />
+                  a escola. */}
+              <div className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 rounded-full bg-white p-1.5 sm:p-2">
+                <div className="relative w-full h-full">
+                  <Image
+                    src="/logo-transparente.png"
+                    alt="Brasão da E.E. Dr. João Beraldo"
+                    fill
+                    sizes="56px"
+                    className="object-contain"
+                  />
+                </div>
               </div>
               <div className="text-start">
-                <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.3em] text-escola-cinza leading-tight">
+                <p className="font-mono text-[10px] sm:text-[11px] uppercase tracking-[0.15em] sm:tracking-[0.3em] text-white leading-tight">
                   E.E. Dr. João Beraldo
                 </p>
-                <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-escola-cinza leading-tight">
+                <p className="font-mono text-[9px] sm:text-[10px] uppercase tracking-[0.08em] sm:tracking-[0.2em] text-white/75 leading-tight">
                   Ensino Médio em Tempo Integral · Carlos Chagas, MG
                 </p>
               </div>
             </div>
+
+            {/* O miolo recua por conta própria, já que o pai não recua mais. */}
+            <div className="flex-1 flex flex-col min-h-0 px-8 sm:px-16 py-5 sm:py-6">
 
             {/* O miolo cresce e encolhe conforme o nome e o título do curso;
                 o cabeçalho e o rodapé ficam ancorados. */}
@@ -244,21 +260,41 @@ export default async function CertificadoPage({ params }: { params: Promise<{ co
                 </div>
               </div>
 
-              {/* O endereço quebrava no meio do código — ".../JB-" numa linha
-                  e "27WJUD2V" na outra — e deixava de parecer um endereço.
-                  O `<wbr>` marca o único lugar onde a quebra é aceitável, logo
-                  depois do domínio: em tela larga sai numa linha só, e onde não
-                  couber parte em dois pedaços que ainda se leem. Proibir a
-                  quebra não servia — na largura de tablet o texto vazava a
-                  folha. */}
-              <p className="font-mono text-[10px] text-escola-cinza leading-relaxed text-center sm:text-end order-3">
-                Código de validação<br />
-                <strong className="font-mono text-escola-cinza text-[11px]">{cert.codigo}</strong><br />
-                <span className="text-[8.5px] leading-snug inline-block">
+              {/* O selo ocupa o lugar que era da validação. Ele fecha o
+                  documento do lado direito e equilibra a data à esquerda, com a
+                  assinatura no meio — a validação desceu para a faixa, onde
+                  cabe numa linha só e some do caminho da leitura. */}
+              <div className="order-3 flex justify-center sm:justify-end">
+                <div className="selo" role="img" aria-label={`Selo de conclusão — curso concluído em ${anoEmissao}`}>
+                  <div className="selo-disco">
+                    <span className="font-mono text-[6px] uppercase tracking-[0.2em] text-white/70">
+                      Curso
+                    </span>
+                    <span className="font-sans text-[10px] font-black uppercase tracking-[0.04em] text-white">
+                      Concluído
+                    </span>
+                    <span aria-hidden="true" className="block w-5 h-px bg-white/45 my-[3px]" />
+                    <span className="font-mono text-[7px] tracking-[0.16em] text-white/80">
+                      {anoEmissao}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            </div>
+
+            {/* Faixa de baixo: a validação, numa linha só. Fecha a folha contra
+                a faixa de cima — sem ela o documento sairia com tarja apenas no
+                topo, que lê como cabeçalho, não como peça acabada. */}
+            <div className="faixa flex-shrink-0 px-6 sm:px-10 py-1.5 sm:py-2">
+              <p className="font-mono text-[8px] sm:text-[9px] text-white/75 leading-snug">
+                Código de validação{' '}
+                <strong className="font-mono text-white tracking-wider">{cert.codigo}</strong>
+                <span className="hidden sm:inline"> · </span>
+                {/* O caminho é indivisível: o navegador quebra depois de hífen
+                    por conta própria e partiria o código em "JB-" e "SS4DRGRH". */}
+                <span className="block sm:inline">
                   escolaestadualdrjoaoberaldo.com<wbr />
-                  {/* O caminho é indivisível: sozinho, o `<wbr>` não bastava —
-                      o navegador quebra depois de hífen por conta própria, e
-                      partia o código em "JB-" e "SS4DRGRH". */}
                   <span className="whitespace-nowrap">/certificado/{cert.codigo}</span>
                 </span>
               </p>

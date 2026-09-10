@@ -14,6 +14,9 @@
      rodapé. Escurecer este valor é o jeito mais fácil de tornar o certificado
      bonito e ilegível ao mesmo tempo. */
   --relevo-sombra: #e4ddd0;
+  /* Azul da marca da escola. Uma variável só para as faixas e o selo: se o
+     tom mudar, os dois mudam juntos e nunca saem desencontrados. */
+  --selo-tinta: #1a3a5c;
   background-color: var(--papel);
 }
 
@@ -68,6 +71,63 @@
 
 /* O conteúdo sobe acima da marca. Sem isto o texto ficaria por baixo dela. */
 .conteudo-certificado {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------------------------------------------------------------- o selo
+   O selo é desenhado em CSS, não é imagem: precisa ficar nítido tanto na tela
+   quanto impresso a 300 dpi, e um PNG que serve para um borra no outro.
+
+   A serrilha da borda vem de um `repeating-conic-gradient` atrás do disco —
+   as pontas que sobram do disco viram os dentes. É o mesmo princípio do selo
+   de papel prensado: o disco esconde o miolo e só a beirada aparece. */
+.selo {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+}
+
+.selo::before {
+  content: '';
+  position: absolute;
+  inset: -7px;
+  border-radius: 50%;
+  background: repeating-conic-gradient(
+    var(--selo-tinta) 0deg 7.5deg,
+    transparent 7.5deg 15deg
+  );
+}
+
+.selo-disco {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--selo-tinta);
+  /* Dois anéis: o claro desenha a linha interna, o escuro devolve a borda.
+     Feito com `inset shadow` para não roubar espaço do texto do miolo. */
+  box-shadow:
+    inset 0 0 0 3px var(--selo-tinta),
+    inset 0 0 0 4px rgba(255, 255, 255, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  line-height: 1;
+}
+
+/* --------------------------------------------------------------- as faixas
+   Sangram de ponta a ponta dentro da moldura. É o que dá ao documento o ar de
+   peça acabada, em vez de texto solto numa folha com borda. */
+.faixa {
+  background-color: var(--selo-tinta);
+  /* A marca em relevo passa por baixo; a faixa é opaca e a cobre, de
+     propósito — relevo atrás de tarja azul viraria sujeira. */
   position: relative;
   z-index: 1;
 }
