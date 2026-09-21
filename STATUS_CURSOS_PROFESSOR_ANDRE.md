@@ -29,6 +29,8 @@
 | Redes de Computadores | redes-de-computadores | 6 | 6 | ✅ Publicado |
 
 ### 4️⃣ **Criados Scripts para Reutilização**
+> Os scripts `inserir-cursos*.js` foram removidos em 2026-09-21: gravavam direto no Supabase, de onde o sistema saiu, e traziam a chave service_role no código. Conteúdo novo entra por `scripts/conteudo-*.mjs` e `scripts/criar-modulo-*.mjs`, que leem o `DATABASE_URL` do `.env`.
+
 - `inserir-cursos.js` — Inserir HTML
 - `inserir-cursos-css.js` — Inserir CSS
 - `inserir-cursos-javascript.js` — Inserir JavaScript
