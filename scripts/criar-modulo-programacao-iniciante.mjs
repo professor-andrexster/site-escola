@@ -13,6 +13,10 @@
  * porque fluxograma é o que vem antes do pseudocódigo. Na trilha Programação o
  * curso entra na posição 8, também antes de Lógica.
  *
+ * Cargas seguem o critério conservador de scripts/recalcular-cargas.mjs
+ * (leitura em dobro + exercícios + projeto): curso 20 min, módulo 37 min,
+ * aulas de 3 a 4 min. É o número que vai no certificado.
+ *
  * Tudo nasce despublicado. O André revisa em /admin/cursos/gerenciar e, quando
  * aprovar, roda com --publicar. Idempotente: rodar duas vezes não duplica nada.
  *
@@ -38,7 +42,8 @@ const MODULO = {
   nome: 'Programação Iniciante',
   nivel: 'Fácil',
   ordem: 6,
-  carga: 6,
+  carga: 1,
+  cargaMin: 37,
   descricao:
     'Antes de escrever código, você aprende a pensar como quem programa: desenhar o caminho de um problema até a solução. Começa com fluxogramas e termina pronto para a Lógica de Programação.',
 }
@@ -47,7 +52,8 @@ const CURSO = {
   slug: 'fluxogramas',
   titulo: 'Fluxogramas: desenhando o raciocínio',
   categoria: 'Programação',
-  carga: 6,
+  carga: 1,
+  cargaMin: 20,
   descricao:
     'Seis aulas para aprender a desenhar o passo a passo de qualquer problema com os símbolos que programadores usam no mundo todo. Você monta seus fluxogramas no draw.io, um programa gratuito, e termina com um fluxograma de um problema seu.',
   ordemNaTrilha: 8,
@@ -59,7 +65,7 @@ const AULAS = [
   {
     slug: 'o-que-e-um-fluxograma',
     titulo: 'O que é um fluxograma e por que programador desenha antes de escrever',
-    min: 30,
+    min: 3,
     descricao: 'A ideia de algoritmo, o desenho que mostra o caminho e por que ele vem antes do código.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -141,7 +147,7 @@ Se a pessoa travar, faltou passo. Anote o que faltou e corrija.</p>
   {
     slug: 'os-simbolos-do-fluxograma',
     titulo: 'Os símbolos: cada forma tem um significado',
-    min: 30,
+    min: 3,
     descricao: 'Início e fim, ação, decisão, entrada e saída, seta. As regras para o desenho ser lido do mesmo jeito por todo mundo.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -228,7 +234,7 @@ fluxograma <strong>desenhado à mão</strong>, no caderno, usando os símbolos c
   {
     slug: 'drawio-primeiro-fluxograma',
     titulo: 'draw.io na prática: o primeiro fluxograma no computador',
-    min: 35,
+    min: 4,
     descricao: 'Abrir o draw.io sem instalar nada, montar um fluxograma de sequência, salvar e exportar em PNG.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -320,7 +326,7 @@ sem decisão) e monte no draw.io.</p>
   {
     slug: 'decisao-o-fluxo-que-escolhe',
     titulo: 'Decisão: o fluxo que escolhe um caminho',
-    min: 35,
+    min: 3,
     descricao: 'O losango na prática. Perguntas de sim ou não, caminhos que se separam e se juntam, decisão dentro de decisão.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -411,7 +417,7 @@ Fim. Mais de duas respostas: encadeie decisões, da condição mais exigente par
   {
     slug: 'repeticao-o-fluxo-que-volta',
     titulo: 'Repetição: o fluxo que volta',
-    min: 35,
+    min: 4,
     descricao: 'Seta que sobe. Repetir até uma condição mandar parar, contar quantas vezes, e o erro do laço que nunca termina.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -503,7 +509,7 @@ compara e soma. Todo laço precisa de uma caixa que faça a condição virar Nã
   {
     slug: 'do-fluxograma-ao-pseudocodigo',
     titulo: 'Do fluxograma ao pseudocódigo, e o desenho que roda sozinho',
-    min: 35,
+    min: 3,
     descricao: 'Traduzir cada símbolo para uma linha de pseudocódigo. E o Flowgorithm, que executa o fluxograma na tela.',
     conteudo: `
 <h2>Objetivo de aprendizagem</h2>
@@ -681,9 +687,9 @@ try {
     acao(`criar módulo "${MODULO.nome}" (${MODULO.nivel}, ${MODULO.carga}h) na ordem ${MODULO.ordem}, publicado=${PUB}`)
     if (APLICAR) {
       await c.query(
-        `INSERT INTO modulos (id, nome, slug, descricao, nivel, ordem, carga_horaria, publicado, criado_em, atualizado_em)
-         VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
-        [MODULO.nome, MODULO.slug, MODULO.descricao, MODULO.nivel, MODULO.ordem, MODULO.carga, PUB]
+        `INSERT INTO modulos (id, nome, slug, descricao, nivel, ordem, carga_horaria, carga_min, publicado, criado_em, atualizado_em)
+         VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+        [MODULO.nome, MODULO.slug, MODULO.descricao, MODULO.nivel, MODULO.ordem, MODULO.carga, MODULO.cargaMin, PUB]
       )
       moduloId = (await c.query('SELECT id FROM modulos WHERE slug = ?', [MODULO.slug]))[0].id
     }
@@ -691,8 +697,8 @@ try {
     acao(`módulo já existe, atualizando${PUBLICAR ? ' e publicando' : ''}`)
     if (APLICAR) {
       await c.query(
-        `UPDATE modulos SET nome=?, descricao=?, nivel=?, carga_horaria=?, publicado=IF(?, 1, publicado), atualizado_em=NOW() WHERE id=?`,
-        [MODULO.nome, MODULO.descricao, MODULO.nivel, MODULO.carga, PUB, moduloId])
+        `UPDATE modulos SET nome=?, descricao=?, nivel=?, carga_horaria=?, carga_min=?, publicado=IF(?, 1, publicado), atualizado_em=NOW() WHERE id=?`,
+        [MODULO.nome, MODULO.descricao, MODULO.nivel, MODULO.carga, MODULO.cargaMin, PUB, moduloId])
     }
   }
 
@@ -710,10 +716,10 @@ try {
     if (APLICAR) {
       await c.query(
         `INSERT INTO cursos (id, titulo, slug, descricao, categoria, nivel, autor_nome, publicado,
-                             ordem, carga_horaria, modulo_id, ordem_no_modulo, trilha_id, ordem_na_trilha,
+                             ordem, carga_horaria, carga_min, modulo_id, ordem_no_modulo, trilha_id, ordem_na_trilha,
                              created_at, updated_at, criado_em, atualizado_em)
-         VALUES (UUID(), ?, ?, ?, ?, 'Fácil', 'André Gomes', ?, 19, ?, ?, 1, ?, ?, NOW(), NOW(), NOW(), NOW())`,
-        [CURSO.titulo, CURSO.slug, CURSO.descricao, CURSO.categoria, PUB, CURSO.carga, moduloId, trilha?.id ?? null, CURSO.ordemNaTrilha]
+         VALUES (UUID(), ?, ?, ?, ?, 'Fácil', 'André Gomes', ?, 19, ?, ?, ?, 1, ?, ?, NOW(), NOW(), NOW(), NOW())`,
+        [CURSO.titulo, CURSO.slug, CURSO.descricao, CURSO.categoria, PUB, CURSO.carga, CURSO.cargaMin, moduloId, trilha?.id ?? null, CURSO.ordemNaTrilha]
       )
       cursoId = (await c.query('SELECT id FROM cursos WHERE slug = ?', [CURSO.slug]))[0].id
     }
@@ -721,8 +727,8 @@ try {
     acao(`curso já existe, atualizando${PUBLICAR ? ' e publicando' : ''}`)
     if (APLICAR) {
       await c.query(
-        `UPDATE cursos SET titulo=?, descricao=?, carga_horaria=?, modulo_id=?, publicado=IF(?, 1, publicado), atualizado_em=NOW() WHERE id=?`,
-        [CURSO.titulo, CURSO.descricao, CURSO.carga, moduloId, PUB, cursoId])
+        `UPDATE cursos SET titulo=?, descricao=?, carga_horaria=?, carga_min=?, modulo_id=?, publicado=IF(?, 1, publicado), atualizado_em=NOW() WHERE id=?`,
+        [CURSO.titulo, CURSO.descricao, CURSO.carga, CURSO.cargaMin, moduloId, PUB, cursoId])
     }
   }
 
