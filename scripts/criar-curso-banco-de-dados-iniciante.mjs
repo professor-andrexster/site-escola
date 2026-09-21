@@ -26,6 +26,9 @@
  * extra na aula 3, o DB Browser for SQLite: gratuito, código aberto, Windows,
  * Mac e Linux (v3.13.1, conferido em github.com/sqlitebrowser/sqlitebrowser).
  *
+ * Fechamento: um mini desafio (sistema escolar: turmas, alunos, notas) preso à
+ * última aula, sem valer certificado, e o projeto final, que vale.
+ *
  * Tudo nasce despublicado. O André revisa em /admin/cursos/gerenciar e, quando
  * aprovar, roda com --publicar. Idempotente: rodar duas vezes não duplica nada.
  */
@@ -674,6 +677,68 @@ resultado da consulta 4.</p>`,
   },
 ]
 
+// Mini desafio de fechamento (pedido do André, 2026-09-21): um sistema escolar
+// pequeno, preso à última aula como segundo desafio dela. Fica entre o desafio
+// da aula 6 e o projeto final: menor que o projeto (não vale certificado) e
+// obriga o aluno a sair da biblioteca, o fio condutor das seis aulas, para
+// montar do zero um assunto novo com as mesmas peças. Idempotente por título.
+const MINI_DESAFIO = {
+  aulaSlug: 'duas-tabelas-que-se-conhecem',
+  titulo: 'Mini desafio: um sistema escolar',
+  enunciado: `
+<p>Durante o curso você montou a biblioteca. Agora monte, sozinho e do zero, um
+<strong>sistema escolar</strong> pequeno: turmas, alunos e notas. É um mini desafio: cabe em uma
+hora e usa só o que as seis aulas ensinaram.</p>
+
+<h3>As três tabelas</h3>
+<ul>
+  <li><code>turmas</code>: <code>id</code>, nome da turma (<code>UNIQUE</code>, ex.: "1º A") e ano
+  (<code>INTEGER</code>)</li>
+  <li><code>alunos</code>: <code>id</code>, nome (<code>NOT NULL</code>), data de nascimento no
+  formato ano-mês-dia e <code>turma_id</code> apontando para <code>turmas</code></li>
+  <li><code>notas</code>: <code>id</code>, <code>aluno_id</code> apontando para <code>alunos</code>,
+  disciplina (<code>TEXT</code>), bimestre (<code>INTEGER</code>) e nota (<code>REAL</code>)</li>
+</ul>
+<p>Antes de digitar, desenhe as três tabelas no papel, como na aula 2. Confira: cada tabela guarda
+um tipo de coisa só, e o nome do aluno aparece <strong>uma vez</strong>, na tabela
+<code>alunos</code>, nunca repetido em <code>notas</code>.</p>
+
+<h3>Os dados</h3>
+<ul>
+  <li>Duas turmas</li>
+  <li>Seis alunos, três em cada turma (pode inventar os nomes)</li>
+  <li>Doze notas, no mínimo: duas disciplinas, dois bimestres, e pelo menos um aluno sem nota
+  em uma delas</li>
+</ul>
+
+<h3>As perguntas</h3>
+<p>Escreva a pergunta em português como comentário (<code>-- ...</code>) em cima de cada consulta.</p>
+<ol>
+  <li>Nome dos alunos de uma turma, em ordem alfabética (<code>JOIN</code> + <code>ORDER BY</code>)</li>
+  <li>Quantos alunos tem cada turma (<code>JOIN</code> + <code>GROUP BY</code>)</li>
+  <li>Todas as notas de um aluno, com o nome dele e a disciplina, do maior para o menor</li>
+  <li>Média de cada aluno em uma disciplina (<code>AVG</code> funciona igual ao <code>COUNT</code>:
+  <code>AVG(nota)</code>)</li>
+  <li>Alunos com alguma nota abaixo de 6 (<code>WHERE nota &lt; 6</code>)</li>
+</ol>
+
+<h3>Uma mudança com cuidado</h3>
+<p>Um aluno mudou de turma. Faça o <code>UPDATE</code> em <code>alunos</code> com <code>WHERE</code>
+pelo <code>id</code>, e mostre o <code>SELECT</code> de conferência antes e depois, como na aula 5.
+Repare que nenhuma nota precisou mudar: a nota aponta para o aluno, e o aluno é quem aponta para
+a turma.</p>
+
+<h3>O que enviar</h3>
+<ul>
+  <li>Um arquivo <code>.sql</code> que recria tudo quando colado no sqliteonline.com: as três
+  tabelas, os dados, as cinco consultas e o <code>UPDATE</code> com as conferências</li>
+  <li>Um print do resultado da consulta 4</li>
+</ul>
+<p>Tudo certo? Você acabou de montar o esqueleto de um sistema escolar de verdade. É por aí que o
+projeto final começa.</p>
+`,
+}
+
 const PROJETO_FINAL = {
   titulo: 'Projeto final: o banco de dados de algo seu',
   enunciado: `
@@ -787,7 +852,8 @@ try {
     }
     const [aulaId] = await c.query('SELECT id FROM aulas WHERE slug = ? AND curso_id = ?', [aula.slug, cursoId])
 
-    const [desafioJa] = await c.query('SELECT id FROM curso_desafios WHERE aula_id = ?', [aulaId.id])
+    // Por título: a última aula tem dois desafios (o dela e o mini desafio).
+    const [desafioJa] = await c.query('SELECT id FROM curso_desafios WHERE aula_id = ? AND titulo = ?', [aulaId.id, aula.desafio.titulo])
     if (desafioJa) {
       await c.query('UPDATE curso_desafios SET titulo=?, enunciado=?, ordem=?, formatos_aceitos=? WHERE id=?',
         [aula.desafio.titulo, aula.desafio.enunciado.trim(), i + 1, FORMATOS, desafioJa.id])
@@ -796,6 +862,26 @@ try {
         `INSERT INTO curso_desafios (id, curso_id, aula_id, titulo, enunciado, tipo, ordem, vale_certificado, formatos_aceitos, created_at)
          VALUES (UUID(), ?, ?, ?, ?, 'pratico', ?, 0, ?, NOW())`,
         [cursoId, aulaId.id, aula.desafio.titulo, aula.desafio.enunciado.trim(), i + 1, FORMATOS]
+      )
+    }
+  }
+
+  // Mini desafio: segundo desafio da última aula, ordem 7 (depois dos seis da
+  // aula), tipo 'pratico', não vale certificado. desafiosDaAula() lista todos os
+  // desafios da aula em ordem, então aparece logo abaixo do desafio da aula 6.
+  acao(`mini desafio na aula ${AULAS.length}: ${MINI_DESAFIO.titulo}`)
+  if (APLICAR) {
+    const [aulaMini] = await c.query('SELECT id FROM aulas WHERE slug = ? AND curso_id = ?', [MINI_DESAFIO.aulaSlug, cursoId])
+    if (!aulaMini) throw new Error(`aula ${MINI_DESAFIO.aulaSlug} não existe`)
+    const [miniJa] = await c.query('SELECT id FROM curso_desafios WHERE aula_id = ? AND titulo = ?', [aulaMini.id, MINI_DESAFIO.titulo])
+    if (miniJa) {
+      await c.query('UPDATE curso_desafios SET enunciado=?, ordem=?, formatos_aceitos=? WHERE id=?',
+        [MINI_DESAFIO.enunciado.trim(), AULAS.length + 1, FORMATOS, miniJa.id])
+    } else {
+      await c.query(
+        `INSERT INTO curso_desafios (id, curso_id, aula_id, titulo, enunciado, tipo, ordem, vale_certificado, formatos_aceitos, created_at)
+         VALUES (UUID(), ?, ?, ?, ?, 'pratico', ?, 0, ?, NOW())`,
+        [cursoId, aulaMini.id, MINI_DESAFIO.titulo, MINI_DESAFIO.enunciado.trim(), AULAS.length + 1, FORMATOS]
       )
     }
   }
@@ -823,7 +909,7 @@ try {
   }
 
   if (!APLICAR) console.log('\n(simulação: passe --aplicar para gravar como rascunho, --publicar para ligar)')
-  else console.log(`\ncurso, ${AULAS.length} aulas e ${AULAS.length + 1} desafios no lugar (publicado=${PUB})`)
+  else console.log(`\ncurso, ${AULAS.length} aulas e ${AULAS.length + 2} desafios no lugar (publicado=${PUB})`)
 } finally {
   c.release()
   await pool.end()
