@@ -1,143 +1,130 @@
 /* Só vale nesta rota: o Next injeta este CSS apenas no segmento do
-   certificado, então o A4 deitado não vaza pra impressão de outras telas. */
+   certificado, então o A4 deitado não vaza pra impressão de outras telas.
 
-/* ---------------------------------------------------------------- o papel
-   Não é branco puro. Um marfim levíssimo é o que dá ao relevo onde existir:
-   sobre branco absoluto a luz do alto-relevo não teria como aparecer, porque
-   não há nada mais claro que o fundo. Daqui saem as três tintas da marca. */
+   Desenho de 2026-09-21 (painel lateral, texto à esquerda, discos em baixa
+   opacidade, QR). O anterior tinha faixas em cima e embaixo, moldura dupla,
+   marca em alto-relevo e selo serrilhado. */
+
 .folha-certificado {
-  --papel: #fcfaf6;
-  --relevo-luz: #ffffff;
-  /* O tom mais escuro que a marca d'água chega a ter em qualquer pixel.
-     Ele é o piso de contraste do documento inteiro: todo texto que passa por
-     cima precisa continuar legível sobre ele, inclusive o cinza pequeno do
-     rodapé. Escurecer este valor é o jeito mais fácil de tornar o certificado
-     bonito e ilegível ao mesmo tempo. */
-  --relevo-sombra: #e4ddd0;
-  /* Azul da marca da escola. Uma variável só para as faixas e o selo: se o
-     tom mudar, os dois mudam juntos e nunca saem desencontrados. */
-  --selo-tinta: #1a3a5c;
+  --papel: #ffffff;
+  --tinta: #1a3a5c;      /* azul da marca: painel, títulos, selo, QR */
+  --acento: #c0392b;     /* vermelho da marca: só em traços curtos */
+  --disco: rgba(26, 58, 92, 0.055);
   background-color: var(--papel);
 }
 
-/* ------------------------------------------------------------- o relevo
-   Alto-relevo de verdade é a leitura de DUAS bordas, não de um contorno: a
-   luz bate no lado de cima e à esquerda, a sombra cai embaixo e à direita.
-   Por isso são três cópias da mesma silhueta, e não um filtro:
+.conteudo-certificado {
+  position: relative;
+}
 
-     1. a sombra, deslocada para baixo/direita;
-     2. a luz, deslocada para cima/esquerda;
-     3. a face, na cor do papel e sem deslocamento, que cobre o miolo das
-        duas e deixa aparecer só as duas beiradas.
+/* ------------------------------------------------------------- o painel
+   Um único bloco de cor, na vertical. É a moldura do documento: a folha não
+   tem borda nenhuma além dele. O degradê é sutil de propósito — só para o
+   painel não parecer um retângulo chapado quando impresso. */
+.painel {
+  background: linear-gradient(170deg, #1e4a7a 0%, var(--tinta) 55%, #142d48 100%);
+  color: #fff;
+  position: relative;
+  z-index: 2;
+}
 
-   O `mask` existe porque o PNG da marca é azul: pintar a silhueta é o que
-   permite dar a ela cor de papel. Usar a imagem direto traria o azul junto e
-   viraria um carimbo, não um relevo. */
-.marca-relevo {
+/* O SVG do QR vem sem tamanho fixo; ocupa a caixa branca inteira. */
+.qr svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* --------------------------------------------------------------- os discos
+   Duas formas, cortadas pela borda do miolo. Ficam ATRÁS do texto (z-index
+   abaixo do conteúdo) e em 5,5% do azul: aparecem sem pesar. */
+.miolo {
+  background-color: var(--papel);
+}
+
+.disco {
   position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
+  border-radius: 50%;
+  background-color: var(--disco);
   pointer-events: none;
-  /* Decoração: quem usa leitor de tela já ouve o nome da escola no cabeçalho,
-     e repetir aqui só atrapalharia. */
   z-index: 0;
 }
 
-.marca-relevo i {
-  position: absolute;
-  /* Cabe na faixa central, entre o cabeçalho e o rodapé. Maior que isto a
-     marca encosta nas duas pontas e o documento vira fundo com texto por
-     cima, em vez de texto sobre papel gravado. */
-  height: 64%;
+.disco-a {
+  width: 44%;
   aspect-ratio: 1;
-  -webkit-mask: url('/logo-transparente.png') center / contain no-repeat;
-  mask: url('/logo-transparente.png') center / contain no-repeat;
+  top: -22%;
+  right: -12%;
 }
 
-.marca-sombra {
-  background-color: var(--relevo-sombra);
-  transform: translate(2.5px, 2.5px);
+.disco-b {
+  width: 26%;
+  aspect-ratio: 1;
+  bottom: -14%;
+  right: 22%;
 }
 
-.marca-luz {
-  background-color: var(--relevo-luz);
-  transform: translate(-2.5px, -2.5px);
+/* ------------------------------------------------------------ as etiquetas
+   Rótulo pequeno em cima, valor embaixo, dentro de um retângulo com borda
+   fina. Substituem a frase corrida "com carga horária de ... obtendo nota ...". */
+.etiqueta {
+  border: 1px solid rgba(26, 58, 92, 0.22);
+  border-radius: 10px;
+  padding: 7px 12px 8px;
+  min-width: 112px;
+  background-color: rgba(255, 255, 255, 0.7);
 }
 
-.marca-face {
-  background-color: var(--papel);
+.etiqueta dt {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: #555555;
 }
 
-/* O conteúdo sobe acima da marca. Sem isto o texto ficaria por baixo dela. */
-.conteudo-certificado {
-  position: relative;
-  z-index: 1;
+.etiqueta dd {
+  font-family: 'Geom', 'DM Sans', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  color: #0a0a0a;
+  margin-top: 2px;
+  line-height: 1.2;
 }
 
 /* ---------------------------------------------------------------- o selo
-   O selo é desenhado em CSS, não é imagem: precisa ficar nítido tanto na tela
-   quanto impresso a 300 dpi, e um PNG que serve para um borra no outro.
-
-   A serrilha da borda vem de um `repeating-conic-gradient` atrás do disco —
-   as pontas que sobram do disco viram os dentes. É o mesmo princípio do selo
-   de papel prensado: o disco esconde o miolo e só a beirada aparece. */
+   Anel duplo fino: a borda de 2px e, dentro, uma linha tracejada. É desenhado
+   em CSS para sair nítido impresso. */
 .selo {
   position: relative;
-  width: 84px;
-  height: 84px;
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-}
-
-.selo::before {
-  content: '';
-  position: absolute;
-  inset: -7px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
-  background: repeating-conic-gradient(
-    var(--selo-tinta) 0deg 7.5deg,
-    transparent 7.5deg 15deg
-  );
-}
-
-.selo-disco {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  background: var(--selo-tinta);
-  /* Dois anéis: o claro desenha a linha interna, o escuro devolve a borda.
-     Feito com `inset shadow` para não roubar espaço do texto do miolo. */
-  box-shadow:
-    inset 0 0 0 3px var(--selo-tinta),
-    inset 0 0 0 4px rgba(255, 255, 255, 0.45);
+  border: 2px solid var(--tinta);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 1px;
   line-height: 1;
+  flex-shrink: 0;
+  background-color: var(--papel);
 }
 
-/* --------------------------------------------------------------- as faixas
-   Sangram de ponta a ponta dentro da moldura. É o que dá ao documento o ar de
-   peça acabada, em vez de texto solto numa folha com borda. */
-.faixa {
-  background-color: var(--selo-tinta);
-  /* A marca em relevo passa por baixo; a faixa é opaca e a cobre, de
-     propósito — relevo atrás de tarja azul viraria sujeira. */
-  position: relative;
-  z-index: 1;
+.selo::before {
+  content: '';
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  border: 1px dashed rgba(26, 58, 92, 0.55);
 }
 
 /* ------------------------------------------------------------- impressão */
 @media print {
   @page {
     size: A4 landscape;
-    /* Margem pequena e simétrica: a moldura azul é a borda visível do
-       documento, e margem grande a empurraria para o meio da folha. */
+    /* Margem pequena e simétrica: o painel azul é a borda visível do
+       documento, e margem grande o empurraria para o meio da folha. */
     margin: 8mm;
   }
 
@@ -146,27 +133,44 @@
     height: 100%;
   }
 
-  /* Sem isto o navegador descarta fundo e cor na impressão — e o relevo, que
-     é feito inteiro de fundo, sairia numa folha em branco. */
+  /* Sem isto o navegador descarta fundo e cor na impressão: o painel e os
+     discos, que são fundo, sairiam em branco. */
   .folha-certificado,
   .folha-certificado * {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
-  /* A moldura ocupa a folha inteira.
-
-     Em milímetros, e não `height: 100%`. A porcentagem só resolve quando TODOS
-     os ancestrais têm altura definida, e aqui não têm: o `100%` caía para
-     `auto` e a moldura saía com a altura do conteúdo — 131 mm dos 194 mm
-     disponíveis, deixando um terço da página em branco embaixo. Não dava para
-     ver na tela, só na impressão.
-
-     A conta é a área útil do @page acima: 297 x 210 menos 8 mm de margem de
-     cada lado. Mexeu na margem, mexa aqui. */
+  /* A folha ocupa a página inteira. Em milímetros, e não `height: 100%`:
+     a porcentagem cai para `auto` quando algum ancestral não tem altura
+     definida, e aqui não tem. A conta é a área útil do @page acima:
+     297 x 210 menos 8 mm de cada lado. Mexeu na margem, mexa aqui. */
   .folha-certificado {
     width: 281mm;
     height: 194mm;
     page-break-inside: avoid;
+  }
+
+  /* No papel a folha é sempre deitada, com o painel à esquerda, mesmo que a
+     janela de impressão tenha sido aberta do celular. */
+  .conteudo-certificado {
+    flex-direction: row !important;
+    height: 100%;
+  }
+
+  .painel {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    width: 26% !important;
+    padding: 2rem 1.75rem !important;
+  }
+
+  .painel > div {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  .qr {
+    display: block !important;
   }
 }
