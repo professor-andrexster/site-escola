@@ -18,16 +18,19 @@
  * empurra curso de ninguém.
  *
  * Cargas seguem o critério conservador de scripts/recalcular-cargas.mjs:
- * curso 20 min, aulas de 3 a 4 min. O módulo passa de 37 para 57 min
- * (dois cursos de 20 + projeto de módulo).
+ * curso 24 min, aulas de 3 a 4 min. O módulo passa de 37 para 61 min
+ * (Fluxogramas 20 + este 24 + projeto de módulo).
  *
  * Ferramenta ensinada: sqliteonline.com. Gratuito, roda no navegador sem
  * conta e sem instalar (SQLite 3.50 em 2026-09-21, conferido no site). Como
  * extra na aula 3, o DB Browser for SQLite: gratuito, código aberto, Windows,
  * Mac e Linux (v3.13.1, conferido em github.com/sqlitebrowser/sqlitebrowser).
  *
- * Fechamento: um mini desafio (sistema escolar: turmas, alunos, notas) preso à
- * última aula, sem valer certificado, e o projeto final, que vale.
+ * Aula 7 (2026-09-21, pedido do André): FOREIGN KEY, ON DELETE CASCADE/RESTRICT/
+ * SET NULL, PRAGMA foreign_keys, tabela de matrícula, DEFAULT, UNIQUE composto.
+ * O desafio dela é o sistema escolar completo (8 tabelas), que serve de base ao
+ * desafio extra "Sistema Escolar na Web" (scripts/criar-modulo-desafios-extras.mjs).
+ * Curso passa de 20 para 24 min; módulo de 57 para 61.
  *
  * Tudo nasce despublicado. O André revisa em /admin/cursos/gerenciar e, quando
  * aprovar, roda com --publicar. Idempotente: rodar duas vezes não duplica nada.
@@ -46,16 +49,16 @@ const env = Object.fromEntries(
 
 const MODULO_SLUG = 'programacao-iniciante'
 const TRILHA_SLUG = 'programacao-iniciante'
-const MODULO_CARGA_MIN = 57
+const MODULO_CARGA_MIN = 61
 
 const CURSO = {
   slug: 'banco-de-dados-iniciante',
   titulo: 'Banco de Dados para Iniciantes: da planilha à tabela',
   categoria: 'Programação',
   carga: 1,
-  cargaMin: 20,
+  cargaMin: 24,
   descricao:
-    'Seis aulas para entender o que é um banco de dados, montar suas primeiras tabelas e fazer perguntas a elas em SQL. Você pratica no sqliteonline.com, direto no navegador, sem instalar nada, e termina com o banco de dados de algo real da sua vida.',
+    'Sete aulas para entender o que é um banco de dados, montar suas primeiras tabelas, ligá-las de verdade (chave estrangeira, cascata, matrícula) e fazer perguntas a elas em SQL. Você pratica no sqliteonline.com, direto no navegador, sem instalar nada, e termina com o banco de dados de algo real da sua vida.',
   ordemNoModulo: 2,
   ordemNaTrilha: 2,
 }
@@ -675,69 +678,245 @@ Contar por grupo é <code>GROUP BY</code>. Próximo passo: Banco de Dados, do Mo
 resultado da consulta 4.</p>`,
     },
   },
-]
-
-// Mini desafio de fechamento (pedido do André, 2026-09-21): um sistema escolar
-// pequeno, preso à última aula como segundo desafio dela. Fica entre o desafio
-// da aula 6 e o projeto final: menor que o projeto (não vale certificado) e
-// obriga o aluno a sair da biblioteca, o fio condutor das seis aulas, para
-// montar do zero um assunto novo com as mesmas peças. Idempotente por título.
-const MINI_DESAFIO = {
-  aulaSlug: 'duas-tabelas-que-se-conhecem',
-  titulo: 'Mini desafio: um sistema escolar',
-  enunciado: `
-<p>Durante o curso você montou a biblioteca. Agora monte, sozinho e do zero, um
-<strong>sistema escolar</strong> pequeno: turmas, alunos e notas. É um mini desafio: cabe em uma
-hora e usa só o que as seis aulas ensinaram.</p>
-
-<h3>As três tabelas</h3>
+  {
+    slug: 'chaves-de-verdade-cascata-e-matricula',
+    titulo: 'Chaves de verdade: FOREIGN KEY, ON DELETE CASCADE e a matrícula',
+    descricao: 'O banco passa a vigiar as ligações entre tabelas: o que acontece quando alguém apaga um aluno, e como a matrícula liga aluno, turma e ano.',
+    min: 4,
+    conteudo: `
+<h2>O que você vai aprender</h2>
 <ul>
-  <li><code>turmas</code>: <code>id</code>, nome da turma (<code>UNIQUE</code>, ex.: "1º A") e ano
-  (<code>INTEGER</code>)</li>
-  <li><code>alunos</code>: <code>id</code>, nome (<code>NOT NULL</code>), data de nascimento no
-  formato ano-mês-dia e <code>turma_id</code> apontando para <code>turmas</code></li>
-  <li><code>notas</code>: <code>id</code>, <code>aluno_id</code> apontando para <code>alunos</code>,
-  disciplina (<code>TEXT</code>), bimestre (<code>INTEGER</code>) e nota (<code>REAL</code>)</li>
+  <li>Declarar a ligação entre tabelas com <code>FOREIGN KEY</code>, para o banco vigiar</li>
+  <li>Decidir o que acontece com as linhas ligadas quando a linha principal some: <code>CASCADE</code>, <code>RESTRICT</code>, <code>SET NULL</code></li>
+  <li>Ligar o SQLite (ele vem com a vigilância desligada)</li>
+  <li>A tabela de matrícula: quando uma ligação precisa de tabela própria</li>
+  <li><code>DEFAULT</code> e <code>UNIQUE</code> de duas colunas</li>
 </ul>
-<p>Antes de digitar, desenhe as três tabelas no papel, como na aula 2. Confira: cada tabela guarda
-um tipo de coisa só, e o nome do aluno aparece <strong>uma vez</strong>, na tabela
-<code>alunos</code>, nunca repetido em <code>notas</code>.</p>
+
+<h2>A ligação que ninguém vigia</h2>
+<p>Na aula 6 você escreveu <code>aluno_id INTEGER</code> na tabela de empréstimos e o banco
+aceitou. Mas ele não sabe que aquele número aponta para um aluno. Teste: apague o aluno 3 e depois
+rode <code>SELECT * FROM emprestimos WHERE aluno_id = 3</code>. As linhas continuam lá, apontando
+para alguém que não existe. Na planilha isso é um "#REF!". No banco é pior: fica quieto.</p>
+<p>A solução é dizer ao banco que a coluna é uma <strong>chave estrangeira</strong> de verdade:</p>
+<pre><code>CREATE TABLE emprestimos (
+  id INTEGER PRIMARY KEY,
+  aluno_id INTEGER NOT NULL,
+  livro_id INTEGER NOT NULL,
+  data_emprestimo TEXT NOT NULL,
+  data_devolucao TEXT,
+  FOREIGN KEY (aluno_id) REFERENCES alunos(id),
+  FOREIGN KEY (livro_id) REFERENCES livros(id)
+);</code></pre>
+<p>Leia assim: "<code>aluno_id</code> aponta para a coluna <code>id</code> da tabela
+<code>alunos</code>". A partir daí o banco recusa um <code>INSERT</code> com <code>aluno_id</code>
+que não existe. E recusa apagar um aluno que ainda tem empréstimo.</p>
+
+<h2>Ligue a vigilância no SQLite</h2>
+<p>O SQLite, por compatibilidade com programas antigos, nasce com a checagem de chave estrangeira
+<strong>desligada</strong>. Ligue no começo de todo arquivo <code>.sql</code>:</p>
+<pre><code>PRAGMA foreign_keys = ON;</code></pre>
+<p>No sqliteonline.com, rode essa linha antes das outras. Sem ela, tudo que vem abaixo nesta aula
+é ignorado em silêncio. MySQL e PostgreSQL já nascem com isso ligado.</p>
+
+<h2>E quando a linha principal some?</h2>
+<p>Você declarou a ligação. Agora decida o que o banco faz com as linhas ligadas quando alguém apaga
+a linha principal. São três respostas, e a escolha é sua, tabela por tabela:</p>
+<table>
+  <tr><th>Opção</th><th>O que acontece</th><th>Quando usar</th></tr>
+  <tr><td><code>ON DELETE RESTRICT</code></td><td>Recusa apagar. É o padrão.</td><td>Apagar uma turma que tem alunos matriculados: não pode</td></tr>
+  <tr><td><code>ON DELETE CASCADE</code></td><td>Apaga junto, em cascata.</td><td>Apagar uma matrícula leva junto as notas dela: não fazem sentido sozinhas</td></tr>
+  <tr><td><code>ON DELETE SET NULL</code></td><td>Deixa a coluna vazia (<code>NULL</code>).</td><td>Um professor sai da escola; a disciplina fica, sem professor por enquanto</td></tr>
+</table>
+<pre><code>CREATE TABLE notas (
+  id INTEGER PRIMARY KEY,
+  matricula_id INTEGER NOT NULL,
+  disciplina_id INTEGER NOT NULL,
+  bimestre INTEGER NOT NULL,
+  nota REAL NOT NULL,
+  FOREIGN KEY (matricula_id) REFERENCES matriculas(id) ON DELETE CASCADE,
+  FOREIGN KEY (disciplina_id) REFERENCES disciplinas(id) ON DELETE RESTRICT
+);</code></pre>
+<p>A regra para escolher: pergunte "<strong>essa linha faz sentido sem a outra?</strong>". Nota sem
+matrícula não faz: <code>CASCADE</code>. Turma sem alunos faz: <code>RESTRICT</code> protege os
+alunos. Disciplina sem professor faz, por um tempo: <code>SET NULL</code>.</p>
+<p><code>CASCADE</code> é poderoso e perigoso na mesma medida. Um <code>DELETE</code> em
+<code>matriculas</code> pode apagar cem notas sem avisar. Por isso o hábito da aula 5 vale em dobro
+aqui: <code>SELECT</code> antes, <code>DELETE</code> com <code>WHERE</code> pelo <code>id</code>,
+<code>SELECT</code> depois, nas duas tabelas.</p>
+
+<h2>A matrícula: quando a ligação vira tabela</h2>
+<p>Na aula 6 a ligação era simples: um empréstimo tem um aluno. Mas pense em aluno e turma. Se você
+colocar <code>turma_id</code> na tabela <code>alunos</code>, funciona por um ano. No ano seguinte o
+aluno muda de turma, você troca o <code>turma_id</code>, e o histórico do ano passado some.</p>
+<p>A saída é uma tabela só para a ligação, com os dados <strong>da ligação</strong>: a
+<strong>matrícula</strong>. Ela diz que <em>este aluno</em> está <em>nesta turma</em>
+<em>neste ano</em>:</p>
+<pre><code>CREATE TABLE matriculas (
+  id INTEGER PRIMARY KEY,
+  aluno_id INTEGER NOT NULL,
+  turma_id INTEGER NOT NULL,
+  ano INTEGER NOT NULL,
+  situacao TEXT NOT NULL DEFAULT 'ativa',
+  FOREIGN KEY (aluno_id) REFERENCES alunos(id) ON DELETE CASCADE,
+  FOREIGN KEY (turma_id) REFERENCES turmas(id) ON DELETE RESTRICT,
+  UNIQUE (aluno_id, ano)
+);</code></pre>
+<p>Duas coisas novas aqui:</p>
+<ul>
+  <li><code>DEFAULT 'ativa'</code>: se o <code>INSERT</code> não disser a situação, o banco preenche
+  com "ativa". Menos digitação, menos <code>NULL</code> por esquecimento.</li>
+  <li><code>UNIQUE (aluno_id, ano)</code>: um <code>UNIQUE</code> de <strong>duas colunas</strong>.
+  O mesmo aluno pode aparecer várias vezes (um por ano), o mesmo ano também, mas o <strong>par</strong>
+  aluno + ano só uma vez. Ninguém se matricula duas vezes no mesmo ano.</li>
+</ul>
+<p>E a nota, agora, aponta para a <strong>matrícula</strong>, não para o aluno. A nota é de alguém
+em uma turma em um ano. Se a matrícula for apagada, a nota vai junto (<code>CASCADE</code>). Se o
+aluno mudar de turma no ano seguinte, é uma matrícula nova: as notas do ano passado ficam onde
+estavam.</p>
+
+<h2>Consultando pela ponte</h2>
+<p>Com a matrícula no meio, o nome do aluno está a dois <code>JOIN</code> das notas:</p>
+<pre><code>-- Notas de matemática do 1º A em 2026, com o nome do aluno
+SELECT alunos.nome, notas.bimestre, notas.nota
+FROM notas
+JOIN matriculas ON matriculas.id = notas.matricula_id
+JOIN alunos ON alunos.id = matriculas.aluno_id
+JOIN turmas ON turmas.id = matriculas.turma_id
+JOIN disciplinas ON disciplinas.id = notas.disciplina_id
+WHERE turmas.nome = '1º A' AND matriculas.ano = 2026 AND disciplinas.nome = 'Matemática'
+ORDER BY alunos.nome, notas.bimestre;</code></pre>
+<p>Parece longo, mas é sempre a mesma peça repetida: <code>JOIN tabela ON tabela.id =
+outra.tabela_id</code>. Leia de cima para baixo seguindo as setas do seu desenho.</p>
+
+<h2>Glossário desta aula</h2>
+<ul>
+  <li><strong>FOREIGN KEY ... REFERENCES:</strong> declara que uma coluna aponta para o <code>id</code> de outra tabela, e o banco passa a vigiar.</li>
+  <li><strong>PRAGMA foreign_keys = ON:</strong> liga a vigilância no SQLite. Primeira linha do arquivo.</li>
+  <li><strong>ON DELETE CASCADE / RESTRICT / SET NULL:</strong> o que acontece com as linhas ligadas quando a principal é apagada.</li>
+  <li><strong>Tabela de ligação (matrícula):</strong> tabela que existe só para ligar duas outras e guardar os dados da ligação (ano, situação).</li>
+  <li><strong>DEFAULT:</strong> valor que o banco usa quando o <code>INSERT</code> não informa a coluna.</li>
+  <li><strong>UNIQUE (a, b):</strong> o par não pode se repetir, mesmo que cada coluna sozinha repita.</li>
+</ul>
+
+<h2>Resumo</h2>
+<p>Declare a ligação com <code>FOREIGN KEY</code> e ligue o <code>PRAGMA</code>. Para cada ligação,
+decida: <code>RESTRICT</code> (protege), <code>CASCADE</code> (leva junto) ou <code>SET NULL</code>
+(esvazia). Ligação que tem dados próprios, como aluno + turma + ano, vira tabela: a matrícula. A
+nota aponta para a matrícula. No desafio abaixo você monta o sistema escolar inteiro com isso. E
+quem quiser transformar esse banco em um site de verdade tem um desafio extra esperando na trilha
+Programação.</p>
+`,
+    desafio: {
+      titulo: 'Sistema escolar: o banco completo',
+      enunciado: `<p>Durante o curso você montou a biblioteca. Agora monte, do zero, o banco de dados de um
+<strong>sistema escolar</strong>: turmas, professores, disciplinas, alunos, matrículas, notas e
+faltas. É o maior desafio do curso e usa tudo que as sete aulas ensinaram.</p>
+
+<h3>Antes de digitar: o desenho</h3>
+<p>Desenhe as oito tabelas no papel ou no draw.io, com uma seta de cada chave estrangeira para o
+<code>id</code> que ela aponta. Ao lado de cada seta escreva <code>CASCADE</code>,
+<code>RESTRICT</code> ou <code>SET NULL</code>, e o motivo em três palavras. O desenho vai no
+envio.</p>
+
+<h3>As oito tabelas</h3>
+<p>Comece o arquivo com <code>PRAGMA foreign_keys = ON;</code>. Toda tabela tem <code>id INTEGER
+PRIMARY KEY</code>. Nomes minúsculos, sem acento, sem espaço.</p>
+<ol>
+  <li><code>turmas</code>: nome (<code>UNIQUE</code>, ex.: "1º A"), serie (<code>INTEGER</code>, 1 a 3),
+  turno (<code>TEXT</code>, manhã ou tarde)</li>
+  <li><code>professores</code>: nome (<code>NOT NULL</code>), email (<code>UNIQUE</code>), data de admissão
+  em ano-mês-dia</li>
+  <li><code>disciplinas</code>: nome (<code>UNIQUE</code>), carga_semanal (<code>INTEGER</code>, aulas por
+  semana), <code>professor_id</code> que aponta para <code>professores</code> com
+  <code>ON DELETE SET NULL</code> (a disciplina fica se o professor sair)</li>
+  <li><code>alunos</code>: nome (<code>NOT NULL</code>), data_nascimento em ano-mês-dia, cpf
+  (<code>UNIQUE</code>, pode ser inventado), nome_responsavel, telefone_responsavel (texto: não se faz
+  conta com telefone)</li>
+  <li><code>matriculas</code>: <code>aluno_id</code> (<code>CASCADE</code>), <code>turma_id</code>
+  (<code>RESTRICT</code>), ano (<code>INTEGER</code>), situacao (<code>TEXT</code>, <code>DEFAULT 'ativa'</code>;
+  outros valores: transferido, concluido), <code>UNIQUE (aluno_id, ano)</code></li>
+  <li><code>turma_disciplinas</code>: qual disciplina cada turma tem. <code>turma_id</code>
+  (<code>CASCADE</code>), <code>disciplina_id</code> (<code>RESTRICT</code>),
+  <code>UNIQUE (turma_id, disciplina_id)</code></li>
+  <li><code>notas</code>: <code>matricula_id</code> (<code>CASCADE</code>), <code>disciplina_id</code>
+  (<code>RESTRICT</code>), bimestre (<code>INTEGER</code>, 1 a 4), nota (<code>REAL</code>, 0 a 10),
+  <code>UNIQUE (matricula_id, disciplina_id, bimestre)</code></li>
+  <li><code>faltas</code>: <code>matricula_id</code> (<code>CASCADE</code>), <code>disciplina_id</code>
+  (<code>RESTRICT</code>), data em ano-mês-dia, justificada (<code>INTEGER</code>, 0 ou 1,
+  <code>DEFAULT 0</code>)</li>
+</ol>
 
 <h3>Os dados</h3>
 <ul>
-  <li>Duas turmas</li>
-  <li>Seis alunos, três em cada turma (pode inventar os nomes)</li>
-  <li>Doze notas, no mínimo: duas disciplinas, dois bimestres, e pelo menos um aluno sem nota
-  em uma delas</li>
+  <li>3 turmas (duas séries diferentes), 4 professores, 5 disciplinas (uma sem professor)</li>
+  <li>10 alunos com matrícula em 2026, distribuídos nas 3 turmas; 2 desses alunos também com
+  matrícula em 2025, em outra turma, com situação "concluido"</li>
+  <li>Cada turma com pelo menos 3 disciplinas em <code>turma_disciplinas</code></li>
+  <li>Pelo menos 30 notas: 2 bimestres, 2 disciplinas por aluno no mínimo, algumas abaixo de 6</li>
+  <li>Pelo menos 8 faltas, de 4 alunos diferentes, 2 delas justificadas</li>
 </ul>
 
-<h3>As perguntas</h3>
-<p>Escreva a pergunta em português como comentário (<code>-- ...</code>) em cima de cada consulta.</p>
+<h3>As consultas</h3>
+<p>Escreva a pergunta em português como comentário (<code>-- ...</code>) em cima de cada uma.</p>
 <ol>
-  <li>Nome dos alunos de uma turma, em ordem alfabética (<code>JOIN</code> + <code>ORDER BY</code>)</li>
-  <li>Quantos alunos tem cada turma (<code>JOIN</code> + <code>GROUP BY</code>)</li>
-  <li>Todas as notas de um aluno, com o nome dele e a disciplina, do maior para o menor</li>
-  <li>Média de cada aluno em uma disciplina (<code>AVG</code> funciona igual ao <code>COUNT</code>:
-  <code>AVG(nota)</code>)</li>
-  <li>Alunos com alguma nota abaixo de 6 (<code>WHERE nota &lt; 6</code>)</li>
+  <li>Lista de chamada do 1º A em 2026: nome dos alunos em ordem alfabética
+  (<code>JOIN</code> pela matrícula)</li>
+  <li>Quantos alunos ativos tem cada turma em 2026 (<code>GROUP BY</code>)</li>
+  <li>Grade de uma turma: as disciplinas dela com o nome do professor; a disciplina sem professor
+  tem que aparecer (dica: <code>LEFT JOIN professores</code>, que mostra a linha mesmo sem par)</li>
+  <li>Boletim de um aluno em 2026: disciplina, bimestre e nota, em ordem de disciplina e bimestre</li>
+  <li>Média de cada aluno por disciplina em 2026 (<code>AVG(nota)</code> com <code>GROUP BY</code>
+  aluno e disciplina)</li>
+  <li>Alunos com média abaixo de 6 em alguma disciplina (<code>GROUP BY ... HAVING AVG(nota) &lt; 6</code>:
+  <code>HAVING</code> é o <code>WHERE</code> de depois do agrupamento)</li>
+  <li>Total de faltas de cada aluno em 2026, só as não justificadas, do maior para o menor</li>
+  <li>Histórico de um dos alunos com duas matrículas: ano, turma e situação</li>
 </ol>
 
-<h3>Uma mudança com cuidado</h3>
-<p>Um aluno mudou de turma. Faça o <code>UPDATE</code> em <code>alunos</code> com <code>WHERE</code>
-pelo <code>id</code>, e mostre o <code>SELECT</code> de conferência antes e depois, como na aula 5.
-Repare que nenhuma nota precisou mudar: a nota aponta para o aluno, e o aluno é quem aponta para
-a turma.</p>
+<h3>Manutenção com cuidado</h3>
+<p>Para cada item: <code>SELECT</code> de conferência antes, o comando, <code>SELECT</code> depois.</p>
+<ol>
+  <li><strong>Transferência:</strong> um aluno sai da escola no meio de 2026. <code>UPDATE</code> a
+  situação da matrícula para "transferido". Nada é apagado: histórico se guarda.</li>
+  <li><strong>Cascata de propósito:</strong> uma matrícula foi lançada por engano (aluno que nunca
+  apareceu). Conte as notas e faltas dela, <code>DELETE</code> a matrícula pelo <code>id</code>, conte de
+  novo. Escreva em comentário quantas linhas sumiram e de quais tabelas.</li>
+  <li><strong>Proteção funcionando:</strong> tente apagar uma turma que tem matrícula. Cole a mensagem de
+  erro que o banco devolveu como comentário. É o <code>RESTRICT</code> fazendo o trabalho dele.</li>
+  <li><strong>SET NULL:</strong> apague um professor que dá aula. Mostre a disciplina dele antes e depois:
+  ela continua existindo, com <code>professor_id</code> vazio.</li>
+</ol>
 
 <h3>O que enviar</h3>
 <ul>
-  <li>Um arquivo <code>.sql</code> que recria tudo quando colado no sqliteonline.com: as três
-  tabelas, os dados, as cinco consultas e o <code>UPDATE</code> com as conferências</li>
-  <li>Um print do resultado da consulta 4</li>
+  <li>Um arquivo <code>.sql</code> que recria tudo do zero quando colado no sqliteonline.com, nesta
+  ordem: <code>PRAGMA</code>, as oito tabelas (as que são apontadas vêm antes das que apontam), os dados, as
+  oito consultas, a manutenção</li>
+  <li>O desenho das tabelas com as setas e as regras de cascata (PDF, PNG ou foto)</li>
+  <li>Um print do resultado da consulta 6</li>
 </ul>
-<p>Tudo certo? Você acabou de montar o esqueleto de um sistema escolar de verdade. É por aí que o
-projeto final começa.</p>
-`,
-}
+
+<h3>Como será avaliado</h3>
+<table>
+  <tr><th>Critério</th><th>O que se espera</th></tr>
+  <tr><td>Recria do zero</td><td>Colar o <code>.sql</code> em um sqliteonline.com limpo roda sem erro (fora o erro proposital do item 3)</td></tr>
+  <tr><td>Ligações declaradas</td><td>Toda chave estrangeira com <code>FOREIGN KEY</code> e uma regra de <code>ON DELETE</code> que faz sentido</td></tr>
+  <tr><td>Matrícula certa</td><td>Nota e falta apontam para a matrícula, não para o aluno; o histórico de 2025 sobrevive</td></tr>
+  <tr><td>Consultas respondem</td><td>Cada uma responde à pergunta escrita em cima dela</td></tr>
+  <tr><td>Cuidado</td><td>Conferência antes e depois em toda manutenção; contagens da cascata anotadas</td></tr>
+  <tr><td>Desenho</td><td>Oito tabelas, setas no sentido certo, regra de cascata em cada seta</td></tr>
+</table>
+
+<h3>Desafio extra: colocar esse banco em um site</h3>
+<p>Esse banco é a base do desafio <strong>Sistema Escolar na Web</strong>, na trilha Programação:
+um site onde a secretaria cadastra alunos, lança matrículas e notas e imprime o boletim. Você publica
+o sistema na internet, envia o link e o professor avalia. Vale certificado próprio. Está no card
+<strong>Programação</strong>, curso "Desafio Extra: Sistema Escolar na Web", ou direto em
+<a href="/admin/cursos/desafio-extra-sistema-escolar">/admin/cursos/desafio-extra-sistema-escolar</a>.</p>`,
+    },
+  },
+]
 
 const PROJETO_FINAL = {
   titulo: 'Projeto final: o banco de dados de algo seu',
@@ -852,7 +1031,7 @@ try {
     }
     const [aulaId] = await c.query('SELECT id FROM aulas WHERE slug = ? AND curso_id = ?', [aula.slug, cursoId])
 
-    // Por título: a última aula tem dois desafios (o dela e o mini desafio).
+    // Por título, para não confundir com desafios antigos da mesma aula.
     const [desafioJa] = await c.query('SELECT id FROM curso_desafios WHERE aula_id = ? AND titulo = ?', [aulaId.id, aula.desafio.titulo])
     if (desafioJa) {
       await c.query('UPDATE curso_desafios SET titulo=?, enunciado=?, ordem=?, formatos_aceitos=? WHERE id=?',
@@ -866,24 +1045,13 @@ try {
     }
   }
 
-  // Mini desafio: segundo desafio da última aula, ordem 7 (depois dos seis da
-  // aula), tipo 'pratico', não vale certificado. desafiosDaAula() lista todos os
-  // desafios da aula em ordem, então aparece logo abaixo do desafio da aula 6.
-  acao(`mini desafio na aula ${AULAS.length}: ${MINI_DESAFIO.titulo}`)
-  if (APLICAR) {
-    const [aulaMini] = await c.query('SELECT id FROM aulas WHERE slug = ? AND curso_id = ?', [MINI_DESAFIO.aulaSlug, cursoId])
-    if (!aulaMini) throw new Error(`aula ${MINI_DESAFIO.aulaSlug} não existe`)
-    const [miniJa] = await c.query('SELECT id FROM curso_desafios WHERE aula_id = ? AND titulo = ?', [aulaMini.id, MINI_DESAFIO.titulo])
-    if (miniJa) {
-      await c.query('UPDATE curso_desafios SET enunciado=?, ordem=?, formatos_aceitos=? WHERE id=?',
-        [MINI_DESAFIO.enunciado.trim(), AULAS.length + 1, FORMATOS, miniJa.id])
-    } else {
-      await c.query(
-        `INSERT INTO curso_desafios (id, curso_id, aula_id, titulo, enunciado, tipo, ordem, vale_certificado, formatos_aceitos, created_at)
-         VALUES (UUID(), ?, ?, ?, ?, 'pratico', ?, 0, ?, NOW())`,
-        [cursoId, aulaMini.id, MINI_DESAFIO.titulo, MINI_DESAFIO.enunciado.trim(), AULAS.length + 1, FORMATOS]
-      )
-    }
+  // O mini desafio "um sistema escolar" (2026-09-21, 1ª versão, preso à aula 6)
+  // virou o desafio da aula 7. Apaga a linha antiga se ainda existir; desafio
+  // de aula não tem envio, então não há nada a preservar.
+  const [miniAntigo] = await c.query('SELECT id FROM curso_desafios WHERE curso_id = ? AND titulo = ?', [cursoId ?? '', 'Mini desafio: um sistema escolar'])
+  if (miniAntigo) {
+    acao('apagar o mini desafio antigo da aula 6 (substituído pelo desafio da aula 7)')
+    if (APLICAR) await c.query('DELETE FROM curso_desafios WHERE id = ?', [miniAntigo.id])
   }
 
   // Projeto final do curso: tipo 'final', ordem 99, vale_certificado = 1, sem aula.
@@ -909,7 +1077,7 @@ try {
   }
 
   if (!APLICAR) console.log('\n(simulação: passe --aplicar para gravar como rascunho, --publicar para ligar)')
-  else console.log(`\ncurso, ${AULAS.length} aulas e ${AULAS.length + 2} desafios no lugar (publicado=${PUB})`)
+  else console.log(`\ncurso, ${AULAS.length} aulas e ${AULAS.length + 1} desafios no lugar (publicado=${PUB})`)
 } finally {
   c.release()
   await pool.end()
