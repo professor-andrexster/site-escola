@@ -365,8 +365,6 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
           >
             <option value={5}>5 perguntas</option>
             <option value={10}>10 perguntas</option>
-            <option value={15}>15 perguntas</option>
-            <option value={20}>20 perguntas</option>
           </select>
           <button
             onClick={gerarComIA}

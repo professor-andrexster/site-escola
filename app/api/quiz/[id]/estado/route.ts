@@ -6,6 +6,7 @@ import {
   contarPerguntas,
   participante as buscarParticipante,
   participantesDoQuiz,
+  respostaCertaNaPosicao,
   type AcaoDeSala,
 } from '@/lib/db/quiz'
 
@@ -89,6 +90,10 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       pergunta_liberada_em: quiz.pergunta_liberada_em,
       resposta_revelada: quiz.resposta_revelada,
       tempo_por_pergunta: quiz.tempo_por_pergunta,
+      // O gabarito da pergunta atual so vai junto depois do "Revelar".
+      resposta_certa_atual: quiz.resposta_revelada
+        ? await respostaCertaNaPosicao(id, quiz.pergunta_atual ?? 0)
+        : null,
     },
     // So faz sentido na espera; durante o jogo a tela nem mostra a lista.
     participantes: quiz.ativo ? [] : await participantesDoQuiz(id),

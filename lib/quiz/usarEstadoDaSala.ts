@@ -25,6 +25,7 @@ export type EstadoDaSala = {
   pergunta_liberada_em: string | null
   resposta_revelada: boolean
   tempo_por_pergunta: number
+  resposta_certa_atual?: string | null
 }
 
 export type ParticipanteDaSala = { id: string; nome: string; turma: string }

@@ -283,6 +283,20 @@ export async function respostasComPerguntas(participanteId: string) {
 }
 
 /** Quantas perguntas o quiz tem. */
+/**
+ * Letra certa da pergunta na posicao `indice`. So sai para o aluno depois que
+ * o professor revela: antes, a tela do aluno nao recebe o gabarito (F12).
+ */
+export async function respostaCertaNaPosicao(quizId: string, indice: number) {
+  const p = await prisma.quiz_perguntas.findFirst({
+    where: { quiz_id: quizId },
+    orderBy: { ordem: 'asc' },
+    skip: Math.max(0, indice),
+    select: { resposta_correta: true },
+  })
+  return p?.resposta_correta ?? null
+}
+
 export async function contarPerguntas(quizId: string): Promise<number> {
   return prisma.quiz_perguntas.count({ where: { quiz_id: quizId } })
 }

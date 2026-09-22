@@ -26,13 +26,14 @@ export async function POST(request: Request) {
   if ('erro' in permissao) return permissao.erro
 
   try {
-    const { correta } = await responder({
+    await responder({
       participanteId,
       perguntaId,
       resposta: (resposta ?? null) as 'a' | 'b' | 'c' | 'd' | null,
       tempoResposta: typeof tempoResposta === 'number' ? tempoResposta : null,
     })
-    return NextResponse.json({ correta })
+    // Nao devolve se acertou: a aba Rede do F12 mostraria antes do "Revelar".
+    return NextResponse.json({ ok: true })
   } catch (erro) {
     console.error('[quiz/responder] falha', erro)
     return NextResponse.json({ error: 'Erro ao registrar a resposta.' }, { status: 400 })

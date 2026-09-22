@@ -1,5 +1,5 @@
 import { buscarPorCodigo, participante as buscarParticipante,
-         perguntasDoQuiz, perguntasRespondidas } from '@/lib/db/quiz'
+         perguntasDoQuiz, perguntasRespondidas, respostaCertaNaPosicao } from '@/lib/db/quiz'
 import { redirect, notFound } from 'next/navigation'
 import QuizRoom from '@/components/quiz/QuizRoom'
 import type { Metadata } from 'next'
@@ -57,6 +57,13 @@ export default async function QuizJogarPage({
 
   const jaRespondidas = new Set(respondidas)
 
+  // Anti-cola (F12): o gabarito nao vai para o navegador do aluno. A letra
+  // certa chega pelo estado da sala, e so depois que o professor revela.
+  const perguntasSemGabarito = perguntas.map(({ resposta_correta: _gabarito, ...p }) => p)
+  const respostaCertaAtual = quiz.resposta_revelada
+    ? await respostaCertaNaPosicao(quiz.id, quiz.pergunta_atual ?? 0)
+    : null
+
   return (
     <QuizRoom
       quiz={{
@@ -72,9 +79,10 @@ export default async function QuizJogarPage({
         pergunta_atual: quiz.pergunta_atual ?? 0,
         pergunta_liberada_em: quiz.pergunta_liberada_em,
         resposta_revelada: quiz.resposta_revelada ?? false,
+        resposta_certa_atual: respostaCertaAtual,
       }}
       participante={participante}
-      perguntas={perguntas}
+      perguntas={perguntasSemGabarito}
       jaRespondidas={jaRespondidas}
     />
   )

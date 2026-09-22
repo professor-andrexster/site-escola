@@ -51,7 +51,7 @@ function ordemDoAluno(participanteId: string, perguntaId: string): number[] {
 type RespostaStatus = 'answered' | 'timeout' | 'already' | null
 
 interface QuizPlayerProps {
-  perguntas: QuizPergunta[]
+  perguntas: Omit<QuizPergunta, 'resposta_correta'>[]
   participanteId: string
   quizTitulo: string
   quizCodigo: string
@@ -61,6 +61,8 @@ interface QuizPlayerProps {
   perguntaAtual: number
   perguntaLiberadaEm: string | null
   respostaRevelada: boolean
+  /** Letra certa da pergunta atual; chega só depois do "Revelar" (anti-F12). */
+  respostaCerta: string | null
   encerrado: boolean
 }
 
@@ -78,6 +80,7 @@ export default function QuizPlayer({
   perguntaAtual,
   perguntaLiberadaEm,
   respostaRevelada,
+  respostaCerta,
   encerrado,
 }: QuizPlayerProps) {
   const router = useRouter()
@@ -102,7 +105,6 @@ export default function QuizPlayer({
     pergunta && jaRespondidas.has(pergunta.id) ? 'already' : null
   )
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
-  const [ultimaCorreta, setUltimaCorreta] = useState(false)
   const [runningScore, setRunningScore] = useState(0)
   const [finishing, setFinishing] = useState(false)
 
@@ -125,7 +127,6 @@ export default function QuizPlayer({
       answeredRef.current = already
       setStatus(already ? 'already' : null)
       setSelectedAnswer(null)
-      setUltimaCorreta(false)
       pontosAplicadosRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -146,6 +147,10 @@ export default function QuizPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [perguntaLiberadaEm, currentIndex])
 
+  // Só dá para saber se acertou depois do "Revelar": antes disso o navegador
+  // não tem o gabarito.
+  const ultimaCorreta = selectedAnswer !== null && respostaCerta !== null && selectedAnswer === respostaCerta
+
   // Professor revelou: aplica os pontos desta pergunta no placar local (uma vez)
   useEffect(() => {
     if (respostaRevelada && ultimaCorreta && !pontosAplicadosRef.current && pergunta) {
@@ -153,7 +158,7 @@ export default function QuizPlayer({
       setRunningScore(prev => prev + pergunta.pontos)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [respostaRevelada])
+  }, [respostaRevelada, respostaCerta])
 
   // Professor encerrou: fecha para todo mundo
   useEffect(() => {
@@ -171,13 +176,9 @@ export default function QuizPlayer({
     setSelectedAnswer(resposta)
     setStatus(resposta === null ? 'timeout' : 'answered')
 
-    const correta = resposta !== null && resposta === pergunta.resposta_correta
-    setUltimaCorreta(correta)
-
     const tempoResposta = Math.max(0, tempoPorPergunta - computeTimeLeft())
 
-    // Quem corrige e pontua é o servidor. O `correta` acima é só para o
-    // feedback imediato na tela; o que vale é o que a rota grava.
+    // Quem corrige e pontua é o servidor; a tela só sabe se acertou no "Revelar".
     await fetch('/api/quiz/responder', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -226,7 +227,7 @@ export default function QuizPlayer({
   ]
   const alternativasTexto = ordemDoAluno(participanteId, pergunta.id).map(i => alternativasOriginais[i])
   // Número (1 a 4) que a alternativa certa tem NA TELA deste aluno.
-  const numeroDaCorreta = alternativasTexto.findIndex(a => a.key === pergunta.resposta_correta) + 1
+  const numeroDaCorreta = alternativasTexto.findIndex(a => a.key === respostaCerta) + 1
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
@@ -284,7 +285,7 @@ export default function QuizPlayer({
           {alternativasTexto.map(({ key, text }, i) => {
             const cor = CORES[i]
             const isSelected = selectedAnswer === key
-            const isCorrect = key === pergunta.resposta_correta
+            const isCorrect = respostaCerta !== null && key === respostaCerta
             const bloqueado = answered || tempoEsgotado
 
             let bgClass: string

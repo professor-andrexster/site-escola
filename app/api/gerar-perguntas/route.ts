@@ -54,7 +54,9 @@ export async function POST(request: Request) {
     )
   }
 
-  const qtd = Math.min(Math.max(Number(quantidade) || 10, 1), 20)
+  // Limite de 10 (2026-09-22, pedido do André): pedido menor volta mais rápido
+  // quando o Gemini está congestionado.
+  const qtd = Math.min(Math.max(Number(quantidade) || 10, 1), 10)
 
   const prompt = `Crie ${qtd} perguntas de múltipla escolha em português, em nível de ensino médio, sobre o tema "${materia.trim()}". ` +
     'Cada pergunta deve ter exatamente 4 alternativas curtas e claras (a, b, c, d), com apenas uma correta. ' +
