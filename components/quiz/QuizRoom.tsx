@@ -1,6 +1,7 @@
 'use client'
 
 import QuizPlayer from './QuizPlayer'
+import TravaTelaCheia from './TravaTelaCheia'
 import { usarEstadoDaSala } from '@/lib/quiz/usarEstadoDaSala'
 import { Gamepad2, Users, Clock } from 'lucide-react'
 import type { QuizPergunta, QuizParticipante } from '@/types/database'
@@ -40,6 +41,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
   // Quiz em andamento — mostra o player
   if (quiz.ativo) {
     return (
+      <TravaTelaCheia participanteId={participante.id}>
       <QuizPlayer
         perguntas={perguntas}
         participanteId={participante.id}
@@ -53,6 +55,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
         respostaRevelada={quiz.resposta_revelada ?? false}
         encerrado={quiz.encerrado}
       />
+      </TravaTelaCheia>
     )
   }
 

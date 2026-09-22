@@ -70,6 +70,26 @@ export async function participantesDoQuiz(quizId: string) {
   })
 }
 
+/**
+ * Trava anti-cola: o aluno saiu da tela cheia ou trocou de aba durante o quiz.
+ * Nao tira ponto; so conta, para o professor ver no telao.
+ */
+export async function registrarSaidaDeTela(participanteId: string) {
+  await prisma.quiz_participantes.update({
+    where: { id: participanteId },
+    data: { saidas_tela: { increment: 1 } },
+  })
+}
+
+/** Quem saiu da tela neste quiz, mais vezes primeiro. */
+export async function saidasDeTela(quizId: string) {
+  return prisma.quiz_participantes.findMany({
+    where: { quiz_id: quizId, saidas_tela: { gt: 0 } },
+    select: { id: true, nome: true, turma: true, saidas_tela: true },
+    orderBy: [{ saidas_tela: 'desc' }, { nome: 'asc' }],
+  })
+}
+
 export async function contarParticipantes(quizId: string): Promise<number> {
   return prisma.quiz_participantes.count({ where: { quiz_id: quizId } })
 }

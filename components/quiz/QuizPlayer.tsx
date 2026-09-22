@@ -21,6 +21,33 @@ const CORES = [
   { bg: 'bg-emerald-700', hover: 'hover:bg-emerald-800' },
 ]
 
+/**
+ * Trava anti-cola (2026-09-22): cada aluno vê as alternativas numa ordem
+ * própria, e a cor segue a posição. Olhar a tela do vizinho não diz qual
+ * alternativa ele marcou. A ordem sai do id do aluno + id da pergunta, então
+ * recarregar a página não embaralha de novo. O servidor segue recebendo a
+ * letra original (a/b/c/d); só a tela muda.
+ */
+function ordemDoAluno(participanteId: string, perguntaId: string): number[] {
+  let h = 2166136261
+  for (const c of participanteId + ':' + perguntaId) {
+    h ^= c.charCodeAt(0)
+    h = Math.imul(h, 16777619)
+  }
+  function aleatorio() {
+    h = (h + 0x6d2b79f5) | 0
+    let t = Math.imul(h ^ (h >>> 15), 1 | h)
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+  const ordem = [0, 1, 2, 3]
+  for (let i = ordem.length - 1; i > 0; i--) {
+    const j = Math.floor(aleatorio() * (i + 1))
+    ;[ordem[i], ordem[j]] = [ordem[j], ordem[i]]
+  }
+  return ordem
+}
+
 type RespostaStatus = 'answered' | 'timeout' | 'already' | null
 
 interface QuizPlayerProps {
@@ -191,12 +218,15 @@ export default function QuizPlayer({
   const timerColor = timeLeft <= 5 ? 'bg-rose-600' : timeLeft <= 10 ? 'bg-amber-600' : 'bg-emerald-600'
   const tempoEsgotado = timeLeft <= 0
 
-  const alternativasTexto = [
+  const alternativasOriginais = [
     { key: 'a', text: pergunta.alternativa_a },
     { key: 'b', text: pergunta.alternativa_b },
     { key: 'c', text: pergunta.alternativa_c },
     { key: 'd', text: pergunta.alternativa_d },
   ]
+  const alternativasTexto = ordemDoAluno(participanteId, pergunta.id).map(i => alternativasOriginais[i])
+  // Número (1 a 4) que a alternativa certa tem NA TELA deste aluno.
+  const numeroDaCorreta = alternativasTexto.findIndex(a => a.key === pergunta.resposta_correta) + 1
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
@@ -278,7 +308,7 @@ export default function QuizPlayer({
                 className={`${bgClass} text-white rounded-xl p-4 text-left font-semibold transition-all flex items-center gap-3 disabled:cursor-default`}
               >
                 <span className={`w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center flex-shrink-0 text-sm uppercase font-black`}>
-                  {key.toUpperCase()}
+                  {i + 1}
                 </span>
                 <span className={`text-sm md:text-base flex-1`}>{text}</span>
                 {revelada && isCorrect && <Check className="ml-auto w-5 h-5 flex-shrink-0" aria-label="correta" />}
@@ -317,12 +347,12 @@ export default function QuizPlayer({
               'bg-red-500/20 border border-red-500/30'
             }`}>
               {status === 'timeout' ? (
-                <p className="text-yellow-300 font-bold text-lg">Tempo esgotado! A resposta era <span className="uppercase">{pergunta.resposta_correta}</span></p>
+                <p className="text-yellow-300 font-bold text-lg">Tempo esgotado! A resposta era a {numeroDaCorreta}</p>
               ) : ultimaCorreta ? (
                 <p className="text-green-300 font-bold text-lg">Correto! +{pergunta.pontos} pontos</p>
               ) : (
                 <p className="text-red-300 font-bold text-lg">
-                  Errado! Resposta: <span className="uppercase">{pergunta.resposta_correta}</span>
+                  Errado! Resposta: {numeroDaCorreta}
                 </p>
               )}
             </div>

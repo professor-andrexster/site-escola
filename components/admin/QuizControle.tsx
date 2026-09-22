@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Eye, ArrowRight, Square, Users, CheckCircle2 } from 'lucide-react'
+import { Eye, ArrowRight, Square, Users, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { usarEstadoDaSala } from '@/lib/quiz/usarEstadoDaSala'
 import type { Quiz, QuizPergunta } from '@/types/database'
 
@@ -22,6 +22,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
   const { estado: quiz, setEstado: setQuiz } = usarEstadoDaSala(initialQuiz.id, initialQuiz)
   const [respostasCount, setRespostasCount] = useState(0)
   const [contagem, setContagem] = useState<Record<string, number>>({})
+  const [saidas, setSaidas] = useState<{ id: string; nome: string; turma: string; saidas_tela: number }[]>([])
   const [loading, setLoading] = useState(false)
   const [timeLeft, setTimeLeft] = useState(0)
   const router = useRouter()
@@ -71,6 +72,18 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     return () => clearInterval(poll)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pergunta?.id])
+
+  // Trava anti-cola: quem saiu da tela cheia ou trocou de aba, a cada 3s.
+  useEffect(() => {
+    async function carregar() {
+      const res = await fetch(`/api/quiz/${quiz.id}/saidas`)
+      if (!res.ok) return
+      setSaidas((await res.json()).saidas ?? [])
+    }
+    carregar()
+    const poll = setInterval(carregar, 3000)
+    return () => clearInterval(poll)
+  }, [quiz.id])
 
   /**
    * Comandos da sala. Antes isto mandava o objeto de colunas a atualizar, o
@@ -193,6 +206,28 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
           )
         })}
       </div>
+
+      {/* Saídas da tela (trava anti-cola) */}
+      {saidas.length > 0 && (
+        <div className="panel p-4 mb-6 border-amber-200 bg-amber-50">
+          <p className="flex items-center gap-2 text-sm font-bold text-amber-800 mb-2">
+            <ShieldAlert className="w-4 h-4" />
+            Saíram da tela do quiz
+          </p>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
+            {saidas.map(s => (
+              <li key={s.id} className="flex items-center justify-between gap-3 text-sm text-gray-800">
+                <span className="min-w-0 truncate">
+                  {s.nome} <span className="text-gray-500 text-xs">{s.turma}</span>
+                </span>
+                <span className="font-mono font-bold text-amber-800 flex-shrink-0">
+                  {s.saidas_tela}×
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       {/* Comandos */}
       <div className="flex items-center gap-3 flex-wrap">
