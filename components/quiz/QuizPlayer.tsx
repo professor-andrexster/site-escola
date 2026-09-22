@@ -286,7 +286,7 @@ export default function QuizPlayer({
             const cor = CORES[i]
             const isSelected = selectedAnswer === key
             const isCorrect = respostaCerta !== null && key === respostaCerta
-            const bloqueado = answered || tempoEsgotado
+            const bloqueado = answered || tempoEsgotado || revelada
 
             let bgClass: string
             if (!bloqueado) {
@@ -343,11 +343,13 @@ export default function QuizPlayer({
           )}
           {revelada && status !== 'already' && (
             <div className={`rounded-xl px-6 py-4 mb-4 ${
-              status === 'timeout' ? 'bg-yellow-500/20 border border-yellow-500/30' :
+              status === 'timeout' || status === null ? 'bg-yellow-500/20 border border-yellow-500/30' :
               ultimaCorreta ? 'bg-green-500/20 border border-green-500/30' :
               'bg-red-500/20 border border-red-500/30'
             }`}>
-              {status === 'timeout' ? (
+              {status === null ? (
+                <p className="text-yellow-300 font-bold text-lg">Você não respondeu. A resposta era a {numeroDaCorreta}</p>
+              ) : status === 'timeout' ? (
                 <p className="text-yellow-300 font-bold text-lg">Tempo esgotado! A resposta era a {numeroDaCorreta}</p>
               ) : ultimaCorreta ? (
                 <p className="text-green-300 font-bold text-lg">Correto! +{pergunta.pontos} pontos</p>

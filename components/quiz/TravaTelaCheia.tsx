@@ -25,6 +25,10 @@ export default function TravaTelaCheia({
   const [emTelaCheia, setEmTelaCheia] = useState(true)
   const [saiu, setSaiu] = useState(false)
   const [saidas, setSaidas] = useState(0)
+  // Navegador que recusa tela cheia (app embutido, política do sistema): o
+  // aluno não pode ficar preso no aviso. Segue sem tela cheia, e a troca de
+  // aba continua contando.
+  const [telaCheiaRecusada, setTelaCheiaRecusada] = useState(false)
   // Só conta saída de quem já esteve dentro; a primeira entrada não é saída.
   const esteveDentroRef = useRef(false)
   const foraRef = useRef(false)
@@ -51,6 +55,7 @@ export default function TravaTelaCheia({
 
     function aoMudarTelaCheia() {
       const dentro = !!document.fullscreenElement
+      if (dentro) setTelaCheiaRecusada(false)
       setEmTelaCheia(dentro)
       if (dentro) esteveDentroRef.current = true
       else marcarSaida()
@@ -75,7 +80,7 @@ export default function TravaTelaCheia({
       try {
         await document.documentElement.requestFullscreen()
       } catch {
-        return
+        setTelaCheiaRecusada(true)
       }
     }
     esteveDentroRef.current = true
@@ -83,7 +88,7 @@ export default function TravaTelaCheia({
     setSaiu(false)
   }
 
-  const bloqueado = saiu || (suportaTelaCheia && !emTelaCheia)
+  const bloqueado = saiu || (suportaTelaCheia && !telaCheiaRecusada && !emTelaCheia)
   const primeiraEntrada = !saiu && saidas === 0
 
   return (

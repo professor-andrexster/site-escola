@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { responder } from '@/lib/db/quiz'
+import { responder, RespostaRecusada } from '@/lib/db/quiz'
 import { participacaoPermitida } from '../participacao'
 
 const ALTERNATIVAS = ['a', 'b', 'c', 'd']
@@ -35,6 +35,9 @@ export async function POST(request: Request) {
     // Nao devolve se acertou: a aba Rede do F12 mostraria antes do "Revelar".
     return NextResponse.json({ ok: true })
   } catch (erro) {
+    if (erro instanceof RespostaRecusada) {
+      return NextResponse.json({ error: erro.message }, { status: 409 })
+    }
     console.error('[quiz/responder] falha', erro)
     return NextResponse.json({ error: 'Erro ao registrar a resposta.' }, { status: 400 })
   }

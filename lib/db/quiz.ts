@@ -458,6 +458,9 @@ export async function entrarNaSala(dados: {
  * um POST forjado para o aluno se dar 9999 pontos, e nao havia nada do lado do
  * servidor conferindo. Agora o cliente so informa a alternativa e o tempo.
  */
+/** Resposta recusada por regra do jogo (nao e falha do sistema). */
+export class RespostaRecusada extends Error {}
+
 export async function responder(dados: {
   participanteId: string
   perguntaId: string
@@ -480,6 +483,24 @@ export async function responder(dados: {
   if (participante.quiz_id !== pergunta.quiz_id) throw new Error('Pergunta de outro quiz.')
   if (participante.concluido) throw new Error('Participação já encerrada.')
 
+  // Anti-cola (2026-09-22): so vale a primeira resposta, so da pergunta que o
+  // professor liberou, e so antes do "Revelar". Antes era upsert sem checar a
+  // sala: dava para responder depois de ver o gabarito, trocar a resposta ou
+  // responder pergunta que ainda nao tinha aparecido.
+  const quiz = await prisma.quizzes.findUnique({
+    where: { id: pergunta.quiz_id },
+    select: { ativo: true, encerrado: true, resposta_revelada: true, pergunta_atual: true },
+  })
+  if (!quiz?.ativo || quiz.encerrado) throw new RespostaRecusada('O quiz não está em andamento.')
+  if (quiz.resposta_revelada) throw new RespostaRecusada('A resposta já foi revelada.')
+  const atual = await prisma.quiz_perguntas.findFirst({
+    where: { quiz_id: pergunta.quiz_id },
+    orderBy: { ordem: 'asc' },
+    skip: Math.max(0, quiz.pergunta_atual ?? 0),
+    select: { id: true },
+  })
+  if (atual?.id !== dados.perguntaId) throw new RespostaRecusada('Esta não é a pergunta atual.')
+
   const correta = dados.resposta !== null && dados.resposta === pergunta.resposta_correta
   const { participanteId, perguntaId } = dados
   const valores = {
@@ -488,11 +509,22 @@ export async function responder(dados: {
     tempo_resposta: dados.tempoResposta,
     pontos_obtidos: correta ? pergunta.pontos : 0,
   }
-  await prisma.quiz_respostas.upsert({
+  const ja = await prisma.quiz_respostas.findUnique({
     where: { participante_id_pergunta_id: { participante_id: participanteId, pergunta_id: perguntaId } },
-    create: { participante_id: participanteId, pergunta_id: perguntaId, ...valores },
-    update: valores,
+    select: { id: true },
   })
+  if (ja) throw new RespostaRecusada('Você já respondeu esta pergunta.')
+  try {
+    await prisma.quiz_respostas.create({
+      data: { participante_id: participanteId, pergunta_id: perguntaId, ...valores },
+    })
+  } catch (erro) {
+    // Dois cliques ao mesmo tempo: o indice unico segura o segundo.
+    if ((erro as { code?: string }).code === 'P2002') {
+      throw new RespostaRecusada('Você já respondeu esta pergunta.')
+    }
+    throw erro
+  }
   return { correta }
 }
 
