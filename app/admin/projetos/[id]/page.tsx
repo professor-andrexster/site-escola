@@ -8,7 +8,6 @@ import { alunoDoUsuario } from '@/lib/db/portfolio'
 import {
   alunosSemEnvio, avaliacoesDoEnvio, buscarTrabalho, envioDoAluno, enviosDoTrabalho, pastaDaSerie, slugDaSerie,
 } from '@/lib/db/projetos-turma'
-import { proseAula } from '@/components/cursos/proseAula'
 import EnvioAlunoForm from '@/components/admin/projetos/EnvioAlunoForm'
 import PainelEnvios from '@/components/admin/projetos/PainelEnvios'
 import CronogramaTabela from '@/components/admin/projetos/CronogramaTabela'
@@ -114,7 +113,7 @@ export default async function ProjetoPage({ params }: Props) {
 
       {trabalho.briefing && (
         <section className="panel p-6 md:p-8 mb-8">
-          <div className={proseAula} dangerouslySetInnerHTML={{ __html: trabalho.briefing }} />
+          <div className="prose prose-lg max-w-none prose-headings:font-geom prose-headings:text-gray-900 prose-p:text-gray-700 prose-li:text-gray-700 prose-strong:text-gray-900 prose-a:text-escola-azul prose-code:text-escola-azul prose-code:before:content-none prose-code:after:content-none prose-blockquote:border-escola-azul prose-blockquote:text-gray-600" dangerouslySetInnerHTML={{ __html: trabalho.briefing }} />
         </section>
       )}
 
