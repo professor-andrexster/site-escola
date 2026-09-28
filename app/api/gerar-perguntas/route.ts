@@ -87,14 +87,31 @@ export async function POST(request: Request) {
   let res: Response | null = null
   let ultimoStatus = 0
 
+  /**
+   * Limite por modelo (2026-09-28). Em 22/09 e 28/09 o Gemini congestionado
+   * levou 77 s para devolver 503 num dos modelos; o nginx corta em 60 s e o
+   * professor via "504 Gateway Time-out" em vez da mensagem desta rota.
+   * Tres modelos x 15 s = 45 s, abaixo do corte do nginx. Estouro de tempo
+   * conta como "tente o proximo", igual ao 503.
+   */
+  const LIMITE_POR_MODELO_MS = 15_000
+
   for (const modelo of MODELOS) {
     try {
       res = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`,
-        { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo }
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: corpo,
+          signal: AbortSignal.timeout(LIMITE_POR_MODELO_MS),
+        }
       )
-    } catch {
-      ultimoStatus = 0
+    } catch (erro) {
+      const estourou = erro instanceof Error && erro.name === 'TimeoutError'
+      console.warn('[gerar-perguntas] modelo sem resposta', { modelo, motivo: estourou ? 'tempo esgotado' : 'rede' })
+      // Sem resposta em 15 s e o mesmo que 503 para quem espera: congestionado.
+      ultimoStatus = estourou ? 503 : 0
       continue
     }
     if (res.ok) break
@@ -108,7 +125,7 @@ export async function POST(request: Request) {
   }
 
   if (!res || !res.ok) {
-    console.error('[gerar-perguntas] nenhum modelo respondeu', { ultimoStatus })
+    console.error('[gerar-perguntas] nenhum modelo respondeu', { ultimoStatus, materia: materia.trim().slice(0, 60) })
     return NextResponse.json(
       {
         error:
