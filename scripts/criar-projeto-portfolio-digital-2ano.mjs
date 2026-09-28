@@ -13,6 +13,10 @@
  *
  * Tabelas: scripts/sql/projetos-turma.sql. Idempotente: casa a pasta pela
  * serie e o projeto pelo titulo dentro da pasta; rodar duas vezes nao duplica.
+ * Rodar de novo SOBRESCREVE resumo, briefing, cronograma e criterios com o
+ * texto deste arquivo — nao rode depois de editar pela tela sem antes copiar
+ * o texto para ca. O cronograma nasce sem datas (o PDF veio com ___/___):
+ * o professor marca em Editar → Cronograma.
  * Roda em /srv/escola/src no VPS (tem node_modules/mariadb e o .env).
  */
 import { readFileSync } from 'node:fs'
@@ -29,6 +33,31 @@ const env = Object.fromEntries(
 
 const PASTAS = ['2° Ano', '3° Ano']
 const SERIE_DO_PROJETO = '2° Ano'
+
+const CRONOGRAMA = [
+  { titulo: 'MVP · primeira versão no ar', foco: 'Matriz de Eisenhower, contas no GitHub e na Vercel, repositório portfolio, Home com menu, hero e rodapé.', entrega: 'Site publicado na Vercel com menu, hero, cadeado e rodapé; link enviado aqui', inicio: null, fim: '2026-09-30', aviso: null },
+  { titulo: 'Semana 01 · Planejamento e identidade', foco: 'Retorno do MVP e revisão da Matriz de Eisenhower. Briefing pessoal, mapa do site, wireframe da Home e identidade visual.', entrega: 'Matriz revisada, briefing, wireframe e identidade visual', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 02 · Estrutura de todas as páginas', foco: 'Criar todas as páginas com menu (logo, links, submenu Estudos, cadeado) e rodapé.', entrega: 'Todas as páginas criadas com menu e rodapé', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 03 · Home completa', foco: 'Hero e as 5 seções da Home.', entrega: 'Home com hero e 5 seções', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 04 · Quem sou eu e Estudos', foco: 'Página Quem sou eu e as três páginas de Estudos (SEO, GEO, Semântica).', entrega: 'Quem sou eu e Estudos prontos', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 05 · Banco de dados e captura de leads', foco: 'Projeto no Supabase, tabela leads, formulário de contato salvando no banco.', entrega: 'Formulário salvando leads no banco', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 06 · Portfólio conectado ao banco', foco: 'Tabela projetos e página Portfólio montando os cards a partir do banco.', entrega: 'Portfólio puxando projetos do banco', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 07 · Login e painel de leads', foco: 'Cadeado, login no Supabase, painel protegido com a aba Leads.', entrega: 'Login e aba Leads funcionando', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 08 · Painel de projetos', foco: 'Aba Projetos do painel: adicionar, editar e excluir.', entrega: 'Aba Projetos completa', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 09 · Qualidade: SEO, GEO e acessibilidade', foco: 'Metatags, dados estruturados, textos alternativos, relatório Lighthouse no próprio site.', entrega: 'Versão final com nota Lighthouse', inicio: null, fim: null, aviso: null },
+  { titulo: 'Semana 10 · Apresentação', foco: 'Pitch de até 3 minutos com demonstração ao vivo. QR code do portfólio.', entrega: 'Apresentação feita', inicio: null, fim: null, aviso: null },
+]
+
+const CRITERIOS = [
+  { titulo: 'Planejamento', descricao: 'Matriz de Eisenhower completa, briefing, mapa do site, wireframe e prazos cumpridos.', peso: 1 },
+  { titulo: 'Layout e identidade', descricao: 'Visual coerente, menu e rodapé como pedido, site responsivo no celular.', peso: 1 },
+  { titulo: 'Conteúdo', descricao: 'Hero, 5 seções da Home, Quem sou eu e as 3 páginas de Estudos com textos próprios.', peso: 1 },
+  { titulo: 'Captura de leads', descricao: 'Formulário salva no banco, tem aceite de privacidade e dá retorno ao visitante.', peso: 1 },
+  { titulo: 'Login e painel', descricao: 'Cadeado abre o login, painel protegido com abas Leads e Projetos funcionando.', peso: 1 },
+  { titulo: 'Portfólio dinâmico', descricao: 'Projetos vêm do banco, os dois projetos do ano estão bem descritos.', peso: 1 },
+  { titulo: 'SEO, GEO e acessibilidade', descricao: 'Metatags, dados estruturados, Lighthouse 90 ou mais, textos alternativos.', peso: 1 },
+  { titulo: 'Apresentação', descricao: 'Pitch de até 3 minutos, clareza e demonstração ao vivo.', peso: 1 },
+]
 
 const PROJETO = {
   titulo: 'Meu Portfólio Digital',
@@ -116,19 +145,7 @@ const PROJETO = {
   <li>Página inicial com menu (logo, links e cadeado), hero com a principal habilidade e rodapé com @nome.</li>
   <li>Publicar na Vercel e <strong>entregar o link do site no ar aqui, nesta página</strong>.</li>
 </ul>
-<p>Depois vêm 10 semanas com 7 aulas de 50 minutos cada (as datas o professor passa em aula):</p>
-<ol>
-  <li>Planejamento e identidade: matriz revisada, briefing, wireframe e identidade visual.</li>
-  <li>Estrutura de todas as páginas, com menu e rodapé.</li>
-  <li>Home completa: hero e 5 seções.</li>
-  <li>Quem sou eu e Estudos prontos.</li>
-  <li>Banco de dados e captura de leads: formulário salvando no banco.</li>
-  <li>Portfólio puxando projetos do banco.</li>
-  <li>Login e aba Leads funcionando.</li>
-  <li>Aba Projetos completa.</li>
-  <li>Qualidade: SEO, GEO e acessibilidade no próprio site, com nota Lighthouse.</li>
-  <li>Apresentação.</li>
-</ol>
+<p>Depois vêm 10 semanas com 7 aulas de 50 minutos cada. As semanas e as datas estão na tabela do cronograma, no alto desta página; o professor preenche as datas conforme o trimestre anda.</p>
 <p><strong>Dicas de quem já passou por isso:</strong> faça commit no fim de toda aula (computador trava, GitHub não esquece); publicou, abriu no celular, sempre; não deixe o banco de dados para a última semana; travou por mais de 15 minutos? Pergunte, isso é quadrante 3; feito é melhor que perfeito.</p>
 
 <h2>Checklist do que vou entregar</h2>
@@ -148,18 +165,6 @@ const PROJETO = {
   <li>Print do relatório Lighthouse</li>
   <li>QR code do portfólio</li>
   <li>Pitch de até 3 minutos</li>
-</ul>
-
-<h2>Como você vai ser avaliado</h2>
-<ul>
-  <li><strong>Planejamento:</strong> Matriz de Eisenhower completa, briefing, mapa do site, wireframe e prazos cumpridos.</li>
-  <li><strong>Layout e identidade:</strong> visual coerente, menu e rodapé como pedido, site responsivo no celular.</li>
-  <li><strong>Conteúdo:</strong> hero, 5 seções da Home, Quem sou eu e as 3 páginas de Estudos com textos próprios.</li>
-  <li><strong>Captura de leads:</strong> formulário salva no banco, tem aceite de privacidade e dá retorno ao visitante.</li>
-  <li><strong>Login e painel:</strong> cadeado abre o login, painel protegido com abas Leads e Projetos funcionando.</li>
-  <li><strong>Portfólio dinâmico:</strong> projetos vêm do banco, os dois projetos do ano estão bem descritos.</li>
-  <li><strong>SEO, GEO e acessibilidade:</strong> metatags, dados estruturados, Lighthouse 90 ou mais, textos alternativos.</li>
-  <li><strong>Apresentação:</strong> pitch de até 3 minutos, clareza e demonstração ao vivo.</li>
 </ul>
 
 <h2>Como entregar</h2>
@@ -209,19 +214,19 @@ async function main() {
       : [null]
 
     if (trabalho) {
-      console.log(`projeto "${PROJETO.titulo}" já existe (${trabalho.id}, publicado=${trabalho.publicado}): atualizar texto`)
+      console.log(`projeto "${PROJETO.titulo}" já existe (${trabalho.id}, publicado=${trabalho.publicado}): atualizar texto, cronograma (${CRONOGRAMA.length} etapas) e critérios (${CRITERIOS.length})`)
       if (APLICAR) {
         await c.query(
-          'UPDATE projeto_trabalhos SET resumo = ?, briefing = ?, arquivo_url = ?, publicado = ?, atualizado_em = NOW(3) WHERE id = ?',
-          [PROJETO.resumo, PROJETO.briefing, PROJETO.arquivo_url, PUBLICAR ? 1 : trabalho.publicado, trabalho.id]
+          'UPDATE projeto_trabalhos SET resumo = ?, briefing = ?, arquivo_url = ?, cronograma = ?, criterios = ?, pede_link_grupo = 0, publicado = ?, atualizado_em = NOW(3) WHERE id = ?',
+          [PROJETO.resumo, PROJETO.briefing, PROJETO.arquivo_url, JSON.stringify(CRONOGRAMA), JSON.stringify(CRITERIOS), PUBLICAR ? 1 : trabalho.publicado, trabalho.id]
         )
       }
     } else {
       console.log(`projeto "${PROJETO.titulo}" na pasta "${SERIE_DO_PROJETO}": criar (${PROJETO.briefing.length} chars de briefing)`)
       if (APLICAR) {
         await c.query(
-          'INSERT INTO projeto_trabalhos (id, pasta_id, titulo, resumo, briefing, arquivo_url, publicado, ordem, criado_por) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?)',
-          [crypto.randomUUID(), pasta, PROJETO.titulo, PROJETO.resumo, PROJETO.briefing, PROJETO.arquivo_url, PUBLICAR ? 1 : 0, criadoPor]
+          'INSERT INTO projeto_trabalhos (id, pasta_id, titulo, resumo, briefing, arquivo_url, cronograma, criterios, pede_link_grupo, publicado, ordem, criado_por) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, ?, 1, ?)',
+          [crypto.randomUUID(), pasta, PROJETO.titulo, PROJETO.resumo, PROJETO.briefing, PROJETO.arquivo_url, JSON.stringify(CRONOGRAMA), JSON.stringify(CRITERIOS), PUBLICAR ? 1 : 0, criadoPor]
         )
       }
     }

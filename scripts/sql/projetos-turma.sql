@@ -67,3 +67,17 @@ CREATE TABLE IF NOT EXISTS `projeto_avaliacoes` (
   CONSTRAINT `projeto_avaliacoes_envio_fkey` FOREIGN KEY (`envio_id`) REFERENCES `projeto_envios` (`id`) ON DELETE CASCADE,
   CONSTRAINT `projeto_avaliacoes_avaliador_fkey` FOREIGN KEY (`avaliador_id`) REFERENCES `usuarios` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2026-09-28 (mesmo dia, segunda leva): cronograma com datas, criterios de
+-- avaliacao e link do projeto em grupo.
+ALTER TABLE `projeto_trabalhos`
+  ADD COLUMN IF NOT EXISTS `cronograma`      longtext   DEFAULT NULL AFTER `arquivo_url`,
+  ADD COLUMN IF NOT EXISTS `criterios`       longtext   DEFAULT NULL AFTER `cronograma`,
+  ADD COLUMN IF NOT EXISTS `pede_link_grupo` tinyint(1) NOT NULL DEFAULT 0 AFTER `criterios`;
+ALTER TABLE `projeto_envios`
+  ADD COLUMN IF NOT EXISTS `link_grupo` varchar(300) DEFAULT NULL AFTER `repo_url`,
+  ADD COLUMN IF NOT EXISTS `etapa`      int          DEFAULT NULL AFTER `feedback`,
+  ADD COLUMN IF NOT EXISTS `criterios`  longtext     DEFAULT NULL AFTER `etapa`;
+ALTER TABLE `projeto_avaliacoes`
+  ADD COLUMN IF NOT EXISTS `etapa`     int      DEFAULT NULL AFTER `feedback`,
+  ADD COLUMN IF NOT EXISTS `criterios` longtext DEFAULT NULL AFTER `etapa`;

@@ -976,6 +976,9 @@ model projeto_trabalhos {
   resumo         String?          @db.VarChar(300)
   briefing       String?          @db.Text
   arquivo_url    String?          @db.VarChar(300)
+  cronograma     String?          @db.LongText
+  criterios      String?          @db.LongText
+  pede_link_grupo Boolean         @default(false)
   publicado      Boolean          @default(false)
   ordem          Int              @default(0)
   criado_por     String?          @db.Char(36)
@@ -998,10 +1001,13 @@ model projeto_envios {
   user_id            String               @db.Char(36)
   link_url           String               @db.VarChar(300)
   repo_url           String?              @db.VarChar(300)
+  link_grupo         String?              @db.VarChar(300)
   comentario         String?              @db.Text
   status             String               @default("enviado") @db.VarChar(20)
   nota               Decimal?             @db.Decimal(4, 1)
   feedback           String?              @db.Text
+  etapa              Int?
+  criterios          String?              @db.LongText
   avaliado_em        DateTime?            @db.DateTime(3)
   enviado_em         DateTime             @default(now()) @db.DateTime(3)
   atualizado_em      DateTime             @default(now()) @db.DateTime(3)
@@ -1020,6 +1026,8 @@ model projeto_avaliacoes {
   status         String         @db.VarChar(20)
   nota           Decimal?       @db.Decimal(4, 1)
   feedback       String?        @db.Text
+  etapa          Int?
+  criterios      String?        @db.LongText
   criado_em      DateTime       @default(now()) @db.DateTime(3)
   projeto_envios projeto_envios @relation(fields: [envio_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "projeto_avaliacoes_envio_fkey")
   usuarios       usuarios?      @relation(fields: [avaliador_id], references: [id], onUpdate: Restrict, map: "projeto_avaliacoes_avaliador_fkey")

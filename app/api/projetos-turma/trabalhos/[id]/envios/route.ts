@@ -47,6 +47,11 @@ export async function POST(request: Request, { params }: Ctx) {
   if (repoUrl === false) {
     return NextResponse.json({ error: 'O link do repositório precisa começar com https://.' }, { status: 400 })
   }
+  // Link do projeto em grupo so existe quando o trabalho pede.
+  const linkGrupo = trabalho.pedeLinkGrupo ? link(b.linkGrupo) : null
+  if (linkGrupo === false) {
+    return NextResponse.json({ error: 'O link do projeto em grupo precisa começar com https://.' }, { status: 400 })
+  }
 
   try {
     const envio = await salvarEnvio({
@@ -54,6 +59,7 @@ export async function POST(request: Request, { params }: Ctx) {
       userId: usuario.id,
       linkUrl,
       repoUrl,
+      linkGrupo,
       comentario: texto(b.comentario, 2000),
     })
     return NextResponse.json({ ok: true, envio })

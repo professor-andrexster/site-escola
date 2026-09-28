@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 import { criarTrabalho } from '@/lib/db/projetos-turma'
-import { link, texto } from '@/lib/projetos-turma-validacao'
+import { criterios, cronograma, link, texto } from '@/lib/projetos-turma-validacao'
 import { prisma } from '@/lib/db'
 
 /** Cria um trabalho dentro de uma pasta. Professor ou gestao. */
@@ -29,6 +29,9 @@ export async function POST(request: Request) {
       resumo: texto(b.resumo, 300),
       briefing: typeof b.briefing === 'string' && b.briefing.trim() ? b.briefing : null,
       arquivoUrl,
+      cronograma: cronograma(b.cronograma),
+      criterios: criterios(b.criterios),
+      pedeLinkGrupo: b.pedeLinkGrupo === true,
       publicado: b.publicado === true,
     }, auth.userId)
     return NextResponse.json({ ok: true, trabalho })

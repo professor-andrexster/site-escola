@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 import { avaliarEnvio, buscarEnvio, STATUS_ENVIO, type StatusEnvio } from '@/lib/db/projetos-turma'
-import { nota as validarNota, texto } from '@/lib/projetos-turma-validacao'
+import { etapa as validarEtapa, marcas as validarMarcas, nota as validarNota, texto } from '@/lib/projetos-turma-validacao'
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -9,6 +9,8 @@ interface Ctx { params: Promise<{ id: string }> }
  * Professor registra como esta o andamento de um envio. Cada chamada e uma
  * linha nova no historico; o envio passa a mostrar a ultima.
  *
+ * Corpo: status, nota (0-10, opcional), feedback, etapa (indice no
+ * cronograma do trabalho, opcional) e marcas por criterio ({ "0": 2, "1": 1 }).
  * "Precisa ajustar" sem comentario deixa o aluno sem saber o que corrigir,
  * por isso o feedback e obrigatorio nesse status.
  */
@@ -39,6 +41,8 @@ export async function POST(request: Request, { params }: Ctx) {
       status: status as StatusEnvio,
       nota,
       feedback,
+      etapa: validarEtapa(b.etapa, envio.trabalho.cronograma.length),
+      marcas: validarMarcas(b.marcas, envio.trabalho.criterios.length),
     })
     return NextResponse.json({ ok: true, envio: atualizado })
   } catch (erro) {

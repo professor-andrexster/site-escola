@@ -11,6 +11,8 @@ import {
 import { proseAula } from '@/components/cursos/proseAula'
 import EnvioAlunoForm from '@/components/admin/projetos/EnvioAlunoForm'
 import PainelEnvios from '@/components/admin/projetos/PainelEnvios'
+import CronogramaTabela from '@/components/admin/projetos/CronogramaTabela'
+import CriteriosLista from '@/components/admin/projetos/CriteriosLista'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -18,8 +20,9 @@ export const metadata: Metadata = { title: 'Projeto' }
 export const dynamic = 'force-dynamic'
 
 /**
- * Pagina do projeto. Briefing para todo mundo; embaixo, o aluno ve o proprio
- * envio e a devolutiva, e o professor ve a turma inteira com os links.
+ * Pagina do projeto. Briefing, cronograma e criterios para todo mundo;
+ * embaixo, o aluno ve o proprio envio e a devolutiva, e o professor ve a
+ * turma inteira com os links e o formulario de avaliacao.
  */
 export default async function ProjetoPage({ params }: Props) {
   const { id } = await params
@@ -31,16 +34,29 @@ export default async function ProjetoPage({ params }: Props) {
   if (!equipe && !trabalho.publicado) notFound()
 
   let corpo: React.ReactNode
+  let etapaDoAluno: number | null = null
+  let marcasDoAluno = null
   if (equipe) {
     const [envios, semEnvio] = await Promise.all([enviosDoTrabalho(id), alunosSemEnvio(id, trabalho.serie)])
-    corpo = <PainelEnvios trabalhoId={id} enviosIniciais={envios} semEnvio={semEnvio} />
+    corpo = <PainelEnvios cronograma={trabalho.cronograma} criterios={trabalho.criterios} enviosIniciais={envios} semEnvio={semEnvio} />
   } else {
     const aluno = await alunoDoUsuario(user.id)
     const minha = await pastaDaSerie(aluno?.serie ?? null)
     if (!minha || minha.id !== trabalho.pastaId) redirect('/admin/projetos')
     const envio = await envioDoAluno(id, user.id)
     const historico = envio ? await avaliacoesDoEnvio(envio.id) : []
-    corpo = <EnvioAlunoForm trabalhoId={id} envioInicial={envio} historico={historico} />
+    etapaDoAluno = envio?.etapa ?? null
+    marcasDoAluno = envio?.marcas ?? null
+    corpo = (
+      <EnvioAlunoForm
+        trabalhoId={id}
+        pedeLinkGrupo={trabalho.pedeLinkGrupo}
+        cronograma={trabalho.cronograma}
+        criterios={trabalho.criterios}
+        envioInicial={envio}
+        historico={historico}
+      />
+    )
   }
 
   return (
@@ -67,6 +83,13 @@ export default async function ProjetoPage({ params }: Props) {
         )}
       </div>
 
+      {equipe ? (
+        <>
+          {corpo}
+          <div className="h-8" />
+        </>
+      ) : null}
+
       {trabalho.arquivoUrl && (
         <a
           href={trabalho.arquivoUrl}
@@ -77,10 +100,17 @@ export default async function ProjetoPage({ params }: Props) {
           <FileDown className="w-6 h-6 text-escola-azul flex-shrink-0" />
           <div>
             <p className="font-semibold text-gray-900 text-sm">Baixar o trabalho em PDF</p>
-            <p className="text-xs text-gray-500">O documento completo, com todas as páginas, o cronograma e a avaliação.</p>
+            <p className="text-xs text-gray-500">O documento completo, para ler com calma ou imprimir.</p>
           </div>
         </a>
       )}
+
+      <CronogramaTabela
+        cronograma={trabalho.cronograma}
+        etapaDoAluno={etapaDoAluno}
+        podeEditar={equipe}
+        editarHref={`/admin/projetos/${id}/editar`}
+      />
 
       {trabalho.briefing && (
         <section className="panel p-6 md:p-8 mb-8">
@@ -88,7 +118,9 @@ export default async function ProjetoPage({ params }: Props) {
         </section>
       )}
 
-      {corpo}
+      <CriteriosLista criterios={trabalho.criterios} marcas={marcasDoAluno} />
+
+      {!equipe ? corpo : null}
     </div>
   )
 }

@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server'
 import { exigirProfessorOuGestao } from '@/lib/apiGestao'
 import { atualizarTrabalho, buscarTrabalho, removerTrabalho } from '@/lib/db/projetos-turma'
-import { link, texto } from '@/lib/projetos-turma-validacao'
+import { criterios, cronograma, link, texto } from '@/lib/projetos-turma-validacao'
 import { prisma } from '@/lib/db'
 
 interface Ctx { params: Promise<{ id: string }> }
 
-/** Edita titulo, resumo, briefing, arquivo ou publicacao. Professor ou gestao. */
+/** Edita titulo, resumo, briefing, arquivo, cronograma, criterios ou publicacao. Professor ou gestao. */
 export async function PATCH(request: Request, { params }: Ctx) {
   const auth = await exigirProfessorOuGestao()
   if (!auth.ok) return auth.res
@@ -33,6 +33,9 @@ export async function PATCH(request: Request, { params }: Ctx) {
     }
     campos.arquivoUrl = arquivoUrl
   }
+  if (b.cronograma !== undefined) campos.cronograma = cronograma(b.cronograma)
+  if (b.criterios !== undefined) campos.criterios = criterios(b.criterios)
+  if (b.pedeLinkGrupo !== undefined) campos.pedeLinkGrupo = b.pedeLinkGrupo === true
   if (b.publicado !== undefined) campos.publicado = b.publicado === true
 
   try {

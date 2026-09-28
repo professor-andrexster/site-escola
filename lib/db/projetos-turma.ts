@@ -10,21 +10,49 @@ import { TURMAS } from '@/lib/turmas'
  * o aluno publica o sistema, cola o link, e o professor abre o link e
  * registra como esta o andamento. Cada avaliacao fica no historico; o
  * envio guarda so a ultima, para a listagem da turma nao precisar de join.
+ *
+ * `cronograma` e `criterios` sao JSON no trabalho (listas curtas, editadas
+ * inteiras pelo formulario). As marcas de cada criterio ficam em JSON na
+ * avaliacao e espelhadas no envio.
  */
 
 export {
-  STATUS_ENVIO, ROTULO_STATUS, slugDaSerie,
+  STATUS_ENVIO, ROTULO_STATUS, ROTULO_MARCA, slugDaSerie, notaSugerida, periodo, dataCurta, etapaDeHoje,
   type StatusEnvio, type Pasta, type Trabalho, type Envio, type EnvioDaTurma, type Avaliacao,
+  type Etapa, type Criterio, type Marca, type Marcas,
 } from '@/lib/projetos-turma-tipos'
-import { STATUS_ENVIO, slugDaSerie, type StatusEnvio, type Pasta, type Trabalho, type Envio, type EnvioDaTurma, type Avaliacao } from '@/lib/projetos-turma-tipos'
+import {
+  STATUS_ENVIO, slugDaSerie,
+  type StatusEnvio, type Pasta, type Trabalho, type Envio, type EnvioDaTurma, type Avaliacao,
+  type Etapa, type Criterio, type Marcas,
+} from '@/lib/projetos-turma-tipos'
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null)
 const statusValido = (s: string): StatusEnvio =>
   (STATUS_ENVIO as readonly string[]).includes(s) ? (s as StatusEnvio) : 'enviado'
 
+function lerJson(texto: string | null): unknown {
+  if (!texto) return null
+  try {
+    return JSON.parse(texto)
+  } catch {
+    return null
+  }
+}
+function lerLista<T>(texto: string | null): T[] {
+  const v = lerJson(texto)
+  return Array.isArray(v) ? (v as T[]) : []
+}
+function lerMarcas(texto: string | null): Marcas | null {
+  const v = lerJson(texto)
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Marcas) : null
+}
+const gravarJson = (v: unknown) => (v == null ? null : JSON.stringify(v))
+
 function serializarTrabalho(t: {
   id: string; pasta_id: string; titulo: string; resumo: string | null; briefing: string | null
-  arquivo_url: string | null; publicado: boolean; ordem: number; criado_em: Date; atualizado_em: Date
+  arquivo_url: string | null; cronograma: string | null; criterios: string | null; pede_link_grupo: boolean
+  publicado: boolean; ordem: number; criado_em: Date; atualizado_em: Date
   projeto_pastas: { serie: string }
 }): Trabalho {
   return {
@@ -35,6 +63,9 @@ function serializarTrabalho(t: {
     resumo: t.resumo,
     briefing: t.briefing,
     arquivoUrl: t.arquivo_url,
+    cronograma: lerLista<Etapa>(t.cronograma),
+    criterios: lerLista<Criterio>(t.criterios),
+    pedeLinkGrupo: t.pede_link_grupo,
     publicado: t.publicado,
     ordem: t.ordem,
     criadoEm: t.criado_em.toISOString(),
@@ -43,8 +74,8 @@ function serializarTrabalho(t: {
 }
 
 function serializarEnvio(e: {
-  id: string; trabalho_id: string; user_id: string; link_url: string; repo_url: string | null
-  comentario: string | null; status: string; nota: unknown; feedback: string | null
+  id: string; trabalho_id: string; user_id: string; link_url: string; repo_url: string | null; link_grupo: string | null
+  comentario: string | null; status: string; nota: unknown; feedback: string | null; etapa: number | null; criterios: string | null
   avaliado_em: Date | null; enviado_em: Date; atualizado_em: Date
 }): Envio {
   return {
@@ -53,10 +84,13 @@ function serializarEnvio(e: {
     userId: e.user_id,
     linkUrl: e.link_url,
     repoUrl: e.repo_url,
+    linkGrupo: e.link_grupo,
     comentario: e.comentario,
     status: statusValido(e.status),
     nota: e.nota == null ? null : Number(e.nota),
     feedback: e.feedback,
+    etapa: e.etapa,
+    marcas: lerMarcas(e.criterios),
     avaliadoEm: iso(e.avaliado_em),
     enviadoEm: e.enviado_em.toISOString(),
     atualizadoEm: e.atualizado_em.toISOString(),
@@ -129,6 +163,9 @@ export interface CamposTrabalho {
   resumo: string | null
   briefing: string | null
   arquivoUrl: string | null
+  cronograma: Etapa[]
+  criterios: Criterio[]
+  pedeLinkGrupo: boolean
   publicado: boolean
 }
 
@@ -141,6 +178,9 @@ export async function criarTrabalho(pastaId: string, campos: CamposTrabalho, cri
       resumo: campos.resumo,
       briefing: campos.briefing,
       arquivo_url: campos.arquivoUrl,
+      cronograma: gravarJson(campos.cronograma),
+      criterios: gravarJson(campos.criterios),
+      pede_link_grupo: campos.pedeLinkGrupo,
       publicado: campos.publicado,
       ordem: (ultimo._max.ordem ?? 0) + 1,
       criado_por: criadoPor,
@@ -158,6 +198,9 @@ export async function atualizarTrabalho(id: string, campos: Partial<CamposTrabal
       ...(campos.resumo !== undefined ? { resumo: campos.resumo } : {}),
       ...(campos.briefing !== undefined ? { briefing: campos.briefing } : {}),
       ...(campos.arquivoUrl !== undefined ? { arquivo_url: campos.arquivoUrl } : {}),
+      ...(campos.cronograma !== undefined ? { cronograma: gravarJson(campos.cronograma) } : {}),
+      ...(campos.criterios !== undefined ? { criterios: gravarJson(campos.criterios) } : {}),
+      ...(campos.pedeLinkGrupo !== undefined ? { pede_link_grupo: campos.pedeLinkGrupo } : {}),
       ...(campos.publicado !== undefined ? { publicado: campos.publicado } : {}),
       atualizado_em: new Date(),
     },
@@ -182,13 +225,15 @@ export async function envioDoAluno(trabalhoId: string, userId: string): Promise<
 /**
  * Aluno envia ou atualiza o link. Reenviar depois de uma avaliacao volta o
  * status para `enviado`: o professor precisa olhar de novo. A ultima
- * devolutiva continua visivel — e o que o aluno usou para corrigir.
+ * devolutiva (feedback, etapa, marcas) continua visivel — e o que o aluno
+ * usou para corrigir.
  */
 export async function salvarEnvio(dados: {
   trabalhoId: string
   userId: string
   linkUrl: string
   repoUrl: string | null
+  linkGrupo: string | null
   comentario: string | null
 }): Promise<Envio> {
   const e = await prisma.projeto_envios.upsert({
@@ -198,12 +243,14 @@ export async function salvarEnvio(dados: {
       user_id: dados.userId,
       link_url: dados.linkUrl,
       repo_url: dados.repoUrl,
+      link_grupo: dados.linkGrupo,
       comentario: dados.comentario,
       status: 'enviado',
     },
     update: {
       link_url: dados.linkUrl,
       repo_url: dados.repoUrl,
+      link_grupo: dados.linkGrupo,
       comentario: dados.comentario,
       status: 'enviado',
       atualizado_em: new Date(),
@@ -212,12 +259,14 @@ export async function salvarEnvio(dados: {
   return serializarEnvio(e)
 }
 
-export async function buscarEnvio(id: string): Promise<(Envio & { serie: string }) | null> {
+export async function buscarEnvio(id: string): Promise<(Envio & { serie: string; trabalho: Trabalho }) | null> {
   const e = await prisma.projeto_envios.findUnique({
     where: { id },
     include: { projeto_trabalhos: { include: { projeto_pastas: { select: { serie: true } } } } },
   })
-  return e ? { ...serializarEnvio(e), serie: e.projeto_trabalhos.projeto_pastas.serie } : null
+  if (!e) return null
+  const trabalho = serializarTrabalho(e.projeto_trabalhos)
+  return { ...serializarEnvio(e), serie: trabalho.serie, trabalho }
 }
 
 /** Todos os envios de um trabalho, com nome e turma do aluno, mais recentes primeiro. */
@@ -271,8 +320,11 @@ export async function avaliarEnvio(dados: {
   status: StatusEnvio
   nota: number | null
   feedback: string | null
+  etapa: number | null
+  marcas: Marcas | null
 }): Promise<Envio> {
   const agora = new Date()
+  const marcasJson = gravarJson(dados.marcas)
   const [, envio] = await prisma.$transaction([
     prisma.projeto_avaliacoes.create({
       data: {
@@ -281,12 +333,17 @@ export async function avaliarEnvio(dados: {
         status: dados.status,
         nota: dados.nota,
         feedback: dados.feedback,
+        etapa: dados.etapa,
+        criterios: marcasJson,
         criado_em: agora,
       },
     }),
     prisma.projeto_envios.update({
       where: { id: dados.envioId },
-      data: { status: dados.status, nota: dados.nota, feedback: dados.feedback, avaliado_em: agora, atualizado_em: agora },
+      data: {
+        status: dados.status, nota: dados.nota, feedback: dados.feedback,
+        etapa: dados.etapa, criterios: marcasJson, avaliado_em: agora, atualizado_em: agora,
+      },
     }),
   ])
   return serializarEnvio(envio)
@@ -303,6 +360,8 @@ export async function avaliacoesDoEnvio(envioId: string): Promise<Avaliacao[]> {
     status: statusValido(a.status),
     nota: a.nota == null ? null : Number(a.nota),
     feedback: a.feedback,
+    etapa: a.etapa,
+    marcas: lerMarcas(a.criterios),
     criadoEm: a.criado_em.toISOString(),
     avaliador: a.usuarios?.profiles?.nome_completo ?? null,
   }))
