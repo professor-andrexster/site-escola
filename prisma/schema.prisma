@@ -865,6 +865,10 @@ model usuarios {
   log_atividades                                                         log_atividades[]
   noticias                                                               noticias[]
   profiles                                                               profiles?
+  projeto_pastas                                                         projeto_pastas[]
+  projeto_trabalhos                                                      projeto_trabalhos[]
+  projeto_envios                                                         projeto_envios[]
+  projeto_avaliacoes                                                     projeto_avaliacoes[]
   progresso_aulas                                                        progresso_aulas[]
   quiz_participantes                                                     quiz_participantes[]
   sessoes                                                                sessoes[]
@@ -949,4 +953,77 @@ model modulos {
   certificados   certificados[]
   curso_desafios curso_desafios[]
   cursos         cursos[]
+}
+
+/// Aba Projetos (2026-09-28): uma pasta por serie ("2° Ano"), com os
+/// trabalhos que a turma faz. DDL em scripts/sql/projetos-turma.sql.
+model projeto_pastas {
+  id                String              @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  serie             String              @unique(map: "projeto_pastas_serie_key") @db.VarChar(20)
+  ordem             Int                 @default(0)
+  criado_por        String?             @db.Char(36)
+  criado_em         DateTime            @default(now()) @db.DateTime(3)
+  usuarios          usuarios?           @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "projeto_pastas_criado_por_fkey")
+  projeto_trabalhos projeto_trabalhos[]
+
+  @@index([criado_por], map: "projeto_pastas_criado_por_fkey")
+}
+
+model projeto_trabalhos {
+  id             String           @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  pasta_id       String           @db.Char(36)
+  titulo         String           @db.VarChar(140)
+  resumo         String?          @db.VarChar(300)
+  briefing       String?          @db.Text
+  arquivo_url    String?          @db.VarChar(300)
+  publicado      Boolean          @default(false)
+  ordem          Int              @default(0)
+  criado_por     String?          @db.Char(36)
+  criado_em      DateTime         @default(now()) @db.DateTime(3)
+  atualizado_em  DateTime         @default(now()) @db.DateTime(3)
+  projeto_pastas projeto_pastas   @relation(fields: [pasta_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "projeto_trabalhos_pasta_fkey")
+  usuarios       usuarios?        @relation(fields: [criado_por], references: [id], onUpdate: Restrict, map: "projeto_trabalhos_criado_por_fkey")
+  projeto_envios projeto_envios[]
+
+  @@index([pasta_id], map: "projeto_trabalhos_pasta_idx")
+  @@index([criado_por], map: "projeto_trabalhos_criado_por_fkey")
+}
+
+/// Um envio por aluno e trabalho: o link do sistema publicado. `status`,
+/// `nota`, `feedback` e `avaliado_em` espelham a ULTIMA avaliacao, para a
+/// listagem nao precisar de join; o historico fica em projeto_avaliacoes.
+model projeto_envios {
+  id                 String               @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  trabalho_id        String               @db.Char(36)
+  user_id            String               @db.Char(36)
+  link_url           String               @db.VarChar(300)
+  repo_url           String?              @db.VarChar(300)
+  comentario         String?              @db.Text
+  status             String               @default("enviado") @db.VarChar(20)
+  nota               Decimal?             @db.Decimal(4, 1)
+  feedback           String?              @db.Text
+  avaliado_em        DateTime?            @db.DateTime(3)
+  enviado_em         DateTime             @default(now()) @db.DateTime(3)
+  atualizado_em      DateTime             @default(now()) @db.DateTime(3)
+  projeto_trabalhos  projeto_trabalhos    @relation(fields: [trabalho_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "projeto_envios_trabalho_fkey")
+  usuarios           usuarios             @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "projeto_envios_user_fkey")
+  projeto_avaliacoes projeto_avaliacoes[]
+
+  @@unique([trabalho_id, user_id], map: "projeto_envios_trabalho_user_key")
+  @@index([user_id], map: "projeto_envios_user_idx")
+}
+
+model projeto_avaliacoes {
+  id             String         @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  envio_id       String         @db.Char(36)
+  avaliador_id   String?        @db.Char(36)
+  status         String         @db.VarChar(20)
+  nota           Decimal?       @db.Decimal(4, 1)
+  feedback       String?        @db.Text
+  criado_em      DateTime       @default(now()) @db.DateTime(3)
+  projeto_envios projeto_envios @relation(fields: [envio_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "projeto_avaliacoes_envio_fkey")
+  usuarios       usuarios?      @relation(fields: [avaliador_id], references: [id], onUpdate: Restrict, map: "projeto_avaliacoes_avaliador_fkey")
+
+  @@index([envio_id], map: "projeto_avaliacoes_envio_idx")
+  @@index([avaliador_id], map: "projeto_avaliacoes_avaliador_fkey")
 }
