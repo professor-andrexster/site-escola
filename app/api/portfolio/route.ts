@@ -17,6 +17,21 @@ function erro(mensagem: string, status = 400) {
   return NextResponse.json({ erro: mensagem }, { status })
 }
 
+/**
+ * A imagem do projeto vem do proprio upload (/api/arquivos, finalidade
+ * `projeto`), que devolve um caminho RELATIVO: `/arquivos/projetos/x.png`.
+ * `enderecoValido` exige http(s) e devolvia null para ele — a imagem que o
+ * aluno acabou de subir era descartada em silencio no salvar. Lilian subiu a
+ * mesma tela tres vezes (23/09 e 28/09) e o projeto seguiu sem imagem.
+ * Aceita o caminho da propria pasta de uploads ou um link http(s).
+ */
+function imagemValida(valor: unknown): string | null {
+  if (typeof valor !== 'string') return null
+  const limpo = valor.trim()
+  if (/^\/arquivos\/projetos\/[A-Za-z0-9._-]+$/.test(limpo)) return limpo.slice(0, 300)
+  return enderecoValido(limpo)
+}
+
 /** O que vale para criar e para editar. */
 function lerCampos(corpo: Record<string, unknown>) {
   const titulo = String(corpo.titulo ?? '').trim()
@@ -28,7 +43,7 @@ function lerCampos(corpo: Record<string, unknown>) {
 
   const linkSite = enderecoValido(corpo.linkSite as string)
   const linkRepo = enderecoValido(corpo.linkRepo as string)
-  const imagem = enderecoValido(corpo.imagemUrl as string)
+  const imagem = imagemValida(corpo.imagemUrl)
 
   if (corpo.linkSite && !linkSite) return { erro: 'O link do site precisa começar com http:// ou https://' }
   if (corpo.linkRepo && !linkRepo) return { erro: 'O link do código precisa começar com http:// ou https://' }
