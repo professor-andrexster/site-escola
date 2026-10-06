@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { exigirQuizStaff } from '@/lib/apiGestao'
-import { criarPerguntasEmSequencia } from '@/lib/db/quiz'
+import { criarPerguntasEmSequencia, LimiteDePerguntas } from '@/lib/db/quiz'
 import { lerCorpoDePergunta } from '../../corpo'
 
 /**
@@ -27,6 +27,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const perguntas = await criarPerguntasEmSequencia(quizId, lote)
     return NextResponse.json({ perguntas })
   } catch (erro) {
+    if (erro instanceof LimiteDePerguntas) return NextResponse.json({ error: erro.message }, { status: 400 })
     console.error('[quiz/:id/perguntas] falha ao criar', erro)
     return NextResponse.json({ error: 'Erro ao salvar as perguntas.' }, { status: 400 })
   }

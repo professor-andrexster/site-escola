@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/db'
+import { MAX_PERGUNTAS } from '@/lib/quiz/limites'
 import type { quizzes, quiz_perguntas, quiz_participantes } from '@prisma/client'
 
 /**
@@ -697,8 +698,19 @@ function serializarPergunta(p: quiz_perguntas) {
  * com a ordem da primeira. Devolve as linhas criadas porque a tela mantem a
  * lista em estado local.
  */
+export class LimiteDePerguntas extends Error {}
+
 export async function criarPerguntasEmSequencia(quizId: string, lote: CamposDePergunta[]) {
   return prisma.$transaction(async tx => {
+    const existentes = await tx.quiz_perguntas.count({ where: { quiz_id: quizId } })
+    if (existentes + lote.length > MAX_PERGUNTAS) {
+      const cabem = Math.max(0, MAX_PERGUNTAS - existentes)
+      throw new LimiteDePerguntas(
+        cabem === 0
+          ? `Este quiz já tem ${MAX_PERGUNTAS} perguntas, o máximo.`
+          : `O máximo é ${MAX_PERGUNTAS} perguntas por quiz. Cabem só mais ${cabem}.`
+      )
+    }
     const ultima = await tx.quiz_perguntas.findFirst({
       where: { quiz_id: quizId },
       orderBy: { ordem: 'desc' },

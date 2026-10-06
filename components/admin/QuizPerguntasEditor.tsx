@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { MAX_PERGUNTAS } from '@/lib/quiz/limites'
 import { useRouter } from 'next/navigation'
 import type { QuizPergunta } from '@/types/database'
 import { Plus, Trash2, ChevronUp, ChevronDown, Check, Pencil, Sparkles } from 'lucide-react'
@@ -106,6 +107,11 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
   const [gerando, setGerando] = useState(false)
   const [erroIA, setErroIA] = useState('')
   const router = useRouter()
+  const restante = Math.max(0, MAX_PERGUNTAS - perguntas.length)
+  const cheio = restante === 0
+  const opcoesIA = [5, 10].filter(n => n <= restante)
+  if (restante > 0 && restante < 5) opcoesIA.push(restante)
+  const quantidadeIAValida = opcoesIA.includes(quantidadeIA) ? quantidadeIA : (opcoesIA[opcoesIA.length - 1] ?? 0)
 
   async function addPergunta() {
     if (!form.enunciado.trim() || !form.alternativa_a.trim() || !form.alternativa_b.trim() || !form.alternativa_c.trim() || !form.alternativa_d.trim()) {
@@ -218,7 +224,7 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
       const res = await fetch('/api/gerar-perguntas', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ materia: materiaIA.trim(), quantidade: quantidadeIA }),
+        body: JSON.stringify({ materia: materiaIA.trim(), quantidade: quantidadeIAValida }),
       })
       const json = await res.json()
 
@@ -342,7 +348,14 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
         </div>
       ))}
 
+      {cheio && (
+        <p className="text-amber-800 text-sm bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">
+          Este quiz tem {perguntas.length} perguntas. O máximo para adicionar é {MAX_PERGUNTAS}: remova alguma para incluir outra.
+        </p>
+      )}
+
       {/* Geração de perguntas com IA */}
+      {!cheio && (
       <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 space-y-3">
         <div className="flex items-center gap-2 text-gray-700 font-semibold text-sm">
           <Sparkles className="w-4 h-4" />
@@ -358,13 +371,12 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-escola-azul"
           />
           <select
-            value={quantidadeIA}
+            value={quantidadeIAValida}
             onChange={e => setQuantidadeIA(Number(e.target.value))}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-escola-azul"
             aria-label="Quantidade de perguntas"
           >
-            <option value={5}>5 perguntas</option>
-            <option value={10}>10 perguntas</option>
+            {opcoesIA.map(n => <option key={n} value={n}>{n} perguntas</option>)}
           </select>
           <button
             onClick={gerarComIA}
@@ -375,11 +387,12 @@ export default function QuizPerguntasEditor({ quizId, perguntas: initial }: Quiz
           </button>
         </div>
         <p className="text-xs text-gray-500">
-          As perguntas geradas são adicionadas à lista acima e podem ser editadas ou removidas livremente.
+          As perguntas geradas são adicionadas à lista acima e podem ser editadas ou removidas livremente. Máximo de {MAX_PERGUNTAS} por quiz (cabem mais {restante}).
         </p>
       </div>
+      )}
 
-      {adding ? (
+      {cheio ? null : adding ? (
         <div className="bg-white border border-escola-azul rounded-xl p-5 space-y-4">
           <h3 className="font-semibold text-gray-800 text-sm">Nova Pergunta #{perguntas.length + 1}</h3>
 
