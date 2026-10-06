@@ -1,4 +1,4 @@
-import { rankingPublico } from '@/lib/db/quiz'
+import { rankingPublico, rankingGeral } from '@/lib/db/quiz'
 import PageLayout from '@/components/PageLayout'
 import Link from 'next/link'
 import { Trophy, Medal, Gamepad2, ArrowRight } from 'lucide-react'
@@ -11,9 +11,9 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function RankingPublicoPage() {
-  const quizzesComRanking = await rankingPublico()
+  const [quizzesComRanking, geral] = await Promise.all([rankingPublico(), rankingGeral()])
 
-  if (quizzesComRanking.length === 0) {
+  if (quizzesComRanking.length === 0 && geral.length === 0) {
     return (
       <PageLayout>
         <div className="bg-escola-azul text-white py-12 border-b-2 border-escola-vermelho">
@@ -56,11 +56,54 @@ export default async function RankingPublicoPage() {
             <Trophy className="w-8 h-8 text-yellow-400" />
             <h1 className="font-playfair text-4xl md:text-5xl font-black">JBQuiz · Ranking</h1>
           </div>
-          <p className="text-white/60 font-serif">Os melhores alunos de cada quiz da escola</p>
+          <p className="text-white/60 font-serif">O ranking geral dos alunos e os melhores de cada quiz da escola</p>
         </div>
       </div>
 
       <div className="container mx-auto px-4 py-12 space-y-14">
+        {/* Ranking geral: soma de todos os quizzes de cada aluno */}
+        {geral.length > 0 && (
+          <div>
+            <div className="mb-6">
+              <p className="font-mono text-[10px] uppercase tracking-widest text-escola-vermelho mb-1">Todos os quizzes somados</p>
+              <h2 className="font-playfair text-escola-azul font-black text-2xl md:text-3xl">Ranking geral</h2>
+              <p className="font-serif text-escola-cinza text-sm mt-1">
+                {geral.length} aluno{geral.length !== 1 ? 's' : ''} no ranking
+              </p>
+            </div>
+            <div className="border border-escola-cinza-claro overflow-hidden">
+              {geral.map((p, i) => {
+                const cor = i < 3 ? medalColors[i] : null
+                return (
+                  <div
+                    key={p.user_id}
+                    className={`flex items-center gap-4 px-5 py-3 border-b last:border-0 ${cor ? `${cor.bg} ${cor.border}` : 'border-escola-cinza-claro hover:bg-escola-creme transition-colors'}`}
+                  >
+                    <span className={`font-mono text-sm font-bold w-8 text-center flex-shrink-0 ${cor ? cor.num : 'text-escola-cinza font-normal'}`}>{i + 1}º</span>
+                    {cor ? (
+                      <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-white border ${cor.border}`}>
+                        <Medal className={`w-5 h-5 ${cor.icon}`} />
+                      </div>
+                    ) : (
+                      <div className="w-9 flex-shrink-0" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <p className={`truncate text-escola-preto ${cor ? 'font-playfair font-bold text-base' : 'font-serif text-sm'}`}>{p.nome_completo}</p>
+                      <p className="font-mono text-escola-cinza text-xs">
+                        {p.turma ? `${p.turma} · ` : ''}{p.quizzes_feitos} quiz{p.quizzes_feitos !== 1 ? 'zes' : ''}
+                      </p>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <div className="font-mono font-black text-lg text-escola-azul">{p.pontuacao_total}</div>
+                      <div className="font-mono text-escola-cinza text-[10px]">pontos</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
+
         {quizzesComRanking.map((quiz) => (
           <div key={quiz.id}>
             {/* Quiz header */}

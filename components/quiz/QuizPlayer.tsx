@@ -63,6 +63,8 @@ interface QuizPlayerProps {
   respostaRevelada: boolean
   /** Letra certa da pergunta atual; chega só depois do "Revelar" (anti-F12). */
   respostaCerta: string | null
+  /** Pontos já revelados, somados no servidor (sobrevive a recarregar a página). */
+  meusPontos: number
   encerrado: boolean
 }
 
@@ -81,6 +83,7 @@ export default function QuizPlayer({
   perguntaLiberadaEm,
   respostaRevelada,
   respostaCerta,
+  meusPontos,
   encerrado,
 }: QuizPlayerProps) {
   const router = useRouter()
@@ -105,13 +108,12 @@ export default function QuizPlayer({
     pergunta && jaRespondidas.has(pergunta.id) ? 'already' : null
   )
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
-  const [runningScore, setRunningScore] = useState(0)
   const [finishing, setFinishing] = useState(false)
+  const [agora, setAgora] = useState(() => Date.now())
 
   const answeredRef = useRef(answered)
   const finishedRef = useRef(false)
   const lastIndexRef = useRef(currentIndex)
-  const pontosAplicadosRef = useRef(false)
 
   useEffect(() => {
     answeredRef.current = answered
@@ -127,7 +129,6 @@ export default function QuizPlayer({
       answeredRef.current = already
       setStatus(already ? 'already' : null)
       setSelectedAnswer(null)
-      pontosAplicadosRef.current = false
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIndex])
@@ -137,6 +138,7 @@ export default function QuizPlayer({
     function tick() {
       const tl = computeTimeLeft()
       setTimeLeft(tl)
+      setAgora(Date.now())
       if (tl <= 0 && !answeredRef.current) {
         handleAnswer(null)
       }
@@ -150,15 +152,6 @@ export default function QuizPlayer({
   // Só dá para saber se acertou depois do "Revelar": antes disso o navegador
   // não tem o gabarito.
   const ultimaCorreta = selectedAnswer !== null && respostaCerta !== null && selectedAnswer === respostaCerta
-
-  // Professor revelou: aplica os pontos desta pergunta no placar local (uma vez)
-  useEffect(() => {
-    if (respostaRevelada && ultimaCorreta && !pontosAplicadosRef.current && pergunta) {
-      pontosAplicadosRef.current = true
-      setRunningScore(prev => prev + pergunta.pontos)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [respostaRevelada, respostaCerta])
 
   // Professor encerrou: fecha para todo mundo
   useEffect(() => {
@@ -179,16 +172,22 @@ export default function QuizPlayer({
     const tempoResposta = Math.max(0, tempoPorPergunta - computeTimeLeft())
 
     // Quem corrige e pontua é o servidor; a tela só sabe se acertou no "Revelar".
-    await fetch('/api/quiz/responder', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        participanteId,
-        perguntaId: pergunta.id,
-        resposta,
-        tempoResposta,
-      }),
-    })
+    // Se o servidor recusar (ex.: o tempo virou), a tela não pode fingir que registrou.
+    try {
+      const res = await fetch('/api/quiz/responder', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participanteId,
+          perguntaId: pergunta.id,
+          resposta,
+          tempoResposta,
+        }),
+      })
+      if (!res.ok && resposta !== null) { setStatus('timeout'); setSelectedAnswer(null) }
+    } catch {
+      if (resposta !== null) { setStatus('timeout'); setSelectedAnswer(null) }
+    }
   }
 
   async function finishQuiz() {
@@ -218,6 +217,8 @@ export default function QuizPlayer({
   const timerPercent = (timeLeft / tempoPorPergunta) * 100
   const timerColor = timeLeft <= 5 ? 'bg-rose-600' : timeLeft <= 10 ? 'bg-amber-600' : 'bg-emerald-600'
   const tempoEsgotado = timeLeft <= 0
+  // Mesma conta do servidor (avancarSala): fim do tempo + 1 s de folga + 5 s de pausa.
+  const segundosParaProxima = Math.max(0, Math.ceil((liberadaMs + tempoPorPergunta * 1000 + 6000 - agora) / 1000))
 
   const alternativasOriginais = [
     { key: 'a', text: pergunta.alternativa_a },
@@ -242,7 +243,7 @@ export default function QuizPlayer({
         <div className="flex items-center gap-3">
           <div className="text-right">
             <p className="text-white/55 text-xs">Pontos</p>
-            <p className="text-white font-mono font-bold">{runningScore}</p>
+            <p className="text-white font-mono font-bold">{meusPontos}</p>
           </div>
           <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white text-lg transition-colors ${
             answered || tempoEsgotado ? 'bg-gray-600' : timeLeft <= 5 ? 'bg-rose-700 animate-pulse' : 'bg-gray-600'
@@ -327,18 +328,18 @@ export default function QuizPlayer({
                 <CheckCircle2 className="w-5 h-5" />
                 Resposta registrada!
               </p>
-              <p className="text-white/50 text-sm mt-1">Aguarde o professor revelar no telão...</p>
+              <p className="text-white/50 text-sm mt-1">A resposta aparece quando o tempo acabar.</p>
             </div>
           )}
           {!revelada && status === 'timeout' && (
             <div className="rounded-xl px-6 py-4 mb-4 bg-yellow-500/20 border border-yellow-500/30">
               <p className="text-yellow-300 font-bold text-lg">Tempo esgotado!</p>
-              <p className="text-white/50 text-sm mt-1">Aguarde o professor revelar a resposta...</p>
+              <p className="text-white/50 text-sm mt-1">A resposta aparece em instantes.</p>
             </div>
           )}
           {!revelada && status === 'already' && (
             <div className="rounded-xl px-6 py-4 mb-4 bg-white/5 border border-white/10">
-              <p className="text-white/60 font-semibold text-sm">Você já respondeu esta pergunta. Aguarde o professor.</p>
+              <p className="text-white/60 font-semibold text-sm">Você já respondeu esta pergunta. Aguarde o tempo acabar.</p>
             </div>
           )}
           {revelada && status !== 'already' && (
@@ -365,12 +366,16 @@ export default function QuizPlayer({
               {revelada ? (
                 <>
                   <Hourglass className="w-4 h-4" />
-                  <span>Aguarde o professor passar para a próxima pergunta...</span>
+                  <span>
+                    {perguntaAtual >= perguntas.length - 1
+                      ? 'Último resultado. O quiz termina em instantes...'
+                      : `Próxima pergunta em ${segundosParaProxima}s...`}
+                  </span>
                 </>
               ) : (
                 <>
                   <Clock className="w-4 h-4" />
-                  <span>Todo mundo verá a resposta junto, no comando do professor.</span>
+                  <span>Todo mundo vê a resposta junto, quando o tempo acabar.</span>
                 </>
               )}
             </div>

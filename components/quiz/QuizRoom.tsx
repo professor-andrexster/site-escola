@@ -20,6 +20,7 @@ interface QuizState {
   pergunta_liberada_em: string | null
   resposta_revelada: boolean
   resposta_certa_atual: string | null
+  meus_pontos?: number
 }
 
 interface QuizRoomProps {
@@ -55,6 +56,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
         perguntaLiberadaEm={quiz.pergunta_liberada_em}
         respostaRevelada={quiz.resposta_revelada ?? false}
         respostaCerta={quiz.resposta_certa_atual ?? null}
+        meusPontos={quiz.meus_pontos ?? 0}
         encerrado={quiz.encerrado}
       />
       </TravaTelaCheia>

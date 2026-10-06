@@ -140,6 +140,11 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
     router.push(`/admin/quiz/${quiz.id}/ranking`)
   }
 
+  // O quiz acaba sozinho depois da última pergunta: leva o professor ao ranking.
+  useEffect(() => {
+    if (quiz.encerrado) router.push(`/admin/quiz/${quiz.id}/ranking`)
+  }, [quiz.encerrado, quiz.id, router])
+
   if (!pergunta) return null
 
   const revelada = quiz.resposta_revelada
@@ -264,7 +269,7 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
 
         {!revelada && (
           <p className="text-xs text-gray-500">
-            Os alunos não veem certo ou errado até você revelar. Revele quando o tempo zerar ou quando todos responderem.
+            Automático: a resposta aparece quando o tempo zera e a próxima pergunta vem 5 s depois. Você pode revelar antes, se todos já responderam.
           </p>
         )}
         {revelada && !ultima && (

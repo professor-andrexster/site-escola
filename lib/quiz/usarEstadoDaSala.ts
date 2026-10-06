@@ -26,6 +26,8 @@ export type EstadoDaSala = {
   resposta_revelada: boolean
   tempo_por_pergunta: number
   resposta_certa_atual?: string | null
+  /** Pontos do aluno nas perguntas já reveladas, somados no servidor. */
+  meus_pontos?: number
 }
 
 export type ParticipanteDaSala = { id: string; nome: string; turma: string }

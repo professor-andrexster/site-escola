@@ -2,10 +2,12 @@ import { NextResponse } from 'next/server'
 import { exigirQuizStaff } from '@/lib/apiGestao'
 import {
   aplicarAcaoDeSala,
+  avancarSala,
   buscarPorId,
   contarPerguntas,
   participante as buscarParticipante,
   participantesDoQuiz,
+  pontosReveladosDoParticipante,
   respostaCertaNaPosicao,
   type AcaoDeSala,
 } from '@/lib/db/quiz'
@@ -77,8 +79,15 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
     if (!auth.ok) return auth.res
   }
 
-  const quiz = await buscarPorId(id)
+  let quiz = await buscarPorId(id)
   if (!quiz) return NextResponse.json({ error: 'Quiz não encontrado.' }, { status: 404 })
+
+  // O quiz anda sozinho: se o tempo venceu, esta consulta faz a transição.
+  try {
+    if (await avancarSala(quiz)) quiz = (await buscarPorId(id)) ?? quiz
+  } catch (erro) {
+    console.error('[quiz/:id/estado] falha ao avançar a sala', erro)
+  }
 
   return NextResponse.json({
     quiz: {
@@ -91,6 +100,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
       resposta_revelada: quiz.resposta_revelada,
       tempo_por_pergunta: quiz.tempo_por_pergunta,
       // O gabarito da pergunta atual so vai junto depois do "Revelar".
+      meus_pontos: participanteId
+        ? await pontosReveladosDoParticipante(participanteId, id, quiz.pergunta_atual ?? 0, quiz.resposta_revelada ?? false)
+        : undefined,
       resposta_certa_atual: quiz.resposta_revelada
         ? await respostaCertaNaPosicao(id, quiz.pergunta_atual ?? 0)
         : null,

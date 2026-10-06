@@ -171,6 +171,7 @@ export async function rankingGeral() {
     by: ['user_id'],
     where: { concluido: true, user_id: { not: null } },
     _sum: { pontuacao_total: true },
+    _count: { _all: true },
   })
   if (!somas.length) return []
 
@@ -189,6 +190,7 @@ export async function rankingGeral() {
         nome_completo: perfil?.nome_completo ?? '',
         turma: perfil?.turma ?? null,
         pontuacao_total: s._sum.pontuacao_total ?? 0,
+        quizzes_feitos: s._count._all,
       }
     })
     .filter(r => r.nome_completo)
@@ -297,6 +299,26 @@ export async function respostaCertaNaPosicao(quizId: string, indice: number) {
   return p?.resposta_correta ?? null
 }
 
+/**
+ * Pontos que o aluno ja pode ver: so das perguntas reveladas (as anteriores a
+ * atual, mais a atual depois do "Revelar"). A soma sai das respostas gravadas,
+ * a mesma fonte do ranking, para a tela e o resultado nunca divergirem.
+ */
+export async function pontosReveladosDoParticipante(
+  participanteId: string, quizId: string, perguntaAtual: number, revelada: boolean
+): Promise<number> {
+  const qtd = Math.max(0, perguntaAtual) + (revelada ? 1 : 0)
+  if (qtd === 0) return 0
+  const ids = await prisma.quiz_perguntas.findMany({
+    where: { quiz_id: quizId }, orderBy: { ordem: 'asc' }, take: qtd, select: { id: true },
+  })
+  const soma = await prisma.quiz_respostas.aggregate({
+    where: { participante_id: participanteId, pergunta_id: { in: ids.map(i => i.id) } },
+    _sum: { pontos_obtidos: true },
+  })
+  return soma._sum.pontos_obtidos ?? 0
+}
+
 export async function contarPerguntas(quizId: string): Promise<number> {
   return prisma.quiz_perguntas.count({ where: { quiz_id: quizId } })
 }
@@ -380,7 +402,94 @@ export async function aplicarAcaoDeSala(id: string, acao: AcaoDeSala, perguntaAt
     },
   }[acao]
 
-  return prisma.quizzes.update({ where: { id }, data })
+  const atualizado = await prisma.quizzes.update({ where: { id }, data })
+  if (acao === 'revelar') await fecharPergunta(id, atualizado.pergunta_atual ?? 0)
+  return atualizado
+}
+
+/**
+ * Quem nao respondeu a pergunta que acabou de ser revelada fica com resposta
+ * vazia, marcada como errada e 0 ponto, gravada no servidor. Nao depende do
+ * celular do aluno mandar nada (aba fechada, rede ruim, resposta recusada no
+ * virar do tempo). O indice unico (participante + pergunta) preserva quem
+ * respondeu: `skipDuplicates` so preenche o que falta.
+ */
+export async function fecharPergunta(quizId: string, indice: number) {
+  const pergunta = await prisma.quiz_perguntas.findFirst({
+    where: { quiz_id: quizId },
+    orderBy: { ordem: 'asc' },
+    skip: Math.max(0, indice),
+    select: { id: true },
+  })
+  if (!pergunta) return
+  const participantes = await prisma.quiz_participantes.findMany({
+    where: { quiz_id: quizId },
+    select: { id: true },
+  })
+  if (!participantes.length) return
+  await prisma.quiz_respostas.createMany({
+    data: participantes.map(p => ({
+      participante_id: p.id,
+      pergunta_id: pergunta.id,
+      resposta: null,
+      correta: false,
+      pontos_obtidos: 0,
+    })),
+    skipDuplicates: true,
+  })
+}
+
+/**
+ * Quiz autonomo (2026-10-06): a sala anda sozinha, sem o professor clicar.
+ *
+ * Quando o tempo da pergunta acaba (mais GRACA_MS, para quem respondeu no
+ * ultimo segundo nao ser recusado), a resposta e revelada. PAUSA_MS depois,
+ * vem a proxima pergunta, ou o quiz encerra se era a ultima. Quem chama e a
+ * consulta de estado, que os alunos e o telao ja fazem a cada 2 s; nao ha
+ * relogio no servidor para morrer. Os botoes do professor continuam valendo
+ * e passam na frente.
+ *
+ * O `updateMany` com a condicao do estado lido deixa a transicao acontecer
+ * uma vez so, mesmo com 40 consultas chegando juntas.
+ */
+export const GRACA_MS = 1000
+export const PAUSA_MS = 5000
+
+export async function avancarSala(quiz: {
+  id: string
+  ativo: boolean
+  encerrado: boolean
+  pergunta_atual: number
+  pergunta_liberada_em: string | null
+  resposta_revelada: boolean
+  tempo_por_pergunta: number
+}): Promise<boolean> {
+  if (!quiz.ativo || quiz.encerrado || !quiz.pergunta_liberada_em) return false
+
+  const fimDoTempo = new Date(quiz.pergunta_liberada_em).getTime() + quiz.tempo_por_pergunta * 1000 + GRACA_MS
+  const agora = Date.now()
+
+  if (!quiz.resposta_revelada) {
+    if (agora < fimDoTempo) return false
+    const { count } = await prisma.quizzes.updateMany({
+      where: { id: quiz.id, ativo: true, encerrado: false, pergunta_atual: quiz.pergunta_atual, resposta_revelada: false },
+      data: { resposta_revelada: true },
+    })
+    if (count > 0) await fecharPergunta(quiz.id, quiz.pergunta_atual)
+    return count > 0
+  }
+
+  if (agora < fimDoTempo + PAUSA_MS) return false
+  const total = await contarPerguntas(quiz.id)
+  if (quiz.pergunta_atual + 1 < total) {
+    const { count } = await prisma.quizzes.updateMany({
+      where: { id: quiz.id, ativo: true, encerrado: false, pergunta_atual: quiz.pergunta_atual, resposta_revelada: true },
+      data: { pergunta_atual: quiz.pergunta_atual + 1, pergunta_liberada_em: new Date(), resposta_revelada: false },
+    })
+    return count > 0
+  }
+  await encerrar(quiz.id)
+  return true
 }
 
 /** Copia quiz e perguntas numa transacao — antes eram tres chamadas soltas. */
