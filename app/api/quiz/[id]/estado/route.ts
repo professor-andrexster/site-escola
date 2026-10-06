@@ -90,6 +90,9 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
   }
 
   return NextResponse.json({
+    // Hora do servidor: o relógio do celular do aluno pode estar adiantado ou
+    // atrasado, e o contador sai de pergunta_liberada_em (hora do servidor).
+    agora: Date.now(),
     quiz: {
       lobby_aberto: quiz.lobby_aberto,
       ativo: quiz.ativo,

@@ -599,10 +599,19 @@ export async function responder(dados: {
   // responder pergunta que ainda nao tinha aparecido.
   const quiz = await prisma.quizzes.findUnique({
     where: { id: pergunta.quiz_id },
-    select: { ativo: true, encerrado: true, resposta_revelada: true, pergunta_atual: true },
+    select: {
+      ativo: true, encerrado: true, resposta_revelada: true, pergunta_atual: true,
+      pergunta_liberada_em: true, tempo_por_pergunta: true,
+    },
   })
   if (!quiz?.ativo || quiz.encerrado) throw new RespostaRecusada('O quiz não está em andamento.')
   if (quiz.resposta_revelada) throw new RespostaRecusada('A resposta já foi revelada.')
+  // "Sem resposta" so vale com o tempo esgotado. Um celular com relogio errado
+  // mandava o vazio cedo demais e tirava do aluno a chance de responder.
+  if (
+    dados.resposta === null && quiz.pergunta_liberada_em &&
+    Date.now() < quiz.pergunta_liberada_em.getTime() + quiz.tempo_por_pergunta * 1000 - 1500
+  ) throw new RespostaRecusada('O tempo ainda não acabou.')
   const atual = await prisma.quiz_perguntas.findFirst({
     where: { quiz_id: pergunta.quiz_id },
     orderBy: { ordem: 'asc' },

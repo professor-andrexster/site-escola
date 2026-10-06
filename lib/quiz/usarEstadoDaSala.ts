@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
  * Acompanha o estado de uma sala de quiz.
@@ -42,6 +42,10 @@ export function usarEstadoDaSala<T extends EstadoDaSala>(
   const [estado, setEstado] = useState<T>(inicial)
   const [participantes, setParticipantes] = useState<ParticipanteDaSala[]>([])
   const vivo = useRef(true)
+  // Diferença entre a hora do servidor e a deste aparelho.
+  const deslocamento = useRef(0)
+  const [sincronizado, setSincronizado] = useState(false)
+  const agora = useCallback(() => Date.now() + deslocamento.current, [])
 
   useEffect(() => {
     vivo.current = true
@@ -56,9 +60,15 @@ export function usarEstadoDaSala<T extends EstadoDaSala>(
 
       if (document.visibilityState === 'visible') {
         try {
+          const antes = Date.now()
           const res = await fetch(endereco)
           if (res.ok && vivo.current) {
             const dados = await res.json()
+            // Compara com o meio da viagem, para a demora da rede não entrar na conta.
+            if (typeof dados.agora === 'number') {
+              deslocamento.current = dados.agora - (antes + Date.now()) / 2
+              setSincronizado(true)
+            }
             setEstado(anterior => ({ ...anterior, ...dados.quiz }))
             setParticipantes(dados.participantes ?? [])
           }
@@ -81,5 +91,5 @@ export function usarEstadoDaSala<T extends EstadoDaSala>(
     }
   }, [quizId, participanteId])
 
-  return { estado, setEstado, participantes }
+  return { estado, setEstado, participantes, agora, sincronizado }
 }

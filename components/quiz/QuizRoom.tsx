@@ -34,7 +34,7 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
   // O estado da sala e a lista de espera vinham por Realtime; agora vêm de uma
   // consulta a cada dois segundos, numa chamada só. O primeiro render usa o que
   // o servidor já mandou, então a tela nunca aparece vazia esperando a rede.
-  const { estado: quiz, participantes } = usarEstadoDaSala(
+  const { estado: quiz, participantes, agora, sincronizado } = usarEstadoDaSala(
     initialQuiz.id,
     initialQuiz,
     participante.id
@@ -57,6 +57,8 @@ export default function QuizRoom({ quiz: initialQuiz, participante, perguntas, j
         respostaRevelada={quiz.resposta_revelada ?? false}
         respostaCerta={quiz.resposta_certa_atual ?? null}
         meusPontos={quiz.meus_pontos ?? 0}
+        relogio={agora}
+        relogioPronto={sincronizado}
         encerrado={quiz.encerrado}
       />
       </TravaTelaCheia>

@@ -19,7 +19,7 @@ interface QuizControleProps {
 export default function QuizControle({ quiz: initialQuiz, perguntas, totalParticipantes }: QuizControleProps) {
   // Acompanha a sala pelo mesmo caminho que a tela do aluno: outra aba do
   // professor comandando o quiz aparece aqui em ate dois segundos.
-  const { estado: quiz, setEstado: setQuiz } = usarEstadoDaSala(initialQuiz.id, initialQuiz)
+  const { estado: quiz, setEstado: setQuiz, agora: relogio } = usarEstadoDaSala(initialQuiz.id, initialQuiz)
   const [respostasCount, setRespostasCount] = useState(0)
   const [contagem, setContagem] = useState<Record<string, number>>({})
   const [saidas, setSaidas] = useState<{ id: string; nome: string; turma: string; saidas_tela: number }[]>([])
@@ -37,15 +37,15 @@ export default function QuizControle({ quiz: initialQuiz, perguntas, totalPartic
       ? new Date(quiz.pergunta_liberada_em).getTime()
       : quiz.quiz_iniciado_em
         ? new Date(quiz.quiz_iniciado_em).getTime()
-        : Date.now()
+        : relogio()
     function tick() {
-      const elapsed = Math.max(0, Date.now() - liberadaMs)
+      const elapsed = Math.max(0, relogio() - liberadaMs)
       setTimeLeft(Math.max(0, quiz.tempo_por_pergunta - Math.floor(elapsed / 1000)))
     }
     tick()
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
-  }, [quiz.pergunta_liberada_em, quiz.quiz_iniciado_em, quiz.tempo_por_pergunta])
+  }, [quiz.pergunta_liberada_em, quiz.quiz_iniciado_em, quiz.tempo_por_pergunta, relogio])
 
   // Contagem de respostas da pergunta atual. Já era consultada a cada 3s como
   // rede de segurança do Realtime; agora é só isso, sem o Realtime.

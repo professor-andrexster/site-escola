@@ -65,6 +65,10 @@ interface QuizPlayerProps {
   respostaCerta: string | null
   /** Pontos já revelados, somados no servidor (sobrevive a recarregar a página). */
   meusPontos: number
+  /** Hora do servidor (corrige relógio errado do celular). */
+  relogio: () => number
+  /** Só depois da 1ª resposta do servidor o relógio é confiável; antes disso o tempo não pode "esgotar". */
+  relogioPronto: boolean
   encerrado: boolean
 }
 
@@ -84,6 +88,8 @@ export default function QuizPlayer({
   respostaRevelada,
   respostaCerta,
   meusPontos,
+  relogio,
+  relogioPronto,
   encerrado,
 }: QuizPlayerProps) {
   const router = useRouter()
@@ -95,10 +101,10 @@ export default function QuizPlayer({
     ? new Date(perguntaLiberadaEm).getTime()
     : quizIniciadoEm
       ? new Date(quizIniciadoEm).getTime()
-      : Date.now()
+      : relogio()
 
   function computeTimeLeft() {
-    const elapsed = Math.max(0, Date.now() - liberadaMs)
+    const elapsed = Math.max(0, relogio() - liberadaMs)
     return Math.max(0, tempoPorPergunta - Math.floor(elapsed / 1000))
   }
 
@@ -109,7 +115,7 @@ export default function QuizPlayer({
   )
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null)
   const [finishing, setFinishing] = useState(false)
-  const [agora, setAgora] = useState(() => Date.now())
+  const [agora, setAgora] = useState(() => relogio())
 
   const answeredRef = useRef(answered)
   const finishedRef = useRef(false)
@@ -138,8 +144,8 @@ export default function QuizPlayer({
     function tick() {
       const tl = computeTimeLeft()
       setTimeLeft(tl)
-      setAgora(Date.now())
-      if (tl <= 0 && !answeredRef.current) {
+      setAgora(relogio())
+      if (relogioPronto && tl <= 0 && !answeredRef.current) {
         handleAnswer(null)
       }
     }
@@ -147,7 +153,7 @@ export default function QuizPlayer({
     const interval = setInterval(tick, 1000)
     return () => clearInterval(interval)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [perguntaLiberadaEm, currentIndex])
+  }, [perguntaLiberadaEm, currentIndex, relogioPronto])
 
   // Só dá para saber se acertou depois do "Revelar": antes disso o navegador
   // não tem o gabarito.
