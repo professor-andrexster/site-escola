@@ -6,7 +6,8 @@ import { NOME_PODCAST, esc, nomePublico } from '@/lib/podcast/tipos'
  * Só episódios publicados e com áudio. Sai do ar junto com o episódio.
  * Créditos seguem a regra do site: primeiro nome e turma.
  */
-export const revalidate = 300
+// Sempre do banco: episodio publicado entra na hora e episodio retirado some na hora.
+export const dynamic = 'force-dynamic'
 
 const BASE = (process.env.APP_URL ?? 'https://escola.nexialabs.com.br').replace(/\/$/, '')
 const DESCRICAO = 'O podcast feito pelos alunos da Escola Estadual Dr. João Beraldo, de Carlos Chagas (MG): entrevistas, notícias da escola e da cidade.'
@@ -46,5 +47,5 @@ ${itens.join('\n')}
   </channel>
 </rss>
 `
-  return new Response(xml, { headers: { 'Content-Type': 'application/rss+xml; charset=utf-8', 'Cache-Control': 'public, max-age=300' } })
+  return new Response(xml, { headers: { 'Content-Type': 'application/rss+xml; charset=utf-8', 'Cache-Control': 'no-cache' } })
 }
