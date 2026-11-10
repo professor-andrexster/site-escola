@@ -24,25 +24,24 @@ export async function PATCH(request: Request, { params }: Ctx) {
     if (b.acao === 'revogar') {
       const retirados = await revogarAutorizacao(id)
       // Episodio tirado do ar tem que sumir ja, nao depois do cache de 60 s.
-      if (retirados > 0) {
-        revalidatePath('/podcast', 'layout')
-        revalidatePath('/noticias', 'layout')
-      }
+      if (retirados > 0) revalidatePath('/', 'layout')
       return NextResponse.json({ ok: true, retirados })
     }
     if (b.acao === 'renovar') {
       // Ano letivo novo: mesmo responsavel, termo novo para assinar.
       if (!m.responsavel_nome || !m.responsavel_cpf) return erro('Preencha o responsável antes.')
-      await atualizarResponsavel(id, { nome: m.responsavel_nome, cpf: m.responsavel_cpf })
-      return NextResponse.json({ ok: true })
+      const retirados = await atualizarResponsavel(id, { nome: m.responsavel_nome, cpf: m.responsavel_cpf })
+      if (retirados > 0) revalidatePath('/', 'layout')
+      return NextResponse.json({ ok: true, retirados })
     }
     if (b.acao === 'responsavel') {
       const nome = texto(b.responsavelNome, 120)
       if (!nome || nome.split(/\s+/).length < 2) return erro('Escreva o nome completo do responsável.')
       const cpf = typeof b.responsavelCpf === 'string' ? digitos(b.responsavelCpf) : ''
       if (!cpfValido(cpf)) return erro('Esse CPF não é válido. Confira os números.')
-      await atualizarResponsavel(id, { nome, cpf })
-      return NextResponse.json({ ok: true })
+      const retirados = await atualizarResponsavel(id, { nome, cpf })
+      if (retirados > 0) revalidatePath('/', 'layout')
+      return NextResponse.json({ ok: true, retirados })
     }
     return erro('Ação desconhecida.')
   } catch (e) {

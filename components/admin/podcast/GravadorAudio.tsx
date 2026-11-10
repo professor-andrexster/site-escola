@@ -36,6 +36,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
+  const [confirmarDescarte, setConfirmarDescarte] = useState(false)
   const rec = useRef<MediaRecorder | null>(null)
   const partes = useRef<Blob[]>([])
   const relogio = useRef<ReturnType<typeof setInterval> | null>(null)
@@ -44,20 +45,42 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
   useEffect(() => () => { if (relogio.current) clearInterval(relogio.current); rec.current?.stream.getTracks().forEach(t => t.stop()) }, [])
   useEffect(() => () => { if (previa) URL.revokeObjectURL(previa) }, [previa])
 
-  // Avisa antes de fechar a aba com gravação não enviada.
+  // Gravação não enviada (ou gravando): avisa antes de fechar a aba E antes de
+  // sair por um link do próprio site, que no Next não dispara beforeunload.
   useEffect(() => {
     if (!gravacao && estado === 'parado') return
     const h = (e: BeforeUnloadEvent) => { e.preventDefault(); e.returnValue = '' }
+    const clique = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement | null)?.closest?.('a')
+      if (!a || a.target === '_blank' || a.hasAttribute('download') || !a.href || e.defaultPrevented) return
+      if (new URL(a.href, location.href).origin !== location.origin) return
+      if (!window.confirm('A gravação ainda não foi salva no episódio. Sair agora perde o áudio. Sair mesmo assim?')) {
+        e.preventDefault(); e.stopPropagation()
+      }
+    }
     window.addEventListener('beforeunload', h)
-    return () => window.removeEventListener('beforeunload', h)
+    document.addEventListener('click', clique, true)
+    return () => { window.removeEventListener('beforeunload', h); document.removeEventListener('click', clique, true) }
   }, [gravacao, estado])
 
   function tic() { relogio.current = setInterval(() => setSegundos(s => s + 1), 1000) }
 
   async function comecar() {
     setErro(''); setAviso('')
+    if (gravacao) { setErro('Ainda tem uma gravação não salva. Salve ou descarte antes de gravar outra.'); return }
+    let stream: MediaStream
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+      stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } })
+    } catch (e) {
+      const nome = (e as { name?: string })?.name
+      setErro(nome === 'NotFoundError'
+        ? 'Não encontrei microfone neste aparelho. Grave no celular ou suba um arquivo pronto.'
+        : nome === 'NotAllowedError'
+          ? 'O navegador bloqueou o microfone. Libere o acesso ao microfone nas configurações do site e tente de novo.'
+          : 'Não consegui ligar o microfone. Feche outros apps que estejam usando e tente de novo.')
+      return
+    }
+    try {
       const mime = tipoSuportado()
       const r = new MediaRecorder(stream, { mimeType: mime, audioBitsPerSecond: 96000 })
       partes.current = []
@@ -77,8 +100,13 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
       setEstado('gravando')
       tic()
     } catch {
-      setErro('Não consegui usar o microfone. Libere o acesso ao microfone no navegador e tente de novo.')
+      stream.getTracks().forEach(t => t.stop())
+      setErro('Este navegador não conseguiu gravar. Grave em outro app e suba o arquivo aqui embaixo.')
     }
+  }
+
+  function descartar() {
+    setGravacao(null); setPrevia(null); setErro(''); setConfirmarDescarte(false)
   }
 
   function pausar() { rec.current?.pause(); setEstado('pausado'); if (relogio.current) clearInterval(relogio.current) }
@@ -108,9 +136,9 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
     <div className="rounded-xl border border-gray-200 p-4">
       {podeGravar && (
         <div className="flex flex-wrap items-center gap-3 mb-3">
-          {estado === 'parado' && (
+          {estado === 'parado' && !gravacao && (
             <button type="button" onClick={comecar} disabled={desabilitado || enviando} className={`${BOTAO} bg-red-600 hover:bg-red-700`}>
-              <Circle className="w-4 h-4 fill-current" /> {gravacao ? 'Gravar de novo' : 'Gravar agora'}
+              <Circle className="w-4 h-4 fill-current" /> Gravar agora
             </button>
           )}
           {estado === 'gravando' && <button type="button" onClick={pausar} className={BOTAO_LEVE}><Pause className="w-4 h-4" /> Pausar</button>}
@@ -130,10 +158,19 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
           <p className="text-xs text-gray-600 mb-2">Escuta antes de salvar. Se ficou bom, salva no episódio.</p>
           <audio controls src={previa} className="w-full mb-2" />
           <div className="flex flex-wrap gap-2">
-            <button type="button" onClick={() => mandar(gravacao)} disabled={enviando} className={BOTAO}>
+            <button type="button" onClick={() => mandar(gravacao)} disabled={enviando || desabilitado} className={BOTAO}>
               <Upload className="w-4 h-4" /> {enviando ? 'Enviando…' : erro ? 'Tentar de novo' : 'Salvar no episódio'}
             </button>
             <button type="button" onClick={baixar} className={BOTAO_LEVE}><Download className="w-4 h-4" /> Baixar gravação</button>
+            {confirmarDescarte ? (
+              <span className="text-xs flex items-center gap-2">
+                <span className="text-red-700">Descartar esta gravação? Ela ainda não foi salva.</span>
+                <button type="button" onClick={descartar} className="font-semibold text-red-600 hover:underline">Descartar</button>
+                <button type="button" onClick={() => setConfirmarDescarte(false)} className="text-gray-500 hover:underline">Manter</button>
+              </span>
+            ) : (
+              <button type="button" onClick={() => setConfirmarDescarte(true)} disabled={enviando} className="text-xs text-gray-500 hover:text-red-600 px-2">Descartar e gravar outra</button>
+            )}
           </div>
         </div>
       )}
@@ -142,7 +179,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
         <span className="block text-xs font-semibold text-gray-600 mb-1">
           {podeGravar ? 'Ou suba um arquivo gravado em outro app' : 'Suba o arquivo de áudio'} (MP3, M4A, WEBM, OGG ou WAV, até 25 MB)
         </span>
-        <input type="file" accept="audio/*" disabled={desabilitado || enviando}
+        <input type="file" accept="audio/*" disabled={desabilitado || enviando || !!gravacao || estado !== 'parado'}
           onChange={e => { const f = e.target.files?.[0]; if (f) { setGravacao(f); setPrevia(URL.createObjectURL(f)); setErro('') } }}
           className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-escola-azul" />
       </label>

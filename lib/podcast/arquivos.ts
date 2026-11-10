@@ -1,18 +1,18 @@
 import { randomBytes } from 'crypto'
-import { mkdir, writeFile } from 'fs/promises'
+import { mkdir, unlink, writeFile } from 'fs/promises'
 import path from 'path'
-import { PREFIXO_PUBLICO } from '@/lib/storage/arquivos'
 
 /**
- * Arquivos do podcast.
+ * Arquivos do podcast. Tudo vai para a pasta PRIVADA (fora de UPLOAD_ROOT),
+ * que o nginx nao serve:
  *
- * Dois destinos, e a diferenca importa:
- *
- * - AUDIO vai para a pasta publica (UPLOAD_ROOT/podcast-audios), servida pelo
- *   nginx em /arquivos: e o episodio que a escola inteira ouve.
- * - AUTORIZACAO dos pais e TERMO do entrevistado vao para a pasta PRIVADA
- *   (fora de UPLOAD_ROOT). Tem nome, CPF e assinatura de responsavel; o nginx
- *   nao serve essa pasta, so a rota /api/podcast/arquivo, que confere quem pede.
+ * - AUDIO: e a voz de menor de idade. Sai pela rota /api/podcast/audio/[id],
+ *   que so entrega episodio publicado (ou para a equipe dele). Assim, revogar
+ *   a autorizacao ou tirar do ar corta o acesso na hora — com o arquivo na
+ *   pasta publica, quem guardou a URL continuaria ouvindo, e o nginx ainda
+ *   mandava cache de um ano.
+ * - AUTORIZACAO dos pais e TERMO do entrevistado: nome, CPF e assinatura.
+ *   Saem so pela rota /api/podcast/arquivo, para monitor e direcao.
  */
 
 const RAIZ_PUBLICA = process.env.UPLOAD_ROOT ?? path.join(process.cwd(), 'data', 'uploads')
@@ -49,16 +49,28 @@ export function tipoDeDocumento(bytes: Uint8Array): { ext: string; mime: string 
 
 const nomeAleatorio = (prefixo: string) => `${prefixo}-${Date.now().toString(36)}-${randomBytes(8).toString('hex')}`
 
-export async function gravarAudio(arquivo: File): Promise<{ erro: string } | { url: string; bytes: number }> {
+export async function gravarAudio(arquivo: File): Promise<{ erro: string } | { caminho: string; bytes: number }> {
   if (arquivo.size === 0) return { erro: 'O áudio está vazio.' }
   if (arquivo.size > LIMITE_AUDIO) return { erro: 'O áudio passa de 25 MB. Corte um pedaço ou exporte em MP3.' }
   const bytes = new Uint8Array(await arquivo.arrayBuffer())
   const tipo = tipoDeAudio(bytes)
   if (!tipo) return { erro: 'Não reconheci esse arquivo como áudio. Use MP3, M4A, WEBM, OGG ou WAV.' }
   const nome = `${nomeAleatorio('ep')}.${tipo.ext}`
-  await mkdir(path.join(RAIZ_PUBLICA, 'podcast-audios'), { recursive: true })
-  await writeFile(path.join(RAIZ_PUBLICA, 'podcast-audios', nome), bytes)
-  return { url: `${PREFIXO_PUBLICO}/podcast-audios/${nome}`, bytes: arquivo.size }
+  await mkdir(path.join(RAIZ_PRIVADA, 'podcast-audios'), { recursive: true })
+  await writeFile(path.join(RAIZ_PRIVADA, 'podcast-audios', nome), bytes)
+  return { caminho: `podcast-audios/${nome}`, bytes: arquivo.size }
+}
+
+/** Apaga um arquivo da pasta privada. Falha (arquivo ja sumiu) nao importa. */
+export async function apagarPrivado(relativo: string | null) {
+  if (!relativo) return
+  const abs = caminhoPrivado(relativo)
+  if (abs) await unlink(abs).catch(() => {})
+}
+
+export function mimeDoAudio(relativo: string): string {
+  const ext = path.extname(relativo).slice(1).toLowerCase()
+  return ({ mp3: 'audio/mpeg', m4a: 'audio/mp4', webm: 'audio/webm', ogg: 'audio/ogg', wav: 'audio/wav' } as Record<string, string>)[ext] ?? 'application/octet-stream'
 }
 
 export type PastaPrivada = 'podcast-autorizacoes' | 'podcast-termos'

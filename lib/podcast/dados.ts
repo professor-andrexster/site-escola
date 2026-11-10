@@ -2,11 +2,18 @@ import { prisma } from '@/lib/db'
 import { isGestao } from '@/lib/roles'
 import { papelEAprovacao } from '@/lib/db/perfis'
 import type { Profile } from '@/types/database'
+import { Prisma } from '@prisma/client'
+import { apagarPrivado } from '@/lib/podcast/arquivos'
 import {
-  anoLetivoAtual, mascararCpf, slugDe, textoParaHtml, NOME_PODCAST,
+  anoLetivoAtual, esc, mascararCpf, slugDe, textoParaHtml, NOME_PODCAST,
   STATUS_AUTORIZACAO, STATUS_EPISODIO, TIPOS_EPISODIO,
-  type Episodio, type Membro, type StatusAutorizacao, type StatusEpisodio, type TipoEpisodio,
+  type Episodio, type Membro, type PessoaEquipe, type StatusAutorizacao, type StatusEpisodio, type TipoEpisodio,
 } from '@/lib/podcast/tipos'
+
+type Tx = Prisma.TransactionClient
+
+/** Participante sem autorizacao valida no momento de publicar. */
+export class PendenciaDeAutorizacao extends Error {}
 
 /**
  * Podcast "JB no Ar": equipe, autorizacoes e episodios.
@@ -141,9 +148,14 @@ export async function adicionarAluno(
   })
 }
 
-/** Corrige responsavel/CPF. Qualquer termo antigo deixa de valer: volta para pendente. */
-export async function atualizarResponsavel(id: string, responsavel: { nome: string; cpf: string }) {
-  return prisma.podcast_membros.update({
+/**
+ * Corrige responsavel/CPF (ou renova para o ano novo). O termo antigo deixa de
+ * valer: volta para pendente, e o que estava no ar com o aluno sai do ar.
+ * Devolve quantos episodios sairam.
+ */
+export async function atualizarResponsavel(id: string, responsavel: { nome: string; cpf: string }): Promise<number> {
+  return prisma.$transaction(async tx => {
+  const m = await tx.podcast_membros.update({
     where: { id },
     data: {
       responsavel_nome: responsavel.nome,
@@ -156,19 +168,25 @@ export async function atualizarResponsavel(id: string, responsavel: { nome: stri
       ano_letivo: anoLetivoAtual(),
     },
   })
+  return retirarEpisodiosDe(tx, m.user_id, 'Tirado do ar: o responsável foi alterado e falta o termo novo assinado.')
+  })
 }
 
-export async function registrarAutorizacao(id: string, caminho: string) {
-  return prisma.podcast_membros.update({
-    where: { id },
-    data: {
-      autorizacao_arquivo: caminho,
-      autorizacao_status: 'enviada',
-      autorizacao_enviada_em: new Date(),
-      autorizacao_aceita_em: null,
-      autorizacao_aceita_por: null,
-      ano_letivo: anoLetivoAtual(),
-    },
+/** Termo assinado novo: espera conferencia. Se o aluno estava liberado, o que estava no ar sai ate o monitor aceitar. */
+export async function registrarAutorizacao(id: string, caminho: string): Promise<number> {
+  return prisma.$transaction(async tx => {
+    const m = await tx.podcast_membros.update({
+      where: { id },
+      data: {
+        autorizacao_arquivo: caminho,
+        autorizacao_status: 'enviada',
+        autorizacao_enviada_em: new Date(),
+        autorizacao_aceita_em: null,
+        autorizacao_aceita_por: null,
+        ano_letivo: anoLetivoAtual(),
+      },
+    })
+    return retirarEpisodiosDe(tx, m.user_id, 'Tirado do ar: chegou um termo novo e o monitor ainda não conferiu.')
   })
 }
 
@@ -183,24 +201,34 @@ export async function aceitarAutorizacao(id: string, por: string) {
  * Revoga: bloqueia o aluno e tira do ar os episodios publicados com ele.
  * Devolve quantos episodios sairam do ar, para a tela avisar.
  */
+/** Tira do ar todo episodio publicado em que a pessoa aparece (e a noticia junto). */
+async function retirarEpisodiosDe(tx: Tx, userId: string, motivo: string): Promise<number> {
+  const eps = await tx.podcast_episodios.findMany({
+    where: {
+      status: 'publicado',
+      OR: [{ autor_id: userId }, { podcast_participantes: { some: { user_id: userId } } }],
+    },
+    select: { id: true, noticia_id: true },
+  })
+  for (const e of eps) {
+    await tx.podcast_episodios.update({ where: { id: e.id }, data: { status: 'retirado', feedback: motivo, atualizado_em: new Date() } })
+    if (e.noticia_id) await tx.noticias.updateMany({ where: { id: e.noticia_id }, data: { publicado: false } })
+  }
+  return eps.length
+}
+
+/**
+ * Revoga: bloqueia o aluno, tira do ar os episodios com ele e descarta o
+ * termo (para nao ser "aceito" de novo com o papel que o responsavel revogou).
+ * Devolve quantos episodios sairam do ar.
+ */
 export async function revogarAutorizacao(id: string): Promise<number> {
   return prisma.$transaction(async tx => {
-    const m = await tx.podcast_membros.update({ where: { id }, data: { autorizacao_status: 'revogada' } })
-    const eps = await tx.podcast_episodios.findMany({
-      where: {
-        status: 'publicado',
-        OR: [{ autor_id: m.user_id }, { podcast_participantes: { some: { user_id: m.user_id } } }],
-      },
-      select: { id: true, noticia_id: true },
+    const m = await tx.podcast_membros.update({
+      where: { id },
+      data: { autorizacao_status: 'revogada', autorizacao_arquivo: null, autorizacao_aceita_em: null, autorizacao_aceita_por: null },
     })
-    for (const e of eps) {
-      await tx.podcast_episodios.update({
-        where: { id: e.id },
-        data: { status: 'retirado', feedback: 'Tirado do ar: a autorização de um participante foi revogada.', atualizado_em: new Date() },
-      })
-      if (e.noticia_id) await tx.noticias.updateMany({ where: { id: e.noticia_id }, data: { publicado: false } })
-    }
-    return eps.length
+    return retirarEpisodiosDe(tx, m.user_id, 'Tirado do ar: a autorização de um participante foi revogada.')
   })
 }
 
@@ -258,7 +286,8 @@ async function montarEpisodios(linhas: LinhaEpisodio[]): Promise<Episodio[]> {
     entrevistadoNome: l.entrevistado_nome,
     entrevistadoDescricao: l.entrevistado_descricao,
     temTermoEntrevistado: Boolean(l.termo_entrevistado),
-    audioUrl: l.audio_url,
+    // audio_url guarda o caminho na pasta privada; para fora vai a rota que confere quem ouve.
+    audioUrl: l.audio_url ? `/api/podcast/audio/${l.id}?v=${l.audio_bytes ?? 0}` : null,
     audioBytes: l.audio_bytes,
     status: statusEp(l.status),
     feedback: l.feedback,
@@ -324,7 +353,22 @@ async function slugLivre(base: string, ignorarId?: string): Promise<string> {
 }
 
 export async function criarEpisodio(autorId: string, campos: { titulo: string; tipo: TipoEpisodio; quadro: string | null }) {
-  const slug = await slugLivre(campos.titulo)
+  let slug = await slugLivre(campos.titulo)
+  for (let tentativa = 0; ; tentativa++) {
+    try {
+      return await criarComSlug(autorId, campos, slug)
+    } catch (e) {
+      // Dois episodios com o mesmo titulo criados no mesmo instante.
+      if (tentativa < 3 && e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') {
+        slug = `${slugDe(campos.titulo)}-${Date.now().toString(36)}`
+        continue
+      }
+      throw e
+    }
+  }
+}
+
+function criarComSlug(autorId: string, campos: { titulo: string; tipo: TipoEpisodio; quadro: string | null }, slug: string) {
   return prisma.podcast_episodios.create({
     data: {
       slug,
@@ -375,12 +419,32 @@ export async function atualizarEpisodio(id: string, c: CamposEpisodio) {
   })
 }
 
-export async function definirAudio(id: string, url: string | null, bytes: number | null) {
-  return prisma.podcast_episodios.update({ where: { id }, data: { audio_url: url, audio_bytes: bytes, atualizado_em: new Date() } })
+/** Troca o audio (caminho na pasta privada) e apaga o arquivo anterior. */
+export async function definirAudio(id: string, caminho: string | null, bytes: number | null) {
+  const antes = await prisma.podcast_episodios.findUnique({ where: { id }, select: { audio_url: true } })
+  const r = await prisma.podcast_episodios.update({ where: { id }, data: { audio_url: caminho, audio_bytes: bytes, atualizado_em: new Date() } })
+  if (antes?.audio_url && antes.audio_url !== caminho) await apagarPrivado(antes.audio_url)
+  return r
+}
+
+/** Para a rota de audio: caminho no disco e quem pode ouvir. */
+export async function audioDoEpisodio(id: string) {
+  return prisma.podcast_episodios.findUnique({
+    where: { id },
+    select: { audio_url: true, status: true, autor_id: true, podcast_participantes: { select: { user_id: true } } },
+  })
 }
 
 export async function definirTermoEntrevistado(id: string, caminho: string) {
-  return prisma.podcast_episodios.update({ where: { id }, data: { termo_entrevistado: caminho, atualizado_em: new Date() } })
+  const antes = await prisma.podcast_episodios.findUnique({ where: { id }, select: { termo_entrevistado: true } })
+  const r = await prisma.podcast_episodios.update({ where: { id }, data: { termo_entrevistado: caminho, atualizado_em: new Date() } })
+  if (antes?.termo_entrevistado && antes.termo_entrevistado !== caminho) await apagarPrivado(antes.termo_entrevistado)
+  return r
+}
+
+/** Equipe para o editor do episodio: so nome e turma. */
+export function paraEditor(m: { userId: string; nome: string; turma: string | null }): PessoaEquipe {
+  return { userId: m.userId, nome: m.nome, turma: m.turma }
 }
 
 export async function caminhoDoTermoEntrevistado(id: string) {
@@ -398,19 +462,44 @@ export async function mudarStatus(id: string, status: StatusEpisodio, feedback?:
   })
 }
 
+/** Apaga o episodio, a noticia (ja despublicada) que ele tenha gerado e o audio. */
 export async function removerEpisodio(id: string) {
-  await prisma.podcast_episodios.delete({ where: { id } })
+  const ep = await prisma.podcast_episodios.findUnique({ where: { id }, select: { noticia_id: true, audio_url: true } })
+  await prisma.$transaction(async tx => {
+    await tx.podcast_episodios.delete({ where: { id } })
+    if (ep?.noticia_id) {
+      await tx.noticias_log.deleteMany({ where: { noticia_id: ep.noticia_id } })
+      await tx.noticias.deleteMany({ where: { id: ep.noticia_id, publicado: false } })
+    }
+  })
+  await apagarPrivado(ep?.audio_url ?? null)
 }
 
 /**
  * Participantes sem autorizacao valida. Publicar com alguem assim e
  * exatamente o que a autorizacao existe para impedir.
  */
-export async function participantesSemAutorizacao(ep: Episodio): Promise<string[]> {
+export async function participantesSemAutorizacao(ep: Episodio, tx: Tx = prisma): Promise<string[]> {
   const ids = ep.participantes.map(p => p.userId)
-  const membros = await montarMembros(await prisma.podcast_membros.findMany({ where: { user_id: { in: ids } } }))
+  if (ids.length === 0) return []
+  // Trava as linhas da equipe ate o fim da transacao: uma revogacao ao mesmo tempo espera.
+  if (tx !== prisma) {
+    await tx.$queryRaw`SELECT id FROM podcast_membros WHERE user_id IN (${Prisma.join(ids)}) FOR UPDATE`
+  }
+  const [linhas, perfis] = await Promise.all([
+    tx.podcast_membros.findMany({ where: { user_id: { in: ids } } }),
+    tx.profiles.findMany({ where: { id: { in: ids } }, select: { id: true, role: true } }),
+  ])
+  const membros = await montarMembros(linhas)
+  const ano = anoLetivoAtual()
   return ep.participantes
-    .filter(p => !membros.find(m => m.userId === p.userId)?.liberado)
+    .filter(p => {
+      const m = membros.find(x => x.userId === p.userId)
+      if (m) return !(m.papel === 'monitor' || (m.autorizacaoStatus === 'aceita' && m.anoLetivo === ano))
+      // Fora da equipe: adulto da escola (direcao, professor) nao precisa de termo; aluno precisa.
+      const role = perfis.find(x => x.id === p.userId)?.role
+      return !(role && (isGestao(role as Profile['role']) || role === 'professor'))
+    })
     .map(p => p.nome)
 }
 
@@ -423,10 +512,12 @@ export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: st
   const rodape = ep.audioUrl
     ? `\n<p><strong>Ouça o episódio completo no <a href="/podcast/${ep.slug}">${NOME_PODCAST}</a>.</strong></p>`
     : ''
-  const creditos = `<p><em>Por ${ep.participantes.map(p => p.nome.split(/\s+/)[0]).join(', ')}, equipe do ${NOME_PODCAST}.</em></p>`
+  const creditos = `<p><em>Por ${ep.participantes.map(p => esc(p.nome.split(/\s+/)[0] ?? '')).join(', ')}, equipe do ${NOME_PODCAST}.</em></p>`
   const conteudo = `${textoParaHtml(ep.texto)}${rodape}\n${creditos}`
 
   return prisma.$transaction(async tx => {
+    const sem = await participantesSemAutorizacao(ep, tx)
+    if (sem.length) throw new PendenciaDeAutorizacao(`Sem autorização aceita: ${sem.join(', ')}.`)
     let noticiaId = ep.noticiaId
     if (ep.noJbinforma) {
       if (noticiaId && (await tx.noticias.findUnique({ where: { id: noticiaId }, select: { id: true } }))) {

@@ -216,6 +216,8 @@ export async function atualizarTrabalho(id: string, campos: Partial<CamposTrabal
  */
 export async function adicionarDocumento(trabalhoId: string, doc: Documento): Promise<Documento[]> {
   return prisma.$transaction(async tx => {
+    // FOR UPDATE: sem a trava, dois envios ao mesmo tempo leem a mesma lista e o segundo apaga o primeiro.
+    await tx.$queryRaw`SELECT id FROM projeto_trabalhos WHERE id = ${trabalhoId} FOR UPDATE`
     const t = await tx.projeto_trabalhos.findUniqueOrThrow({ where: { id: trabalhoId }, select: { documentos: true } })
     const lista = [...lerLista<Documento>(t.documentos), doc]
     await tx.projeto_trabalhos.update({ where: { id: trabalhoId }, data: { documentos: gravarJson(lista) } })
@@ -226,6 +228,7 @@ export async function adicionarDocumento(trabalhoId: string, doc: Documento): Pr
 /** Tira o documento da lista. O arquivo fica no disco (sem apagar nada que nao volta). */
 export async function removerDocumento(trabalhoId: string, docId: string): Promise<Documento[] | null> {
   return prisma.$transaction(async tx => {
+    await tx.$queryRaw`SELECT id FROM projeto_trabalhos WHERE id = ${trabalhoId} FOR UPDATE`
     const t = await tx.projeto_trabalhos.findUniqueOrThrow({ where: { id: trabalhoId }, select: { documentos: true } })
     const atual = lerLista<Documento>(t.documentos)
     const lista = atual.filter(d => d.id !== docId)

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { buscarEpisodio, definirAudio } from '@/lib/podcast/dados'
 import { gravarAudio } from '@/lib/podcast/arquivos'
 import { erro, exigirAcesso, podeEditar } from '@/lib/podcast/api'
@@ -22,8 +23,14 @@ export async function POST(request: Request, { params }: Ctx) {
   })
   if ('erro' in g) return erro(g.erro)
   try {
-    await definirAudio(id, g.url, g.bytes)
-    return NextResponse.json({ ok: true, audioUrl: g.url, audioBytes: g.bytes })
+    const r = await definirAudio(id, g.caminho, g.bytes)
+    if (ep.status === 'publicado') revalidatePath('/', 'layout')
+    return NextResponse.json({
+      ok: true,
+      audioUrl: `/api/podcast/audio/${id}?v=${g.bytes}`,
+      audioBytes: g.bytes,
+      atualizadoEm: r.atualizado_em.toISOString(),
+    })
   } catch (e) {
     console.error('[podcast/audio]', e)
     return erro('O áudio subiu, mas não consegui ligar ao episódio. Tente de novo.', 500)

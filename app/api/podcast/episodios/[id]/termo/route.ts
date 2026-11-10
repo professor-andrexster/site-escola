@@ -22,8 +22,8 @@ export async function POST(request: Request, { params }: Ctx) {
   })
   if ('erro' in g) return erro(g.erro)
   try {
-    await definirTermoEntrevistado(id, g.caminho)
-    return NextResponse.json({ ok: true })
+    const r = await definirTermoEntrevistado(id, g.caminho)
+    return NextResponse.json({ ok: true, atualizadoEm: r.atualizado_em.toISOString() })
   } catch (e) {
     console.error('[podcast/termo]', e)
     return erro('O arquivo subiu, mas não consegui registrar. Tente de novo.', 500)

@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
-import { acessoDe, buscarEpisodio, listarMembros } from '@/lib/podcast/dados'
+import { acessoDe, buscarEpisodio, listarMembros, paraEditor } from '@/lib/podcast/dados'
 import { participa, podeEditar } from '@/lib/podcast/api'
 import EditorEpisodio from '@/components/admin/podcast/EditorEpisodio'
 
@@ -19,7 +19,11 @@ export default async function EpisodioPage({ params }: Props) {
   if (!ep || !acesso) notFound()
   if (!acesso.moderador && !participa(ep, user.id)) notFound()
 
-  const equipe = (await listarMembros()).filter(m => m.liberado || ep.participantes.some(p => p.userId === m.userId))
+  // So nome e turma vao ao navegador: o objeto Membro tem responsavel, CPF mascarado e matricula.
+  const membros = await listarMembros()
+  const equipe = membros.filter(m => m.liberado || ep.participantes.some(p => p.userId === m.userId)).map(paraEditor)
+  // Participante que nao esta mais na equipe (ou a direcao) continua aparecendo, para poder desmarcar.
+  for (const p of ep.participantes) if (!equipe.some(e => e.userId === p.userId)) equipe.push(paraEditor(p))
 
   return (
     <div className="max-w-4xl mx-auto">
@@ -27,7 +31,7 @@ export default async function EpisodioPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> Podcast
       </Link>
       <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900 mb-4">{ep.titulo}</h1>
-      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} />
+      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} />
     </div>
   )
 }

@@ -64,6 +64,13 @@ export interface Membro {
   vencida: boolean
 }
 
+/** O que o editor do episodio precisa saber de cada pessoa da equipe. Nada de responsavel, CPF ou matricula. */
+export interface PessoaEquipe {
+  userId: string
+  nome: string
+  turma: string | null
+}
+
 export interface Episodio {
   id: string
   slug: string
@@ -134,15 +141,17 @@ export function slugDe(texto: string): string {
     .replace(/[̀-ͯ]/g, '')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 140) || 'episodio'
+    .slice(0, 140)
+    .replace(/^-+|-+$/g, '') || 'episodio'
 }
+
+/** Escapa texto para entrar em HTML. */
+export const esc = (s: string) =>
+  s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 
 /** Texto puro digitado pelo aluno -> HTML seguro em paragrafos. */
 export function textoParaHtml(texto: string | null): string {
   if (!texto) return ''
-  const esc = (s: string) =>
-    s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
   return texto
     .split(/\n{2,}/)
     .map(p => p.trim())

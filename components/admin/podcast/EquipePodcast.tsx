@@ -36,6 +36,8 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
   const [alunoId, setAlunoId] = useState('')
   const [respNome, setRespNome] = useState('')
   const [respCpf, setRespCpf] = useState('')
+  // Nome do responsavel veio do cadastro (e nao digitado): troca junto quando o aluno muda.
+  const [respAuto, setRespAuto] = useState(false)
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
@@ -43,7 +45,10 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
   function escolherAluno(id: string) {
     setAlunoId(id)
     const a = disponiveis.find(x => x.id === id)
-    if (a?.responsavel && !respNome) setRespNome(a.responsavel)
+    if (!respNome || respAuto) {
+      setRespNome(a?.responsavel ?? '')
+      setRespAuto(Boolean(a?.responsavel))
+    }
   }
 
   async function adicionar() {
@@ -56,7 +61,7 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
     setOcupado(false)
     if (!r.ok) { setErro(`${r.erro} Os dados continuam no formulário.`); return }
     const nome = disponiveis.find(x => x.id === alunoId)?.nome ?? 'Aluno'
-    setAlunoId(''); setRespNome(''); setRespCpf('')
+    setAlunoId(''); setRespNome(''); setRespCpf(''); setRespAuto(false)
     setAviso(`${nome} entrou na equipe. Agora baixe o termo preenchido, mande para o responsável assinar e suba a foto ou o PDF assinado.`)
     router.refresh()
   }
@@ -83,7 +88,7 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
           </label>
           <label className="block">
             <span className="block text-xs font-semibold text-gray-600 mb-1">Nome completo do responsável</span>
-            <input value={respNome} onChange={e => setRespNome(e.target.value)} maxLength={120} className={CAMPO} placeholder="Como está no documento" />
+            <input value={respNome} onChange={e => { setRespNome(e.target.value); setRespAuto(false) }} maxLength={120} className={CAMPO} placeholder="Como está no documento" />
           </label>
           <label className="block">
             <span className="block text-xs font-semibold text-gray-600 mb-1">CPF do responsável</span>
@@ -125,11 +130,13 @@ function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
   const [nome, setNome] = useState(m.responsavelNome ?? '')
   const [cpf, setCpf] = useState('')
 
+  const [aviso, setAviso] = useState('')
   async function acao(corpo: Record<string, unknown>, depois?: (d: any) => void) {
-    setOcupado(true); setErro('')
+    setOcupado(true); setErro(''); setAviso('')
     const r = await chamar(`/api/podcast/membros/${m.id}`, json('PATCH', corpo))
     setOcupado(false)
     if (!r.ok) { setErro(r.erro); return }
+    if (r.dados?.retirados > 0) setAviso(`${r.dados.retirados} episódio(s) com ${m.nome.split(' ')[0]} saíram do ar até o termo novo ser aceito.`)
     depois?.(r.dados)
     setConfirmar(null); setEditando(false)
     router.refresh()
@@ -144,6 +151,7 @@ function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
     setOcupado(false)
     if (!r.ok) { setErro(`${r.erro} O arquivo continua selecionado.`); return }
     setArquivo(null)
+    if (r.dados?.retirados > 0) setAviso(`${r.dados.retirados} episódio(s) saíram do ar até você conferir o termo novo.`)
     router.refresh()
   }
 
@@ -181,7 +189,7 @@ function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
           <button type="button" disabled={ocupado} onClick={() => acao({ acao: 'aceitar' })} className={BOTAO}><CheckCircle2 className="w-4 h-4" /> Conferi, liberar aluno</button>
         )}
         <button type="button" onClick={() => setEditando(v => !v)} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2"><Pencil className="w-3.5 h-3.5" /> Corrigir responsável</button>
-        {m.autorizacaoStatus === 'aceita' && !m.vencida && (
+        {m.autorizacaoStatus === 'aceita' && (
           confirmar === 'revogar' ? (
             <span className="text-xs flex items-center gap-2">
               <span className="text-red-700">Revogar? Os episódios com {m.nome.split(' ')[0]} saem do ar.</span>
@@ -224,6 +232,7 @@ function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
         </div>
       )}
       {erro && <p className="text-sm text-red-600 mt-2" role="alert">{erro}</p>}
+      {aviso && <p className="text-sm text-amber-700 mt-2">{aviso}</p>}
     </li>
   )
 }

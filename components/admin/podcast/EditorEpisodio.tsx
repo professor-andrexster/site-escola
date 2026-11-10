@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Eye, FileUp, Radio, Save, Send, Trash2, Undo2 } from 'lucide-react'
 import {
   QUADROS, ROTULO_EPISODIO, tamanhoLegivel,
-  type Episodio, type Membro,
+  type Episodio, type PessoaEquipe,
 } from '@/lib/podcast/tipos'
 import GravadorAudio from './GravadorAudio'
 import { BOTAO, BOTAO_LEVE, CAMPO, chamar, json } from './comum'
@@ -14,7 +14,8 @@ interface Props {
   inicial: Episodio
   podeEditar: boolean
   moderador: boolean
-  equipe: Membro[]
+  equipe: PessoaEquipe[]
+  userId: string
 }
 
 type Form = {
@@ -37,9 +38,10 @@ const COR_STATUS: Record<string, string> = {
  * Tela do episódio. O que o aluno digita fica guardado no aparelho até o
  * servidor confirmar: se a internet cair no meio, nada se perde.
  */
-export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe }: Props) {
+export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe, userId }: Props) {
   const router = useRouter()
-  const chaveRascunho = `podcast-ep-${inicial.id}`
+  // Por usuario: num computador da sala, o rascunho de um aluno nao aparece para o outro.
+  const chaveRascunho = `podcast-ep-${inicial.id}-${userId}`
   const [ep, setEp] = useState(inicial)
   const [form, setForm] = useState<Form>(() => doEpisodio(inicial))
   const [sujo, setSujo] = useState(false)
@@ -50,27 +52,40 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe 
   const [termo, setTermo] = useState<File | null>(null)
   const [confirmarApagar, setConfirmarApagar] = useState(false)
   const [recuperado, setRecuperado] = useState(false)
+  // Rascunho local feito sobre uma versão que mudou no servidor. Nunca apagado sem o usuário decidir.
+  const [conflito, setConflito] = useState<Form | null>(null)
 
-  // Recupera rascunho não salvo deste aparelho.
+  // Recupera rascunho não salvo deste aparelho. Só na abertura da tela:
+  // depois disso o servidor muda a data a cada upload e isso não pode apagar nada.
   useEffect(() => {
     try {
       const salvo = localStorage.getItem(chaveRascunho)
-      if (salvo) {
-        const r = JSON.parse(salvo) as { form: Form; base: string }
-        if (r.base === inicial.atualizadoEm && JSON.stringify(r.form) !== JSON.stringify(doEpisodio(inicial))) {
-          setForm(r.form); setSujo(true); setRecuperado(true)
-        } else localStorage.removeItem(chaveRascunho)
-      }
+      if (!salvo) return
+      const r = JSON.parse(salvo) as { form: Form; base: string }
+      if (JSON.stringify(r.form) === JSON.stringify(doEpisodio(inicial))) { localStorage.removeItem(chaveRascunho); return }
+      if (r.base === inicial.atualizadoEm) { setForm(r.form); setSujo(true); setRecuperado(true) }
+      else setConflito(r.form)
     } catch { /* sem localStorage: segue sem rascunho local */ }
-  }, [chaveRascunho, inicial])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  function guardarLocal(f: Form, base: string) {
+    try { localStorage.setItem(chaveRascunho, JSON.stringify({ form: f, base })) } catch { /* ok */ }
+  }
 
   function mudar<K extends keyof Form>(k: K, v: Form[K]) {
     setForm(f => {
       const novo = { ...f, [k]: v }
-      try { localStorage.setItem(chaveRascunho, JSON.stringify({ form: novo, base: ep.atualizadoEm })) } catch { /* ok */ }
+      guardarLocal(novo, ep.atualizadoEm)
       return novo
     })
     setSujo(true); setAviso('')
+  }
+
+  /** O servidor mudou a data (upload de áudio/termo): o rascunho local passa a valer sobre a data nova. */
+  function novaBase(atualizadoEm: string) {
+    setEp(e => ({ ...e, atualizadoEm }))
+    if (sujo) guardarLocal(form, atualizadoEm)
   }
 
   const quadro = useMemo(() => QUADROS.find(q => q.chave === form.quadro), [form.quadro])
@@ -87,7 +102,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe 
       return false
     }
     const novo = r.dados.episodio as Episodio
-    setEp(novo); setForm(doEpisodio(novo)); setSujo(false); setRecuperado(false)
+    setEp(novo); setForm(doEpisodio(novo)); setSujo(false); setRecuperado(false); setConflito(null); setFeedback('')
     try { localStorage.removeItem(chaveRascunho) } catch { /* ok */ }
     router.refresh()
     return true
@@ -99,7 +114,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe 
     const r = await chamar(`/api/podcast/episodios/${ep.id}/audio`, { method: 'POST', body: fd })
     if (!r.ok) return r.erro
     setEp(e => ({ ...e, audioUrl: r.dados.audioUrl, audioBytes: r.dados.audioBytes }))
-    router.refresh()
+    if (r.dados.atualizadoEm) novaBase(r.dados.atualizadoEm)
     return null
   }
 
@@ -113,6 +128,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe 
     if (!r.ok) { setErro(`${r.erro} O arquivo continua selecionado.`); return }
     setTermo(null)
     setEp(e => ({ ...e, temTermoEntrevistado: true }))
+    if (r.dados.atualizadoEm) novaBase(r.dados.atualizadoEm)
     setAviso('Termo do entrevistado guardado.')
   }
 
@@ -147,6 +163,16 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe 
       )}
       {ep.status === 'revisao' && !moderador && (
         <p className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">Enviado. Agora é com o monitor: ele ouve, lê e responde aqui. Enquanto isso, o episódio fica travado para edição.</p>
+      )}
+      {conflito && (
+        <div className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-semibold">Este episódio mudou desde a última vez que você escreveu aqui.</p>
+          <p className="mt-1">O texto que você não chegou a salvar neste aparelho está guardado. Quer usar ele no lugar do que está no servidor?</p>
+          <div className="flex gap-3 mt-3">
+            <button type="button" className={BOTAO_LEVE} disabled={bloqueado} onClick={() => { setForm(conflito); setSujo(true); guardarLocal(conflito, ep.atualizadoEm); setConflito(null); setRecuperado(true) }}>Usar meu texto</button>
+            <button type="button" className="text-sm text-gray-600 hover:underline" onClick={() => { try { localStorage.removeItem(chaveRascunho) } catch { /* ok */ } setConflito(null) }}>Descartar meu texto</button>
+          </div>
+        </div>
       )}
       {recuperado && (
         <p className="rounded-xl border border-blue-200 bg-blue-50 p-3 text-sm text-blue-900">Recuperei o que você tinha escrito e não chegou a salvar. Confira e clique em Salvar.</p>

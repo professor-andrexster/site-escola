@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { buscarMembro, registrarAutorizacao } from '@/lib/podcast/dados'
 import { gravarDocumento } from '@/lib/podcast/arquivos'
 import { erro, exigirModerador } from '@/lib/podcast/api'
@@ -21,8 +22,9 @@ export async function POST(request: Request, { params }: Ctx) {
   })
   if ('erro' in g) return erro(g.erro)
   try {
-    await registrarAutorizacao(id, g.caminho)
-    return NextResponse.json({ ok: true })
+    const retirados = await registrarAutorizacao(id, g.caminho)
+    if (retirados > 0) revalidatePath('/', 'layout')
+    return NextResponse.json({ ok: true, retirados })
   } catch (e) {
     console.error('[podcast/autorizacao]', e)
     return erro('O arquivo subiu, mas não consegui registrar. Tente de novo.', 500)

@@ -3,17 +3,16 @@ import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
 import {
   atualizarEpisodio, buscarEpisodio, listarMembros, mudarStatus, participantesSemAutorizacao,
-  publicarEpisodio, removerEpisodio, retirarEpisodio, type CamposEpisodio,
+  PendenciaDeAutorizacao, publicarEpisodio, removerEpisodio, retirarEpisodio, type CamposEpisodio,
 } from '@/lib/podcast/dados'
 import { erro, exigirAcesso, participa, podeEditar, texto } from '@/lib/podcast/api'
 import { QUADROS, type Episodio } from '@/lib/podcast/tipos'
 
 interface Ctx { params: Promise<{ id: string }> }
 
-function revalidar(ep: Episodio) {
-  revalidatePath('/podcast')
-  revalidatePath(`/podcast/${ep.slug}`)
-  revalidatePath('/noticias')
+/** Podcast, episodio, JBInforma (lista e noticia) e home: tudo que pode mostrar o episodio. */
+function revalidar(_ep: Episodio) {
+  revalidatePath('/', 'layout')
 }
 
 /** O que falta para o episódio ir ao ar. Vazio = pode. */
@@ -67,8 +66,27 @@ export async function PATCH(request: Request, { params }: Ctx) {
       }
       await atualizarEpisodio(id, campos)
       ep = (await buscarEpisodio(id))!
-      // Monitor corrigiu um episodio que ja esta no ar: a noticia acompanha.
-      if (ep.status === 'publicado' && a.moderador) await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
+      // Monitor corrigiu um episodio que ja esta no ar: confere de novo e a noticia acompanha.
+      if (ep.status === 'publicado') {
+        const falta = await pendencias(ep)
+        if (falta.length) {
+          await retirarEpisodio(ep, `Saiu do ar na edição: ${falta.join(' ')}`)
+          revalidar(ep)
+          return erro(`Salvei, mas o episódio saiu do ar porque ficou faltando: ${falta.join(' ')}`, 409)
+        }
+        try {
+          await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
+          revalidar(ep)
+        } catch (e) {
+          if (e instanceof PendenciaDeAutorizacao) {
+            await retirarEpisodio(ep, `Saiu do ar na edição: ${e.message}`)
+            revalidar(ep)
+            return erro(`Salvei, mas o episódio saiu do ar: ${e.message}`, 409)
+          }
+          console.error('[podcast/episodios/id] republicar', e)
+          return erro('Salvei o episódio, mas não consegui atualizar a notícia do JBInforma. Clique em Salvar de novo.', 500)
+        }
+      }
     }
 
     // 2) acao
@@ -83,7 +101,12 @@ export async function PATCH(request: Request, { params }: Ctx) {
       if (!a.moderador) return erro('Só o monitor publica.', 403)
       const falta = await pendencias(ep)
       if (falta.length) return erro(`Não dá para publicar ainda: ${falta.join(' ')}`)
-      await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
+      try {
+        await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
+      } catch (e) {
+        if (e instanceof PendenciaDeAutorizacao) return erro(`Não dá para publicar ainda: ${e.message}`)
+        throw e
+      }
     } else if (acao === 'ajustar') {
       if (!a.moderador) return erro('Só o monitor devolve.', 403)
       const fb = texto(b.feedback, 2000)
@@ -95,6 +118,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
       await retirarEpisodio(ep, texto(b.motivo, 500))
     } else if (acao === 'rascunho') {
       if (!a.moderador) return erro('Sem permissão.', 403)
+      if (ep.status === 'publicado') await retirarEpisodio(ep, 'Voltou para rascunho.')
       await mudarStatus(id, 'rascunho')
     } else if (acao !== undefined) {
       return erro('Ação desconhecida.')
@@ -105,7 +129,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
     return NextResponse.json({ ok: true, episodio: final })
   } catch (e) {
     console.error('[podcast/episodios/id]', e)
-    return erro('Não consegui salvar. O que você escreveu continua na tela, tente de novo.', 500)
+    return erro('Não consegui salvar. Tente de novo.', 500)
   }
 }
 
@@ -123,5 +147,6 @@ export async function DELETE(_request: Request, { params }: Ctx) {
   if (!(r.acesso.moderador || ep.autorId === r.acesso.userId)) return erro('Sem permissão.', 403)
   if (ep.status !== 'rascunho' && ep.status !== 'ajustar') return erro('Só rascunho pode ser apagado.', 409)
   await removerEpisodio(id)
+  revalidar(ep)
   return NextResponse.json({ ok: true })
 }
