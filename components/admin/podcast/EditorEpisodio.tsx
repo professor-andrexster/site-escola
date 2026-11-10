@@ -105,6 +105,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
   async function salvar(acao?: string, extra: Record<string, unknown> = {}): Promise<boolean> {
     setOcupado(true); setErro(''); setAviso('')
     const corpo: Record<string, unknown> = { ...extra }
+    const enviado = JSON.stringify(form)
     if (podeEditar && sujo) Object.assign(corpo, { ...form, quadro: form.quadro || null, categoria: form.categoria || null })
     if (acao) corpo.acao = acao
     const r = await chamar(`/api/podcast/episodios/${ep.id}`, json('PATCH', corpo))
@@ -122,8 +123,15 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
       return false
     }
     const novo = r.dados.episodio as Episodio
-    setEp(novo); setForm(doEpisodio(novo)); setSujo(false); setRecuperado(false); setConflito(null); setFeedback('')
-    try { localStorage.removeItem(chaveRascunho) } catch { /* ok */ }
+    setEp(novo); setRecuperado(false); setConflito(null); setFeedback('')
+    if (JSON.stringify(formRef.current) !== enviado) {
+      // Digitou enquanto salvava: o que foi digitado fica, e continua "não salvo" sobre a versão nova.
+      guardarLocal(formRef.current, novo.atualizadoEm)
+      setSujo(true)
+    } else {
+      setForm(doEpisodio(novo)); setSujo(false)
+      try { localStorage.removeItem(chaveRascunho) } catch { /* ok */ }
+    }
     router.refresh()
     return true
   }

@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import {
   atualizarEpisodio, buscarEpisodio, listarMembros, mudarStatus, participantesSemAutorizacao,
-  PendenciaDeAutorizacao, publicarEpisodio, quadroValido, removerEpisodio, retirarEpisodio, type CamposEpisodio,
+  paraAluno, PendenciaDeAutorizacao, publicarEpisodio, quadroValido, removerEpisodio, retirarEpisodio, type CamposEpisodio,
 } from '@/lib/podcast/dados'
 import { erro, exigirAcesso, participa, podeAudio, podeEditar, texto } from '@/lib/podcast/api'
 import { auditar } from '@/lib/podcast/auditoria'
@@ -44,7 +44,8 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const a = r.acesso
   const { id } = await params
   let ep = await buscarEpisodio(id)
-  if (!ep) return erro('Episódio não encontrado.', 404)
+  // Quem nao e da equipe do episodio nem moderador nao sabe nem que ele existe.
+  if (!ep || !(a.moderador || participa(ep, a.userId))) return erro('Episódio não encontrado.', 404)
   const b = (await request.json().catch(() => ({}))) as Record<string, unknown>
 
   // 1) campos
@@ -65,12 +66,14 @@ export async function PATCH(request: Request, { params }: Ctx) {
   if (b.texto !== undefined) campos.texto = typeof b.texto === 'string' && b.texto.trim() ? b.texto.slice(0, 20000) : null
   if (b.entrevistadoNome !== undefined) campos.entrevistadoNome = texto(b.entrevistadoNome, 120)
   if (b.entrevistadoDescricao !== undefined) campos.entrevistadoDescricao = texto(b.entrevistadoDescricao, 200)
-  if (b.categoria !== undefined) campos.categoria = typeof b.categoria === 'string' && b.categoria in CATEGORIAS && b.categoria !== 'podcast' ? b.categoria : null
+  if (b.categoria !== undefined) campos.categoria = typeof b.categoria === 'string' && Object.prototype.hasOwnProperty.call(CATEGORIAS, b.categoria) && b.categoria !== 'podcast' ? b.categoria : null
   if (b.noJbinforma !== undefined) campos.noJbinforma = b.noJbinforma === true
   if (Array.isArray(b.participantes)) {
     const equipe = new Set((await listarMembros()).map(m => m.userId))
     campos.participantes = (b.participantes as unknown[]).filter((x): x is string => typeof x === 'string' && equipe.has(x)).slice(0, 12)
   }
+
+  if (Object.keys(campos).length === 0 && b.acao === undefined) return erro('Nada para salvar.')
 
   try {
     if (Object.keys(campos).length > 0) {
@@ -154,7 +157,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
       })
     }
     if (acao || final.status === 'publicado') revalidar(final)
-    return NextResponse.json({ ok: true, episodio: final })
+    return NextResponse.json({ ok: true, episodio: a.moderador ? final : paraAluno(final) })
   } catch (e) {
     console.error('[podcast/episodios/id]', e)
     return erro('Não consegui salvar. Tente de novo.', 500)

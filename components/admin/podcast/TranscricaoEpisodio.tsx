@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Captions, Eye, EyeOff, RefreshCw, Save, Sparkles } from 'lucide-react'
 import { BOTAO, BOTAO_LEVE, CAMPO, chamar, json } from './comum'
@@ -28,8 +28,13 @@ export default function TranscricaoEpisodio({ episodioId, publicado, temAudio, s
   const [erro, setErro] = useState('')
   const [aviso, setAviso] = useState('')
 
-  // Texto novo do servidor (a IA terminou): entra, a não ser que o monitor esteja no meio de uma edição.
-  useEffect(() => { if (!sujo) setValor(texto ?? '') }, [texto, sujo])
+  // Texto novo do servidor (a IA terminou): entra só quando o texto do servidor muda,
+  // e nunca por cima de uma edição em andamento.
+  const sujoRef = useRef(sujo)
+  sujoRef.current = sujo
+  const valorRef = useRef(valor)
+  valorRef.current = valor
+  useEffect(() => { if (!sujoRef.current) setValor(texto ?? '') }, [texto])
 
   // Enquanto gera, confere a cada 6 s.
   useEffect(() => {
@@ -51,10 +56,12 @@ export default function TranscricaoEpisodio({ episodioId, publicado, temAudio, s
 
   async function salvar(extra: { publica?: boolean } = {}) {
     setOcupado(true); setErro(''); setAviso('')
-    const r = await chamar(url, json('PUT', { ...(sujo ? { texto: valor } : {}), ...extra }))
+    const enviado = valor
+    const r = await chamar(url, json('PUT', { ...(sujo ? { texto: enviado } : {}), ...extra }))
     setOcupado(false)
     if (!r.ok) { setErro(`${r.erro}${sujo ? ' O texto continua aqui.' : ''}`); return }
-    setSujo(false)
+    // Digitou enquanto salvava: continua "não salvo".
+    setSujo(valorRef.current !== enviado)
     setAviso(extra.publica === true ? 'A transcrição agora aparece na página do episódio.' : extra.publica === false ? 'A transcrição saiu do site.' : 'Transcrição salva.')
     router.refresh()
   }
@@ -76,7 +83,7 @@ export default function TranscricaoEpisodio({ episodioId, publicado, temAudio, s
       </div>
       {status === 'erro' && erroIa && <p className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-3">{erroIa}</p>}
 
-      <textarea value={valor} onChange={e => { setValor(e.target.value); setSujo(true); setAviso('') }} rows={10} className={CAMPO}
+      <textarea value={valor} onChange={e => { setValor(e.target.value); setSujo(true); setAviso('') }} rows={10} className={CAMPO} disabled={status === 'gerando'}
         placeholder="A transcrição aparece aqui. Leia ouvindo o áudio e corrija nomes e trechos errados antes de mostrar no site." />
 
       <div className="flex flex-wrap gap-2">

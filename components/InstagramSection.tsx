@@ -71,6 +71,7 @@ export default async function InstagramSection() {
             >
               <Image
                 src={noticia.imagem_url!}
+                unoptimized={noticia.imagem_url!.startsWith('/api/podcast/capa/')}
                 alt={noticia.titulo}
                 fill
                 sizes="(max-width: 768px) 33vw, 16vw"

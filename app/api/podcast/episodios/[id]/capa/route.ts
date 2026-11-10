@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { buscarEpisodio, definirCapa } from '@/lib/podcast/dados'
-import { gravarCapa } from '@/lib/podcast/arquivos'
+import { apagarPrivado, gravarCapa } from '@/lib/podcast/arquivos'
 import { erro, exigirAcesso, podeEditar } from '@/lib/podcast/api'
 import { auditar } from '@/lib/podcast/auditoria'
 
@@ -31,6 +31,7 @@ export async function POST(request: Request, { params }: Ctx) {
     return NextResponse.json({ ok: true, capaUrl: novo?.capaUrl ?? null, atualizadoEm: linha.atualizado_em.toISOString() })
   } catch (e) {
     console.error('[podcast/capa]', e)
+    await apagarPrivado(g.caminho)
     return erro('A imagem subiu, mas não consegui ligar ao episódio. Tente de novo.', 500)
   }
 }

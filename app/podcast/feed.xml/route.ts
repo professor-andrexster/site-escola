@@ -1,5 +1,8 @@
 import { episodiosPublicados } from '@/lib/podcast/dados'
-import { NOME_PODCAST, esc, nomePublico } from '@/lib/podcast/tipos'
+import { NOME_PODCAST, esc as escHtml, nomePublico } from '@/lib/podcast/tipos'
+
+/** Escapa para XML e tira caractere de controle, que invalidaria o feed inteiro. */
+const esc = (s: string) => escHtml(s.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\uFFFE\uFFFF]/g, ''))
 
 /**
  * Feed RSS do podcast (RSS 2.0 + tags do iTunes), para aplicativos de podcast.

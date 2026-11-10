@@ -351,7 +351,7 @@ async function montarEpisodios(linhas: LinhaEpisodio[], db: Tx = prisma): Promis
     categoria: l.categoria,
     transcricao: l.transcricao,
     // 'gerando' ha mais de 5 min: o processo morreu (deploy, queda). Vira erro para poder tentar de novo.
-    transcricaoStatus: l.transcricao_status === 'gerando' && l.transcricao_em && Date.now() - l.transcricao_em.getTime() > 5 * 60_000
+    transcricaoStatus: l.transcricao_status === 'gerando' && l.transcricao_em && Date.now() - l.transcricao_em.getTime() > 9 * 60_000
       ? 'erro'
       : (['gerando', 'pronta', 'erro'].includes(l.transcricao_status ?? '') ? (l.transcricao_status as 'gerando' | 'pronta' | 'erro') : null),
     transcricaoErro: l.transcricao_status === 'gerando' ? 'A transcrição parou no meio. Tente de novo.' : l.transcricao_erro,
@@ -492,7 +492,8 @@ export async function atualizarEpisodio(id: string, c: CamposEpisodio, emTx?: Tx
 /** Troca o audio (caminho na pasta privada) e apaga o arquivo anterior. */
 export async function definirAudio(id: string, caminho: string | null, bytes: number | null) {
   const antes = await prisma.podcast_episodios.findUnique({ where: { id }, select: { audio_url: true } })
-  const r = await prisma.podcast_episodios.update({ where: { id }, data: { audio_url: caminho, audio_bytes: bytes, atualizado_em: new Date() } })
+  // Audio trocado: a transcricao antiga pode ter trecho que foi cortado. Sai do site ate o monitor revisar de novo.
+  const r = await prisma.podcast_episodios.update({ where: { id }, data: { audio_url: caminho, audio_bytes: bytes, transcricao_publica: false, atualizado_em: new Date() } })
   if (antes?.audio_url && antes.audio_url !== caminho) await apagarPrivado(antes.audio_url)
   return r
 }
@@ -509,6 +510,11 @@ export async function audioDoEpisodio(id: string) {
 export async function definirCapa(id: string, caminho: string | null) {
   const antes = await prisma.podcast_episodios.findUnique({ where: { id }, select: { capa: true } })
   const r = await prisma.podcast_episodios.update({ where: { id }, data: { capa: caminho, atualizado_em: new Date() } })
+  // A noticia do JBInforma mostra a mesma foto: troca ou tira junto.
+  if (r.noticia_id) {
+    const url = caminho ? `/api/podcast/capa/${id}?v=${path.basename(caminho, path.extname(caminho)).slice(-8)}` : null
+    await prisma.noticias.updateMany({ where: { id: r.noticia_id }, data: { imagem_url: url } })
+  }
   if (antes?.capa && antes.capa !== caminho) await apagarPrivado(antes.capa)
   return r
 }
@@ -532,6 +538,8 @@ export async function marcarTranscricao(id: string, d: { status: 'gerando' | 'pr
       transcricao_status: d.status,
       transcricao_erro: d.erro ?? null,
       transcricao_em: new Date(),
+      // Texto novo da IA nunca vai direto ao site: o monitor revisa e liga de novo.
+      ...(d.status === 'gerando' || d.texto !== undefined ? { transcricao_publica: false } : {}),
       ...(d.texto !== undefined ? { transcricao: d.texto } : {}),
     },
   })
@@ -553,6 +561,11 @@ export async function definirTermoEntrevistado(id: string, caminho: string) {
   const r = await prisma.podcast_episodios.update({ where: { id }, data: { termo_entrevistado: caminho, atualizado_em: new Date() } })
   if (antes?.termo_entrevistado && antes.termo_entrevistado !== caminho) await apagarPrivado(antes.termo_entrevistado)
   return r
+}
+
+/** Episodio como o aluno pode ver: sem a transcricao que o monitor ainda nao liberou. */
+export function paraAluno(ep: Episodio): Episodio {
+  return ep.transcricaoPublica ? ep : { ...ep, transcricao: null, transcricaoStatus: null, transcricaoErro: null }
 }
 
 /** Equipe para o editor do episodio: so nome e turma. */
@@ -709,7 +722,9 @@ export async function buscarQuadro(id: string) {
 }
 
 export async function criarQuadro(nome: string, ideia: string | null, por: string): Promise<{ erro: string } | { id: string }> {
-  const chave = slugDe(nome).slice(0, 30).replace(/-+$/, '')
+  let chave = slugDe(nome).slice(0, 30).replace(/-+$/, '')
+  // Nome sem letra nem numero (so emoji) cairia na chave generica "episodio".
+  if (!/[a-z0-9]/i.test(nome.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))) chave = `quadro-${Date.now().toString(36)}`
   if (await prisma.podcast_quadros.findUnique({ where: { chave }, select: { id: true } })) {
     return { erro: 'Já existe um quadro com esse nome (ou muito parecido).' }
   }
@@ -738,6 +753,8 @@ export async function atualizarQuadro(id: string, c: { nome?: string; ideia?: st
 /** Sobe ou desce um quadro na ordem, trocando de lugar com o vizinho. */
 export async function moverQuadro(id: string, direcao: 'cima' | 'baixo') {
   return prisma.$transaction(async tx => {
+    // Trava a tabela inteira (meia duzia de linhas): duas setas ao mesmo tempo esperam uma pela outra.
+    await tx.$queryRaw`SELECT id FROM podcast_quadros ORDER BY id FOR UPDATE`
     const todos = await tx.podcast_quadros.findMany({ orderBy: [{ ordem: 'asc' }, { nome: 'asc' }], select: { id: true } })
     const i = todos.findIndex(q => q.id === id)
     const j = direcao === 'cima' ? i - 1 : i + 1

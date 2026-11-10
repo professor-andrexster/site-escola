@@ -1,6 +1,7 @@
 import { randomBytes } from 'crypto'
 import { mkdir, unlink, writeFile } from 'fs/promises'
 import path from 'path'
+import sharp from 'sharp'
 
 /**
  * Arquivos do podcast. Tudo vai para a pasta PRIVADA (fora de UPLOAD_ROOT),
@@ -82,9 +83,17 @@ export async function gravarCapa(arquivo: File): Promise<{ erro: string } | { ca
   const bytes = new Uint8Array(await arquivo.arrayBuffer())
   const tipo = tipoDeDocumento(bytes)
   if (!tipo || tipo.ext === 'pdf') return { erro: 'Envie uma foto JPG, PNG ou WEBP.' }
-  const nome = `${nomeAleatorio('capa')}.${tipo.ext}`
+  // Regrava a imagem: tira os metadados (foto de celular leva a localizacao no EXIF),
+  // aplica a rotacao e limita o tamanho. O arquivo original nunca vai para o disco.
+  let limpa: Buffer
+  try {
+    limpa = await sharp(bytes).rotate().resize(1600, 1600, { fit: 'inside', withoutEnlargement: true }).jpeg({ quality: 85 }).toBuffer()
+  } catch {
+    return { erro: 'Não consegui ler essa imagem. Tente outra foto.' }
+  }
+  const nome = `${nomeAleatorio('capa')}.jpg`
   await mkdir(path.join(RAIZ_PRIVADA, 'podcast-capas'), { recursive: true })
-  await writeFile(path.join(RAIZ_PRIVADA, 'podcast-capas', nome), bytes)
+  await writeFile(path.join(RAIZ_PRIVADA, 'podcast-capas', nome), limpa)
   return { caminho: `podcast-capas/${nome}` }
 }
 

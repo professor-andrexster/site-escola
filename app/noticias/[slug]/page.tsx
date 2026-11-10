@@ -44,7 +44,7 @@ export default async function NoticiaPage({ params }: Props) {
         </Link>
         {noticia.imagem_url && (
           <div className="relative w-full h-64 md:h-96 rounded-xl overflow-hidden mb-8">
-            <Image src={noticia.imagem_url} alt={noticia.titulo} fill sizes="(max-width: 896px) 100vw, 896px" className="object-cover" priority />
+            <Image src={noticia.imagem_url} unoptimized={noticia.imagem_url.startsWith('/api/podcast/capa/')} alt={noticia.titulo} fill sizes="(max-width: 896px) 100vw, 896px" className="object-cover" priority />
           </div>
         )}
         <time className="text-gray-500 text-sm">{formatDate(noticia.created_at)}</time>

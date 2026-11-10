@@ -1,4 +1,4 @@
-import { readFile } from 'fs/promises'
+import { readFile, stat } from 'fs/promises'
 import { caminhoPrivado, mimeDoAudio } from '@/lib/podcast/arquivos'
 import { caminhoDoAudio, marcarTranscricao } from '@/lib/podcast/dados'
 
@@ -36,9 +36,9 @@ export async function transcreverEmSegundoPlano(episodioId: string) {
     const relativo = await caminhoDoAudio(episodioId)
     const abs = relativo ? caminhoPrivado(relativo) : null
     if (!relativo || !abs) throw new Falha('O episódio não tem áudio.')
-    const bytes = await readFile(abs)
-    if (bytes.length > LIMITE_TRANSCRICAO) throw new Falha('O áudio passa de 14 MB, que é o limite da transcrição automática. Escreva a transcrição à mão ou suba um áudio menor.')
+    if ((await stat(abs)).size > LIMITE_TRANSCRICAO) throw new Falha('O áudio passa de 14 MB, que é o limite da transcrição automática. Escreva a transcrição à mão ou suba um áudio menor.')
 
+    const bytes = await readFile(abs)
     const corpo = JSON.stringify({
       contents: [{ parts: [{ text: PROMPT }, { inline_data: { mime_type: mimeDoAudio(relativo), data: bytes.toString('base64') } }] }],
       generationConfig: { temperature: 0.1 },
@@ -48,8 +48,8 @@ export async function transcreverEmSegundoPlano(episodioId: string) {
     for (const modelo of MODELOS) {
       let res: Response
       try {
-        res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${apiKey}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: corpo, signal: AbortSignal.timeout(150_000),
+        res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey }, body: corpo, signal: AbortSignal.timeout(150_000),
         })
       } catch {
         ultimo = 503

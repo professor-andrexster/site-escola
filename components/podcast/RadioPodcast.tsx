@@ -17,7 +17,12 @@ export default function RadioPodcast({ faixas }: { faixas: Faixa[] }) {
   const [erro, setErro] = useState('')
   const audio = useRef<HTMLAudioElement>(null)
   const contados = useRef(new Set<string>())
-  const atual = faixas[i]
+  const falhas = useRef(0)
+  const pulo = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // A lista pode encolher (episodio tirado do ar): o indice nunca aponta para fora.
+  const atual = faixas[Math.min(i, Math.max(0, faixas.length - 1))]
+
+  useEffect(() => () => { if (pulo.current) clearTimeout(pulo.current) }, [])
 
   // Trocou de faixa com a rádio ligada: toca.
   useEffect(() => {
@@ -27,7 +32,16 @@ export default function RadioPodcast({ faixas }: { faixas: Faixa[] }) {
 
   if (faixas.length === 0) return null
 
-  const ir = (n: number) => { setErro(''); setI((n + faixas.length) % faixas.length) }
+  function ir(n: number) {
+    setErro('')
+    const novo = (n + faixas.length) % faixas.length
+    if (novo === i) {
+      // Um episodio so: o indice nao muda, entao recomeca na mao.
+      if (audio.current) { audio.current.currentTime = 0; audio.current.play().catch(() => {}) }
+      return
+    }
+    setI(novo)
+  }
 
   function alternar() {
     setErro('')
@@ -67,6 +81,7 @@ export default function RadioPodcast({ faixas }: { faixas: Faixa[] }) {
           className="w-full mt-4"
           onPlay={() => {
             setTocando(true)
+            falhas.current = 0
             if (!contados.current.has(atual.id)) {
               contados.current.add(atual.id)
               fetch(`/api/podcast/play/${atual.id}`, { method: 'POST', keepalive: true }).catch(() => {})
@@ -74,7 +89,14 @@ export default function RadioPodcast({ faixas }: { faixas: Faixa[] }) {
           }}
           onPause={() => setTocando(false)}
           onEnded={() => ir(i + 1)}
-          onError={() => { setErro('Este episódio não carregou. Pulando para o próximo.'); if (faixas.length > 1) setTimeout(() => ir(i + 1), 1500) }}
+          onError={() => {
+            falhas.current += 1
+            // Todas falharam em sequencia (sem internet): para, em vez de ficar girando.
+            if (faixas.length < 2 || falhas.current >= faixas.length) { setTocando(false); setErro('Não consegui carregar o áudio. Confira a internet e toque em Tocar.'); return }
+            setErro('Este episódio não carregou. Pulando para o próximo.')
+            if (pulo.current) clearTimeout(pulo.current)
+            pulo.current = setTimeout(() => setI(x => (x + 1) % faixas.length), 1500)
+          }}
         />
       )}
       {erro && <p className="text-sm text-amber-200 mt-2" role="alert">{erro}</p>}

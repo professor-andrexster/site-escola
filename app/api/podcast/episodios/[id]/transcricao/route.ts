@@ -31,6 +31,7 @@ export async function PUT(request: Request, { params }: Ctx) {
   const { id } = await params
   const ep = await buscarEpisodio(id)
   if (!ep) return erro('Episódio não encontrado.', 404)
+  if (ep.transcricaoStatus === 'gerando') return erro('A IA está gerando a transcrição agora. Espere terminar para editar: o que você escreveu continua na tela.', 409)
   const b = (await request.json().catch(() => ({}))) as Record<string, unknown>
   const d: { texto?: string | null; publica?: boolean } = {}
   if (b.texto !== undefined) d.texto = typeof b.texto === 'string' && b.texto.trim() ? b.texto.slice(0, 200_000) : null
