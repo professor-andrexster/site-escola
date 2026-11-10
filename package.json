@@ -11,7 +11,8 @@
     "ui:corrigir": "node scripts/auditar-ui.mjs --corrigir",
     "ui:telas": "node scripts/auditar-telas.mjs",
     "ui:telas:todas": "node scripts/auditar-telas.mjs --todas",
-    "ui:painel": "node scripts/auditar-telas.mjs --painel"
+    "ui:painel": "node scripts/auditar-telas.mjs --painel",
+    "test:suporte": "tsx tests/suporte-assinatura.mjs"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.9.1",

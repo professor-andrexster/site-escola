@@ -2,6 +2,7 @@ import { getProfileOrRedirect } from '@/lib/profile'
 import AdminSidebar from '@/components/admin/AdminSidebar'
 import RolagemAoTopo from '@/components/admin/RolagemAoTopo'
 import MobileAdminHeader from '@/components/admin/MobileAdminHeader'
+import BotaoChamados from '@/components/admin/BotaoChamados'
 
 // Mesmo enquadramento do catálogo de cursos: os módulos são a camada de cima
 // dele, e trocar de tema visual entre as duas telas confundiria o aluno.
@@ -10,6 +11,7 @@ export default async function ModulosLayout({ children }: { children: React.Reac
   return (
     <div className="min-h-screen bg-gray-50 md:flex">
       <AdminSidebar profile={profile} userEmail={user.email} />
+      <BotaoChamados />
       <div className="flex-1 flex flex-col min-w-0">
         <MobileAdminHeader profile={profile} userEmail={user.email} />
         <main className="flex-1 overflow-auto bg-curso-tinta">
