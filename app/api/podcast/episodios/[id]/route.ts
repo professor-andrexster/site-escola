@@ -8,6 +8,8 @@ import {
 } from '@/lib/podcast/dados'
 import { erro, exigirAcesso, participa, podeAudio, podeEditar, texto } from '@/lib/podcast/api'
 import { auditar } from '@/lib/podcast/auditoria'
+import { avisarEquipe, avisarRevisao } from '@/lib/podcast/avisos'
+import { CATEGORIAS } from '@/lib/categorias'
 import type { Episodio } from '@/lib/podcast/tipos'
 
 interface Ctx { params: Promise<{ id: string }> }
@@ -63,6 +65,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
   if (b.texto !== undefined) campos.texto = typeof b.texto === 'string' && b.texto.trim() ? b.texto.slice(0, 20000) : null
   if (b.entrevistadoNome !== undefined) campos.entrevistadoNome = texto(b.entrevistadoNome, 120)
   if (b.entrevistadoDescricao !== undefined) campos.entrevistadoDescricao = texto(b.entrevistadoDescricao, 200)
+  if (b.categoria !== undefined) campos.categoria = typeof b.categoria === 'string' && b.categoria in CATEGORIAS && b.categoria !== 'podcast' ? b.categoria : null
   if (b.noJbinforma !== undefined) campos.noJbinforma = b.noJbinforma === true
   if (Array.isArray(b.participantes)) {
     const equipe = new Set((await listarMembros()).map(m => m.userId))
@@ -139,6 +142,11 @@ export async function PATCH(request: Request, { params }: Ctx) {
     const editou = Object.keys(campos).length > 0
     const acaoAud: Record<string, string> = { enviar: 'episodio.enviado', publicar: 'episodio.publicado', ajustar: 'episodio.devolvido', retirar: 'episodio.retirado', rascunho: 'episodio.rascunho' }
     if (editou) await auditar({ atorId: a.userId, acao: 'episodio.editado', alvoTipo: 'episodio', alvoId: id, alvoNome: final.titulo, detalhe: `campos: ${Object.keys(campos).join(', ')}` })
+    // E-mails saem sem segurar a resposta; falha de e-mail nao desfaz nada.
+    if (acao === 'enviar') void avisarRevisao(final)
+    else if (acao === 'publicar') void avisarEquipe(final, 'publicado')
+    else if (acao === 'ajustar') void avisarEquipe(final, 'devolvido', texto(b.feedback, 600))
+    else if (acao === 'retirar') void avisarEquipe(final, 'retirado', texto(b.motivo, 600))
     if (typeof acao === 'string' && acaoAud[acao]) {
       await auditar({
         atorId: a.userId, acao: acaoAud[acao], alvoTipo: 'episodio', alvoId: id, alvoNome: final.titulo,

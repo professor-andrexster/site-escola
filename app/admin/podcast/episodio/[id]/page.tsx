@@ -6,6 +6,7 @@ import { getProfileOrRedirect } from '@/lib/profile'
 import { acessoDe, buscarEpisodio, listarMembros, listarQuadros, paraEditor } from '@/lib/podcast/dados'
 import { participa, podeAudio, podeEditar } from '@/lib/podcast/api'
 import EditorEpisodio from '@/components/admin/podcast/EditorEpisodio'
+import TranscricaoEpisodio from '@/components/admin/podcast/TranscricaoEpisodio'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -34,6 +35,19 @@ export default async function EpisodioPage({ params }: Props) {
       </Link>
       <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900 mb-4">{ep.titulo}</h1>
       <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} podeAudio={podeAudio(acesso)} quadros={quadros} />
+      {acesso.moderador && (
+        <div className="mt-6">
+          <TranscricaoEpisodio
+            episodioId={ep.id}
+            publicado={ep.status === 'publicado'}
+            temAudio={Boolean(ep.audioUrl)}
+            status={ep.transcricaoStatus}
+            erroIa={ep.transcricaoErro}
+            texto={ep.transcricao}
+            publica={ep.transcricaoPublica}
+          />
+        </div>
+      )}
     </div>
   )
 }

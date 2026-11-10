@@ -3,7 +3,8 @@ import { isGestao } from '@/lib/roles'
 import { papelEAprovacao } from '@/lib/db/perfis'
 import type { Profile } from '@/types/database'
 import { Prisma } from '@prisma/client'
-import { apagarPrivado } from '@/lib/podcast/arquivos'
+import path from 'path'
+import { apagarPrivado, mimeDoAudio } from '@/lib/podcast/arquivos'
 import {
   anoLetivoAtual, esc, mascararCpf, slugDe, textoParaHtml, NOME_PODCAST,
   STATUS_AUTORIZACAO, STATUS_EPISODIO, TIPOS_EPISODIO,
@@ -344,6 +345,18 @@ async function montarEpisodios(linhas: LinhaEpisodio[], db: Tx = prisma): Promis
     // audio_url guarda o caminho na pasta privada; para fora vai a rota que confere quem ouve.
     audioUrl: l.audio_url ? `/api/podcast/audio/${l.id}?v=${l.audio_bytes ?? 0}` : null,
     audioBytes: l.audio_bytes,
+    audioMime: l.audio_url ? mimeDoAudio(l.audio_url) : null,
+    audioExt: l.audio_url ? path.extname(l.audio_url).slice(1) : null,
+    capaUrl: l.capa ? `/api/podcast/capa/${l.id}?v=${path.basename(l.capa, path.extname(l.capa)).slice(-8)}` : null,
+    categoria: l.categoria,
+    transcricao: l.transcricao,
+    // 'gerando' ha mais de 5 min: o processo morreu (deploy, queda). Vira erro para poder tentar de novo.
+    transcricaoStatus: l.transcricao_status === 'gerando' && l.transcricao_em && Date.now() - l.transcricao_em.getTime() > 5 * 60_000
+      ? 'erro'
+      : (['gerando', 'pronta', 'erro'].includes(l.transcricao_status ?? '') ? (l.transcricao_status as 'gerando' | 'pronta' | 'erro') : null),
+    transcricaoErro: l.transcricao_status === 'gerando' ? 'A transcrição parou no meio. Tente de novo.' : l.transcricao_erro,
+    transcricaoPublica: l.transcricao_publica,
+    plays: l.plays,
     status: statusEp(l.status),
     feedback: l.feedback,
     noJbinforma: l.no_jbinforma,
@@ -445,6 +458,7 @@ export interface CamposEpisodio {
   texto?: string | null
   entrevistadoNome?: string | null
   entrevistadoDescricao?: string | null
+  categoria?: string | null
   noJbinforma?: boolean
   participantes?: string[]
 }
@@ -462,6 +476,7 @@ export async function atualizarEpisodio(id: string, c: CamposEpisodio, emTx?: Tx
         ...(c.texto !== undefined ? { texto: c.texto } : {}),
         ...(c.entrevistadoNome !== undefined ? { entrevistado_nome: c.entrevistadoNome } : {}),
         ...(c.entrevistadoDescricao !== undefined ? { entrevistado_descricao: c.entrevistadoDescricao } : {}),
+        ...(c.categoria !== undefined ? { categoria: c.categoria } : {}),
         ...(c.noJbinforma !== undefined ? { no_jbinforma: c.noJbinforma } : {}),
         atualizado_em: new Date(),
       },
@@ -482,11 +497,54 @@ export async function definirAudio(id: string, caminho: string | null, bytes: nu
   return r
 }
 
-/** Para a rota de audio: caminho no disco e quem pode ouvir. */
+/** Para as rotas de audio e capa: caminhos no disco e quem pode abrir. */
 export async function audioDoEpisodio(id: string) {
   return prisma.podcast_episodios.findUnique({
     where: { id },
-    select: { audio_url: true, status: true, autor_id: true, podcast_participantes: { select: { user_id: true } } },
+    select: { audio_url: true, capa: true, status: true, autor_id: true, podcast_participantes: { select: { user_id: true } } },
+  })
+}
+
+/** Troca a foto de capa (caminho na pasta privada) e apaga a anterior. */
+export async function definirCapa(id: string, caminho: string | null) {
+  const antes = await prisma.podcast_episodios.findUnique({ where: { id }, select: { capa: true } })
+  const r = await prisma.podcast_episodios.update({ where: { id }, data: { capa: caminho, atualizado_em: new Date() } })
+  if (antes?.capa && antes.capa !== caminho) await apagarPrivado(antes.capa)
+  return r
+}
+
+/** Conta um play. So episodio publicado. */
+export async function contarPlay(id: string): Promise<boolean> {
+  const r = await prisma.podcast_episodios.updateMany({ where: { id, status: 'publicado' }, data: { plays: { increment: 1 } } })
+  return r.count > 0
+}
+
+// ── Transcricao ─────────────────────────────────────────────────────────────
+
+export async function caminhoDoAudio(id: string) {
+  return (await prisma.podcast_episodios.findUnique({ where: { id }, select: { audio_url: true } }))?.audio_url ?? null
+}
+
+export async function marcarTranscricao(id: string, d: { status: 'gerando' | 'pronta' | 'erro'; texto?: string; erro?: string | null }) {
+  await prisma.podcast_episodios.update({
+    where: { id },
+    data: {
+      transcricao_status: d.status,
+      transcricao_erro: d.erro ?? null,
+      transcricao_em: new Date(),
+      ...(d.texto !== undefined ? { transcricao: d.texto } : {}),
+    },
+  })
+}
+
+/** Monitor corrige o texto e decide se aparece no site. Nao mexe em atualizado_em (nao e conteudo do aluno). */
+export async function salvarTranscricao(id: string, d: { texto?: string | null; publica?: boolean }) {
+  await prisma.podcast_episodios.update({
+    where: { id },
+    data: {
+      ...(d.texto !== undefined ? { transcricao: d.texto, transcricao_status: d.texto ? 'pronta' : null, transcricao_erro: null } : {}),
+      ...(d.publica !== undefined ? { transcricao_publica: d.publica } : {}),
+    },
   })
 }
 
@@ -519,7 +577,7 @@ export async function mudarStatus(id: string, status: StatusEpisodio, feedback?:
 
 /** Apaga o episodio, a noticia (ja despublicada) que ele tenha gerado e o audio. */
 export async function removerEpisodio(id: string) {
-  const ep = await prisma.podcast_episodios.findUnique({ where: { id }, select: { noticia_id: true, audio_url: true, termo_entrevistado: true } })
+  const ep = await prisma.podcast_episodios.findUnique({ where: { id }, select: { noticia_id: true, audio_url: true, capa: true, termo_entrevistado: true } })
   await prisma.$transaction(async tx => {
     await tx.podcast_episodios.delete({ where: { id } })
     // O log da noticia fica (FK ON DELETE SET NULL): registro de quem publicou e quando.
@@ -527,6 +585,7 @@ export async function removerEpisodio(id: string) {
   })
   await apagarPrivado(ep?.audio_url ?? null)
   await apagarPrivado(ep?.termo_entrevistado ?? null)
+  await apagarPrivado(ep?.capa ?? null)
 }
 
 /**
@@ -582,7 +641,7 @@ export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: st
       if (noticiaId && (await tx.noticias.findUnique({ where: { id: noticiaId }, select: { id: true } }))) {
         await tx.noticias.update({
           where: { id: noticiaId },
-          data: { titulo: ep.titulo, resumo, conteudo, publicado: true, categoria: 'podcast', updated_at: new Date() },
+          data: { titulo: ep.titulo, resumo, conteudo, publicado: true, categoria: ep.categoria ?? 'podcast', imagem_url: ep.capaUrl, updated_at: new Date() },
         })
       } else {
         let slug = `podcast-${ep.slug}`
@@ -590,7 +649,7 @@ export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: st
         const n = await tx.noticias.create({
           data: {
             titulo: ep.titulo, slug, resumo, conteudo, publicado: true, destaque_home: false,
-            categoria: 'podcast', imagem_url: null, autor_id: por.id, autor_nome: `${NOME_PODCAST} · ${por.nome}`,
+            categoria: ep.categoria ?? 'podcast', imagem_url: ep.capaUrl, autor_id: por.id, autor_nome: `${NOME_PODCAST} · ${por.nome}`,
           },
           select: { id: true },
         })

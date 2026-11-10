@@ -93,6 +93,18 @@ export interface Episodio {
   temTermoEntrevistado: boolean
   audioUrl: string | null
   audioBytes: number | null
+  /** Tipo do audio (audio/mpeg...) e extensao, para o feed RSS. */
+  audioMime: string | null
+  audioExt: string | null
+  /** Foto de capa (rota que confere quem ve), ou null para a capa desenhada. */
+  capaUrl: string | null
+  /** Categoria da noticia no JBInforma (null = Podcast). */
+  categoria: string | null
+  transcricao: string | null
+  transcricaoStatus: 'gerando' | 'pronta' | 'erro' | null
+  transcricaoErro: string | null
+  transcricaoPublica: boolean
+  plays: number
   status: StatusEpisodio
   feedback: string | null
   noJbinforma: boolean

@@ -254,7 +254,7 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
   secao(p, '5', 'Condições e garantias')
   marcadores(p, [
     'A participação é voluntária e gratuita. Não autorizar não traz nenhum prejuízo ao(à) estudante na escola.',
-    'Todo episódio e toda matéria são revisados por um professor monitor antes de serem publicados.',
+    'Todo episódio e toda matéria são revisados por um professor monitor antes de serem publicados. O áudio já publicado pode ser transcrito por ferramenta automática, para quem não pode ouvir.',
     'É proibido: uso comercial; uso fora da finalidade e dos meios marcados acima; publicação em perfis pessoais de servidores; exposição vexatória ou constrangedora; divulgar endereço, telefone, documentos, localização ou rotina do(a) estudante.',
     'Os dados deste termo (inclusive o CPF do responsável) servem apenas para identificar quem autorizou. Ficam guardados pela escola em local de acesso restrito e nunca são publicados (LGPD).',
     `Validade: ano letivo de ${ano}. Para o ano seguinte, a escola pedirá um novo termo.`,

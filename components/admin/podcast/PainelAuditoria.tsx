@@ -14,7 +14,7 @@ const GRUPOS = [
 
 const COR: Record<string, string> = {
   monitor: 'bg-purple-50 text-purple-800', aluno: 'bg-blue-50 text-blue-800', termo: 'bg-amber-50 text-amber-800',
-  episodio: 'bg-green-50 text-green-800', quadro: 'bg-teal-50 text-teal-800', audio: 'bg-rose-50 text-rose-800', termo_entrevistado: 'bg-amber-50 text-amber-800',
+  episodio: 'bg-green-50 text-green-800', quadro: 'bg-teal-50 text-teal-800', capa: 'bg-rose-50 text-rose-800', transcricao: 'bg-indigo-50 text-indigo-800', audio: 'bg-rose-50 text-rose-800', termo_entrevistado: 'bg-amber-50 text-amber-800',
 }
 
 const quando = (iso: string) =>

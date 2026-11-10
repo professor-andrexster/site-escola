@@ -1072,6 +1072,14 @@ model podcast_episodios {
   termo_entrevistado     String?                 @db.VarChar(300)
   audio_url              String?                 @db.VarChar(300)
   audio_bytes            Int?
+  capa                   String?                 @db.VarChar(300)
+  categoria              String?                 @db.VarChar(20)
+  transcricao            String?                 @db.LongText
+  transcricao_status     String?                 @db.VarChar(10)
+  transcricao_erro       String?                 @db.VarChar(300)
+  transcricao_em         DateTime?               @db.DateTime(3)
+  transcricao_publica    Boolean                 @default(false)
+  plays                  Int                     @default(0)
   status                 String                  @default("rascunho") @db.VarChar(12)
   feedback               String?                 @db.Text
   no_jbinforma           Boolean                 @default(true)

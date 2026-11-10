@@ -101,3 +101,15 @@ INSERT IGNORE INTO `podcast_quadros` (`chave`, `nome`, `ideia`, `ordem`) VALUES
   ('fala-ex-aluno',     'Fala, Ex-aluno',    'Quem estudou aqui conta onde chegou e o que faria diferente.', 4),
   ('debate',            'Na Roda',           'Dois ou três alunos conversam sobre um tema: celular na sala, vestibular, redes sociais.', 5),
   ('cidade',            'Pela Cidade',       'O que acontece em Carlos Chagas e afeta quem estuda aqui.', 6);
+
+-- 2026-11-10 (noite): capa por episodio, categoria da materia no JBInforma,
+-- transcricao automatica e contador de plays.
+ALTER TABLE `podcast_episodios`
+  ADD COLUMN IF NOT EXISTS `capa`                varchar(300) DEFAULT NULL AFTER `audio_bytes`,   -- caminho na pasta PRIVADA
+  ADD COLUMN IF NOT EXISTS `categoria`           varchar(20)  DEFAULT NULL AFTER `quadro`,
+  ADD COLUMN IF NOT EXISTS `transcricao`         longtext     DEFAULT NULL AFTER `texto`,
+  ADD COLUMN IF NOT EXISTS `transcricao_status`  varchar(10)  DEFAULT NULL AFTER `transcricao`,   -- gerando | pronta | erro
+  ADD COLUMN IF NOT EXISTS `transcricao_erro`    varchar(300) DEFAULT NULL AFTER `transcricao_status`,
+  ADD COLUMN IF NOT EXISTS `transcricao_em`      datetime(3)  DEFAULT NULL AFTER `transcricao_erro`,
+  ADD COLUMN IF NOT EXISTS `transcricao_publica` tinyint(1)   NOT NULL DEFAULT 0 AFTER `transcricao_em`,
+  ADD COLUMN IF NOT EXISTS `plays`               int          NOT NULL DEFAULT 0 AFTER `no_jbinforma`;

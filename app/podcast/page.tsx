@@ -3,11 +3,14 @@ import type { Metadata } from 'next'
 import { Headphones, Radio } from 'lucide-react'
 import PageLayout from '@/components/PageLayout'
 import CapaEpisodio from '@/components/podcast/CapaEpisodio'
+import PlayerEpisodio from '@/components/podcast/PlayerEpisodio'
+import RadioPodcast from '@/components/podcast/RadioPodcast'
 import { episodiosPublicados, equipePublica, listarQuadros } from '@/lib/podcast/dados'
 import { NOME_PODCAST, nomePublico } from '@/lib/podcast/tipos'
 import { formatDate } from '@/lib/utils'
 
 export const metadata: Metadata = {
+  alternates: { types: { 'application/rss+xml': '/podcast/feed.xml' } },
   title: `${NOME_PODCAST} · Podcast dos alunos`,
   description: 'O podcast feito pelos alunos da E.E. Dr. João Beraldo: entrevistas, notícias da escola e de Carlos Chagas. Toca na rádio da escola e aqui.',
 }
@@ -18,6 +21,7 @@ export default async function PodcastPublicoPage() {
   const [destaque, ...resto] = episodios
   const alunos = equipe.filter(m => m.papel === 'aluno')
   const monitores = equipe.filter(m => m.papel === 'monitor')
+  const faixas = episodios.filter(e => e.audioUrl).map(e => ({ id: e.id, titulo: e.titulo, quadroNome: e.quadroNome, audioUrl: e.audioUrl! }))
 
   return (
     <PageLayout>
@@ -30,16 +34,17 @@ export default async function PodcastPublicoPage() {
       </div>
 
       <div className="container mx-auto px-4 py-12">
+        <RadioPodcast faixas={faixas} />
         {destaque ? (
           <section className="grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr] items-center mb-16">
-            <CapaEpisodio quadroNome={destaque.quadroNome} tipo={destaque.tipo} grande />
+            <CapaEpisodio quadroNome={destaque.quadroNome} tipo={destaque.tipo} capaUrl={destaque.capaUrl} grande />
             <div className="min-w-0">
               <p className="font-mono text-xs uppercase tracking-widest text-escola-vermelho mb-2">Episódio mais recente · {destaque.publicadoEm ? formatDate(destaque.publicadoEm) : ''}</p>
               <h2 className="font-playfair text-3xl md:text-4xl font-bold text-gray-900 mb-3">
                 <Link href={`/podcast/${destaque.slug}`} className="hover:text-escola-azul transition-colors">{destaque.titulo}</Link>
               </h2>
               {destaque.resumo && <p className="text-lg text-gray-600 mb-5 max-w-[62ch]">{destaque.resumo}</p>}
-              {destaque.audioUrl && <audio controls preload="metadata" src={destaque.audioUrl} className="w-full max-w-xl mb-4" />}
+              {destaque.audioUrl && <PlayerEpisodio id={destaque.id} src={destaque.audioUrl} preload="metadata" className="w-full max-w-xl mb-4" />}
               <p className="text-sm text-gray-500">
                 Com {destaque.participantes.map(p => nomePublico(p.nome, p.turma)).join(' · ')}
                 {destaque.entrevistadoNome ? ` · entrevistando ${destaque.entrevistadoNome}` : ''}
@@ -60,14 +65,14 @@ export default async function PodcastPublicoPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {resto.map(e => (
                 <article key={e.id} className="bg-white border border-escola-cinza-claro overflow-hidden card-lift flex flex-col">
-                  <Link href={`/podcast/${e.slug}`}><CapaEpisodio quadroNome={e.quadroNome} tipo={e.tipo} /></Link>
+                  <Link href={`/podcast/${e.slug}`}><CapaEpisodio quadroNome={e.quadroNome} tipo={e.tipo} capaUrl={e.capaUrl} /></Link>
                   <div className="p-5 flex flex-col flex-1">
                     <p className="font-mono text-[11px] text-escola-cinza mb-1">{e.publicadoEm ? formatDate(e.publicadoEm) : ''}{e.quadroNome ? ` · ${e.quadroNome}` : ''}</p>
                     <h3 className="font-playfair text-lg font-bold text-gray-900 mb-2">
                       <Link href={`/podcast/${e.slug}`} className="hover:text-escola-azul transition-colors">{e.titulo}</Link>
                     </h3>
                     {e.resumo && <p className="text-sm text-gray-600 mb-3 line-clamp-3">{e.resumo}</p>}
-                    {e.audioUrl && <audio controls preload="none" src={e.audioUrl} className="w-full mt-auto" />}
+                    {e.audioUrl && <PlayerEpisodio id={e.id} src={e.audioUrl} className="w-full mt-auto" />}
                   </div>
                 </article>
               ))}
@@ -110,6 +115,9 @@ export default async function PodcastPublicoPage() {
               <p className="text-sm text-gray-500">Monitoria: {monitores.map(m => m.nome).join(', ')}</p>
             )}
             <p className="text-sm text-gray-600 mt-6">Quer entrar na equipe? Fale com um professor monitor do {NOME_PODCAST}.</p>
+            {faixas.length > 0 && (
+              <p className="text-sm text-gray-500 mt-2">Para ouvir em aplicativo de podcast, use o <a href="/podcast/feed.xml" className="text-escola-azul hover:underline">feed RSS</a>.</p>
+            )}
           </div>
         </section>
       </div>

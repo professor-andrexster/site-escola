@@ -73,6 +73,21 @@ export function mimeDoAudio(relativo: string): string {
   return ({ mp3: 'audio/mpeg', m4a: 'audio/mp4', webm: 'audio/webm', ogg: 'audio/ogg', wav: 'audio/wav' } as Record<string, string>)[ext] ?? 'application/octet-stream'
 }
 
+export const LIMITE_CAPA = 8 * MB
+
+/** Foto de capa do episodio: JPG, PNG ou WEBP, conferida pelos bytes. Pasta privada, como o audio. */
+export async function gravarCapa(arquivo: File): Promise<{ erro: string } | { caminho: string }> {
+  if (arquivo.size === 0) return { erro: 'A imagem está vazia.' }
+  if (arquivo.size > LIMITE_CAPA) return { erro: 'A imagem passa de 8 MB. Tire a foto com qualidade menor.' }
+  const bytes = new Uint8Array(await arquivo.arrayBuffer())
+  const tipo = tipoDeDocumento(bytes)
+  if (!tipo || tipo.ext === 'pdf') return { erro: 'Envie uma foto JPG, PNG ou WEBP.' }
+  const nome = `${nomeAleatorio('capa')}.${tipo.ext}`
+  await mkdir(path.join(RAIZ_PRIVADA, 'podcast-capas'), { recursive: true })
+  await writeFile(path.join(RAIZ_PRIVADA, 'podcast-capas', nome), bytes)
+  return { caminho: `podcast-capas/${nome}` }
+}
+
 export type PastaPrivada = 'podcast-autorizacoes' | 'podcast-termos'
 
 export async function gravarDocumento(

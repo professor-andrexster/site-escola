@@ -4,6 +4,7 @@ import ContatoForm from '@/components/ContatoForm'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
 import NewsCard from '@/components/NewsCard'
 import CapaEpisodio from '@/components/podcast/CapaEpisodio'
+import PlayerEpisodio from '@/components/podcast/PlayerEpisodio'
 import { cursosDaHome } from '@/lib/db/cursos'
 import { ultimasPublicadas } from '@/lib/db/noticias'
 import { episodiosPublicados, listarQuadros } from '@/lib/podcast/dados'
@@ -91,7 +92,7 @@ export default async function HomePage() {
           <div className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr] md:gap-14 items-center max-w-5xl mx-auto">
             <AnimateOnScroll>
               <Link href={episodio ? `/podcast/${episodio.slug}` : '/podcast'} className="block max-w-[18rem] mx-auto md:mx-0">
-                <CapaEpisodio quadroNome={episodio ? episodio.quadroNome : 'Feito pelos alunos'} tipo={episodio?.tipo ?? 'entrevista'} grande />
+                <CapaEpisodio quadroNome={episodio ? episodio.quadroNome : 'Feito pelos alunos'} tipo={episodio?.tipo ?? 'entrevista'} capaUrl={episodio?.capaUrl ?? null} grande />
               </Link>
             </AnimateOnScroll>
             <AnimateOnScroll delay={1}>
@@ -108,7 +109,7 @@ export default async function HomePage() {
                       <Link href={`/podcast/${episodio.slug}`} className="hover:text-escola-vermelho transition-colors">{episodio.titulo}</Link>
                     </h3>
                     {episodio.resumo && <p className="font-serif text-escola-cinza leading-relaxed mb-4 max-w-[62ch]">{episodio.resumo}</p>}
-                    {episodio.audioUrl && <audio controls preload="none" src={episodio.audioUrl} className="w-full max-w-xl mb-4" />}
+                    {episodio.audioUrl && <PlayerEpisodio id={episodio.id} src={episodio.audioUrl} className="w-full max-w-xl mb-4" />}
                     <p className="font-serif text-sm text-escola-cinza mb-5">Com {episodio.participantes.map(p => nomePublico(p.nome, p.turma)).join(' · ')}</p>
                   </>
                 ) : (

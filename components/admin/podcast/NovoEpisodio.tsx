@@ -33,7 +33,7 @@ export default function NovoEpisodio({ podeAudio = true, quadros }: { podeAudio?
       <div className="grid grid-cols-2 gap-3 mb-4 max-w-md">
         {([
           ['entrevista', 'Entrevista', 'Tem áudio. Você conversa com alguém.', Mic],
-          ['materia', 'Matéria', 'Texto para o JBInforma. Áudio é opcional.', Newspaper],
+          ['materia', 'Matéria do jornal', 'Notícia escrita para o JBInforma. Áudio é opcional.', Newspaper],
         ] as const).filter(([valor]) => podeAudio || valor === 'materia').map(([valor, rotulo, desc, Icone]) => (
           <button key={valor} type="button" onClick={() => setTipo(valor)}
             className={`text-left rounded-xl border p-3 transition-colors ${tipo === valor ? 'border-escola-azul bg-blue-50' : 'border-gray-200 bg-white hover:border-gray-300'}`}>

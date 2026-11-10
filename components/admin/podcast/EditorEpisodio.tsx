@@ -2,7 +2,9 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { AlertTriangle, CheckCircle2, Download, ExternalLink, Eye, FileUp, Radio, Save, Send, Trash2, Undo2 } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, Download, ExternalLink, Eye, FileUp, Headphones, ImagePlus, Radio, Save, Send, Trash2, Undo2 } from 'lucide-react'
+import { CATEGORIAS } from '@/lib/categorias'
+import CapaEpisodio from '@/components/podcast/CapaEpisodio'
 import {
   ROTULO_EPISODIO, tamanhoLegivel,
   type Episodio, type PessoaEquipe, type QuadroOpcao,
@@ -23,12 +25,12 @@ interface Props {
 }
 
 type Form = {
-  titulo: string; tipo: 'entrevista' | 'materia'; quadro: string; resumo: string; texto: string
+  titulo: string; tipo: 'entrevista' | 'materia'; quadro: string; categoria: string; resumo: string; texto: string
   entrevistadoNome: string; entrevistadoDescricao: string; noJbinforma: boolean; participantes: string[]
 }
 
 const doEpisodio = (e: Episodio): Form => ({
-  titulo: e.titulo, tipo: e.tipo, quadro: e.quadro ?? '', resumo: e.resumo ?? '', texto: e.texto ?? '',
+  titulo: e.titulo, tipo: e.tipo, quadro: e.quadro ?? '', categoria: e.categoria ?? '', resumo: e.resumo ?? '', texto: e.texto ?? '',
   entrevistadoNome: e.entrevistadoNome ?? '', entrevistadoDescricao: e.entrevistadoDescricao ?? '',
   noJbinforma: e.noJbinforma, participantes: e.participantes.map(p => p.userId),
 })
@@ -54,6 +56,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
   const [aviso, setAviso] = useState('')
   const [feedback, setFeedback] = useState('')
   const [termo, setTermo] = useState<File | null>(null)
+  const [capa, setCapa] = useState<File | null>(null)
   const [confirmarApagar, setConfirmarApagar] = useState(false)
   const [recuperado, setRecuperado] = useState(false)
   // Rascunho local feito sobre uma versão que mudou no servidor. Nunca apagado sem o usuário decidir.
@@ -102,7 +105,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
   async function salvar(acao?: string, extra: Record<string, unknown> = {}): Promise<boolean> {
     setOcupado(true); setErro(''); setAviso('')
     const corpo: Record<string, unknown> = { ...extra }
-    if (podeEditar && sujo) Object.assign(corpo, { ...form, quadro: form.quadro || null })
+    if (podeEditar && sujo) Object.assign(corpo, { ...form, quadro: form.quadro || null, categoria: form.categoria || null })
     if (acao) corpo.acao = acao
     const r = await chamar(`/api/podcast/episodios/${ep.id}`, json('PATCH', corpo))
     setOcupado(false)
@@ -133,6 +136,29 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
     setEp(e => ({ ...e, audioUrl: r.dados.audioUrl, audioBytes: r.dados.audioBytes }))
     if (r.dados.atualizadoEm) novaBase(r.dados.atualizadoEm)
     return null
+  }
+
+  async function subirCapa() {
+    if (!capa) return
+    setOcupado(true); setErro(''); setAviso('')
+    const fd = new FormData()
+    fd.append('arquivo', capa)
+    const r = await chamar(`/api/podcast/episodios/${ep.id}/capa`, { method: 'POST', body: fd })
+    setOcupado(false)
+    if (!r.ok) { setErro(`${r.erro} A imagem continua selecionada.`); return }
+    setCapa(null)
+    setEp(e => ({ ...e, capaUrl: r.dados.capaUrl }))
+    if (r.dados.atualizadoEm) novaBase(r.dados.atualizadoEm)
+    setAviso('Capa salva.')
+  }
+
+  async function tirarCapa() {
+    setOcupado(true); setErro(''); setAviso('')
+    const r = await chamar(`/api/podcast/episodios/${ep.id}/capa`, { method: 'DELETE' })
+    setOcupado(false)
+    if (!r.ok) { setErro(r.erro); return }
+    setEp(e => ({ ...e, capaUrl: null }))
+    if (r.dados.atualizadoEm) novaBase(r.dados.atualizadoEm)
   }
 
   async function subirTermo() {
@@ -169,6 +195,9 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
           <a href={`/podcast/${ep.slug}`} target="_blank" rel="noopener noreferrer" className="text-sm text-escola-azul hover:underline inline-flex items-center gap-1">
             Ver no site <ExternalLink className="w-3.5 h-3.5" />
           </a>
+        )}
+        {(ep.status === 'publicado' || ep.plays > 0) && (
+          <span className="text-sm text-gray-500 inline-flex items-center gap-1"><Headphones className="w-4 h-4" /> {ep.plays} play{ep.plays === 1 ? '' : 's'}</span>
         )}
       </div>
 
@@ -263,10 +292,21 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
           <p className="text-xs text-gray-500 mt-1">Só aparece quem tem autorização aceita. Se alguém falou no áudio, marque aqui.</p>
         </fieldset>
 
-        <label className="flex items-center gap-2 text-sm text-gray-700">
-          <input type="checkbox" checked={form.noJbinforma} disabled={bloqueado} onChange={e => mudar('noJbinforma', e.target.checked)} />
-          Publicar também como notícia no JBInforma
-        </label>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <label className="flex items-center gap-2 text-sm text-gray-700">
+            <input type="checkbox" checked={form.noJbinforma} disabled={bloqueado} onChange={e => mudar('noJbinforma', e.target.checked)} />
+            Publicar também como notícia no JBInforma
+          </label>
+          {form.noJbinforma && (
+            <label className="flex items-center gap-2 text-sm text-gray-700">
+              <span className="text-xs font-semibold text-gray-600">Seção do jornal</span>
+              <select value={form.categoria} onChange={e => mudar('categoria', e.target.value)} disabled={bloqueado} className="border border-gray-200 rounded-lg px-2 py-1.5 text-sm bg-white">
+                <option value="">Podcast</option>
+                {Object.entries(CATEGORIAS).filter(([k]) => k !== 'podcast').map(([k, c]) => <option key={k} value={k}>{c.label}</option>)}
+              </select>
+            </label>
+          )}
+        </div>
 
         {podeEditar && (
           <div className="flex flex-wrap items-center gap-3 pt-2">
@@ -276,6 +316,29 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
             )}
           </div>
         )}
+      </section>
+
+      <section className="panel p-6">
+        <h2 className="font-geom text-lg font-bold text-gray-900 flex items-center gap-2 mb-3"><ImagePlus className="w-5 h-5 text-escola-azul" /> Capa</h2>
+        <div className="grid gap-5 sm:grid-cols-[11rem_1fr] items-start">
+          <CapaEpisodio quadroNome={quadro?.nome ?? ep.quadroNome} tipo={form.tipo} capaUrl={ep.capaUrl} grande />
+          <div className="min-w-0 space-y-3">
+            <p className="text-sm text-gray-500">
+              Sem foto, o episódio usa esta capa desenhada. Com foto, ela vira a capa no podcast e a imagem da notícia no JBInforma.
+            </p>
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-lg p-2">
+              Só use foto de quem marcou <strong>Fotografia</strong> no termo (aluno ou entrevistado). Na dúvida, use foto de objeto ou do lugar, sem rosto.
+            </p>
+            {podeEditar && (
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                <input type="file" accept="image/jpeg,image/png,image/webp" onChange={e => setCapa(e.target.files?.[0] ?? null)}
+                  className="text-sm text-gray-600 min-w-0 file:mr-2 file:rounded-md file:border-0 file:bg-blue-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-escola-azul" />
+                <button type="button" onClick={subirCapa} disabled={ocupado || !capa} className={BOTAO_LEVE}><FileUp className="w-4 h-4" /> {ep.capaUrl ? 'Trocar foto' : 'Usar esta foto'}</button>
+                {ep.capaUrl && <button type="button" onClick={tirarCapa} disabled={ocupado} className="text-xs text-gray-500 hover:text-red-600 px-2">Tirar a foto</button>}
+              </div>
+            )}
+          </div>
+        </div>
       </section>
 
       <section className="panel p-6 space-y-4">

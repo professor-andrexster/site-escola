@@ -103,3 +103,16 @@ export async function enviarRedefinicaoDeSenhaPorEmail(params: { email: string; 
     )
   )
 }
+
+/**
+ * Aviso do podcast (episodio para revisar, publicado ou devolvido).
+ * `titulo` e `corpo` chegam ja escapados por quem chama.
+ */
+export async function enviarAvisoDoPodcast(params: { email: string; assunto: string; titulo: string; corpo: string; link: string; botao: string }) {
+  await enviar(
+    params.email,
+    params.assunto,
+    moldura(params.titulo, params.corpo, { link: params.link, texto: params.botao },
+      'Você recebeu este aviso porque faz parte da equipe do podcast JB no Ar, da E.E. Dr. João Beraldo.')
+  )
+}

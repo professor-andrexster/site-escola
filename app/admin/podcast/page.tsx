@@ -33,7 +33,7 @@ function ListaEpisodios({ eps, vazio }: { eps: Episodio[]; vazio: string }) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{e.titulo}</p>
               <p className="text-xs text-gray-500 truncate">
-                {[e.quadroNome, `por ${e.autorNome.split(' ')[0]}`, e.audioUrl ? 'com áudio' : 'sem áudio'].filter(Boolean).join(' · ')}
+                {[e.quadroNome, `por ${e.autorNome.split(' ')[0]}`, e.audioUrl ? 'com áudio' : 'sem áudio', e.status === 'publicado' ? `${e.plays} play${e.plays === 1 ? '' : 's'}` : null].filter(Boolean).join(' · ')}
               </p>
             </div>
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${COR[e.status]}`}>{ROTULO_EPISODIO[e.status]}</span>
@@ -222,6 +222,19 @@ export default async function PodcastPage({ searchParams }: Props) {
             <p className="text-xs text-gray-500 mt-2">Situação: {m.vencida ? 'autorização vencida' : ROTULO_AUTORIZACAO[m.autorizacaoStatus]}</p>
           </section>
         )}
+        {eps.filter(e => e.status === 'ajustar').map(e => (
+          <Link key={e.id} href={`/admin/podcast/episodio/${e.id}`} className="block panel p-4 mb-4 border-l-4 border-red-400 hover:bg-red-50/40">
+            <p className="text-sm font-semibold text-gray-900">O monitor pediu um ajuste em &quot;{e.titulo}&quot;</p>
+            {e.feedback && <p className="text-sm text-gray-600 mt-1 line-clamp-2">{e.feedback}</p>}
+            <p className="text-xs text-escola-azul mt-1">Abrir e ajustar →</p>
+          </Link>
+        ))}
+        {eps.filter(e => e.status === 'publicado' && e.publicadoEm && Date.now() - new Date(e.publicadoEm).getTime() < 7 * 86400_000).map(e => (
+          <Link key={e.id} href={`/podcast/${e.slug}`} target="_blank" className="block panel p-4 mb-4 border-l-4 border-green-500 hover:bg-green-50/40">
+            <p className="text-sm font-semibold text-gray-900">&quot;{e.titulo}&quot; está no ar!</p>
+            <p className="text-xs text-gray-600 mt-1">{e.plays} play{e.plays === 1 ? '' : 's'} até agora · Ver no site →</p>
+          </Link>
+        ))}
         {m.podeCriar && <NovoEpisodio podeAudio={m.podeAudio} quadros={quadrosAtivos.map(q => ({ chave: q.chave, nome: q.nome, ideia: q.ideia }))} />}
         <section>
           <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Meus episódios</h2>
