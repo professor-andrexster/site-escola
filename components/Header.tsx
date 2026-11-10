@@ -40,7 +40,7 @@ function formatDate() {
 
 export default function Header() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [emtiOpen, setEmtiOpen] = useState(false)
+  const [submenuAberto, setSubmenuAberto] = useState<string | null>(null)
   const [alunoOpen, setAlunoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
@@ -162,10 +162,10 @@ export default function Header() {
             {navItems.map((item) => {
               if (item.children) {
                 return (
-                  <div key="emti" className="relative group">
+                  <div key={item.label} className="relative group">
                     <button className={cn(
                       'flex items-center gap-1 px-4 py-3 text-sm font-mono uppercase tracking-wider transition-all duration-200',
-                      pathname.startsWith('/emti')
+                      item.children.some(c => pathname.startsWith(c.href))
                         ? 'text-white bg-escola-vermelho'
                         : 'text-white/80 hover:text-white hover:bg-white/10'
                     )}>
@@ -225,15 +225,15 @@ export default function Header() {
           {navItems.map((item) => {
             if (item.children) {
               return (
-                <div key="emti-mobile">
+                <div key={`${item.label}-mobile`}>
                   <button
-                    onClick={() => setEmtiOpen(!emtiOpen)}
+                    onClick={() => setSubmenuAberto(submenuAberto === item.label ? null : item.label)}
                     className="w-full flex items-center justify-between px-5 py-3.5 text-sm font-mono uppercase tracking-wider text-white/80 border-b border-white/10 hover:bg-white/10"
                   >
                     {item.label}
-                    <ChevronDown className={cn('w-3 h-3 transition-transform', emtiOpen && 'rotate-180')} />
+                    <ChevronDown className={cn('w-3 h-3 transition-transform', submenuAberto === item.label && 'rotate-180')} />
                   </button>
-                  {emtiOpen && (
+                  {submenuAberto === item.label && (
                     <div className="bg-escola-azul/80">
                       {item.children.map((child) => (
                         <Link

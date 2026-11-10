@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { revalidatePath } from 'next/cache'
 import { aceitarAutorizacao, atualizarResponsavel, buscarMembro, removerMembro, revogarAutorizacao } from '@/lib/podcast/dados'
 import { erro, exigirAcesso, exigirModerador, texto } from '@/lib/podcast/api'
 import { cpfValido, digitos } from '@/lib/podcast/tipos'
@@ -22,6 +23,11 @@ export async function PATCH(request: Request, { params }: Ctx) {
     }
     if (b.acao === 'revogar') {
       const retirados = await revogarAutorizacao(id)
+      // Episodio tirado do ar tem que sumir ja, nao depois do cache de 60 s.
+      if (retirados > 0) {
+        revalidatePath('/podcast', 'layout')
+        revalidatePath('/noticias', 'layout')
+      }
       return NextResponse.json({ ok: true, retirados })
     }
     if (b.acao === 'renovar') {
