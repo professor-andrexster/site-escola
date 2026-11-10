@@ -117,6 +117,7 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual, episodios
       <div className="mt-6 flex flex-wrap gap-3 text-sm">
         <a href="/api/podcast/termos?modelo=responsavel" className={BOTAO_LEVE}><Download className="w-4 h-4" /> Termo do responsável em branco</a>
         <a href="/api/podcast/termos?modelo=entrevistado" className={BOTAO_LEVE}><Download className="w-4 h-4" /> Termo do entrevistado em branco</a>
+        <a href="/api/podcast/termos?modelo=revogacao" className={BOTAO_LEVE}><Download className="w-4 h-4" /> Pedido de revogação em branco</a>
       </div>
     </section>
   )
@@ -210,6 +211,9 @@ function LinhaAluno({ m, anoAtual, episodios }: { m: Membro; anoAtual: number; e
         {m.autorizacaoStatus === 'enviada' && (
           <button type="button" disabled={ocupado} onClick={() => acao({ acao: 'aceitar' })} className={BOTAO}><CheckCircle2 className="w-4 h-4" /> Conferi, liberar aluno</button>
         )}
+        {m.autorizacaoStatus === 'aceita' && (
+          <a href={`/api/podcast/termos?modelo=revogacao&membro=${m.id}`} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2"><Download className="w-3.5 h-3.5" /> Pedido de revogação</a>
+        )}
         <button type="button" onClick={() => setEditando(v => !v)} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2"><Pencil className="w-3.5 h-3.5" /> Corrigir responsável</button>
         {m.autorizacaoStatus === 'aceita' && (
           confirmar === 'revogar' ? (
@@ -233,6 +237,11 @@ function LinhaAluno({ m, anoAtual, episodios }: { m: Membro; anoAtual: number; e
         )}
       </div>
 
+      {m.autorizacaoStatus === 'enviada' && (
+        <p className="mt-3 text-xs text-blue-900 bg-blue-50 rounded-lg p-2">
+          Ao conferir, veja as caixas que o responsável marcou no item 4 do termo. Se ele não marcou <strong>voz</strong>, deixe &quot;Pode gravar áudio&quot; desligado. Se marcou &quot;Não autorizo&quot;, não libere.
+        </p>
+      )}
       {(m.autorizacaoStatus === 'pendente' || m.autorizacaoStatus === 'enviada' || m.autorizacaoStatus === 'revogada') && !m.vencida && (
         <div className="flex flex-col sm:flex-row sm:items-center gap-2 mt-3 bg-gray-50 rounded-lg p-3">
           <span className="text-xs text-gray-600 flex-shrink-0">{m.temArquivo ? 'Trocar o termo assinado:' : 'Termo assinado (foto ou PDF):'}</span>

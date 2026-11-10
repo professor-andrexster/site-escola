@@ -1,111 +1,206 @@
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from 'pdf-lib'
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage, type RGB } from 'pdf-lib'
 import { NOME_PODCAST, formatarCpf } from '@/lib/podcast/tipos'
 
 /**
  * Termos do podcast em PDF (A4), gerados no servidor.
  *
- * Dois modelos:
- * - Responsavel: autoriza o aluno menor a participar com nome, voz e imagem.
- *   Sai preenchido com o que o monitor digitou (aluno, turma, responsavel,
- *   CPF), ou em branco para imprimir varios.
- * - Entrevistado: quem da a entrevista autoriza o uso da voz e do nome.
+ * Formato baseado em modelos oficiais de 2026 (Portaria SEME 857/2026 de
+ * Cachoeiro de Itapemirim/ES e termo da SEDUC de Caraguatatuba/SP):
+ * autorizacao previa, expressa, especifica e destacada, com caixas por tipo
+ * de midia e por meio de divulgacao, finalidade delimitada (o podcast, no ano
+ * letivo), vedacoes explicitas, direito de nao autorizar sem prejuizo,
+ * revogacao formal, ciencia do proprio estudante e assinatura da direcao.
  *
- * Base legal citada no texto: Constituicao art. 5º, X; Codigo Civil art. 20;
- * ECA arts. 17 e 100; LGPD art. 14, §1º (consentimento especifico de um dos
- * pais ou responsavel para dado de crianca e adolescente).
+ * Tres documentos:
+ * - termoResponsavel: estudante menor no podcast (preenchido ou em branco).
+ * - termoEntrevistado: quem da a entrevista (com bloco do responsavel se for menor).
+ * - termoRevogacao: pedido do responsavel para cancelar a autorizacao.
+ *
+ * Base legal citada: CF art. 5º, X e art. 227; Codigo Civil art. 20; ECA
+ * (Lei 8.069/1990) arts. 17, 18 e 100; ECA Digital (Lei 15.211/2025); LGPD
+ * (Lei 13.709/2018) art. 14, §1º.
  */
 
+const ESTADO = 'ESTADO DE MINAS GERAIS · SECRETARIA DE ESTADO DE EDUCAÇÃO'
 const ESCOLA = 'Escola Estadual Dr. João Beraldo'
 const CIDADE = 'Carlos Chagas - MG'
 const AZUL = rgb(0.06, 0.2, 0.45)
-const CINZA = rgb(0.35, 0.35, 0.35)
-const MARGEM = 56
+const AZUL_CLARO = rgb(0.93, 0.95, 0.99)
+const CINZA = rgb(0.38, 0.38, 0.38)
+const LINHA = rgb(0.72, 0.72, 0.72)
+const TEXTO = rgb(0.1, 0.1, 0.1)
+const MARGEM = 42
 const LARGURA = 595.28
 const ALTURA = 841.89
+const UTIL = LARGURA - MARGEM * 2
 
-type Pena = { page: PDFPage; y: number; doc: PDFDocument; normal: PDFFont; negrito: PDFFont }
+type Pena = { page: PDFPage; y: number; doc: PDFDocument; normal: PDFFont; negrito: PDFFont; italico: PDFFont; titulo: string }
 
 function quebrar(texto: string, fonte: PDFFont, tamanho: number, largura: number): string[] {
   const linhas: string[] = []
-  for (const paragrafo of texto.split('\n')) {
+  for (const par of texto.split('\n')) {
     let atual = ''
-    for (const palavra of paragrafo.split(' ')) {
-      const tentativa = atual ? `${atual} ${palavra}` : palavra
-      if (fonte.widthOfTextAtSize(tentativa, tamanho) > largura && atual) {
-        linhas.push(atual)
-        atual = palavra
-      } else atual = tentativa
+    for (const palavra of par.split(' ')) {
+      const t = atual ? `${atual} ${palavra}` : palavra
+      if (fonte.widthOfTextAtSize(t, tamanho) > largura && atual) { linhas.push(atual); atual = palavra } else atual = t
     }
     linhas.push(atual)
   }
   return linhas
 }
 
-function novaPaginaSePreciso(p: Pena, altura: number) {
-  if (p.y - altura < MARGEM) {
-    p.page = p.doc.addPage([LARGURA, ALTURA])
-    p.y = ALTURA - MARGEM
+function novaPagina(p: Pena) {
+  p.page = p.doc.addPage([LARGURA, ALTURA])
+  p.y = ALTURA - MARGEM
+  p.page.drawText(p.titulo, { x: MARGEM, y: ALTURA - 32, size: 8, font: p.negrito, color: CINZA })
+  p.y = ALTURA - 50
+}
+
+function espaco(p: Pena, altura: number) {
+  if (p.y - altura < 44) novaPagina(p)
+}
+
+function texto(p: Pena, t: string, o: { tam?: number; fonte?: PDFFont; cor?: RGB; x?: number; largura?: number; depois?: number } = {}) {
+  const tam = o.tam ?? 9
+  const fonte = o.fonte ?? p.normal
+  const x = o.x ?? MARGEM
+  for (const l of quebrar(t, fonte, tam, o.largura ?? UTIL - (x - MARGEM))) {
+    espaco(p, tam * 1.5)
+    p.page.drawText(l, { x, y: p.y - tam, size: tam, font: fonte, color: o.cor ?? TEXTO })
+    p.y -= tam * 1.42
   }
+  p.y -= o.depois ?? 4
 }
 
-function paragrafo(p: Pena, texto: string, opts: { tamanho?: number; negrito?: boolean; cor?: ReturnType<typeof rgb>; depois?: number } = {}) {
-  const tamanho = opts.tamanho ?? 10.5
-  const fonte = opts.negrito ? p.negrito : p.normal
-  const linhas = quebrar(texto, fonte, tamanho, LARGURA - MARGEM * 2)
-  for (const l of linhas) {
-    novaPaginaSePreciso(p, tamanho * 1.5)
-    p.page.drawText(l, { x: MARGEM, y: p.y - tamanho, size: tamanho, font: fonte, color: opts.cor ?? rgb(0.1, 0.1, 0.1) })
-    p.y -= tamanho * 1.45
+/** Faixa numerada de seção. */
+function secao(p: Pena, numero: string, titulo: string) {
+  espaco(p, 36)
+  p.y -= 2
+  p.page.drawRectangle({ x: MARGEM, y: p.y - 15, width: UTIL, height: 15, color: AZUL_CLARO })
+  p.page.drawRectangle({ x: MARGEM, y: p.y - 15, width: 3, height: 15, color: AZUL })
+  p.page.drawText(`${numero}. ${titulo.toUpperCase()}`, { x: MARGEM + 9, y: p.y - 10.8, size: 8.3, font: p.negrito, color: AZUL })
+  p.y -= 21
+}
+
+/** Campo com rótulo pequeno e linha; valor vazio vira espaço para preencher à mão. */
+function campo(p: Pena, rotulo: string, valor: string, largura: number, x: number) {
+  const base = p.y - 22
+  p.page.drawText(rotulo, { x, y: p.y - 7, size: 7, font: p.negrito, color: CINZA })
+  if (valor) p.page.drawText(valor, { x: x + 2, y: base + 4, size: 10.5, font: p.normal, color: TEXTO })
+  p.page.drawLine({ start: { x, y: base }, end: { x: x + largura, y: base }, thickness: 0.6, color: LINHA })
+}
+
+/** Linha de campos lado a lado: [rótulo, valor, fração da largura]. */
+function linhaCampos(p: Pena, campos: [string, string, number][]) {
+  espaco(p, 30)
+  const gap = 14
+  const total = UTIL - gap * (campos.length - 1)
+  let x = MARGEM
+  for (const [r, v, f] of campos) {
+    const w = total * f
+    campo(p, r, v, w, x)
+    x += w + gap
   }
-  p.y -= opts.depois ?? 6
+  p.y -= 30
 }
 
-/** Campo "Rotulo: valor" com linha embaixo; valor vazio vira linha para preencher a mao. */
-function campo(p: Pena, rotulo: string, valor: string, largura = LARGURA - MARGEM * 2, x = MARGEM, avancar = true) {
-  novaPaginaSePreciso(p, 40)
-  const yBase = p.y - 30
-  p.page.drawText(rotulo, { x, y: p.y - 8, size: 8, font: p.negrito, color: CINZA })
-  if (valor) p.page.drawText(valor, { x: x + 2, y: yBase + 4, size: 11, font: p.normal })
-  p.page.drawLine({ start: { x, y: yBase }, end: { x: x + largura, y: yBase }, thickness: 0.6, color: CINZA })
-  if (avancar) p.y -= 40
+function caixa(p: Pena, x: number, y: number) {
+  p.page.drawRectangle({ x, y, width: 9, height: 9, borderColor: TEXTO, borderWidth: 0.8 })
 }
 
-function cabecalho(p: Pena, titulo: string, subtitulo: string) {
-  p.page.drawRectangle({ x: 0, y: ALTURA - 8, width: LARGURA, height: 8, color: AZUL })
-  p.y -= 6
-  paragrafo(p, `${ESCOLA} · ${CIDADE}`, { tamanho: 9, cor: CINZA, depois: 2 })
-  paragrafo(p, titulo, { tamanho: 15, negrito: true, cor: AZUL, depois: 0 })
-  paragrafo(p, subtitulo, { tamanho: 10, cor: CINZA, depois: 10 })
+/** Grade de opções com caixa de marcar, em colunas. */
+function opcoes(p: Pena, itens: string[], colunas = 2) {
+  const w = UTIL / colunas
+  for (let i = 0; i < itens.length; i += colunas) {
+    const linha = itens.slice(i, i + colunas)
+    const alturas = linha.map(t => quebrar(t, p.normal, 9, w - 22).length)
+    const h = Math.max(...alturas) * 11.5 + 3
+    espaco(p, h)
+    linha.forEach((t, j) => {
+      const x = MARGEM + j * w
+      caixa(p, x, p.y - 10)
+      quebrar(t, p.normal, 9, w - 22).forEach((l, k) => p.page.drawText(l, { x: x + 15, y: p.y - 9 - k * 12, size: 9, font: p.normal, color: TEXTO }))
+    })
+    p.y -= h
+  }
+  p.y -= 2
 }
 
-function assinatura(p: Pena, rotulo: string, nome: string) {
-  novaPaginaSePreciso(p, 90)
+function marcadores(p: Pena, itens: string[]) {
+  for (const i of itens) {
+    const linhas = quebrar(i, p.normal, 8.6, UTIL - 14)
+    espaco(p, linhas.length * 11.6)
+    p.page.drawText('•', { x: MARGEM + 2, y: p.y - 8.6, size: 8.6, font: p.negrito, color: AZUL })
+    linhas.forEach((l, k) => p.page.drawText(l, { x: MARGEM + 12, y: p.y - 8.6 - k * 11.6, size: 8.6, font: p.normal, color: TEXTO }))
+    p.y -= linhas.length * 11.6 + 1.2
+  }
+  p.y -= 3
+}
+
+/** Assinaturas lado a lado. */
+function assinaturas(p: Pena, quem: { rotulo: string; nome?: string }[]) {
+  espaco(p, 54)
   p.y -= 26
-  campo(p, 'Local e data', `${CIDADE}, ____ de ______________ de ________`, 300)
-  p.y -= 18
-  const meio = LARGURA / 2
-  p.page.drawLine({ start: { x: meio - 150, y: p.y }, end: { x: meio + 150, y: p.y }, thickness: 0.8 })
-  const t1 = nome || rotulo
-  p.page.drawText(t1, { x: meio - p.normal.widthOfTextAtSize(t1, 10) / 2, y: p.y - 13, size: 10, font: p.normal })
-  if (nome) p.page.drawText(rotulo, { x: meio - p.normal.widthOfTextAtSize(rotulo, 8) / 2, y: p.y - 25, size: 8, font: p.normal, color: CINZA })
-  p.y -= 40
+  const gap = 20
+  const w = (UTIL - gap * (quem.length - 1)) / quem.length
+  quem.forEach((q, i) => {
+    const x = MARGEM + i * (w + gap)
+    p.page.drawLine({ start: { x, y: p.y }, end: { x: x + w, y: p.y }, thickness: 0.8, color: TEXTO })
+    const linha1 = q.nome || q.rotulo
+    const tam1 = Math.min(8.5, (8.5 * w) / Math.max(w, p.normal.widthOfTextAtSize(linha1, 8.5)))
+    p.page.drawText(linha1, { x: x + (w - p.normal.widthOfTextAtSize(linha1, tam1)) / 2, y: p.y - 11, size: tam1, font: q.nome ? p.normal : p.negrito, color: TEXTO })
+    if (q.nome) p.page.drawText(q.rotulo, { x: x + (w - p.normal.widthOfTextAtSize(q.rotulo, 7)) / 2, y: p.y - 21, size: 7, font: p.normal, color: CINZA })
+  })
+  p.y -= 30
 }
 
-function rodape(doc: PDFDocument, fonte: PDFFont, codigo: string) {
-  const paginas = doc.getPages()
-  paginas.forEach((pg, i) => {
-    const t = `${NOME_PODCAST} · ${codigo} · página ${i + 1} de ${paginas.length}`
-    pg.drawText(t, { x: MARGEM, y: 28, size: 7.5, font: fonte, color: CINZA })
+function localData(p: Pena) {
+  espaco(p, 24)
+  texto(p, `${CIDADE}, ______ de ______________________ de __________.`, { tam: 9.5, depois: 2 })
+}
+
+async function iniciar(titulo: string, subtitulo: string, codigo: string): Promise<Pena> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`${titulo} - ${NOME_PODCAST}`)
+  doc.setAuthor(ESCOLA)
+  const normal = await doc.embedFont(StandardFonts.Helvetica)
+  const negrito = await doc.embedFont(StandardFonts.HelveticaBold)
+  const italico = await doc.embedFont(StandardFonts.HelveticaOblique)
+  const page = doc.addPage([LARGURA, ALTURA])
+  const p: Pena = { doc, normal, negrito, italico, page, y: ALTURA - 34, titulo: `${titulo.toUpperCase()} · ${NOME_PODCAST}` }
+
+  // Cabeçalho institucional
+  p.page.drawRectangle({ x: 0, y: ALTURA - 6, width: LARGURA, height: 6, color: AZUL })
+  const centro = (t: string, tam: number, f: PDFFont, cor: RGB) => {
+    p.page.drawText(t, { x: (LARGURA - f.widthOfTextAtSize(t, tam)) / 2, y: p.y - tam, size: tam, font: f, color: cor })
+    p.y -= tam * 1.5
+  }
+  centro(ESTADO, 7.5, negrito, CINZA)
+  centro(`${ESCOLA.toUpperCase()} · ${CIDADE}`, 8.5, negrito, AZUL)
+  p.y -= 6
+  p.page.drawLine({ start: { x: MARGEM, y: p.y }, end: { x: LARGURA - MARGEM, y: p.y }, thickness: 0.6, color: LINHA })
+  p.y -= 14
+  centro(titulo.toUpperCase(), 13, negrito, TEXTO)
+  centro(subtitulo, 9, italico, CINZA)
+  p.page.drawText(codigo, { x: LARGURA - MARGEM - normal.widthOfTextAtSize(codigo, 7), y: ALTURA - 22, size: 7, font: normal, color: CINZA })
+  p.y -= 4
+  return p
+}
+
+function rodape(p: Pena) {
+  const pgs = p.doc.getPages()
+  pgs.forEach((pg, i) => {
+    pg.drawLine({ start: { x: MARGEM, y: 34 }, end: { x: LARGURA - MARGEM, y: 34 }, thickness: 0.4, color: LINHA })
+    pg.drawText(`${ESCOLA} · ${NOME_PODCAST} · 1ª via: escola (arquivo) · 2ª via: responsável`, { x: MARGEM, y: 23, size: 6.5, font: p.normal, color: CINZA })
+    const t = `página ${i + 1} de ${pgs.length}`
+    pg.drawText(t, { x: LARGURA - MARGEM - p.normal.widthOfTextAtSize(t, 6.5), y: 23, size: 6.5, font: p.normal, color: CINZA })
   })
 }
 
-async function iniciar() {
-  const doc = await PDFDocument.create()
-  const normal = await doc.embedFont(StandardFonts.Helvetica)
-  const negrito = await doc.embedFont(StandardFonts.HelveticaBold)
-  const page = doc.addPage([LARGURA, ALTURA])
-  return { doc, normal, negrito, page, y: ALTURA - MARGEM } as Pena
-}
+const BASE_LEGAL =
+  'Base legal: Constituição Federal, art. 5º, X, e art. 227; Código Civil, art. 20; Estatuto da Criança e do Adolescente (Lei 8.069/1990), arts. 17, 18 e 100; Estatuto Digital da Criança e do Adolescente (Lei 15.211/2025); Lei Geral de Proteção de Dados Pessoais (Lei 13.709/2018), art. 14, §1º.'
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 export interface DadosResponsavel {
   alunoNome: string
@@ -117,75 +212,130 @@ export interface DadosResponsavel {
 }
 
 export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promise<Uint8Array> {
-  const p = await iniciar()
   const ano = d.ano ?? new Date().getFullYear()
-  p.doc.setTitle(`Autorização do responsável - ${NOME_PODCAST}`)
-  cabecalho(p, 'Termo de autorização do responsável', `Participação de estudante no podcast ${NOME_PODCAST} e na rádio da escola · ano letivo ${ano}`)
-
-  paragrafo(p, 'Dados do estudante', { negrito: true, cor: AZUL, depois: 4 })
-  campo(p, 'Nome do estudante', d.alunoNome ?? '')
-  const terco = (LARGURA - MARGEM * 2 - 20) / 2
-  campo(p, 'Turma', d.turma ?? '', terco, MARGEM, false)
-  campo(p, 'Matrícula', d.matricula ?? '', terco, MARGEM + terco + 20)
-
-  paragrafo(p, 'Dados do responsável legal', { negrito: true, cor: AZUL, depois: 4 })
-  campo(p, 'Nome do responsável', d.responsavelNome ?? '')
-  campo(p, 'CPF', d.responsavelCpf ? formatarCpf(d.responsavelCpf) : '', terco, MARGEM, false)
-  campo(p, 'Parentesco (mãe, pai, avó, tutor...)', '', terco, MARGEM + terco + 20)
-  campo(p, 'Telefone para contato', '', terco)
-
-  paragrafo(p, 'O que estou autorizando', { negrito: true, cor: AZUL, depois: 4 })
-  paragrafo(
-    p,
-    `Eu, responsável legal pelo estudante acima, autorizo a ${ESCOLA} a usar, sem cobrança e sem fins comerciais, o nome, a turma, a voz e a imagem do estudante nas produções do podcast ${NOME_PODCAST}: episódios em áudio, matérias do jornal JBInforma, a rádio da escola, o site oficial da escola e as redes sociais oficiais da escola.`
+  const p = await iniciar(
+    'Termo de autorização de uso de imagem, voz e nome',
+    `Participação de estudante no podcast ${NOME_PODCAST} e na rádio da escola · ano letivo ${ano}`,
+    `Termo do responsável · ${ano}`
   )
-  paragrafo(p, 'Fico ciente de que:', { negrito: true, depois: 2 })
-  const itens = [
-    'O estudante participa por vontade própria e pode deixar a equipe quando quiser.',
-    'Todo episódio e toda matéria passam pela revisão de um professor antes de ir ao ar.',
-    'No site aparece só o primeiro nome e a turma do estudante. Endereço, telefone e documentos dele nunca são publicados.',
-    'Meu nome e meu CPF servem só para identificar quem assinou este termo. Ficam guardados pela escola em local restrito e não são publicados.',
-    `Esta autorização vale para o ano letivo de ${ano}. Para o ano seguinte, a escola pede um termo novo.`,
-    'Posso revogar esta autorização a qualquer momento, por escrito ou pessoalmente na secretaria. Ao revogar, a escola tira do ar os episódios em que o estudante aparece.',
-  ]
-  for (const i of itens) paragrafo(p, `•  ${i}`, { depois: 1 })
-  p.y -= 4
-  paragrafo(
-    p,
-    'Base legal: Constituição Federal, art. 5º, X; Código Civil, art. 20; Estatuto da Criança e do Adolescente, arts. 17 e 100; Lei Geral de Proteção de Dados (Lei 13.709/2018), art. 14, §1º.',
-    { tamanho: 8.5, cor: CINZA }
-  )
-  assinatura(p, 'Assinatura do responsável legal', d.responsavelNome ?? '')
-  rodape(p.doc, p.normal, 'Termo do responsável')
+
+  secao(p, '1', 'Estudante')
+  linhaCampos(p, [['Nome completo do(a) estudante', d.alunoNome ?? '', 1]])
+  linhaCampos(p, [['Turma', d.turma ?? '', 0.3], ['Matrícula', d.matricula ?? '', 0.3], ['Data de nascimento', '', 0.4]])
+
+  secao(p, '2', 'Responsável legal')
+  linhaCampos(p, [['Nome completo do(a) responsável', d.responsavelNome ?? '', 1]])
+  linhaCampos(p, [['CPF', d.responsavelCpf ? formatarCpf(d.responsavelCpf) : '', 0.3], ['Parentesco (mãe, pai, avó, tutor...)', '', 0.36], ['Telefone / WhatsApp', '', 0.34]])
+
+  secao(p, '3', 'Finalidade específica')
+  texto(p,
+    `Participação do(a) estudante no projeto pedagógico ${NOME_PODCAST}, podcast e rádio da ${ESCOLA}, em que os estudantes entrevistam pessoas, produzem notícias e gravam episódios sob acompanhamento de professores. Esta autorização vale somente para este projeto e somente no ano letivo de ${ano}.`)
+
+  secao(p, '4', 'O que autorizo (marque cada item que autoriza)')
+  texto(p, 'Tipo de conteúdo:', { fonte: p.negrito, tam: 9, depois: 3 })
+  opcoes(p, [
+    'Voz do(a) estudante (áudio dos episódios e entrevistas)',
+    'Primeiro nome e turma nos créditos (nunca o nome completo no site)',
+    'Fotografia do(a) estudante',
+    'Vídeo do(a) estudante',
+  ])
+  texto(p, 'Onde pode ser divulgado:', { fonte: p.negrito, tam: 9, depois: 3 })
+  opcoes(p, [
+    'Rádio interna da escola (somente dentro da escola)',
+    `Página do podcast no site oficial da escola`,
+    'Jornal da escola JBInforma, no site oficial',
+    'Redes sociais oficiais da escola',
+  ])
+  espaco(p, 20)
+  caixa(p, MARGEM, p.y - 10)
+  p.page.drawText('NÃO AUTORIZO nenhum dos usos acima.', { x: MARGEM + 15, y: p.y - 9, size: 9, font: p.negrito, color: TEXTO })
+  p.y -= 18
+
+  secao(p, '5', 'Condições e garantias')
+  marcadores(p, [
+    'A participação é voluntária e gratuita. Não autorizar não traz nenhum prejuízo ao(à) estudante na escola.',
+    'Todo episódio e toda matéria são revisados por um professor monitor antes de serem publicados.',
+    'É proibido: uso comercial; uso fora da finalidade e dos meios marcados acima; publicação em perfis pessoais de servidores; exposição vexatória ou constrangedora; divulgar endereço, telefone, documentos, localização ou rotina do(a) estudante.',
+    'Os dados deste termo (inclusive o CPF do responsável) servem apenas para identificar quem autorizou. Ficam guardados pela escola em local de acesso restrito e nunca são publicados (LGPD).',
+    `Validade: ano letivo de ${ano}. Para o ano seguinte, a escola pedirá um novo termo.`,
+    'Revogação: o responsável pode cancelar esta autorização a qualquer momento, por escrito, na secretaria da escola. A escola deixa de usar o conteúdo e tira do ar os episódios em que o(a) estudante aparece, a partir do recebimento do pedido.',
+  ])
+  texto(p, BASE_LEGAL, { tam: 7.5, cor: CINZA, fonte: p.italico, depois: 6 })
+
+  secao(p, '6', 'Declaração e assinaturas')
+  texto(p,
+    'Declaro que li este termo, entendi as condições e autorizo, de forma prévia, expressa, específica e destacada, somente os usos marcados no item 4. O(a) estudante também foi ouvido(a) e concorda em participar.')
+  localData(p)
+  assinaturas(p, [
+    { rotulo: 'Responsável legal', nome: d.responsavelNome ?? '' },
+    { rotulo: 'Estudante (ciência)', nome: d.alunoNome ?? '' },
+    { rotulo: 'Direção (assinatura e carimbo)' },
+  ])
+  rodape(p)
   return p.doc.save()
 }
 
 export async function termoEntrevistado(d: { nome?: string; descricao?: string; titulo?: string } = {}): Promise<Uint8Array> {
-  const p = await iniciar()
-  p.doc.setTitle(`Autorização de entrevistado - ${NOME_PODCAST}`)
-  cabecalho(p, 'Termo de autorização de entrevistado', `Uso de voz, imagem e nome em entrevista do podcast ${NOME_PODCAST}`)
-
-  campo(p, 'Nome de quem deu a entrevista', d.nome ?? '')
-  campo(p, 'Quem é (cargo, profissão, relação com a escola)', d.descricao ?? '')
-  const meia = (LARGURA - MARGEM * 2 - 20) / 2
-  campo(p, 'CPF ou RG', '', meia, MARGEM, false)
-  campo(p, 'Telefone', '', meia, MARGEM + meia + 20)
-  campo(p, 'Assunto da entrevista', d.titulo ?? '')
-
-  paragrafo(
-    p,
-    `Autorizo a ${ESCOLA} a gravar e publicar, sem cobrança e sem fins comerciais, a entrevista que dei aos estudantes da equipe do podcast ${NOME_PODCAST}, com minha voz, meu nome e, se houver, minha imagem, no podcast, no jornal JBInforma, na rádio da escola, no site oficial e nas redes sociais oficiais da escola.`
+  const p = await iniciar(
+    'Termo de autorização de entrevistado',
+    `Uso de voz, imagem e nome em entrevista do podcast ${NOME_PODCAST}`,
+    'Termo do entrevistado'
   )
-  const itens = [
-    'A entrevista pode ser editada para caber no tempo do episódio, sem mudar o sentido do que eu disse.',
-    'Posso pedir para tirar a entrevista do ar a qualquer momento, falando com a direção da escola.',
+  secao(p, '1', 'Quem deu a entrevista')
+  linhaCampos(p, [['Nome completo', d.nome ?? '', 1]])
+  linhaCampos(p, [['Quem é (cargo, profissão, relação com a escola)', d.descricao ?? '', 1]])
+  linhaCampos(p, [['CPF ou RG', '', 0.4], ['Telefone', '', 0.3], ['Data de nascimento', '', 0.3]])
+  linhaCampos(p, [['Assunto da entrevista', d.titulo ?? '', 1]])
+
+  secao(p, '2', 'O que autorizo (marque cada item)')
+  texto(p, 'Tipo de conteúdo:', { fonte: p.negrito, tam: 9, depois: 3 })
+  opcoes(p, ['Minha voz (áudio da entrevista)', 'Meu nome e minha função, como informados acima', 'Fotografia', 'Vídeo'])
+  texto(p, 'Onde pode ser divulgado:', { fonte: p.negrito, tam: 9, depois: 3 })
+  opcoes(p, ['Rádio interna da escola', 'Página do podcast no site oficial da escola', 'Jornal da escola JBInforma, no site oficial', 'Redes sociais oficiais da escola'])
+  espaco(p, 20)
+  caixa(p, MARGEM, p.y - 10)
+  p.page.drawText('NÃO AUTORIZO a publicação da entrevista.', { x: MARGEM + 15, y: p.y - 9, size: 9, font: p.negrito, color: TEXTO })
+  p.y -= 18
+
+  secao(p, '3', 'Condições')
+  marcadores(p, [
+    `A entrevista foi feita por estudantes da equipe do ${NOME_PODCAST}, projeto pedagógico da ${ESCOLA}, sem cobrança e sem fins comerciais.`,
+    'A gravação pode ser editada para caber no tempo do episódio, sem mudar o sentido do que eu disse.',
     'Meus documentos e telefone não são publicados.',
-  ]
-  for (const i of itens) paragrafo(p, `•  ${i}`, { depois: 1 })
-  assinatura(p, 'Assinatura de quem deu a entrevista', d.nome ?? '')
-  paragrafo(p, 'Se quem deu a entrevista tiver menos de 18 anos, o responsável legal assina também:', { tamanho: 9, cor: CINZA })
-  campo(p, 'Nome e CPF do responsável legal', '')
-  assinatura(p, 'Assinatura do responsável legal', '')
-  rodape(p.doc, p.normal, 'Termo do entrevistado')
+    'Posso pedir a retirada da entrevista a qualquer momento, por escrito, na secretaria da escola.',
+  ])
+  texto(p, BASE_LEGAL, { tam: 7.5, cor: CINZA, fonte: p.italico, depois: 6 })
+
+  secao(p, '4', 'Assinaturas')
+  localData(p)
+  assinaturas(p, [{ rotulo: 'Quem deu a entrevista', nome: d.nome ?? '' }, { rotulo: 'Professor(a) monitor(a) do podcast' }])
+  texto(p, 'Se quem deu a entrevista tiver menos de 18 anos, o responsável legal também preenche e assina:', { tam: 8.5, cor: CINZA, depois: 2 })
+  linhaCampos(p, [['Nome do responsável legal', '', 0.6], ['CPF', '', 0.4]])
+  assinaturas(p, [{ rotulo: 'Responsável legal (se menor de idade)' }])
+  rodape(p)
+  return p.doc.save()
+}
+
+export async function termoRevogacao(d: Partial<DadosResponsavel> = {}): Promise<Uint8Array> {
+  const p = await iniciar(
+    'Solicitação de revogação de autorização',
+    `Cancelamento da autorização de uso de imagem, voz e nome no podcast ${NOME_PODCAST}`,
+    'Revogação'
+  )
+  secao(p, '1', 'Identificação')
+  linhaCampos(p, [['Nome completo do(a) estudante', d.alunoNome ?? '', 0.7], ['Turma', d.turma ?? '', 0.3]])
+  linhaCampos(p, [['Nome completo do(a) responsável legal', d.responsavelNome ?? '', 0.65], ['CPF', d.responsavelCpf ? formatarCpf(d.responsavelCpf) : '', 0.35]])
+  secao(p, '2', 'Pedido')
+  texto(p, `Solicito o cancelamento da autorização de uso de imagem, voz e nome do(a) estudante acima no podcast ${NOME_PODCAST}. Peço que a escola:`)
+  opcoes(p, [
+    'Pare de usar a voz, a imagem e o nome do(a) estudante em novos conteúdos',
+    'Tire do ar os episódios e matérias já publicados em que ele(a) aparece',
+  ], 1)
+  linhaCampos(p, [['Motivo (opcional)', '', 1]])
+  texto(p, 'A revogação vale a partir da data em que este pedido for recebido pela escola.', { tam: 8.5, cor: CINZA })
+  secao(p, '3', 'Assinaturas')
+  localData(p)
+  assinaturas(p, [{ rotulo: 'Responsável legal', nome: d.responsavelNome ?? '' }, { rotulo: 'Recebido por (escola) e data' }])
+  rodape(p)
   return p.doc.save()
 }

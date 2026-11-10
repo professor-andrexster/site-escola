@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { buscarEpisodio, dadosDoTermo } from '@/lib/podcast/dados'
-import { termoEntrevistado, termoResponsavel } from '@/lib/podcast/termos'
+import { termoEntrevistado, termoResponsavel, termoRevogacao } from '@/lib/podcast/termos'
 import { erro, exigirAcesso, participa } from '@/lib/podcast/api'
 import { slugDe } from '@/lib/podcast/tipos'
 import { auditar } from '@/lib/podcast/auditoria'
@@ -11,6 +11,7 @@ import { auditar } from '@/lib/podcast/auditoria'
  *   ?modelo=responsavel&membro=<id>   preenchido (monitor ou direcao: tem CPF)
  *   ?modelo=entrevistado              em branco
  *   ?modelo=entrevistado&episodio=<id> com nome e assunto (quem participa ou monitor)
+ *   ?modelo=revogacao[&membro=<id>]   pedido de revogacao, em branco ou preenchido
  */
 export async function GET(request: Request) {
   const r = await exigirAcesso()
@@ -44,6 +45,18 @@ export async function GET(request: Request) {
     } else {
       bytes = await termoEntrevistado()
       nome = 'termo-entrevistado-em-branco.pdf'
+    }
+  } else if (modelo === 'revogacao') {
+    if (membro) {
+      if (!r.acesso.moderador) return erro('Só o monitor do podcast gera o pedido preenchido.', 403)
+      const d = await dadosDoTermo(membro)
+      if (!d) return erro('Aluno não encontrado na equipe.', 404)
+      bytes = await termoRevogacao(d)
+      nome = `revogacao-${slugDe(d.alunoNome)}.pdf`
+      await auditar({ atorId: r.acesso.userId, acao: 'termo.baixado', alvoTipo: 'aluno', alvoId: membro, alvoNome: d.alunoNome, detalhe: 'pedido de revogação' })
+    } else {
+      bytes = await termoRevogacao()
+      nome = 'pedido-de-revogacao-em-branco.pdf'
     }
   } else {
     return erro('Modelo desconhecido.')
