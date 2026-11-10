@@ -43,7 +43,10 @@ export default function GravadorAudio({ enviar, desabilitado, chave }: Props) {
   const rec = useRef<MediaRecorder | null>(null)
   const partes = useRef<Blob[]>([])
   const relogio = useRef<ReturnType<typeof setInterval> | null>(null)
-  const podeGravar = typeof window !== 'undefined' && !!navigator.mediaDevices?.getUserMedia && !!tipoSuportado()
+  // Decidido só no navegador, depois de montar: no servidor não há microfone, e
+  // calcular durante a renderização dava HTML diferente do servidor (React #418).
+  const [podeGravar, setPodeGravar] = useState(false)
+  useEffect(() => { setPodeGravar(!!navigator.mediaDevices?.getUserMedia && !!tipoSuportado()) }, [])
 
   useEffect(() => () => { if (relogio.current) clearInterval(relogio.current); rec.current?.stream.getTracks().forEach(t => t.stop()) }, [])
   useEffect(() => () => { if (previa) URL.revokeObjectURL(previa) }, [previa])
