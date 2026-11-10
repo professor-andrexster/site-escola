@@ -29,7 +29,9 @@ chmod 700 "$DESTINO" "$DESTINO/diario" "$DESTINO/mensal"
 
 ARQUIVO="$DESTINO/diario/${BANCO}-${DIA}.sql.gz"
 mysqldump --single-transaction --routines --triggers --default-character-set=utf8mb4 "$BANCO" | gzip -6 > "${ARQUIVO}.tmp"
-if ! gzip -t "${ARQUIVO}.tmp" 2>/dev/null || ! zcat "${ARQUIVO}.tmp" | head -c 400 | grep -q "MariaDB dump\|MySQL dump"; then
+# head corta o zcat no meio (SIGPIPE); com pipefail isso daria falso negativo.
+CABECALHO=$(zcat "${ARQUIVO}.tmp" 2>/dev/null | head -c 400 || true)
+if ! gzip -t "${ARQUIVO}.tmp" 2>/dev/null || ! grep -q "MariaDB dump\|MySQL dump" <<< "$CABECALHO"; then
   rm -f "${ARQUIVO}.tmp"
   echo "$(date -Is) FALHOU: dump corrompido ou sem cabeçalho do mysqldump." >&2
   exit 1
