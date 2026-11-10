@@ -1114,3 +1114,15 @@ model podcast_auditoria {
   @@index([alvo_id], map: "podcast_auditoria_alvo_idx")
   @@index([ator_id], map: "podcast_auditoria_ator_idx")
 }
+
+/// Quadros do podcast, criados pelo painel. DDL e carga inicial em scripts/sql/podcast.sql.
+model podcast_quadros {
+  id         String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  chave      String   @unique(map: "podcast_quadros_chave_key") @db.VarChar(30)
+  nome       String   @db.VarChar(60)
+  ideia      String?  @db.VarChar(240)
+  ordem      Int      @default(0)
+  ativo      Boolean  @default(true)
+  criado_por String?  @db.Char(36)
+  criado_em  DateTime @default(now()) @db.DateTime(3)
+}

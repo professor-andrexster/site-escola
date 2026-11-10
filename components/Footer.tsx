@@ -47,6 +47,8 @@ export default function Footer() {
                 { href: '/sobre', label: 'A Escola' },
                 { href: '/emti', label: 'Programa EMTI' },
                 { href: '/cursos', label: 'Cursos' },
+                { href: '/noticias', label: 'JBInforma' },
+                { href: '/podcast', label: 'Podcast JB no Ar' },
                 { href: '/contato', label: 'Contato' },
               ].map(({ href, label }) => (
                 <li key={href}>

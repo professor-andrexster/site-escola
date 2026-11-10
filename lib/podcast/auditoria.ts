@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db'
  * do servidor e a resposta segue. CPF nunca entra aqui (nem mascarado).
  */
 
-export type AlvoTipo = 'monitor' | 'aluno' | 'episodio' | 'termo'
+export type AlvoTipo = 'monitor' | 'aluno' | 'episodio' | 'termo' | 'quadro'
 
 export const ROTULO_ACAO: Record<string, string> = {
   'monitor.adicionado': 'Tornou monitor',
@@ -35,6 +35,11 @@ export const ROTULO_ACAO: Record<string, string> = {
   'audio.removido': 'Removeu áudio',
   'termo_entrevistado.enviado': 'Subiu termo do entrevistado',
   'termo_entrevistado.aberto': 'Abriu termo do entrevistado',
+  'quadro.criado': 'Criou quadro',
+  'quadro.editado': 'Editou quadro',
+  'quadro.ativado': 'Reativou quadro',
+  'quadro.desativado': 'Desativou quadro',
+  'quadro.removido': 'Apagou quadro',
 }
 
 async function ipDaRequisicao(): Promise<string | null> {

@@ -30,21 +30,23 @@ export const TIPOS_EPISODIO = ['entrevista', 'materia'] as const
 export type TipoEpisodio = (typeof TIPOS_EPISODIO)[number]
 
 /**
- * Quadros fixos, como num programa de radio de verdade: o ouvinte sabe o que
- * esperar, e a equipe nao trava na folha em branco ("sobre o que eu falo?").
+ * Quadro do podcast, como num programa de radio de verdade: o ouvinte sabe o
+ * que esperar, e a equipe nao trava na folha em branco. Os quadros vivem na
+ * tabela podcast_quadros e sao criados pelo painel (aba Quadros).
  */
-export const QUADROS = [
-  { chave: 'papo-de-corredor', nome: 'Papo de Corredor', ideia: 'Entrevista rápida com alguém da escola: funcionário, professor, colega com uma história boa.' },
-  { chave: 'giro-jb', nome: 'Giro JB', ideia: 'As notícias da semana em poucos minutos: evento, jogo, prova, aviso.' },
-  { chave: 'quem-faz-a-escola', nome: 'Quem Faz a Escola', ideia: 'Perfil de quem trabalha nos bastidores: cantina, secretaria, limpeza, portaria.' },
-  { chave: 'fala-ex-aluno', nome: 'Fala, Ex-aluno', ideia: 'Quem estudou aqui conta onde chegou e o que faria diferente.' },
-  { chave: 'debate', nome: 'Na Roda', ideia: 'Dois ou três alunos conversam sobre um tema: celular na sala, vestibular, redes sociais.' },
-  { chave: 'cidade', nome: 'Pela Cidade', ideia: 'O que acontece em Carlos Chagas e afeta quem estuda aqui.' },
-] as const
-
-export function nomeDoQuadro(chave: string | null): string | null {
-  return QUADROS.find(q => q.chave === chave)?.nome ?? null
+export interface Quadro {
+  id: string
+  chave: string
+  nome: string
+  ideia: string | null
+  ordem: number
+  ativo: boolean
+  /** Quantos episodios usam este quadro. */
+  episodios: number
 }
+
+/** O que os formularios precisam de um quadro. */
+export type QuadroOpcao = Pick<Quadro, 'chave' | 'nome' | 'ideia'>
 
 export interface Membro {
   id: string
@@ -81,6 +83,8 @@ export interface Episodio {
   slug: string
   tipo: TipoEpisodio
   quadro: string | null
+  /** Nome do quadro, ja resolvido (null se sem quadro ou quadro apagado). */
+  quadroNome: string | null
   titulo: string
   resumo: string | null
   texto: string | null

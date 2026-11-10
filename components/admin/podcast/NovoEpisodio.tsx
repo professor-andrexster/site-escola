@@ -3,18 +3,18 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Mic, Newspaper, Plus } from 'lucide-react'
-import { QUADROS } from '@/lib/podcast/tipos'
+import type { QuadroOpcao } from '@/lib/podcast/tipos'
 import { BOTAO, CAMPO, chamar, json } from './comum'
 
 /** Começar um episódio: título, se é entrevista ou matéria, e o quadro. */
-export default function NovoEpisodio({ podeAudio = true }: { podeAudio?: boolean }) {
+export default function NovoEpisodio({ podeAudio = true, quadros }: { podeAudio?: boolean; quadros: QuadroOpcao[] }) {
   const router = useRouter()
   const [titulo, setTitulo] = useState('')
   const [tipo, setTipo] = useState<'entrevista' | 'materia'>(podeAudio ? 'entrevista' : 'materia')
   const [quadro, setQuadro] = useState('')
   const [ocupado, setOcupado] = useState(false)
   const [erro, setErro] = useState('')
-  const ideia = QUADROS.find(q => q.chave === quadro)?.ideia
+  const ideia = quadros.find(q => q.chave === quadro)?.ideia
 
   async function criar() {
     setErro('')
@@ -52,7 +52,7 @@ export default function NovoEpisodio({ podeAudio = true }: { podeAudio?: boolean
           <span className="block text-xs font-semibold text-gray-600 mb-1">Quadro (opcional)</span>
           <select value={quadro} onChange={e => setQuadro(e.target.value)} className={CAMPO}>
             <option value="">Sem quadro</option>
-            {QUADROS.map(q => <option key={q.chave} value={q.chave}>{q.nome}</option>)}
+            {quadros.map(q => <option key={q.chave} value={q.chave}>{q.nome}</option>)}
           </select>
         </label>
       </div>

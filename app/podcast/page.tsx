@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { Headphones, Radio } from 'lucide-react'
 import PageLayout from '@/components/PageLayout'
 import CapaEpisodio from '@/components/podcast/CapaEpisodio'
-import { episodiosPublicados, equipePublica } from '@/lib/podcast/dados'
-import { NOME_PODCAST, QUADROS, nomeDoQuadro, nomePublico } from '@/lib/podcast/tipos'
+import { episodiosPublicados, equipePublica, listarQuadros } from '@/lib/podcast/dados'
+import { NOME_PODCAST, nomePublico } from '@/lib/podcast/tipos'
 import { formatDate } from '@/lib/utils'
 
 export const metadata: Metadata = {
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 export const revalidate = 60
 
 export default async function PodcastPublicoPage() {
-  const [episodios, equipe] = await Promise.all([episodiosPublicados(), equipePublica()])
+  const [episodios, equipe, quadros] = await Promise.all([episodiosPublicados(), equipePublica(), listarQuadros(true)])
   const [destaque, ...resto] = episodios
   const alunos = equipe.filter(m => m.papel === 'aluno')
   const monitores = equipe.filter(m => m.papel === 'monitor')
@@ -32,7 +32,7 @@ export default async function PodcastPublicoPage() {
       <div className="container mx-auto px-4 py-12">
         {destaque ? (
           <section className="grid gap-8 md:grid-cols-[minmax(0,20rem)_1fr] items-center mb-16">
-            <CapaEpisodio quadro={destaque.quadro} tipo={destaque.tipo} grande />
+            <CapaEpisodio quadroNome={destaque.quadroNome} tipo={destaque.tipo} grande />
             <div className="min-w-0">
               <p className="font-mono text-xs uppercase tracking-widest text-escola-vermelho mb-2">Episódio mais recente · {destaque.publicadoEm ? formatDate(destaque.publicadoEm) : ''}</p>
               <h2 className="font-playfair text-3xl md:text-4xl font-bold text-gray-900 mb-3">
@@ -60,9 +60,9 @@ export default async function PodcastPublicoPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {resto.map(e => (
                 <article key={e.id} className="bg-white border border-escola-cinza-claro overflow-hidden card-lift flex flex-col">
-                  <Link href={`/podcast/${e.slug}`}><CapaEpisodio quadro={e.quadro} tipo={e.tipo} /></Link>
+                  <Link href={`/podcast/${e.slug}`}><CapaEpisodio quadroNome={e.quadroNome} tipo={e.tipo} /></Link>
                   <div className="p-5 flex flex-col flex-1">
-                    <p className="font-mono text-[11px] text-escola-cinza mb-1">{e.publicadoEm ? formatDate(e.publicadoEm) : ''}{nomeDoQuadro(e.quadro) ? ` · ${nomeDoQuadro(e.quadro)}` : ''}</p>
+                    <p className="font-mono text-[11px] text-escola-cinza mb-1">{e.publicadoEm ? formatDate(e.publicadoEm) : ''}{e.quadroNome ? ` · ${e.quadroNome}` : ''}</p>
                     <h3 className="font-playfair text-lg font-bold text-gray-900 mb-2">
                       <Link href={`/podcast/${e.slug}`} className="hover:text-escola-azul transition-colors">{e.titulo}</Link>
                     </h3>
@@ -75,6 +75,7 @@ export default async function PodcastPublicoPage() {
           </section>
         )}
 
+        {quadros.length > 0 && (
         <section className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr] mb-16">
           <div>
             <Headphones className="w-8 h-8 text-escola-vermelho mb-3" />
@@ -82,14 +83,15 @@ export default async function PodcastPublicoPage() {
             <p className="text-gray-600 mt-2">Como num programa de rádio: cada episódio entra num quadro, e você já sabe o que vem.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 min-w-0">
-            {QUADROS.map(q => (
+            {quadros.map(q => (
               <div key={q.chave} className="border-l-4 border-escola-azul bg-white p-4">
                 <p className="font-semibold text-gray-900">{q.nome}</p>
-                <p className="text-sm text-gray-600 mt-1">{q.ideia}</p>
+                {q.ideia && <p className="text-sm text-gray-600 mt-1">{q.ideia}</p>}
               </div>
             ))}
           </div>
         </section>
+        )}
 
         <section className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr]">
           <div>

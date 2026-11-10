@@ -4,8 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Eye, FileUp, Radio, Save, Send, Trash2, Undo2 } from 'lucide-react'
 import {
-  QUADROS, ROTULO_EPISODIO, tamanhoLegivel,
-  type Episodio, type PessoaEquipe,
+  ROTULO_EPISODIO, tamanhoLegivel,
+  type Episodio, type PessoaEquipe, type QuadroOpcao,
 } from '@/lib/podcast/tipos'
 import GravadorAudio from './GravadorAudio'
 import { BOTAO, BOTAO_LEVE, CAMPO, chamar, json } from './comum'
@@ -18,6 +18,8 @@ interface Props {
   userId: string
   /** Monitor, ou aluno com permissão de áudio. */
   podeAudio: boolean
+  /** Quadros ativos (mais o do próprio episódio, se foi desativado). */
+  quadros: QuadroOpcao[]
 }
 
 type Form = {
@@ -40,7 +42,7 @@ const COR_STATUS: Record<string, string> = {
  * Tela do episódio. O que o aluno digita fica guardado no aparelho até o
  * servidor confirmar: se a internet cair no meio, nada se perde.
  */
-export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe, userId, podeAudio }: Props) {
+export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe, userId, podeAudio, quadros }: Props) {
   const router = useRouter()
   // Por usuario: num computador da sala, o rascunho de um aluno nao aparece para o outro.
   const chaveRascunho = `podcast-ep-${inicial.id}-${userId}`
@@ -95,7 +97,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
     if (sujoRef.current) guardarLocal(formRef.current, atualizadoEm)
   }
 
-  const quadro = useMemo(() => QUADROS.find(q => q.chave === form.quadro), [form.quadro])
+  const quadro = useMemo(() => quadros.find(q => q.chave === form.quadro), [quadros, form.quadro])
 
   async function salvar(acao?: string, extra: Record<string, unknown> = {}): Promise<boolean> {
     setOcupado(true); setErro(''); setAviso('')
@@ -212,7 +214,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
           <span className="block text-xs font-semibold text-gray-600 mb-1">Quadro</span>
           <select value={form.quadro} onChange={e => mudar('quadro', e.target.value)} disabled={bloqueado} className={CAMPO}>
             <option value="">Sem quadro</option>
-            {QUADROS.map(q => <option key={q.chave} value={q.chave}>{q.nome}</option>)}
+            {quadros.map(q => <option key={q.chave} value={q.chave}>{q.nome}</option>)}
           </select>
           {quadro && <span className="block text-xs text-gray-500 mt-1">{quadro.ideia}</span>}
         </label>

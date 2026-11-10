@@ -4,11 +4,11 @@ import { prisma } from '@/lib/db'
 import type { Prisma } from '@prisma/client'
 import {
   atualizarEpisodio, buscarEpisodio, listarMembros, mudarStatus, participantesSemAutorizacao,
-  PendenciaDeAutorizacao, publicarEpisodio, removerEpisodio, retirarEpisodio, type CamposEpisodio,
+  PendenciaDeAutorizacao, publicarEpisodio, quadroValido, removerEpisodio, retirarEpisodio, type CamposEpisodio,
 } from '@/lib/podcast/dados'
 import { erro, exigirAcesso, participa, podeAudio, podeEditar, texto } from '@/lib/podcast/api'
 import { auditar } from '@/lib/podcast/auditoria'
-import { QUADROS, type Episodio } from '@/lib/podcast/tipos'
+import type { Episodio } from '@/lib/podcast/tipos'
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -58,7 +58,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
       return erro('Você ainda não tem permissão para gravar áudio, então o formato fica matéria. Peça a permissão ao monitor.', 403)
     }
   }
-  if (b.quadro !== undefined) campos.quadro = QUADROS.some(q => q.chave === b.quadro) ? (b.quadro as string) : null
+  if (b.quadro !== undefined) campos.quadro = await quadroValido(b.quadro, ep.quadro)
   if (b.resumo !== undefined) campos.resumo = texto(b.resumo, 300)
   if (b.texto !== undefined) campos.texto = typeof b.texto === 'string' && b.texto.trim() ? b.texto.slice(0, 20000) : null
   if (b.entrevistadoNome !== undefined) campos.entrevistadoNome = texto(b.entrevistadoNome, 120)

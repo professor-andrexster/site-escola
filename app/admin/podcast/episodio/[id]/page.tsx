@@ -3,7 +3,7 @@ import { notFound } from 'next/navigation'
 import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
-import { acessoDe, buscarEpisodio, listarMembros, paraEditor } from '@/lib/podcast/dados'
+import { acessoDe, buscarEpisodio, listarMembros, listarQuadros, paraEditor } from '@/lib/podcast/dados'
 import { participa, podeAudio, podeEditar } from '@/lib/podcast/api'
 import EditorEpisodio from '@/components/admin/podcast/EditorEpisodio'
 
@@ -25,13 +25,15 @@ export default async function EpisodioPage({ params }: Props) {
   // Participante que nao esta mais na equipe (ou a direcao) continua aparecendo, para poder desmarcar.
   for (const p of ep.participantes) if (!equipe.some(e => e.userId === p.userId)) equipe.push(paraEditor(p))
 
+  const quadros = (await listarQuadros()).filter(q => q.ativo || q.chave === ep.quadro).map(q => ({ chave: q.chave, nome: q.nome, ideia: q.ideia }))
+
   return (
     <div className="max-w-4xl mx-auto">
       <Link href="/admin/podcast" className="inline-flex items-center gap-1.5 text-gray-500 hover:text-gray-700 text-sm mb-4">
         <ArrowLeft className="w-4 h-4" /> Podcast
       </Link>
       <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900 mb-4">{ep.titulo}</h1>
-      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} podeAudio={podeAudio(acesso)} />
+      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} podeAudio={podeAudio(acesso)} quadros={quadros} />
     </div>
   )
 }

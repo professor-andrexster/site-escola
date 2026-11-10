@@ -1,8 +1,8 @@
 import { Mic, Newspaper } from 'lucide-react'
-import { NOME_PODCAST, nomeDoQuadro, type TipoEpisodio } from '@/lib/podcast/tipos'
+import { NOME_PODCAST, type TipoEpisodio } from '@/lib/podcast/tipos'
 
 /** Capa desenhada (sem foto de aluno de propósito): quadro, ícone e o nome do programa. */
-export default function CapaEpisodio({ quadro, tipo, grande = false }: { quadro: string | null; tipo: TipoEpisodio; grande?: boolean }) {
+export default function CapaEpisodio({ quadroNome, tipo, grande = false }: { quadroNome: string | null; tipo: TipoEpisodio; grande?: boolean }) {
   const Icone = tipo === 'entrevista' ? Mic : Newspaper
   return (
     <div className={`relative overflow-hidden bg-gradient-to-br from-escola-azul via-escola-azul-medio to-escola-vermelho ${grande ? 'aspect-square rounded-2xl' : 'aspect-[4/3]'}`}>
@@ -12,7 +12,7 @@ export default function CapaEpisodio({ quadro, tipo, grande = false }: { quadro:
         <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-white/70">{NOME_PODCAST}</span>
         <div>
           <Icone className={`${grande ? 'w-12 h-12' : 'w-8 h-8'} mb-2 text-white/90`} />
-          <p className={`font-playfair font-black leading-tight ${grande ? 'text-3xl' : 'text-xl'}`}>{nomeDoQuadro(quadro) ?? (tipo === 'entrevista' ? 'Entrevista' : 'Matéria')}</p>
+          <p className={`font-playfair font-black leading-tight ${grande ? 'text-3xl' : 'text-xl'}`}>{quadroNome ?? (tipo === 'entrevista' ? 'Entrevista' : 'Matéria')}</p>
         </div>
       </div>
     </div>

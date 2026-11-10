@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { criarEpisodio } from '@/lib/podcast/dados'
+import { criarEpisodio, quadroValido } from '@/lib/podcast/dados'
 import { alunoLiberado, erro, exigirAcesso, podeAudio, texto } from '@/lib/podcast/api'
 import { auditar } from '@/lib/podcast/auditoria'
-import { QUADROS } from '@/lib/podcast/tipos'
 
 /** Começa um episódio (rascunho). Aluno liberado ou monitor. */
 export async function POST(request: Request) {
@@ -25,7 +24,7 @@ export async function POST(request: Request) {
   if (!titulo || titulo.length < 4) return erro('Dê um título ao episódio (pode mudar depois).')
   const tipo = b.tipo === 'materia' ? 'materia' : 'entrevista'
   if (tipo === 'entrevista' && !podeAudio(a)) return erro('Você ainda não tem permissão para gravar áudio. Comece uma matéria escrita ou peça a permissão ao monitor.', 403)
-  const quadro = QUADROS.some(q => q.chave === b.quadro) ? (b.quadro as string) : null
+  const quadro = await quadroValido(b.quadro)
   try {
     const ep = await criarEpisodio(a.userId, { titulo, tipo, quadro })
     await auditar({ atorId: a.userId, acao: 'episodio.criado', alvoTipo: 'episodio', alvoId: ep.id, alvoNome: titulo, detalhe: tipo })

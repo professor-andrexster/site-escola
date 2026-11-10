@@ -7,7 +7,7 @@ import { apagarPrivado } from '@/lib/podcast/arquivos'
 import {
   anoLetivoAtual, esc, mascararCpf, slugDe, textoParaHtml, NOME_PODCAST,
   STATUS_AUTORIZACAO, STATUS_EPISODIO, TIPOS_EPISODIO,
-  type Episodio, type Membro, type PessoaEquipe, type StatusAutorizacao, type StatusEpisodio, type TipoEpisodio,
+  type Episodio, type Membro, type PessoaEquipe, type Quadro, type StatusAutorizacao, type StatusEpisodio, type TipoEpisodio,
 } from '@/lib/podcast/tipos'
 
 type Tx = Prisma.TransactionClient
@@ -323,6 +323,7 @@ async function montarEpisodios(linhas: LinhaEpisodio[], db: Tx = prisma): Promis
     db.profiles.findMany({ where: { id: { in: ids } }, select: { id: true, nome_completo: true, turma: true } }),
     db.alunos.findMany({ where: { user_id: { in: ids } }, select: { user_id: true, nome: true, turma: true } }),
   ])
+  const quadros = await db.podcast_quadros.findMany({ select: { chave: true, nome: true } })
   const pessoa = (id: string) => {
     const a = alunos.find(x => x.user_id === id)
     const p = perfis.find(x => x.id === id)
@@ -333,6 +334,7 @@ async function montarEpisodios(linhas: LinhaEpisodio[], db: Tx = prisma): Promis
     slug: l.slug,
     tipo: tipoEp(l.tipo),
     quadro: l.quadro,
+    quadroNome: quadros.find(q => q.chave === l.quadro)?.nome ?? null,
     titulo: l.titulo,
     resumo: l.resumo,
     texto: l.texto,
@@ -620,4 +622,79 @@ export async function retirarEpisodio(ep: Episodio, motivo: string | null) {
 /** Equipe que aparece no site publico: alunos liberados e monitores. So primeiro nome e turma. */
 export async function equipePublica() {
   return (await listarMembros()).filter(m => m.liberado)
+}
+
+// ── Quadros ─────────────────────────────────────────────────────────────────
+
+export async function listarQuadros(soAtivos = false): Promise<Quadro[]> {
+  const [qs, uso] = await Promise.all([
+    prisma.podcast_quadros.findMany({ where: soAtivos ? { ativo: true } : {}, orderBy: [{ ordem: 'asc' }, { nome: 'asc' }] }),
+    prisma.podcast_episodios.groupBy({ by: ['quadro'], _count: { _all: true } }),
+  ])
+  return qs.map(q => ({
+    id: q.id, chave: q.chave, nome: q.nome, ideia: q.ideia, ordem: q.ordem, ativo: q.ativo,
+    episodios: uso.find(u => u.quadro === q.chave)?._count._all ?? 0,
+  }))
+}
+
+/** Quadro que pode ser escolhido agora: ativo, ou o que o episodio ja usa. */
+export async function quadroValido(chave: unknown, atual?: string | null): Promise<string | null> {
+  if (typeof chave !== 'string' || !chave) return null
+  if (chave === atual) return chave
+  const q = await prisma.podcast_quadros.findUnique({ where: { chave }, select: { ativo: true } })
+  return q?.ativo ? chave : null
+}
+
+export async function buscarQuadro(id: string) {
+  return prisma.podcast_quadros.findUnique({ where: { id } })
+}
+
+export async function criarQuadro(nome: string, ideia: string | null, por: string): Promise<{ erro: string } | { id: string }> {
+  const chave = slugDe(nome).slice(0, 30).replace(/-+$/, '')
+  if (await prisma.podcast_quadros.findUnique({ where: { chave }, select: { id: true } })) {
+    return { erro: 'Já existe um quadro com esse nome (ou muito parecido).' }
+  }
+  const ultimo = await prisma.podcast_quadros.aggregate({ _max: { ordem: true } })
+  try {
+    const q = await prisma.podcast_quadros.create({ data: { chave, nome, ideia, ordem: (ultimo._max.ordem ?? 0) + 1, criado_por: por }, select: { id: true } })
+    return { id: q.id }
+  } catch (e) {
+    if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === 'P2002') return { erro: 'Já existe um quadro com esse nome.' }
+    throw e
+  }
+}
+
+/** Muda nome, ideia ou ativo. A chave nao muda: os episodios apontam para ela. */
+export async function atualizarQuadro(id: string, c: { nome?: string; ideia?: string | null; ativo?: boolean }) {
+  return prisma.podcast_quadros.update({
+    where: { id },
+    data: {
+      ...(c.nome !== undefined ? { nome: c.nome } : {}),
+      ...(c.ideia !== undefined ? { ideia: c.ideia } : {}),
+      ...(c.ativo !== undefined ? { ativo: c.ativo } : {}),
+    },
+  })
+}
+
+/** Sobe ou desce um quadro na ordem, trocando de lugar com o vizinho. */
+export async function moverQuadro(id: string, direcao: 'cima' | 'baixo') {
+  return prisma.$transaction(async tx => {
+    const todos = await tx.podcast_quadros.findMany({ orderBy: [{ ordem: 'asc' }, { nome: 'asc' }], select: { id: true } })
+    const i = todos.findIndex(q => q.id === id)
+    const j = direcao === 'cima' ? i - 1 : i + 1
+    if (i < 0 || j < 0 || j >= todos.length) return
+    ;[todos[i], todos[j]] = [todos[j], todos[i]]
+    // Regrava a ordem de todos: conserta tambem ordens repetidas.
+    for (let k = 0; k < todos.length; k++) await tx.podcast_quadros.update({ where: { id: todos[k].id }, data: { ordem: k + 1 } })
+  })
+}
+
+/** Apaga quadro sem episodio. Com episodio, so da para desativar (o historico continua com o nome). */
+export async function removerQuadro(id: string): Promise<{ erro: string } | { ok: true }> {
+  const q = await prisma.podcast_quadros.findUnique({ where: { id } })
+  if (!q) return { erro: 'Quadro não encontrado.' }
+  const uso = await prisma.podcast_episodios.count({ where: { quadro: q.chave } })
+  if (uso > 0) return { erro: `Este quadro tem ${uso} episódio(s). Desative em vez de apagar: ele some das opções e os episódios continuam com o nome.` }
+  await prisma.podcast_quadros.delete({ where: { id } })
+  return { ok: true }
 }

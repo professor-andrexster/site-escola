@@ -2,10 +2,16 @@ import PageLayout from '@/components/PageLayout'
 import CursosEmtiBanner from '@/components/CursosEmtiBanner'
 import ContatoForm from '@/components/ContatoForm'
 import AnimateOnScroll from '@/components/AnimateOnScroll'
+import NewsCard from '@/components/NewsCard'
+import CapaEpisodio from '@/components/podcast/CapaEpisodio'
 import { cursosDaHome } from '@/lib/db/cursos'
+import { ultimasPublicadas } from '@/lib/db/noticias'
+import { episodiosPublicados, listarQuadros } from '@/lib/podcast/dados'
+import { NOME_PODCAST, nomePublico } from '@/lib/podcast/tipos'
+import { formatDate } from '@/lib/utils'
 import Image from 'next/image'
 import Link from 'next/link'
-import { BookOpen, Cpu, Users, Award, MessageCircle, ChevronRight } from 'lucide-react'
+import { BookOpen, Cpu, Users, Award, MessageCircle, ChevronRight, Headphones } from 'lucide-react'
 
 export const revalidate = 60
 
@@ -24,7 +30,10 @@ const tecnologia = [
 ]
 
 export default async function HomePage() {
-  const cursosDestaque = await cursosDaHome()
+  const [cursosDestaque, noticias, episodios, quadros] = await Promise.all([
+    cursosDaHome(), ultimasPublicadas(3), episodiosPublicados(1), listarQuadros(true),
+  ])
+  const episodio = episodios[0] ?? null
 
   return (
     <PageLayout>
@@ -75,6 +84,83 @@ export default async function HomePage() {
           </div>
         </div>
       </div>
+
+      {/* Podcast dos alunos: ultimo episodio, ou o convite enquanto o primeiro nao sai */}
+      <section className="bg-white py-14 border-b border-escola-cinza-claro">
+        <div className="container mx-auto px-4">
+          <div className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr] md:gap-14 items-center max-w-5xl mx-auto">
+            <AnimateOnScroll>
+              <Link href={episodio ? `/podcast/${episodio.slug}` : '/podcast'} className="block max-w-[18rem] mx-auto md:mx-0">
+                <CapaEpisodio quadroNome={episodio ? episodio.quadroNome : 'Feito pelos alunos'} tipo={episodio?.tipo ?? 'entrevista'} grande />
+              </Link>
+            </AnimateOnScroll>
+            <AnimateOnScroll delay={1}>
+              <div className="min-w-0">
+                <p className="section-label mb-1">Podcast e rádio da escola</p>
+                <div className="w-10 h-px bg-escola-vermelho mb-4" />
+                <h2 className="font-playfair text-escola-azul font-black text-3xl md:text-4xl mb-3">{NOME_PODCAST}</h2>
+                {episodio ? (
+                  <>
+                    <p className="font-mono text-[10px] uppercase tracking-widest text-escola-vermelho mb-2">
+                      Episódio mais recente{episodio.publicadoEm ? ` · ${formatDate(episodio.publicadoEm)}` : ''}
+                    </p>
+                    <h3 className="font-playfair text-escola-azul font-bold text-xl md:text-2xl leading-snug mb-2">
+                      <Link href={`/podcast/${episodio.slug}`} className="hover:text-escola-vermelho transition-colors">{episodio.titulo}</Link>
+                    </h3>
+                    {episodio.resumo && <p className="font-serif text-escola-cinza leading-relaxed mb-4 max-w-[62ch]">{episodio.resumo}</p>}
+                    {episodio.audioUrl && <audio controls preload="none" src={episodio.audioUrl} className="w-full max-w-xl mb-4" />}
+                    <p className="font-serif text-sm text-escola-cinza mb-5">Com {episodio.participantes.map(p => nomePublico(p.nome, p.turma)).join(' · ')}</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-serif text-escola-cinza leading-relaxed mb-4 max-w-[62ch]">
+                      Os alunos da João Beraldo entrevistam gente da escola e da cidade, contam as notícias da semana e gravam tudo. O primeiro episódio está sendo gravado.
+                    </p>
+                    {quadros.length > 0 && (
+                      <ul className="flex flex-wrap gap-2 mb-5">
+                        {quadros.slice(0, 6).map(q => (
+                          <li key={q.id} className="font-mono text-[10px] uppercase tracking-widest border border-escola-cinza-claro text-escola-azul px-3 py-1.5">{q.nome}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </>
+                )}
+                <Link href="/podcast" className="inline-flex items-center gap-2 bg-escola-azul text-white font-mono text-xs uppercase tracking-widest px-6 py-3.5 hover:bg-escola-azul-medio transition-colors">
+                  <Headphones className="w-4 h-4" />
+                  {episodio ? 'Todos os episódios' : 'Conhecer o podcast'}
+                </Link>
+              </div>
+            </AnimateOnScroll>
+          </div>
+        </div>
+      </section>
+
+      {/* JBInforma: o jornal da escola de volta a home */}
+      {noticias.length > 0 && (
+        <section className="bg-escola-creme py-14 border-b border-escola-cinza-claro">
+          <div className="container mx-auto px-4">
+            <AnimateOnScroll>
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10">
+                <div>
+                  <p className="section-label mb-1">O jornal da escola</p>
+                  <div className="w-10 h-px bg-escola-vermelho mb-4" />
+                  <h2 className="font-playfair text-escola-azul font-black text-3xl md:text-4xl">JBInforma</h2>
+                </div>
+                <Link href="/noticias" className="font-mono text-xs uppercase tracking-widest text-escola-cinza hover:text-escola-azul transition-colors flex-shrink-0 mb-1 inline-flex items-center gap-1">
+                  Ver todas as notícias <ChevronRight className="w-3 h-3" />
+                </Link>
+              </div>
+            </AnimateOnScroll>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {noticias.map((noticia, i) => (
+                <AnimateOnScroll key={noticia.id} delay={(i + 1) as 1|2|3}>
+                  <NewsCard noticia={noticia} />
+                </AnimateOnScroll>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Cursos & EMTI */}
       <CursosEmtiBanner />

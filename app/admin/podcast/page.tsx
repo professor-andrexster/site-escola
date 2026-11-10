@@ -3,12 +3,13 @@ import type { Metadata } from 'next'
 import { AlertTriangle, CheckCircle2, ExternalLink, FileCheck, Mic, Radio, ShieldCheck, Users } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
 import {
-  acessoDe, alunosDisponiveis, episodiosDoAluno, episodiosPorPessoa, listarMembros, professoresDisponiveis, resumoDoPainel, todosOsEpisodios,
+  acessoDe, alunosDisponiveis, episodiosDoAluno, episodiosPorPessoa, listarMembros, listarQuadros, professoresDisponiveis, resumoDoPainel, todosOsEpisodios,
 } from '@/lib/podcast/dados'
 import { listarAuditoria } from '@/lib/podcast/auditoria'
 import AbasPodcast, { ABAS, type Aba } from '@/components/admin/podcast/AbasPodcast'
 import PainelAuditoria from '@/components/admin/podcast/PainelAuditoria'
-import { NOME_PODCAST, ROTULO_AUTORIZACAO, ROTULO_EPISODIO, anoLetivoAtual, nomeDoQuadro, type Episodio } from '@/lib/podcast/tipos'
+import { NOME_PODCAST, ROTULO_AUTORIZACAO, ROTULO_EPISODIO, anoLetivoAtual, type Episodio } from '@/lib/podcast/tipos'
+import QuadrosPodcast from '@/components/admin/podcast/QuadrosPodcast'
 import MonitoresPodcast from '@/components/admin/podcast/MonitoresPodcast'
 import EquipePodcast from '@/components/admin/podcast/EquipePodcast'
 import NovoEpisodio from '@/components/admin/podcast/NovoEpisodio'
@@ -32,7 +33,7 @@ function ListaEpisodios({ eps, vazio }: { eps: Episodio[]; vazio: string }) {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{e.titulo}</p>
               <p className="text-xs text-gray-500 truncate">
-                {[nomeDoQuadro(e.quadro), `por ${e.autorNome.split(' ')[0]}`, e.audioUrl ? 'com áudio' : 'sem áudio'].filter(Boolean).join(' · ')}
+                {[e.quadroNome, `por ${e.autorNome.split(' ')[0]}`, e.audioUrl ? 'com áudio' : 'sem áudio'].filter(Boolean).join(' · ')}
               </p>
             </div>
             <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0 ${COR[e.status]}`}>{ROTULO_EPISODIO[e.status]}</span>
@@ -163,7 +164,7 @@ export default async function PodcastPage({ searchParams }: Props) {
         </>
       )
     } else if (aba === 'revisao' || aba === 'episodios') {
-      const episodios = await todosOsEpisodios()
+      const [episodios, quadros] = await Promise.all([todosOsEpisodios(), listarQuadros(true)])
       corpo = aba === 'revisao' ? (
         <section>
           <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Esperando sua revisão</h2>
@@ -171,13 +172,15 @@ export default async function PodcastPage({ searchParams }: Props) {
         </section>
       ) : (
         <>
-          <NovoEpisodio podeAudio />
+          <NovoEpisodio podeAudio quadros={quadros.map(q => ({ chave: q.chave, nome: q.nome, ideia: q.ideia }))} />
           <section>
             <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Todos os episódios</h2>
             <ListaEpisodios eps={episodios} vazio="Nenhum episódio ainda." />
           </section>
         </>
       )
+    } else if (aba === 'quadros') {
+      corpo = <QuadrosPodcast quadros={await listarQuadros()} />
     } else {
       const linhas = await listarAuditoria({ pessoa: sp.pessoa?.slice(0, 80), acao: sp.acao?.slice(0, 30), antesDe: /^\d+$/.test(sp.antes ?? '') ? sp.antes : undefined, limite: 100 })
       corpo = <PainelAuditoria linhas={linhas} pessoa={sp.pessoa ?? ''} acao={sp.acao ?? ''} maisAntigo={linhas.length === 100 ? linhas[linhas.length - 1].id : null} />
@@ -194,7 +197,7 @@ export default async function PodcastPage({ searchParams }: Props) {
 
   const m = acesso.membro
   if (m?.papel === 'aluno') {
-    const eps = await episodiosDoAluno(user.id)
+    const [eps, quadrosAtivos] = await Promise.all([episodiosDoAluno(user.id), listarQuadros(true)])
     return (
       <div className="max-w-5xl mx-auto">
         {cabecalho}
@@ -219,7 +222,7 @@ export default async function PodcastPage({ searchParams }: Props) {
             <p className="text-xs text-gray-500 mt-2">Situação: {m.vencida ? 'autorização vencida' : ROTULO_AUTORIZACAO[m.autorizacaoStatus]}</p>
           </section>
         )}
-        {m.podeCriar && <NovoEpisodio podeAudio={m.podeAudio} />}
+        {m.podeCriar && <NovoEpisodio podeAudio={m.podeAudio} quadros={quadrosAtivos.map(q => ({ chave: q.chave, nome: q.nome, ideia: q.ideia }))} />}
         <section>
           <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Meus episódios</h2>
           <ListaEpisodios eps={eps} vazio={m.podeCriar ? 'Você ainda não começou nenhum. Que tal o primeiro?' : 'Assim que liberar, seus episódios aparecem aqui.'} />

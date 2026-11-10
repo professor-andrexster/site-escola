@@ -49,6 +49,16 @@ export async function listarPublicadas(categoria?: string | null): Promise<Notic
   return linhas.map(serializar)
 }
 
+/** As mais recentes publicadas, para a faixa do JBInforma na home. */
+export async function ultimasPublicadas(limite = 3): Promise<Noticia[]> {
+  const linhas = await prisma.noticias.findMany({
+    where: { publicado: true },
+    orderBy: { created_at: 'desc' },
+    take: limite,
+  })
+  return linhas.map(serializar)
+}
+
 /** Uma noticia publicada pelo slug. Null quando nao existe ou esta despublicada. */
 export async function buscarPorSlug(slug: string): Promise<Noticia | null> {
   const n = await prisma.noticias.findFirst({ where: { slug, publicado: true } })

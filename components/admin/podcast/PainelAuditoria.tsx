@@ -9,11 +9,12 @@ const GRUPOS = [
   { valor: 'termo', rotulo: 'Termos e acessos' },
   { valor: 'episodio', rotulo: 'Episódios' },
   { valor: 'audio', rotulo: 'Áudios' },
+  { valor: 'quadro', rotulo: 'Quadros' },
 ]
 
 const COR: Record<string, string> = {
   monitor: 'bg-purple-50 text-purple-800', aluno: 'bg-blue-50 text-blue-800', termo: 'bg-amber-50 text-amber-800',
-  episodio: 'bg-green-50 text-green-800', audio: 'bg-rose-50 text-rose-800', termo_entrevistado: 'bg-amber-50 text-amber-800',
+  episodio: 'bg-green-50 text-green-800', quadro: 'bg-teal-50 text-teal-800', audio: 'bg-rose-50 text-rose-800', termo_entrevistado: 'bg-amber-50 text-amber-800',
 }
 
 const quando = (iso: string) =>

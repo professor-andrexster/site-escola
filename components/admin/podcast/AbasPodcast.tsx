@@ -5,6 +5,7 @@ export const ABAS = [
   { chave: 'equipe', rotulo: 'Equipe' },
   { chave: 'revisao', rotulo: 'Revisão' },
   { chave: 'episodios', rotulo: 'Episódios' },
+  { chave: 'quadros', rotulo: 'Quadros' },
   { chave: 'auditoria', rotulo: 'Auditoria' },
 ] as const
 export type Aba = (typeof ABAS)[number]['chave']
