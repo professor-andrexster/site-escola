@@ -464,15 +464,14 @@ export async function mudarStatus(id: string, status: StatusEpisodio, feedback?:
 
 /** Apaga o episodio, a noticia (ja despublicada) que ele tenha gerado e o audio. */
 export async function removerEpisodio(id: string) {
-  const ep = await prisma.podcast_episodios.findUnique({ where: { id }, select: { noticia_id: true, audio_url: true } })
+  const ep = await prisma.podcast_episodios.findUnique({ where: { id }, select: { noticia_id: true, audio_url: true, termo_entrevistado: true } })
   await prisma.$transaction(async tx => {
     await tx.podcast_episodios.delete({ where: { id } })
-    if (ep?.noticia_id) {
-      await tx.noticias_log.deleteMany({ where: { noticia_id: ep.noticia_id } })
-      await tx.noticias.deleteMany({ where: { id: ep.noticia_id, publicado: false } })
-    }
+    // O log da noticia fica (FK ON DELETE SET NULL): registro de quem publicou e quando.
+    if (ep?.noticia_id) await tx.noticias.deleteMany({ where: { id: ep.noticia_id, publicado: false } })
   })
   await apagarPrivado(ep?.audio_url ?? null)
+  await apagarPrivado(ep?.termo_entrevistado ?? null)
 }
 
 /**
@@ -516,7 +515,12 @@ export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: st
   const conteudo = `${textoParaHtml(ep.texto)}${rodape}\n${creditos}`
 
   return prisma.$transaction(async tx => {
-    const sem = await participantesSemAutorizacao(ep, tx)
+    // Participantes relidos dentro da transacao: se a lista mudou durante o publicar, vale a de agora.
+    const atuais = await tx.podcast_participantes.findMany({ where: { episodio_id: ep.id }, select: { user_id: true } })
+    const sem = await participantesSemAutorizacao(
+      { ...ep, participantes: atuais.map(a => ep.participantes.find(p => p.userId === a.user_id) ?? { userId: a.user_id, nome: 'Participante novo', turma: null }) },
+      tx
+    )
     if (sem.length) throw new PendenciaDeAutorizacao(`Sem autorização aceita: ${sem.join(', ')}.`)
     let noticiaId = ep.noticiaId
     if (ep.noJbinforma) {

@@ -72,7 +72,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
         if (falta.length) {
           await retirarEpisodio(ep, `Saiu do ar na edição: ${falta.join(' ')}`)
           revalidar(ep)
-          return erro(`Salvei, mas o episódio saiu do ar porque ficou faltando: ${falta.join(' ')}`, 409)
+          return NextResponse.json({ ok: false, error: `Salvei, mas o episódio saiu do ar porque ficou faltando: ${falta.join(' ')}`, episodio: await buscarEpisodio(id) }, { status: 409 })
         }
         try {
           await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
@@ -81,7 +81,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
           if (e instanceof PendenciaDeAutorizacao) {
             await retirarEpisodio(ep, `Saiu do ar na edição: ${e.message}`)
             revalidar(ep)
-            return erro(`Salvei, mas o episódio saiu do ar: ${e.message}`, 409)
+            return NextResponse.json({ ok: false, error: `Salvei, mas o episódio saiu do ar: ${e.message}`, episodio: await buscarEpisodio(id) }, { status: 409 })
           }
           console.error('[podcast/episodios/id] republicar', e)
           return erro('Salvei o episódio, mas não consegui atualizar a notícia do JBInforma. Clique em Salvar de novo.', 500)

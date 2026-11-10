@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { AlertTriangle, CheckCircle2, Download, ExternalLink, Eye, FileUp, Radio, Save, Send, Trash2, Undo2 } from 'lucide-react'
 import {
@@ -54,6 +54,11 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
   const [recuperado, setRecuperado] = useState(false)
   // Rascunho local feito sobre uma versão que mudou no servidor. Nunca apagado sem o usuário decidir.
   const [conflito, setConflito] = useState<Form | null>(null)
+  // Valores atuais para callbacks que terminam depois (upload longo): o texto digitado no meio não pode ser trocado pelo antigo.
+  const formRef = useRef(form)
+  const sujoRef = useRef(sujo)
+  formRef.current = form
+  sujoRef.current = sujo
 
   // Recupera rascunho não salvo deste aparelho. Só na abertura da tela:
   // depois disso o servidor muda a data a cada upload e isso não pode apagar nada.
@@ -85,7 +90,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
   /** O servidor mudou a data (upload de áudio/termo): o rascunho local passa a valer sobre a data nova. */
   function novaBase(atualizadoEm: string) {
     setEp(e => ({ ...e, atualizadoEm }))
-    if (sujo) guardarLocal(form, atualizadoEm)
+    if (sujoRef.current) guardarLocal(formRef.current, atualizadoEm)
   }
 
   const quadro = useMemo(() => QUADROS.find(q => q.chave === form.quadro), [form.quadro])
@@ -98,6 +103,14 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
     const r = await chamar(`/api/podcast/episodios/${ep.id}`, json('PATCH', corpo))
     setOcupado(false)
     if (!r.ok) {
+      // 409: o servidor salvou, mas tirou do ar. A tela passa a mostrar o estado real.
+      if (r.dados?.episodio) {
+        const atual = r.dados.episodio as Episodio
+        setEp(atual); setForm(doEpisodio(atual)); setSujo(false)
+        try { localStorage.removeItem(chaveRascunho) } catch { /* ok */ }
+        setErro(r.erro)
+        return false
+      }
       setErro(`${r.erro}${sujo ? ' O que você escreveu continua aqui.' : ''}`)
       return false
     }
@@ -293,7 +306,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
           <h2 className="font-geom text-lg font-bold text-gray-900">Termo de quem deu a entrevista</h2>
           <p className="text-sm text-gray-500">A pessoa entrevistada também precisa autorizar o uso da voz e do nome. Sem isso, o monitor não consegue publicar.</p>
           <div className="flex flex-wrap items-center gap-2">
-            <a href={`/api/podcast/termos?modelo=entrevistado&episodio=${ep.id}`} className={BOTAO_LEVE}><Download className="w-4 h-4" /> Baixar termo {form.entrevistadoNome && !sujo ? `de ${form.entrevistadoNome.split(' ')[0]}` : ''}</a>
+            <a href={`/api/podcast/termos?modelo=entrevistado&episodio=${ep.id}`} download className={BOTAO_LEVE}><Download className="w-4 h-4" /> Baixar termo {form.entrevistadoNome && !sujo ? `de ${form.entrevistadoNome.split(' ')[0]}` : ''}</a>
             {ep.temTermoEntrevistado
               ? <span className="text-sm text-green-700 inline-flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Termo assinado guardado</span>
               : <span className="text-sm text-amber-700 inline-flex items-center gap-1"><AlertTriangle className="w-4 h-4" /> Ainda sem termo assinado</span>}
