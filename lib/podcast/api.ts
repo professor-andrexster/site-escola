@@ -22,8 +22,11 @@ export async function exigirModerador() {
   return r
 }
 
-/** Aluno da equipe com autorizacao valida. */
-export const alunoLiberado = (a: Acesso) => Boolean(a.membro && a.membro.papel === 'aluno' && a.membro.liberado)
+/** Aluno da equipe com termo aceito do ano E permissao de postar dada pelo monitor. */
+export const alunoLiberado = (a: Acesso) => Boolean(a.membro && a.membro.papel === 'aluno' && a.membro.podeCriar)
+
+/** Pode mexer em audio: monitor/direcao, ou aluno liberado com permissao de audio. */
+export const podeAudio = (a: Acesso) => a.moderador || Boolean(alunoLiberado(a) && a.membro?.podeAudio)
 
 export const participa = (ep: Episodio, userId: string) =>
   ep.autorId === userId || ep.participantes.some(p => p.userId === userId)

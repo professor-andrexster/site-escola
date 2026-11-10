@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { CheckCircle2, Download, Eye, FileUp, Pencil, RotateCcw, Trash2, UserPlus, Users, XCircle } from 'lucide-react'
+import { CheckCircle2, Download, Eye, FileUp, Mic, PenLine, Pencil, RotateCcw, Trash2, UserPlus, Users, XCircle } from 'lucide-react'
 import { ROTULO_AUTORIZACAO, cpfValido, digitos, formatarCpf, type Membro } from '@/lib/podcast/tipos'
 import { BOTAO, BOTAO_LEVE, CAMPO, chamar, json } from './comum'
 
@@ -12,6 +12,8 @@ interface Props {
   alunos: Membro[]
   disponiveis: AlunoDisponivel[]
   anoAtual: number
+  /** Episodios por userId (autor ou participante). */
+  episodios: Record<string, number>
 }
 
 const COR: Record<string, string> = {
@@ -31,7 +33,7 @@ const mascaraDigitando = (v: string) => {
  * termo preenchido, e o aluno só é liberado quando o termo assinado sobe e o
  * monitor aceita.
  */
-export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) {
+export default function EquipePodcast({ alunos, disponiveis, anoAtual, episodios }: Props) {
   const router = useRouter()
   const [alunoId, setAlunoId] = useState('')
   const [respNome, setRespNome] = useState('')
@@ -108,7 +110,7 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
         <p className="text-sm text-gray-400">Nenhum aluno na equipe ainda.</p>
       ) : (
         <ul className="space-y-3">
-          {alunos.map(m => <LinhaAluno key={m.id} m={m} anoAtual={anoAtual} />)}
+          {alunos.map(m => <LinhaAluno key={m.id} m={m} anoAtual={anoAtual} episodios={episodios[m.userId] ?? 0} />)}
         </ul>
       )}
 
@@ -120,7 +122,20 @@ export default function EquipePodcast({ alunos, disponiveis, anoAtual }: Props) 
   )
 }
 
-function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
+/** Interruptor de permissao. */
+function Chave({ ligado, rotulo, Icone, onChange, desabilitado }: { ligado: boolean; rotulo: string; Icone: typeof Mic; onChange: (v: boolean) => void; desabilitado: boolean }) {
+  return (
+    <button type="button" role="switch" aria-checked={ligado} disabled={desabilitado} onClick={() => onChange(!ligado)}
+      className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors disabled:opacity-50 ${ligado ? 'border-green-300 bg-green-50 text-green-800' : 'border-gray-200 bg-white text-gray-500 hover:border-gray-300'}`}>
+      <span className={`relative inline-block h-4 w-7 rounded-full transition-colors ${ligado ? 'bg-green-600' : 'bg-gray-300'}`}>
+        <span className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-all ${ligado ? 'left-3.5' : 'left-0.5'}`} />
+      </span>
+      <Icone className="w-3.5 h-3.5" /> {rotulo}
+    </button>
+  )
+}
+
+function LinhaAluno({ m, anoAtual, episodios }: { m: Membro; anoAtual: number; episodios: number }) {
   const router = useRouter()
   const [arquivo, setArquivo] = useState<File | null>(null)
   const [ocupado, setOcupado] = useState(false)
@@ -166,6 +181,13 @@ function LinhaAluno({ m, anoAtual }: { m: Membro; anoAtual: number }) {
   const status = m.vencida ? 'pendente' : m.autorizacaoStatus
   return (
     <li className="border border-gray-100 rounded-xl p-4">
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        <Chave ligado={m.podePostar} rotulo="Pode postar" Icone={PenLine} desabilitado={ocupado} onChange={v => acao({ acao: 'permissoes', podePostar: v })} />
+        <Chave ligado={m.podeAudio} rotulo="Pode gravar áudio" Icone={Mic} desabilitado={ocupado} onChange={v => acao({ acao: 'permissoes', podeAudio: v })} />
+        <span className="text-xs text-gray-500">
+          {!m.liberado ? 'As permissões só valem depois do termo aceito.' : m.podeCriar ? `${episodios} episódio(s)` : 'Termo ok, falta liberar para postar.'}
+        </span>
+      </div>
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold text-gray-900">{m.nome}</p>

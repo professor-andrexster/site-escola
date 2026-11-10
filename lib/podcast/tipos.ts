@@ -62,6 +62,11 @@ export interface Membro {
   liberado: boolean
   /** Aceita, mas de ano anterior: precisa de termo novo. */
   vencida: boolean
+  /** Permissoes dadas pelo monitor/direcao (so valem com termo aceito). */
+  podePostar: boolean
+  podeAudio: boolean
+  /** Liberado + pode postar: pode criar episodio. */
+  podeCriar: boolean
 }
 
 /** O que o editor do episodio precisa saber de cada pessoa da equipe. Nada de responsavel, CPF ou matricula. */

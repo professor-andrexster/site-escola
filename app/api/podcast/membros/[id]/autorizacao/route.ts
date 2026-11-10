@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
-import { buscarMembro, registrarAutorizacao } from '@/lib/podcast/dados'
+import { buscarMembro, nomeDoUsuario, registrarAutorizacao } from '@/lib/podcast/dados'
+import { auditar } from '@/lib/podcast/auditoria'
 import { gravarDocumento } from '@/lib/podcast/arquivos'
 import { erro, exigirModerador } from '@/lib/podcast/api'
 
@@ -23,6 +24,7 @@ export async function POST(request: Request, { params }: Ctx) {
   if ('erro' in g) return erro(g.erro)
   try {
     const retirados = await registrarAutorizacao(id, g.caminho)
+    await auditar({ atorId: r.acesso.userId, acao: 'termo.enviado', alvoTipo: 'aluno', alvoId: id, alvoNome: await nomeDoUsuario(m.user_id), detalhe: retirados ? `${retirados} episódio(s) saíram do ar até conferir` : null })
     if (retirados > 0) revalidatePath('/', 'layout')
     return NextResponse.json({ ok: true, retirados })
   } catch (e) {

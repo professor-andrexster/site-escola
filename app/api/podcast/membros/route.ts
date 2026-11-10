@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { adicionarAluno, alunosDisponiveis } from '@/lib/podcast/dados'
 import { erro, exigirModerador, texto } from '@/lib/podcast/api'
+import { auditar } from '@/lib/podcast/auditoria'
 import { cpfValido, digitos } from '@/lib/podcast/tipos'
 
 /** Monitor adiciona aluno à equipe com nome e CPF do responsável. */
@@ -18,6 +19,7 @@ export async function POST(request: Request) {
   if (!aluno?.user_id) return erro('Esse aluno não está disponível: já está na equipe ou ainda não tem conta no site.')
   try {
     const m = await adicionarAluno({ id: aluno.id, userId: aluno.user_id }, { nome, cpf }, r.acesso.userId)
+    await auditar({ atorId: r.acesso.userId, acao: 'aluno.adicionado', alvoTipo: 'aluno', alvoId: m.id, alvoNome: aluno.nome, detalhe: `responsável: ${nome}` })
     return NextResponse.json({ ok: true, id: m.id })
   } catch (e) {
     console.error('[podcast/membros]', e)

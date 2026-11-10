@@ -4,7 +4,7 @@ import type { Metadata } from 'next'
 import { ArrowLeft } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
 import { acessoDe, buscarEpisodio, listarMembros, paraEditor } from '@/lib/podcast/dados'
-import { participa, podeEditar } from '@/lib/podcast/api'
+import { participa, podeAudio, podeEditar } from '@/lib/podcast/api'
 import EditorEpisodio from '@/components/admin/podcast/EditorEpisodio'
 
 interface Props { params: Promise<{ id: string }> }
@@ -31,7 +31,7 @@ export default async function EpisodioPage({ params }: Props) {
         <ArrowLeft className="w-4 h-4" /> Podcast
       </Link>
       <h1 className="font-playfair text-2xl md:text-3xl font-bold text-gray-900 mb-4">{ep.titulo}</h1>
-      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} />
+      <EditorEpisodio inicial={ep} podeEditar={podeEditar(ep, acesso)} moderador={acesso.moderador} equipe={equipe} userId={user.id} podeAudio={podeAudio(acesso)} />
     </div>
   )
 }

@@ -1053,6 +1053,8 @@ model podcast_membros {
   autorizacao_aceita_em  DateTime? @db.DateTime(3)
   autorizacao_aceita_por String?   @db.Char(36)
   ano_letivo             Int
+  pode_postar            Boolean   @default(false)
+  pode_audio             Boolean   @default(false)
   adicionado_por         String?   @db.Char(36)
   criado_em              DateTime  @default(now()) @db.DateTime(3)
 }
@@ -1092,4 +1094,23 @@ model podcast_participantes {
 
   @@id([episodio_id, user_id])
   @@index([user_id], map: "podcast_participantes_user_idx")
+}
+
+/// Auditoria do podcast: toda acao de equipe, permissao, episodio e acesso a
+/// termo. Nunca guarda CPF. DDL em scripts/sql/podcast.sql.
+model podcast_auditoria {
+  id        BigInt   @id @default(autoincrement())
+  quando    DateTime @default(now()) @db.DateTime(3)
+  ator_id   String?  @db.Char(36)
+  ator_nome String?  @db.VarChar(160)
+  acao      String   @db.VarChar(40)
+  alvo_tipo String?  @db.VarChar(12)
+  alvo_id   String?  @db.Char(36)
+  alvo_nome String?  @db.VarChar(200)
+  detalhe   String?  @db.VarChar(500)
+  ip        String?  @db.VarChar(64)
+
+  @@index([quando], map: "podcast_auditoria_quando_idx")
+  @@index([alvo_id], map: "podcast_auditoria_alvo_idx")
+  @@index([ator_id], map: "podcast_auditoria_ator_idx")
 }

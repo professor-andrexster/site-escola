@@ -92,6 +92,9 @@ async function montarMembros(linhas: LinhaMembro[]): Promise<Membro[]> {
       anoLetivo: l.ano_letivo,
       liberado: l.papel === 'monitor' || (status === 'aceita' && l.ano_letivo === ano),
       vencida: l.papel !== 'monitor' && status === 'aceita' && l.ano_letivo !== ano,
+      podePostar: l.papel === 'monitor' || l.pode_postar,
+      podeAudio: l.papel === 'monitor' || l.pode_audio,
+      podeCriar: l.papel === 'monitor' || (status === 'aceita' && l.ano_letivo === ano && l.pode_postar),
     }
   })
 }
@@ -104,6 +107,13 @@ export async function listarMembros(): Promise<Membro[]> {
 
 export async function buscarMembro(id: string) {
   return prisma.podcast_membros.findUnique({ where: { id } })
+}
+
+/** Nome para a auditoria (aluno: nome da ficha; professor: nome do perfil). */
+export async function nomeDoUsuario(userId: string): Promise<string | null> {
+  const a = await prisma.alunos.findFirst({ where: { user_id: userId }, select: { nome: true } })
+  if (a) return a.nome
+  return (await prisma.profiles.findUnique({ where: { id: userId }, select: { nome_completo: true } }))?.nome_completo ?? null
 }
 
 /** Professores aprovados que ainda nao sao monitores do podcast. */
@@ -247,6 +257,44 @@ export async function removerMembro(id: string): Promise<{ erro: string } | { ok
   if (noAr > 0) return { erro: `Essa pessoa aparece em ${noAr} episódio(s) no ar. Tire do ar antes de remover.` }
   await prisma.podcast_membros.delete({ where: { id } })
   return { ok: true }
+}
+
+/** Liga/desliga o que o aluno pode fazer. So aluno (monitor pode tudo). */
+export async function definirPermissoes(id: string, p: { podePostar?: boolean; podeAudio?: boolean }) {
+  return prisma.podcast_membros.update({
+    where: { id },
+    data: {
+      ...(p.podePostar !== undefined ? { pode_postar: p.podePostar } : {}),
+      ...(p.podeAudio !== undefined ? { pode_audio: p.podeAudio } : {}),
+    },
+  })
+}
+
+/** Numeros do painel. */
+export async function resumoDoPainel() {
+  const [membros, eps] = await Promise.all([
+    listarMembros(),
+    prisma.podcast_episodios.groupBy({ by: ['status'], _count: { _all: true } }),
+  ])
+  const alunos = membros.filter(m => m.papel === 'aluno')
+  const conta = (s: string) => eps.find(e => e.status === s)?._count._all ?? 0
+  return {
+    monitores: membros.filter(m => m.papel === 'monitor').length,
+    alunos: alunos.length,
+    podemCriar: alunos.filter(m => m.podeCriar).length,
+    esperandoTermo: alunos.filter(m => m.autorizacaoStatus === 'pendente' || m.vencida).length,
+    termoParaConferir: alunos.filter(m => m.autorizacaoStatus === 'enviada').length,
+    semPermissao: alunos.filter(m => m.liberado && !m.podePostar).length,
+    emRevisao: conta('revisao'),
+    noAr: conta('publicado'),
+    rascunhos: conta('rascunho') + conta('ajustar'),
+  }
+}
+
+/** Quantos episodios cada pessoa fez (autor ou participante). */
+export async function episodiosPorPessoa(): Promise<Record<string, number>> {
+  const ps = await prisma.podcast_participantes.groupBy({ by: ['user_id'], _count: { _all: true } })
+  return Object.fromEntries(ps.map(p => [p.user_id, p._count._all]))
 }
 
 /** Dados para preencher o termo do responsavel. CPF inteiro: so para o PDF. */

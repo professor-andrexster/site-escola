@@ -57,3 +57,25 @@ CREATE TABLE IF NOT EXISTS `podcast_participantes` (
   KEY `podcast_participantes_user_idx` (`user_id`),
   CONSTRAINT `podcast_participantes_episodio_fkey` FOREIGN KEY (`episodio_id`) REFERENCES `podcast_episodios` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- 2026-11-10 (noite): permissoes por aluno e auditoria.
+ALTER TABLE `podcast_membros`
+  ADD COLUMN IF NOT EXISTS `pode_postar` tinyint(1) NOT NULL DEFAULT 0 AFTER `ano_letivo`,
+  ADD COLUMN IF NOT EXISTS `pode_audio`  tinyint(1) NOT NULL DEFAULT 0 AFTER `pode_postar`;
+
+CREATE TABLE IF NOT EXISTS `podcast_auditoria` (
+  `id`        bigint       NOT NULL AUTO_INCREMENT,
+  `quando`    datetime(3)  NOT NULL DEFAULT current_timestamp(3),
+  `ator_id`   char(36)     DEFAULT NULL,
+  `ator_nome` varchar(160) DEFAULT NULL,
+  `acao`      varchar(40)  NOT NULL,
+  `alvo_tipo` varchar(12)  DEFAULT NULL,  -- monitor | aluno | episodio | termo
+  `alvo_id`   char(36)     DEFAULT NULL,
+  `alvo_nome` varchar(200) DEFAULT NULL,
+  `detalhe`   varchar(500) DEFAULT NULL,  -- nunca CPF
+  `ip`        varchar(64)  DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `podcast_auditoria_quando_idx` (`quando`),
+  KEY `podcast_auditoria_alvo_idx` (`alvo_id`),
+  KEY `podcast_auditoria_ator_idx` (`ator_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

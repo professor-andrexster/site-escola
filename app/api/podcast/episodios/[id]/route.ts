@@ -6,7 +6,8 @@ import {
   atualizarEpisodio, buscarEpisodio, listarMembros, mudarStatus, participantesSemAutorizacao,
   PendenciaDeAutorizacao, publicarEpisodio, removerEpisodio, retirarEpisodio, type CamposEpisodio,
 } from '@/lib/podcast/dados'
-import { erro, exigirAcesso, participa, podeEditar, texto } from '@/lib/podcast/api'
+import { erro, exigirAcesso, participa, podeAudio, podeEditar, texto } from '@/lib/podcast/api'
+import { auditar } from '@/lib/podcast/auditoria'
 import { QUADROS, type Episodio } from '@/lib/podcast/tipos'
 
 interface Ctx { params: Promise<{ id: string }> }
@@ -51,7 +52,12 @@ export async function PATCH(request: Request, { params }: Ctx) {
     if (!t || t.length < 4) return erro('O título precisa de pelo menos 4 letras.')
     campos.titulo = t
   }
-  if (b.tipo !== undefined) campos.tipo = b.tipo === 'materia' ? 'materia' : 'entrevista'
+  if (b.tipo !== undefined) {
+    campos.tipo = b.tipo === 'materia' ? 'materia' : 'entrevista'
+    if (campos.tipo === 'entrevista' && ep.tipo !== 'entrevista' && !podeAudio(a)) {
+      return erro('Você ainda não tem permissão para gravar áudio, então o formato fica matéria. Peça a permissão ao monitor.', 403)
+    }
+  }
   if (b.quadro !== undefined) campos.quadro = QUADROS.some(q => q.chave === b.quadro) ? (b.quadro as string) : null
   if (b.resumo !== undefined) campos.resumo = texto(b.resumo, 300)
   if (b.texto !== undefined) campos.texto = typeof b.texto === 'string' && b.texto.trim() ? b.texto.slice(0, 20000) : null
@@ -130,6 +136,15 @@ export async function PATCH(request: Request, { params }: Ctx) {
     }
 
     const final = (await buscarEpisodio(id))!
+    const editou = Object.keys(campos).length > 0
+    const acaoAud: Record<string, string> = { enviar: 'episodio.enviado', publicar: 'episodio.publicado', ajustar: 'episodio.devolvido', retirar: 'episodio.retirado', rascunho: 'episodio.rascunho' }
+    if (editou) await auditar({ atorId: a.userId, acao: 'episodio.editado', alvoTipo: 'episodio', alvoId: id, alvoNome: final.titulo, detalhe: `campos: ${Object.keys(campos).join(', ')}` })
+    if (typeof acao === 'string' && acaoAud[acao]) {
+      await auditar({
+        atorId: a.userId, acao: acaoAud[acao], alvoTipo: 'episodio', alvoId: id, alvoNome: final.titulo,
+        detalhe: acao === 'ajustar' ? texto(b.feedback, 300) : acao === 'retirar' ? texto(b.motivo, 300) : acao === 'publicar' ? (final.audioUrl ? 'com áudio' : 'sem áudio') : null,
+      })
+    }
     if (acao || final.status === 'publicado') revalidar(final)
     return NextResponse.json({ ok: true, episodio: final })
   } catch (e) {
@@ -152,6 +167,7 @@ export async function DELETE(_request: Request, { params }: Ctx) {
   if (!(r.acesso.moderador || ep.autorId === r.acesso.userId)) return erro('Sem permissão.', 403)
   if (ep.status !== 'rascunho' && ep.status !== 'ajustar') return erro('Só rascunho pode ser apagado.', 409)
   await removerEpisodio(id)
+  await auditar({ atorId: r.acesso.userId, acao: 'episodio.apagado', alvoTipo: 'episodio', alvoId: id, alvoNome: ep.titulo })
   revalidar(ep)
   return NextResponse.json({ ok: true })
 }

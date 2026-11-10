@@ -1,10 +1,13 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { ExternalLink, Mic, Radio } from 'lucide-react'
+import { AlertTriangle, CheckCircle2, ExternalLink, FileCheck, Mic, Radio, ShieldCheck, Users } from 'lucide-react'
 import { getProfileOrRedirect } from '@/lib/profile'
 import {
-  acessoDe, alunosDisponiveis, episodiosDoAluno, listarMembros, professoresDisponiveis, todosOsEpisodios,
+  acessoDe, alunosDisponiveis, episodiosDoAluno, episodiosPorPessoa, listarMembros, professoresDisponiveis, resumoDoPainel, todosOsEpisodios,
 } from '@/lib/podcast/dados'
+import { listarAuditoria } from '@/lib/podcast/auditoria'
+import AbasPodcast, { ABAS, type Aba } from '@/components/admin/podcast/AbasPodcast'
+import PainelAuditoria from '@/components/admin/podcast/PainelAuditoria'
 import { NOME_PODCAST, ROTULO_AUTORIZACAO, ROTULO_EPISODIO, anoLetivoAtual, nomeDoQuadro, type Episodio } from '@/lib/podcast/tipos'
 import MonitoresPodcast from '@/components/admin/podcast/MonitoresPodcast'
 import EquipePodcast from '@/components/admin/podcast/EquipePodcast'
@@ -45,7 +48,10 @@ function ListaEpisodios({ eps, vazio }: { eps: Episodio[]; vazio: string }) {
  * direção escolhe monitores; monitor cuida da equipe e aprova; aluno da
  * equipe grava (depois da autorização aceita); os demais são convidados a ouvir.
  */
-export default async function PodcastPage() {
+interface Props { searchParams: Promise<{ aba?: string; pessoa?: string; acao?: string; antes?: string }> }
+
+export default async function PodcastPage({ searchParams }: Props) {
+  const sp = await searchParams
   const { user } = await getProfileOrRedirect()
   const acesso = await acessoDe(user.id)
   const ano = anoLetivoAtual()
@@ -68,32 +74,120 @@ export default async function PodcastPage() {
   }
 
   if (acesso.moderador) {
-    const [membros, episodios, disponiveis, professores] = await Promise.all([
-      listarMembros(), todosOsEpisodios(), alunosDisponiveis(), acesso.gestao ? professoresDisponiveis() : Promise.resolve([]),
-    ])
-    const esperando = episodios.filter(e => e.status === 'revisao')
+    const aba: Aba = (ABAS.map(a => a.chave) as string[]).includes(sp.aba ?? '') ? (sp.aba as Aba) : 'visao'
+    const resumo = await resumoDoPainel()
+    const contagem = { revisao: resumo.emRevisao, equipe: resumo.termoParaConferir + resumo.semPermissao }
+    let corpo: React.ReactNode = null
+
+    if (aba === 'visao') {
+      const cards = [
+        { rotulo: 'Monitores', valor: resumo.monitores, Icone: ShieldCheck, href: 'equipe' },
+        { rotulo: 'Alunos na equipe', valor: resumo.alunos, Icone: Users, href: 'equipe' },
+        { rotulo: 'Podem postar', valor: resumo.podemCriar, Icone: CheckCircle2, href: 'equipe' },
+        { rotulo: 'No ar', valor: resumo.noAr, Icone: Radio, href: 'episodios' },
+      ]
+      const pendencias = [
+        resumo.monitores === 0 && { texto: 'Nenhum professor monitor ainda.', href: 'equipe' },
+        resumo.termoParaConferir > 0 && { texto: `${resumo.termoParaConferir} termo(s) assinado(s) esperando sua conferência.`, href: 'equipe' },
+        resumo.semPermissao > 0 && { texto: `${resumo.semPermissao} aluno(s) com termo ok, mas sem permissão para postar.`, href: 'equipe' },
+        resumo.esperandoTermo > 0 && { texto: `${resumo.esperandoTermo} aluno(s) esperando o termo assinado pelo responsável.`, href: 'equipe' },
+        resumo.emRevisao > 0 && { texto: `${resumo.emRevisao} episódio(s) esperando revisão.`, href: 'revisao' },
+      ].filter(Boolean) as { texto: string; href: string }[]
+      const recentes = await listarAuditoria({ limite: 8 })
+      corpo = (
+        <>
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            {cards.map(c => (
+              <Link key={c.rotulo} href={`/admin/podcast?aba=${c.href}`} className="panel-interativo p-5 block">
+                <c.Icone className="w-5 h-5 text-escola-azul mb-2" />
+                <p className="text-3xl font-bold text-gray-900">{c.valor}</p>
+                <p className="text-sm text-gray-500">{c.rotulo}</p>
+              </Link>
+            ))}
+          </div>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <section className="panel p-6">
+              <h2 className="font-geom text-lg font-bold text-gray-900 mb-3">O que precisa de você</h2>
+              {pendencias.length === 0 ? (
+                <p className="text-sm text-green-700 inline-flex items-center gap-2"><CheckCircle2 className="w-4 h-4" /> Nada pendente agora.</p>
+              ) : (
+                <ul className="space-y-2">
+                  {pendencias.map(p => (
+                    <li key={p.texto}><Link href={`/admin/podcast?aba=${p.href}`} className="flex items-start gap-2 text-sm text-gray-800 hover:text-escola-azul"><AlertTriangle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />{p.texto}</Link></li>
+                  ))}
+                </ul>
+              )}
+            </section>
+            <section className="panel p-6 min-w-0">
+              <div className="flex items-center justify-between mb-3">
+                <h2 className="font-geom text-lg font-bold text-gray-900">Últimas ações</h2>
+                <Link href="/admin/podcast?aba=auditoria" className="text-sm text-escola-azul hover:underline">Auditoria completa</Link>
+              </div>
+              {recentes.length === 0 ? <p className="text-sm text-gray-400">Nada registrado ainda.</p> : (
+                <ul className="space-y-2 text-sm">
+                  {recentes.map(r => (
+                    <li key={r.id} className="flex gap-2 min-w-0">
+                      <FileCheck className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
+                      <span className="min-w-0"><strong className="font-semibold text-gray-900">{r.atorNome?.split(' ')[0] ?? 'Alguém'}</strong> <span className="text-gray-600">{r.rotulo.toLowerCase()}</span>{r.alvoNome ? <span className="text-gray-800">: {r.alvoNome}</span> : null}
+                        <span className="block text-xs text-gray-400">{new Date(r.quando).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</span></span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          </div>
+        </>
+      )
+    } else if (aba === 'equipe') {
+      const [membros, disponiveis, professores, porPessoa] = await Promise.all([
+        listarMembros(), alunosDisponiveis(), acesso.gestao ? professoresDisponiveis() : Promise.resolve([]), episodiosPorPessoa(),
+      ])
+      const monitores = membros.filter(m => m.papel === 'monitor')
+      corpo = (
+        <>
+          {acesso.gestao ? (
+            <MonitoresPodcast monitores={monitores} professores={professores} />
+          ) : (
+            <section className="panel p-6 mb-6">
+              <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Professores monitores</h2>
+              <ul className="flex flex-wrap gap-2">{monitores.map(m => <li key={m.id} className="rounded-full border border-gray-200 px-3 py-1 text-sm">{m.nome}</li>)}</ul>
+              <p className="text-xs text-gray-500 mt-2">Só a direção adiciona ou tira monitores.</p>
+            </section>
+          )}
+          <EquipePodcast
+            alunos={membros.filter(m => m.papel === 'aluno')}
+            disponiveis={disponiveis.map(a => ({ id: a.id, nome: a.nome, turma: a.turma, matricula: a.matricula, responsavel: a.responsavel }))}
+            anoAtual={ano}
+            episodios={porPessoa}
+          />
+        </>
+      )
+    } else if (aba === 'revisao' || aba === 'episodios') {
+      const episodios = await todosOsEpisodios()
+      corpo = aba === 'revisao' ? (
+        <section>
+          <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Esperando sua revisão</h2>
+          <ListaEpisodios eps={episodios.filter(e => e.status === 'revisao')} vazio="Nada esperando. Quando a equipe enviar um episódio, ele aparece aqui." />
+        </section>
+      ) : (
+        <>
+          <NovoEpisodio podeAudio />
+          <section>
+            <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Todos os episódios</h2>
+            <ListaEpisodios eps={episodios} vazio="Nenhum episódio ainda." />
+          </section>
+        </>
+      )
+    } else {
+      const linhas = await listarAuditoria({ pessoa: sp.pessoa?.slice(0, 80), acao: sp.acao?.slice(0, 30), antesDe: /^\d+$/.test(sp.antes ?? '') ? sp.antes : undefined, limite: 100 })
+      corpo = <PainelAuditoria linhas={linhas} pessoa={sp.pessoa ?? ''} acao={sp.acao ?? ''} maisAntigo={linhas.length === 100 ? linhas[linhas.length - 1].id : null} />
+    }
+
     return (
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {cabecalho}
-        {acesso.gestao && <MonitoresPodcast monitores={membros.filter(m => m.papel === 'monitor')} professores={professores} />}
-
-        <section className="mb-6">
-          <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Esperando sua revisão {esperando.length > 0 && <span className="ml-1 text-sm bg-amber-100 text-amber-800 rounded-full px-2 py-0.5">{esperando.length}</span>}</h2>
-          <ListaEpisodios eps={esperando} vazio="Nada esperando. Quando a equipe enviar um episódio, ele aparece aqui." />
-        </section>
-
-        <EquipePodcast
-          alunos={membros.filter(m => m.papel === 'aluno')}
-          disponiveis={disponiveis.map(a => ({ id: a.id, nome: a.nome, turma: a.turma, matricula: a.matricula, responsavel: a.responsavel }))}
-          anoAtual={ano}
-        />
-
-        <NovoEpisodio />
-
-        <section className="mb-6">
-          <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Todos os episódios</h2>
-          <ListaEpisodios eps={episodios.filter(e => e.status !== 'revisao')} vazio="Nenhum episódio ainda." />
-        </section>
+        <AbasPodcast atual={aba} contagem={contagem} />
+        {corpo}
       </div>
     )
   }
@@ -104,6 +198,12 @@ export default async function PodcastPage() {
     return (
       <div className="max-w-5xl mx-auto">
         {cabecalho}
+        {m.liberado && !m.podePostar && (
+          <section className="panel p-6 mb-6 border-l-4 border-blue-400">
+            <h2 className="font-geom text-lg font-bold text-gray-900">Seu termo está ok!</h2>
+            <p className="text-sm text-gray-600 mt-1">Agora falta o monitor liberar você para postar. Assim que ele ligar, o botão de começar um episódio aparece aqui.</p>
+          </section>
+        )}
         {!m.liberado && (
           <section className="panel p-6 mb-6 border-l-4 border-amber-400">
             <h2 className="font-geom text-lg font-bold text-gray-900">Você está na equipe! Falta só uma coisa.</h2>
@@ -119,10 +219,10 @@ export default async function PodcastPage() {
             <p className="text-xs text-gray-500 mt-2">Situação: {m.vencida ? 'autorização vencida' : ROTULO_AUTORIZACAO[m.autorizacaoStatus]}</p>
           </section>
         )}
-        {m.liberado && <NovoEpisodio />}
+        {m.podeCriar && <NovoEpisodio podeAudio={m.podeAudio} />}
         <section>
           <h2 className="font-geom text-lg font-bold text-gray-900 mb-2">Meus episódios</h2>
-          <ListaEpisodios eps={eps} vazio={m.liberado ? 'Você ainda não começou nenhum. Que tal o primeiro?' : 'Assim que liberar, seus episódios aparecem aqui.'} />
+          <ListaEpisodios eps={eps} vazio={m.podeCriar ? 'Você ainda não começou nenhum. Que tal o primeiro?' : 'Assim que liberar, seus episódios aparecem aqui.'} />
         </section>
       </div>
     )

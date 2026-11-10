@@ -16,6 +16,8 @@ interface Props {
   moderador: boolean
   equipe: PessoaEquipe[]
   userId: string
+  /** Monitor, ou aluno com permissão de áudio. */
+  podeAudio: boolean
 }
 
 type Form = {
@@ -38,7 +40,7 @@ const COR_STATUS: Record<string, string> = {
  * Tela do episódio. O que o aluno digita fica guardado no aparelho até o
  * servidor confirmar: se a internet cair no meio, nada se perde.
  */
-export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe, userId }: Props) {
+export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe, userId, podeAudio }: Props) {
   const router = useRouter()
   // Por usuario: num computador da sala, o rascunho de um aluno nao aparece para o outro.
   const chaveRascunho = `podcast-ep-${inicial.id}-${userId}`
@@ -201,7 +203,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
           <label className="block">
             <span className="block text-xs font-semibold text-gray-600 mb-1">Formato</span>
             <select value={form.tipo} onChange={e => mudar('tipo', e.target.value as Form['tipo'])} disabled={bloqueado} className={CAMPO}>
-              <option value="entrevista">Entrevista (com áudio)</option>
+              <option value="entrevista" disabled={!podeAudio && ep.tipo !== 'entrevista'}>Entrevista (com áudio)</option>
               <option value="materia">Matéria (texto)</option>
             </select>
           </label>
@@ -284,7 +286,10 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
         ) : (
           <p className="text-sm text-gray-500">{ehEntrevista ? 'Sem áudio ainda. A entrevista só vai ao ar com áudio.' : 'Matéria pode ir sem áudio. Se quiser, grave uma versão falada.'}</p>
         )}
-        {podeEditar && (
+        {podeEditar && !podeAudio && (
+          <p className="text-sm text-gray-500 bg-gray-50 rounded-lg p-3">Gravação de áudio ainda não liberada para você. Peça ao monitor do podcast.</p>
+        )}
+        {podeEditar && podeAudio && (
           <>
             <details className="text-sm text-gray-600">
               <summary className="cursor-pointer font-semibold text-gray-700">Dicas rápidas antes de gravar</summary>

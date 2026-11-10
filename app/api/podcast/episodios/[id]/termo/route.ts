@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { buscarEpisodio, definirTermoEntrevistado } from '@/lib/podcast/dados'
 import { gravarDocumento } from '@/lib/podcast/arquivos'
 import { erro, exigirAcesso, podeEditar } from '@/lib/podcast/api'
+import { auditar } from '@/lib/podcast/auditoria'
 
 interface Ctx { params: Promise<{ id: string }> }
 
@@ -9,6 +10,7 @@ interface Ctx { params: Promise<{ id: string }> }
 export async function POST(request: Request, { params }: Ctx) {
   const r = await exigirAcesso()
   if (!r.ok) return r.res
+  const acessoId = r.acesso.userId
   const { id } = await params
   const ep = await buscarEpisodio(id)
   if (!ep) return erro('Episódio não encontrado.', 404)
@@ -23,6 +25,7 @@ export async function POST(request: Request, { params }: Ctx) {
   if ('erro' in g) return erro(g.erro)
   try {
     const r = await definirTermoEntrevistado(id, g.caminho)
+    await auditar({ atorId: acessoId, acao: 'termo_entrevistado.enviado', alvoTipo: 'episodio', alvoId: id, alvoNome: ep.titulo, detalhe: ep.entrevistadoNome })
     return NextResponse.json({ ok: true, atualizadoEm: r.atualizado_em.toISOString() })
   } catch (e) {
     console.error('[podcast/termo]', e)

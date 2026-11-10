@@ -3,6 +3,7 @@ import { buscarEpisodio, dadosDoTermo } from '@/lib/podcast/dados'
 import { termoEntrevistado, termoResponsavel } from '@/lib/podcast/termos'
 import { erro, exigirAcesso, participa } from '@/lib/podcast/api'
 import { slugDe } from '@/lib/podcast/tipos'
+import { auditar } from '@/lib/podcast/auditoria'
 
 /**
  * PDF dos termos.
@@ -28,6 +29,7 @@ export async function GET(request: Request) {
       if (!d) return erro('Aluno não encontrado na equipe.', 404)
       bytes = await termoResponsavel(d)
       nome = `autorizacao-${slugDe(d.alunoNome)}.pdf`
+      await auditar({ atorId: r.acesso.userId, acao: 'termo.baixado', alvoTipo: 'aluno', alvoId: membro, alvoNome: d.alunoNome })
     } else {
       bytes = await termoResponsavel()
       nome = 'autorizacao-responsavel-em-branco.pdf'
