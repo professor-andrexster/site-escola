@@ -3,11 +3,14 @@
 import { useEffect, useRef, useState } from 'react'
 import { Circle, Download, Pause, Play, Square, Upload } from 'lucide-react'
 import { BOTAO, BOTAO_LEVE } from './comum'
+import { apagarGravacao, guardarGravacao, lerGravacao } from './guardaGravacao'
 
 interface Props {
   /** Envia o arquivo. Devolve mensagem de erro, ou null quando deu certo. */
   enviar: (arquivo: File) => Promise<string | null>
   desabilitado?: boolean
+  /** Identifica a gravação guardada no aparelho (episódio + usuário). */
+  chave: string
 }
 
 const LIMITE = 25 * 1024 * 1024
@@ -28,7 +31,7 @@ function tipoSuportado(): string {
  * o botão "Tentar de novo" reenvia a mesma gravação, e "Baixar gravação"
  * salva no aparelho para não perder a entrevista de jeito nenhum.
  */
-export default function GravadorAudio({ enviar, desabilitado }: Props) {
+export default function GravadorAudio({ enviar, desabilitado, chave }: Props) {
   const [estado, setEstado] = useState<'parado' | 'gravando' | 'pausado'>('parado')
   const [segundos, setSegundos] = useState(0)
   const [gravacao, setGravacao] = useState<File | null>(null)
@@ -44,6 +47,25 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
 
   useEffect(() => () => { if (relogio.current) clearInterval(relogio.current); rec.current?.stream.getTracks().forEach(t => t.stop()) }, [])
   useEffect(() => () => { if (previa) URL.revokeObjectURL(previa) }, [previa])
+
+  // Gravação que ficou guardada no aparelho (saiu sem salvar, aba fechou, bateria acabou).
+  useEffect(() => {
+    let vivo = true
+    lerGravacao(chave).then(f => {
+      if (!vivo || !f) return
+      setGravacao(atual => atual ?? f)
+      setPrevia(p => p ?? URL.createObjectURL(f))
+      setAviso('Recuperei uma gravação que não chegou a ser salva no episódio. Escute e salve.')
+    })
+    return () => { vivo = false }
+  }, [chave])
+
+  /** Põe a gravação na tela e guarda no aparelho até o servidor confirmar. */
+  function pendente(f: File) {
+    setGravacao(f)
+    setPrevia(URL.createObjectURL(f))
+    guardarGravacao(chave, f)
+  }
 
   // Gravação não enviada (ou gravando): avisa antes de fechar a aba E antes de
   // sair por um link do próprio site, que no Next não dispara beforeunload.
@@ -90,8 +112,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
         const blob = new Blob(partes.current, { type: mime.split(';')[0] })
         const ext = mime.includes('mp4') ? 'm4a' : mime.includes('ogg') ? 'ogg' : 'webm'
         const f = new File([blob], `gravacao-${new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-')}.${ext}`, { type: blob.type })
-        setGravacao(f)
-        setPrevia(URL.createObjectURL(blob))
+        pendente(f)
         if (f.size > LIMITE) setErro('A gravação passou de 25 MB. Baixe e corte num app de áudio, ou grave em partes menores.')
       }
       r.start(1000)
@@ -107,6 +128,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
 
   function descartar() {
     setGravacao(null); setPrevia(null); setErro(''); setConfirmarDescarte(false)
+    apagarGravacao(chave)
   }
 
   function pausar() { rec.current?.pause(); setEstado('pausado'); if (relogio.current) clearInterval(relogio.current) }
@@ -122,6 +144,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
     setAviso('Áudio salvo no episódio.')
     setGravacao(null)
     setPrevia(null)
+    apagarGravacao(chave)
   }
 
   function baixar() {
@@ -180,7 +203,7 @@ export default function GravadorAudio({ enviar, desabilitado }: Props) {
           {podeGravar ? 'Ou suba um arquivo gravado em outro app' : 'Suba o arquivo de áudio'} (MP3, M4A, WEBM, OGG ou WAV, até 25 MB)
         </span>
         <input type="file" accept="audio/*" disabled={desabilitado || enviando || !!gravacao || estado !== 'parado'}
-          onChange={e => { const f = e.target.files?.[0]; if (f) { setGravacao(f); setPrevia(URL.createObjectURL(f)); setErro('') } }}
+          onChange={e => { const f = e.target.files?.[0]; if (f) { pendente(f); setErro('') } }}
           className="block w-full text-sm text-gray-600 file:mr-3 file:rounded-lg file:border-0 file:bg-blue-50 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-escola-azul" />
       </label>
 

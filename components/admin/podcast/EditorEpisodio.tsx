@@ -296,7 +296,7 @@ export default function EditorEpisodio({ inicial, podeEditar, moderador, equipe,
                 <li>Entre 5 e 15 minutos está ótimo. Ninguém ouve 40 minutos no intervalo.</li>
               </ul>
             </details>
-            <GravadorAudio enviar={enviarAudio} desabilitado={ocupado} />
+            <GravadorAudio enviar={enviarAudio} desabilitado={ocupado} chave={`${ep.id}-${userId}`} />
           </>
         )}
       </section>

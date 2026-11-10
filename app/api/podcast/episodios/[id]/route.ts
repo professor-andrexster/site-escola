@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { revalidatePath } from 'next/cache'
 import { prisma } from '@/lib/db'
+import type { Prisma } from '@prisma/client'
 import {
   atualizarEpisodio, buscarEpisodio, listarMembros, mudarStatus, participantesSemAutorizacao,
   PendenciaDeAutorizacao, publicarEpisodio, removerEpisodio, retirarEpisodio, type CamposEpisodio,
@@ -16,13 +17,16 @@ function revalidar(_ep: Episodio) {
 }
 
 /** O que falta para o episódio ir ao ar. Vazio = pode. */
-async function pendencias(ep: Episodio): Promise<string[]> {
+/** Edição do monitor que deixaria o episódio no ar faltando algo: nada é salvo. */
+class EdicaoRecusada extends Error {}
+
+async function pendencias(ep: Episodio, tx?: Prisma.TransactionClient): Promise<string[]> {
   const p: string[] = []
   if (ep.tipo === 'entrevista' && !ep.audioUrl) p.push('Entrevista precisa do áudio.')
   if (ep.tipo === 'materia' && !(ep.texto && ep.texto.trim().length >= 80)) p.push('A matéria precisa de um texto com pelo menos umas três linhas.')
   if (!ep.resumo) p.push('Escreva o resumo (uma ou duas frases que chamem para ouvir).')
   if (ep.tipo === 'entrevista' && ep.entrevistadoNome && !ep.temTermoEntrevistado) p.push(`Falta o termo assinado por ${ep.entrevistadoNome}.`)
-  const sem = await participantesSemAutorizacao(ep)
+  const sem = await participantesSemAutorizacao(ep, tx)
   if (sem.length) p.push(`Sem autorização aceita: ${sem.join(', ')}.`)
   return p
 }
@@ -64,28 +68,29 @@ export async function PATCH(request: Request, { params }: Ctx) {
       if (!podeEditar(ep, a)) {
         return erro(ep.status === 'revisao' ? 'O episódio está com o monitor. Espere a resposta para mexer de novo.' : 'Você não pode editar este episódio.', 403)
       }
-      await atualizarEpisodio(id, campos)
-      ep = (await buscarEpisodio(id))!
-      // Monitor corrigiu um episodio que ja esta no ar: confere de novo e a noticia acompanha.
       if (ep.status === 'publicado') {
-        const falta = await pendencias(ep)
-        if (falta.length) {
-          await retirarEpisodio(ep, `Saiu do ar na edição: ${falta.join(' ')}`)
-          revalidar(ep)
-          return NextResponse.json({ ok: false, error: `Salvei, mas o episódio saiu do ar porque ficou faltando: ${falta.join(' ')}`, episodio: await buscarEpisodio(id) }, { status: 409 })
-        }
+        // Episodio no ar: editar, conferir e republicar a noticia numa transacao so.
+        // Se a edicao deixaria faltando algo, nada e salvo e o episodio continua no ar como estava.
+        const nome = await nomeDe(a.userId)
         try {
-          await publicarEpisodio(ep, { id: a.userId, nome: await nomeDe(a.userId) })
+          ep = await prisma.$transaction(async tx => {
+            await atualizarEpisodio(id, campos, tx)
+            const novo = (await buscarEpisodio(id, tx))!
+            const falta = await pendencias(novo, tx)
+            if (falta.length) throw new EdicaoRecusada(falta.join(' '))
+            await publicarEpisodio(novo, { id: a.userId, nome }, tx)
+            return novo
+          })
           revalidar(ep)
         } catch (e) {
-          if (e instanceof PendenciaDeAutorizacao) {
-            await retirarEpisodio(ep, `Saiu do ar na edição: ${e.message}`)
-            revalidar(ep)
-            return NextResponse.json({ ok: false, error: `Salvei, mas o episódio saiu do ar: ${e.message}`, episodio: await buscarEpisodio(id) }, { status: 409 })
+          if (e instanceof EdicaoRecusada || e instanceof PendenciaDeAutorizacao) {
+            return erro(`Não salvei: o episódio está no ar e ficaria faltando: ${e.message} Ele continua no ar como estava.`, 409)
           }
-          console.error('[podcast/episodios/id] republicar', e)
-          return erro('Salvei o episódio, mas não consegui atualizar a notícia do JBInforma. Clique em Salvar de novo.', 500)
+          throw e
         }
+      } else {
+        await atualizarEpisodio(id, campos)
+        ep = (await buscarEpisodio(id))!
       }
     }
 

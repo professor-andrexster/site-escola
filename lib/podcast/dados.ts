@@ -15,6 +15,11 @@ type Tx = Prisma.TransactionClient
 /** Participante sem autorizacao valida no momento de publicar. */
 export class PendenciaDeAutorizacao extends Error {}
 
+/** Roda dentro da transacao recebida, ou abre uma. Permite juntar editar + republicar numa so. */
+function naTransacao<T>(tx: Tx | undefined, fn: (tx: Tx) => Promise<T>): Promise<T> {
+  return tx ? fn(tx) : prisma.$transaction(fn)
+}
+
 /**
  * Podcast "JB no Ar": equipe, autorizacoes e episodios.
  *
@@ -263,12 +268,12 @@ export async function dadosDoTermo(membroId: string) {
 
 type LinhaEpisodio = Awaited<ReturnType<typeof prisma.podcast_episodios.findMany<{ include: { podcast_participantes: true } }>>>[number]
 
-async function montarEpisodios(linhas: LinhaEpisodio[]): Promise<Episodio[]> {
+async function montarEpisodios(linhas: LinhaEpisodio[], db: Tx = prisma): Promise<Episodio[]> {
   if (linhas.length === 0) return []
   const ids = Array.from(new Set(linhas.flatMap(l => [l.autor_id, ...l.podcast_participantes.map(p => p.user_id)])))
   const [perfis, alunos] = await Promise.all([
-    prisma.profiles.findMany({ where: { id: { in: ids } }, select: { id: true, nome_completo: true, turma: true } }),
-    prisma.alunos.findMany({ where: { user_id: { in: ids } }, select: { user_id: true, nome: true, turma: true } }),
+    db.profiles.findMany({ where: { id: { in: ids } }, select: { id: true, nome_completo: true, turma: true } }),
+    db.alunos.findMany({ where: { user_id: { in: ids } }, select: { user_id: true, nome: true, turma: true } }),
   ])
   const pessoa = (id: string) => {
     const a = alunos.find(x => x.user_id === id)
@@ -304,9 +309,9 @@ async function montarEpisodios(linhas: LinhaEpisodio[]): Promise<Episodio[]> {
 
 const COM_PARTICIPANTES = { podcast_participantes: true } as const
 
-export async function buscarEpisodio(id: string): Promise<Episodio | null> {
-  const l = await prisma.podcast_episodios.findUnique({ where: { id }, include: COM_PARTICIPANTES })
-  return l ? (await montarEpisodios([l]))[0] : null
+export async function buscarEpisodio(id: string, db: Tx = prisma): Promise<Episodio | null> {
+  const l = await db.podcast_episodios.findUnique({ where: { id }, include: COM_PARTICIPANTES })
+  return l ? (await montarEpisodios([l], db))[0] : null
 }
 
 export async function episodioPublicadoPorSlug(slug: string): Promise<Episodio | null> {
@@ -394,8 +399,8 @@ export interface CamposEpisodio {
   participantes?: string[]
 }
 
-export async function atualizarEpisodio(id: string, c: CamposEpisodio) {
-  return prisma.$transaction(async tx => {
+export async function atualizarEpisodio(id: string, c: CamposEpisodio, emTx?: Tx) {
+  return naTransacao(emTx, async tx => {
     const atual = await tx.podcast_episodios.findUniqueOrThrow({ where: { id }, select: { autor_id: true, status: true } })
     await tx.podcast_episodios.update({
       where: { id },
@@ -506,7 +511,7 @@ export async function participantesSemAutorizacao(ep: Episodio, tx: Tx = prisma)
  * Publica: muda o status e, se pedido, cria ou atualiza a noticia no
  * JBInforma (categoria `podcast`) com o texto e o link para ouvir.
  */
-export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: string }) {
+export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: string }, emTx?: Tx) {
   const resumo = ep.resumo ?? (ep.texto ? ep.texto.slice(0, 200) : null)
   const rodape = ep.audioUrl
     ? `\n<p><strong>Ouça o episódio completo no <a href="/podcast/${ep.slug}">${NOME_PODCAST}</a>.</strong></p>`
@@ -514,7 +519,7 @@ export async function publicarEpisodio(ep: Episodio, por: { id: string; nome: st
   const creditos = `<p><em>Por ${ep.participantes.map(p => esc(p.nome.split(/\s+/)[0] ?? '')).join(', ')}, equipe do ${NOME_PODCAST}.</em></p>`
   const conteudo = `${textoParaHtml(ep.texto)}${rodape}\n${creditos}`
 
-  return prisma.$transaction(async tx => {
+  return naTransacao(emTx, async tx => {
     // Participantes relidos dentro da transacao: se a lista mudou durante o publicar, vale a de agora.
     const atuais = await tx.podcast_participantes.findMany({ where: { episodio_id: ep.id }, select: { user_id: true } })
     const sem = await participantesSemAutorizacao(
