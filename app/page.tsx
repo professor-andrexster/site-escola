@@ -154,7 +154,10 @@ export default async function HomePage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {noticias.map((noticia, i) => (
                 <AnimateOnScroll key={noticia.id} delay={(i + 1) as 1|2|3}>
-                  <NewsCard noticia={noticia} />
+                  {/* Mesma altura nos tres cards sem mexer no NewsCard, que /noticias tambem usa. */}
+                  <div className="h-full [&>a]:h-full">
+                    <NewsCard noticia={noticia} />
+                  </div>
                 </AnimateOnScroll>
               ))}
             </div>

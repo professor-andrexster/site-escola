@@ -126,24 +126,24 @@ function LinhaQuadro({ q, primeiro, ultimo }: { q: Quadro; primeiro: boolean; ul
             </>
           )}
         </div>
-        {!editando && (
-          <div className="flex flex-wrap items-center justify-end gap-1 flex-shrink-0">
-            <button type="button" onClick={() => setEditando(true)} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2 py-1"><Pencil className="w-3.5 h-3.5" /> Editar</button>
-            <button type="button" disabled={ocupado} onClick={() => patch({ ativo: !q.ativo })} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2 py-1">
-              {q.ativo ? <><EyeOff className="w-3.5 h-3.5" /> Desativar</> : <><Eye className="w-3.5 h-3.5" /> Reativar</>}
-            </button>
-            {q.episodios === 0 && (confirmar ? (
-              <span className="text-xs flex items-center gap-2 px-2">
-                <span className="text-gray-700">Apagar?</span>
-                <button type="button" disabled={ocupado} onClick={apagar} className="font-semibold text-red-600 hover:underline">Sim</button>
-                <button type="button" onClick={() => setConfirmar(false)} className="text-gray-500 hover:underline">Não</button>
-              </span>
-            ) : (
-              <button type="button" onClick={() => setConfirmar(true)} className="text-xs text-gray-400 hover:text-red-600 inline-flex items-center gap-1 px-2 py-1"><Trash2 className="w-3.5 h-3.5" /> Apagar</button>
-            ))}
-          </div>
-        )}
       </div>
+      {!editando && (
+        <div className="flex flex-wrap items-center gap-1 mt-2 pl-9">
+          <button type="button" onClick={() => setEditando(true)} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2 py-1"><Pencil className="w-3.5 h-3.5" /> Editar</button>
+          <button type="button" disabled={ocupado} onClick={() => patch({ ativo: !q.ativo })} className="text-xs text-gray-500 hover:text-escola-azul inline-flex items-center gap-1 px-2 py-1">
+            {q.ativo ? <><EyeOff className="w-3.5 h-3.5" /> Desativar</> : <><Eye className="w-3.5 h-3.5" /> Reativar</>}
+          </button>
+          {q.episodios === 0 && (confirmar ? (
+            <span className="text-xs flex items-center gap-2 px-2">
+              <span className="text-gray-700">Apagar?</span>
+              <button type="button" disabled={ocupado} onClick={apagar} className="font-semibold text-red-600 hover:underline">Sim</button>
+              <button type="button" onClick={() => setConfirmar(false)} className="text-gray-500 hover:underline">Não</button>
+            </span>
+          ) : (
+            <button type="button" onClick={() => setConfirmar(true)} className="text-xs text-gray-400 hover:text-red-600 inline-flex items-center gap-1 px-2 py-1"><Trash2 className="w-3.5 h-3.5" /> Apagar</button>
+          ))}
+        </div>
+      )}
       {erro && <p className="text-sm text-red-600 mt-2" role="alert">{erro}</p>}
     </li>
   )
