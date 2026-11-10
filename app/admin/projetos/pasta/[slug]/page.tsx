@@ -71,7 +71,11 @@ export default async function PastaPage({ params }: Props) {
             <Link key={t.id} href={`/admin/projetos/${t.id}`} className="panel-interativo p-5 block">
               <div className="flex items-center gap-2 mb-2">
                 {!t.publicado && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-gray-100 text-gray-600">Rascunho</span>}
-                {t.arquivoUrl && <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">PDF</span>}
+                {(t.arquivoUrl || t.documentos.length > 0) && (
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-50 text-escola-azul">
+                    {t.documentos.length + (t.arquivoUrl ? 1 : 0) > 1 ? `${t.documentos.length + (t.arquivoUrl ? 1 : 0)} PDFs` : 'PDF'}
+                  </span>
+                )}
               </div>
               <h2 className="font-playfair text-lg font-bold text-gray-900">{t.titulo}</h2>
               {t.resumo && <p className="text-sm text-gray-500 mt-1">{t.resumo}</p>}

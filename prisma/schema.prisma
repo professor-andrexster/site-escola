@@ -978,6 +978,7 @@ model projeto_trabalhos {
   arquivo_url    String?          @db.VarChar(300)
   cronograma     String?          @db.LongText
   criterios      String?          @db.LongText
+  documentos     String?          @db.LongText
   pede_link_grupo Boolean         @default(false)
   publicado      Boolean          @default(false)
   ordem          Int              @default(0)

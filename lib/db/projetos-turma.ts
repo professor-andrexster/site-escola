@@ -19,12 +19,12 @@ import { TURMAS } from '@/lib/turmas'
 export {
   STATUS_ENVIO, ROTULO_STATUS, ROTULO_MARCA, slugDaSerie, notaSugerida, periodo, dataCurta, etapaDeHoje,
   type StatusEnvio, type Pasta, type Trabalho, type Envio, type EnvioDaTurma, type Avaliacao,
-  type Etapa, type Criterio, type Marca, type Marcas,
+  type Etapa, type Criterio, type Marca, type Marcas, type Documento,
 } from '@/lib/projetos-turma-tipos'
 import {
   STATUS_ENVIO, slugDaSerie,
   type StatusEnvio, type Pasta, type Trabalho, type Envio, type EnvioDaTurma, type Avaliacao,
-  type Etapa, type Criterio, type Marcas,
+  type Etapa, type Criterio, type Marcas, type Documento,
 } from '@/lib/projetos-turma-tipos'
 
 const iso = (d: Date | null | undefined) => (d ? d.toISOString() : null)
@@ -51,7 +51,7 @@ const gravarJson = (v: unknown) => (v == null ? null : JSON.stringify(v))
 
 function serializarTrabalho(t: {
   id: string; pasta_id: string; titulo: string; resumo: string | null; briefing: string | null
-  arquivo_url: string | null; cronograma: string | null; criterios: string | null; pede_link_grupo: boolean
+  arquivo_url: string | null; documentos: string | null; cronograma: string | null; criterios: string | null; pede_link_grupo: boolean
   publicado: boolean; ordem: number; criado_em: Date; atualizado_em: Date
   projeto_pastas: { serie: string }
 }): Trabalho {
@@ -63,6 +63,7 @@ function serializarTrabalho(t: {
     resumo: t.resumo,
     briefing: t.briefing,
     arquivoUrl: t.arquivo_url,
+    documentos: lerLista<Documento>(t.documentos),
     cronograma: lerLista<Etapa>(t.cronograma),
     criterios: lerLista<Criterio>(t.criterios),
     pedeLinkGrupo: t.pede_link_grupo,
@@ -207,6 +208,31 @@ export async function atualizarTrabalho(id: string, campos: Partial<CamposTrabal
     include: { projeto_pastas: { select: { serie: true } } },
   })
   return serializarTrabalho(t)
+}
+
+/**
+ * Acrescenta um documento ao projeto. Le e regrava a lista dentro de uma
+ * transacao, para dois envios seguidos nao apagarem um ao outro.
+ */
+export async function adicionarDocumento(trabalhoId: string, doc: Documento): Promise<Documento[]> {
+  return prisma.$transaction(async tx => {
+    const t = await tx.projeto_trabalhos.findUniqueOrThrow({ where: { id: trabalhoId }, select: { documentos: true } })
+    const lista = [...lerLista<Documento>(t.documentos), doc]
+    await tx.projeto_trabalhos.update({ where: { id: trabalhoId }, data: { documentos: gravarJson(lista) } })
+    return lista
+  })
+}
+
+/** Tira o documento da lista. O arquivo fica no disco (sem apagar nada que nao volta). */
+export async function removerDocumento(trabalhoId: string, docId: string): Promise<Documento[] | null> {
+  return prisma.$transaction(async tx => {
+    const t = await tx.projeto_trabalhos.findUniqueOrThrow({ where: { id: trabalhoId }, select: { documentos: true } })
+    const atual = lerLista<Documento>(t.documentos)
+    const lista = atual.filter(d => d.id !== docId)
+    if (lista.length === atual.length) return null
+    await tx.projeto_trabalhos.update({ where: { id: trabalhoId }, data: { documentos: gravarJson(lista) } })
+    return lista
+  })
 }
 
 export async function removerTrabalho(id: string): Promise<void> {

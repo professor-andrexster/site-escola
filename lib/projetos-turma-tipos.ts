@@ -93,6 +93,15 @@ export interface Pasta {
   totalPublicados: number
 }
 
+/** PDF de instrucao enviado pela pagina do projeto. */
+export interface Documento {
+  id: string
+  titulo: string
+  url: string
+  tamanho: number
+  enviadoEm: string
+}
+
 export interface Trabalho {
   id: string
   pastaId: string
@@ -101,6 +110,7 @@ export interface Trabalho {
   resumo: string | null
   briefing: string | null
   arquivoUrl: string | null
+  documentos: Documento[]
   cronograma: Etapa[]
   criterios: Criterio[]
   pedeLinkGrupo: boolean

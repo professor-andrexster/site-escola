@@ -12,6 +12,7 @@ import EnvioAlunoForm from '@/components/admin/projetos/EnvioAlunoForm'
 import PainelEnvios from '@/components/admin/projetos/PainelEnvios'
 import CronogramaTabela from '@/components/admin/projetos/CronogramaTabela'
 import CriteriosLista from '@/components/admin/projetos/CriteriosLista'
+import DocumentosProjeto from '@/components/admin/projetos/DocumentosProjeto'
 
 interface Props { params: Promise<{ id: string }> }
 
@@ -103,6 +104,8 @@ export default async function ProjetoPage({ params }: Props) {
           </div>
         </a>
       )}
+
+      <DocumentosProjeto trabalhoId={id} documentosIniciais={trabalho.documentos} podeEditar={equipe} />
 
       <CronogramaTabela
         cronograma={trabalho.cronograma}

@@ -52,6 +52,13 @@ async function autorizado(
     case 'desafio-curso':
       return null
 
+    // PDF de instrucao da aba Projetos. O caminho normal e a rota
+    // /api/projetos-turma/trabalhos/[id]/documentos; aqui so nao fica aberto.
+    case 'projeto-turma':
+      return autor.role === 'professor' || isGestao(autor.role)
+        ? null
+        : 'Só professor envia documento de projeto.'
+
     case 'obra':
       return autor.role === 'bibliotecario' || isGestao(autor.role)
         ? null

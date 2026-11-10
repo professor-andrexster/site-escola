@@ -81,3 +81,8 @@ ALTER TABLE `projeto_envios`
 ALTER TABLE `projeto_avaliacoes`
   ADD COLUMN IF NOT EXISTS `etapa`     int      DEFAULT NULL AFTER `feedback`,
   ADD COLUMN IF NOT EXISTS `criterios` longtext DEFAULT NULL AFTER `etapa`;
+
+-- 2026-11-10: documentos do projeto (varios PDFs de instrucoes enviados pela
+-- propria pagina do projeto). Lista JSON [{id, titulo, url, tamanho, enviadoEm}].
+ALTER TABLE `projeto_trabalhos`
+  ADD COLUMN IF NOT EXISTS `documentos` longtext DEFAULT NULL AFTER `criterios`;

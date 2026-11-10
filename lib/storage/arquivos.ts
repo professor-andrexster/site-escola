@@ -21,9 +21,9 @@ export const PREFIXO_PUBLICO = '/arquivos'
 
 const MB = 1024 * 1024
 
-export type Finalidade = 'avatar' | 'noticia' | 'curso' | 'projeto' | 'desafio' | 'desafio-curso' | 'obra'
+export type Finalidade = 'avatar' | 'noticia' | 'curso' | 'projeto' | 'desafio' | 'desafio-curso' | 'obra' | 'projeto-turma'
 
-type Regra = { pasta: string; limite: number; tipos: string[] | 'qualquer' }
+type Regra = { pasta: string; limite: number; tipos: string[] | 'qualquer'; recusa?: string }
 
 const IMAGENS = ['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 
@@ -41,6 +41,9 @@ const REGRAS: Record<Finalidade, Regra> = {
   // do sistema seria recusado. Por isso a pasta é servida como anexo: baixa,
   // nunca roda no domínio da escola.
   'desafio-curso': { pasta: 'desafios-curso', limite: 15 * MB, tipos: 'qualquer' },
+  // Documentos de instrucao da aba Projetos: so PDF, conferido pelos bytes.
+  // Mesma pasta onde os PDFs eram postos a mao por scp.
+  'projeto-turma': { pasta: 'projetos-turma', limite: 20 * MB, tipos: ['application/pdf'], recusa: 'Envie um arquivo PDF.' },
 }
 
 export function finalidadeValida(v: unknown): v is Finalidade {
@@ -120,7 +123,7 @@ export async function gravar(
     extensao = /^[a-z0-9]{1,8}$/.test(bruta) ? bruta : 'bin'
   } else {
     if (!tipo || !regra.tipos.includes(tipo)) {
-      return { erro: 'Envie uma imagem JPG, PNG, WEBP ou GIF.' }
+      return { erro: regra.recusa ?? 'Envie uma imagem JPG, PNG, WEBP ou GIF.' }
     }
     extensao = EXTENSAO[tipo]
   }
