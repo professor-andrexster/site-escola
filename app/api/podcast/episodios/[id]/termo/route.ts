@@ -16,7 +16,10 @@ export async function POST(request: Request, { params }: Ctx) {
   const form = await request.formData().catch(() => null)
   const arquivo = form?.get('arquivo')
   if (!(arquivo instanceof File)) return erro('Nenhum arquivo chegou. Escolha o termo de novo.')
-  const g = await gravarDocumento(arquivo, 'podcast-termos')
+  const g = await gravarDocumento(arquivo, 'podcast-termos').catch((e: unknown) => {
+    console.error('[podcast] falha ao gravar arquivo', e)
+    return { erro: 'O servidor não conseguiu guardar o arquivo. Ele continua no seu aparelho: tente de novo em instantes.' }
+  })
   if ('erro' in g) return erro(g.erro)
   try {
     await definirTermoEntrevistado(id, g.caminho)

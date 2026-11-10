@@ -16,7 +16,10 @@ export async function POST(request: Request, { params }: Ctx) {
   const form = await request.formData().catch(() => null)
   const arquivo = form?.get('arquivo')
   if (!(arquivo instanceof File)) return erro('O áudio não chegou. Tente de novo.')
-  const g = await gravarAudio(arquivo)
+  const g = await gravarAudio(arquivo).catch((e: unknown) => {
+    console.error('[podcast] falha ao gravar arquivo', e)
+    return { erro: 'O servidor não conseguiu guardar o arquivo. Ele continua no seu aparelho: tente de novo em instantes.' }
+  })
   if ('erro' in g) return erro(g.erro)
   try {
     await definirAudio(id, g.url, g.bytes)
