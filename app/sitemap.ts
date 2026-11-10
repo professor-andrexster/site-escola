@@ -23,6 +23,7 @@ const ROTAS_FIXAS: Array<{
   { path: '/emti/protagonismo', changeFrequency: 'yearly', priority: 0.6 },
   { path: '/cursos', changeFrequency: 'weekly', priority: 0.8 },
   { path: '/noticias', changeFrequency: 'daily', priority: 0.8 },
+  { path: '/podcast', changeFrequency: 'weekly', priority: 0.7 },
   { path: '/projetos', changeFrequency: 'monthly', priority: 0.7 },
   { path: '/vocacional', changeFrequency: 'monthly', priority: 0.6 },
   { path: '/ranking', changeFrequency: 'weekly', priority: 0.5 },

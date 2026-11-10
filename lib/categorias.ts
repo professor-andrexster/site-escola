@@ -3,6 +3,7 @@ export const CATEGORIAS = {
   esporte:    { label: 'Esporte',    bg: 'bg-green-100',  text: 'text-green-800',  border: 'border-green-200'  },
   projeto:    { label: 'Projeto',    bg: 'bg-amber-100',  text: 'text-amber-800',  border: 'border-amber-200'  },
   cidadania:  { label: 'Cidadania', bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-200' },
+  podcast:    { label: 'Podcast',    bg: 'bg-rose-100',   text: 'text-rose-800',   border: 'border-rose-200'   },
 } as const
 
 export type CategoriaKey = keyof typeof CATEGORIAS

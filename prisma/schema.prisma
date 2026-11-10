@@ -1036,3 +1036,60 @@ model projeto_avaliacoes {
   @@index([envio_id], map: "projeto_avaliacoes_envio_idx")
   @@index([avaliador_id], map: "projeto_avaliacoes_avaliador_fkey")
 }
+
+/// Podcast "JB no Ar" (2026-11-10). DDL em scripts/sql/podcast.sql.
+/// Sem relacao Prisma com usuarios de proposito: o model usuarios ja tem
+/// dezenas de relacoes e o podcast so precisa do id.
+model podcast_membros {
+  id                     String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  user_id                String    @unique(map: "podcast_membros_user_key") @db.Char(36)
+  papel                  String    @db.VarChar(10)
+  aluno_id               String?   @db.Char(36)
+  responsavel_nome       String?   @db.VarChar(120)
+  responsavel_cpf        String?   @db.VarChar(14)
+  autorizacao_status     String    @default("pendente") @db.VarChar(12)
+  autorizacao_arquivo    String?   @db.VarChar(300)
+  autorizacao_enviada_em DateTime? @db.DateTime(3)
+  autorizacao_aceita_em  DateTime? @db.DateTime(3)
+  autorizacao_aceita_por String?   @db.Char(36)
+  ano_letivo             Int
+  adicionado_por         String?   @db.Char(36)
+  criado_em              DateTime  @default(now()) @db.DateTime(3)
+}
+
+model podcast_episodios {
+  id                     String                  @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  slug                   String                  @unique(map: "podcast_episodios_slug_key") @db.VarChar(170)
+  tipo                   String                  @default("entrevista") @db.VarChar(12)
+  quadro                 String?                 @db.VarChar(30)
+  titulo                 String                  @db.VarChar(140)
+  resumo                 String?                 @db.VarChar(300)
+  texto                  String?                 @db.LongText
+  entrevistado_nome      String?                 @db.VarChar(120)
+  entrevistado_descricao String?                 @db.VarChar(200)
+  termo_entrevistado     String?                 @db.VarChar(300)
+  audio_url              String?                 @db.VarChar(300)
+  audio_bytes            Int?
+  status                 String                  @default("rascunho") @db.VarChar(12)
+  feedback               String?                 @db.Text
+  no_jbinforma           Boolean                 @default(true)
+  noticia_id             String?                 @db.Char(36)
+  autor_id               String                  @db.Char(36)
+  publicado_em           DateTime?               @db.DateTime(3)
+  publicado_por          String?                 @db.Char(36)
+  criado_em              DateTime                @default(now()) @db.DateTime(3)
+  atualizado_em          DateTime                @default(now()) @db.DateTime(3)
+  podcast_participantes  podcast_participantes[]
+
+  @@index([status], map: "podcast_episodios_status_idx")
+  @@index([autor_id], map: "podcast_episodios_autor_idx")
+}
+
+model podcast_participantes {
+  episodio_id       String            @db.Char(36)
+  user_id           String            @db.Char(36)
+  podcast_episodios podcast_episodios @relation(fields: [episodio_id], references: [id], onDelete: Cascade, onUpdate: Restrict, map: "podcast_participantes_episodio_fkey")
+
+  @@id([episodio_id, user_id])
+  @@index([user_id], map: "podcast_participantes_user_idx")
+}

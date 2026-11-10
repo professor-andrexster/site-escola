@@ -2,7 +2,7 @@ import {
   FolderGit2,
   LayoutDashboard, FileText, Settings,
   Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
-  UserCheck, ScanLine, RotateCcw, Layers, Award, Target, FolderKanban,
+  UserCheck, ScanLine, RotateCcw, Layers, Award, Target, FolderKanban, Mic,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -48,6 +48,7 @@ const navGestao: NavGroup[] = [
       items: [
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+        { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
       ],
     },
     {
@@ -107,6 +108,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
       items: [
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+        { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
       ],
     },
   ],
@@ -124,6 +126,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/meu-portfolio', label: 'Meu Portfólio', icon: FolderGit2 },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+        { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },
@@ -142,6 +145,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/meu-portfolio', label: 'Meu Portfólio', icon: FolderGit2 },
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
+        { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },

@@ -20,6 +20,13 @@ const navItems = [
     ],
   },
   { href: '/cursos', label: 'Cursos' },
+  {
+    label: 'JBInforma',
+    children: [
+      { href: '/noticias', label: 'Notícias' },
+      { href: '/podcast', label: 'Podcast JB no Ar' },
+    ],
+  },
   { href: '/projetos', label: 'Projetos' },
   { href: '/ranking', label: 'Ranking' },
   { href: '/contato', label: 'Contato' },
