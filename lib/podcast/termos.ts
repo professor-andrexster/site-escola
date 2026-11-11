@@ -232,7 +232,7 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
     `Participação do(a) estudante no projeto pedagógico de comunicação da ${ESCOLA}: o podcast ${NOME_PODCAST}, a rádio interna e o jornal JBInforma. Os estudantes entrevistam pessoas, escrevem notícias e gravam episódios sob acompanhamento de professores. Esta autorização vale somente para este projeto e somente no ano letivo de ${ano}.`)
 
   secao(p, '4', 'O que o(a) estudante faz no projeto')
-  texto(p, 'O(a) estudante pode exercer uma ou mais das funções abaixo. Todas têm acompanhamento de um professor monitor.', { depois: 3 })
+  texto(p, 'O(a) estudante pode exercer uma ou mais das funções abaixo. Todas acontecem dentro da escola, com acompanhamento de um professor monitor.', { depois: 3 })
   texto(p, `No podcast ${NOME_PODCAST} e na rádio da escola:`, { fonte: p.negrito, tam: 9, depois: 3 })
   marcadores(p, [
     'Pauta e roteiro: escolher o assunto do episódio, pesquisar e escrever as perguntas e o roteiro.',
@@ -256,7 +256,7 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
   marcadores(p, [
     'O(a) estudante não publica nada sozinho(a). Tudo vai antes para o professor monitor, que publica, devolve para ajuste ou recusa.',
     'O que o(a) estudante faz no painel (criar, enviar, corrigir) fica registrado com data e hora, para a escola acompanhar.',
-    'Este termo não autoriza saída da escola. Atividade fora da escola depende de autorização própria.',
+    'As gravações e as demais atividades acontecem dentro da escola. O(a) estudante não sai da escola para o projeto, e este termo não autoriza saída.',
   ])
 
   secao(p, '5', 'O que autorizo (marque cada item que autoriza)')
