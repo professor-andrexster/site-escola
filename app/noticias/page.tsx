@@ -6,7 +6,8 @@ import CabecalhoJornal from '@/components/jornal/CabecalhoJornal'
 import CartaoMateria, { Etiqueta } from '@/components/jornal/CartaoMateria'
 import { CATEGORIAS, type CategoriaKey } from '@/lib/categorias'
 import { assinaturas, publicadas, quadroPublico, servicosVigentes, ultimaEdicao } from '@/lib/jornal/dados'
-import { EDITORIAS, VEREDITOS, dataCurta, ehEditoria, periodoDaEdicao, type Editoria } from '@/lib/jornal/tipos'
+import { EDITORIAS, dataCurta, ehEditoria, periodoDaEdicao, type Editoria } from '@/lib/jornal/tipos'
+import { COR_EDITORIA, COR_VEREDITO } from '@/components/jornal/estilos'
 
 export const metadata: Metadata = {
   title: 'JBInforma',
@@ -48,7 +49,7 @@ export default async function NoticiasPage({ searchParams }: { searchParams: Pro
           <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-none">
             <Link href="/noticias" className={chip(!filtrando)}>Todas</Link>
             {(Object.keys(EDITORIAS) as Editoria[]).map(k => (
-              <Link key={k} href={`/noticias?editoria=${k}`} className={chip(editoria === k, EDITORIAS[k].cor)}>{EDITORIAS[k].nome}</Link>
+              <Link key={k} href={`/noticias?editoria=${k}`} className={chip(editoria === k, COR_EDITORIA[k])}>{EDITORIAS[k].nome}</Link>
             ))}
             <span className="flex-shrink-0 w-px h-5 bg-escola-cinza-claro mx-1" aria-hidden="true" />
             {ASSUNTOS.map(k => (
@@ -102,7 +103,7 @@ export default async function NoticiasPage({ searchParams }: { searchParams: Pro
                   <ul className="space-y-3">
                     {checagens.map(c => (
                       <li key={c.id}>
-                        <Link href={`/noticias/${c.slug}`} className={`block bg-white border-l-4 ${c.veredito ? VEREDITOS[c.veredito].borda : 'border-slate-600'} p-4 card-lift`}>
+                        <Link href={`/noticias/${c.slug}`} className={`block bg-white border-l-4 ${c.veredito ? COR_VEREDITO[c.veredito].borda : 'border-slate-600'} p-4 card-lift`}>
                           <Etiqueta m={c} />
                           <p className="font-playfair font-bold text-lg text-escola-preto mt-2">{c.titulo}</p>
                           {c.boato && <p className="text-sm text-escola-cinza mt-1 line-clamp-2">O que diziam: {c.boato}</p>}

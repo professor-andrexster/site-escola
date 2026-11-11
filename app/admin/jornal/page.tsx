@@ -224,7 +224,7 @@ export default async function JornalPage({ searchParams }: { searchParams: Promi
   return (
     <div className="max-w-6xl mx-auto">
       {cabecalho}
-      <nav className="flex gap-1 overflow-x-auto border-b border-gray-200 mb-6 -mx-1 px-1" aria-label="Seções da redação">
+      <nav className="flex gap-1 overflow-x-auto border-b border-gray-200 mb-6" aria-label="Seções da redação">
         {abas.map(a => {
           const ativo = a.chave === aba
           const n = contagem[a.chave]

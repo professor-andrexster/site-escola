@@ -2,11 +2,11 @@ import PageLayout from '@/components/PageLayout'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { formatDate } from '@/lib/utils'
 import type { Metadata } from 'next'
 import { Etiqueta } from '@/components/jornal/CartaoMateria'
 import { assinaturas, correcoesDaNoticia, publicadaPorSlug } from '@/lib/jornal/dados'
-import { COMO_OUVIU, TEMAS, VEREDITOS, dataCurta, hojeSP } from '@/lib/jornal/tipos'
+import { COMO_OUVIU, TEMAS, VEREDITOS, dataCurta, dataLonga, hojeSP } from '@/lib/jornal/tipos'
+import { COR_VEREDITO } from '@/components/jornal/estilos'
 
 export const revalidate = 60
 
@@ -42,7 +42,7 @@ export default async function NoticiaPage({ params }: Props) {
   const [nomes, correcoes] = await Promise.all([assinaturas([m.autorId]), correcoesDaNoticia(m.id)])
   const assinatura = m.autorId ? nomes.get(m.autorId) : undefined
   const daRedacao = m.fontes.length > 0 || m.tipo !== 'materia' || Boolean(m.editoria)
-  const selo = m.tipo === 'checagem' && m.veredito ? VEREDITOS[m.veredito] : null
+  const selo = m.tipo === 'checagem' && m.veredito ? { ...VEREDITOS[m.veredito], ...COR_VEREDITO[m.veredito] } : null
   const vencido = m.tipo === 'servico' && m.validoAte ? m.validoAte < hojeSP() : false
   const data = m.publicadoEm ?? m.criadoEm
 
@@ -78,7 +78,7 @@ export default async function NoticiaPage({ params }: Props) {
           <Etiqueta m={m} />
           {m.tipo === 'checagem' && m.tema && <span className="font-mono text-[10px] uppercase tracking-wider text-gray-500">{TEMAS[m.tema]}</span>}
           {m.tipo === 'memoria' && m.memoriaAno && <span className="font-mono text-[10px] uppercase tracking-wider text-gray-500">{m.memoriaAno}</span>}
-          <time className="text-gray-500 text-sm" dateTime={data}>{formatDate(data)}</time>
+          <time className="text-gray-500 text-sm" dateTime={data}>{dataLonga(data)}</time>
         </div>
         <h1 className="font-playfair text-3xl md:text-5xl font-bold text-gray-900 mt-2 mb-4">
           {m.titulo}
@@ -96,13 +96,13 @@ export default async function NoticiaPage({ params }: Props) {
           <aside className="border-l-4 border-amber-500 bg-amber-50 px-4 py-3 mb-8" aria-label="Correções">
             <p className="font-semibold text-amber-900 text-sm mb-1">Erramos</p>
             <ul className="space-y-1.5">
-              {correcoes.map(c => <li key={c.id} className="text-sm text-amber-900"><span className="font-mono text-xs">{formatDate(c.criadoEm)}:</span> {c.texto}</li>)}
+              {correcoes.map(c => <li key={c.id} className="text-sm text-amber-900"><span className="font-mono text-xs">{dataLonga(c.criadoEm)}:</span> {c.texto}</li>)}
             </ul>
           </aside>
         )}
         {selo && (
           <section className={`border-2 ${selo.borda} rounded-xl overflow-hidden mb-8`} aria-label="Resultado da checagem">
-            <div className={`${selo.cor} px-5 py-3 flex flex-wrap items-baseline gap-x-3`}>
+            <div className={`${selo.fundo} px-5 py-3 flex flex-wrap items-baseline gap-x-3`}>
               <span className="font-playfair text-2xl font-black">{selo.nome}</span>
               <span className="text-sm opacity-90">{selo.frase}</span>
             </div>

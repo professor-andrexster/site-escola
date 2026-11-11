@@ -3,7 +3,7 @@ import Link from 'next/link'
 import PageLayout from '@/components/PageLayout'
 import CabecalhoJornal from '@/components/jornal/CabecalhoJornal'
 import { todasAsCorrecoes } from '@/lib/jornal/dados'
-import { formatDate } from '@/lib/utils'
+import { dataLonga } from '@/lib/jornal/tipos'
 
 export const metadata: Metadata = {
   title: 'Erramos',
@@ -33,7 +33,7 @@ export default async function ErramosPage() {
               <ul className="space-y-3">
                 {correcoes.map(c => (
                   <li key={c.id} className="bg-white border-l-4 border-amber-500 p-4">
-                    <time className="font-mono text-[11px] text-escola-cinza">{formatDate(c.criadoEm)}</time>
+                    <time className="font-mono text-[11px] text-escola-cinza">{dataLonga(c.criadoEm)}</time>
                     <p className="text-escola-preto mt-1">{c.texto}</p>
                     <Link href={`/noticias/${c.slug}`} className="text-sm text-escola-azul hover:underline mt-2 inline-block">Matéria: {c.titulo}</Link>
                   </li>

@@ -3,8 +3,8 @@ import Link from 'next/link'
 import PageLayout from '@/components/PageLayout'
 import CabecalhoJornal from '@/components/jornal/CabecalhoJornal'
 import { publicadas } from '@/lib/jornal/dados'
-import { TEMAS, VEREDITOS, type Veredito } from '@/lib/jornal/tipos'
-import { formatDate } from '@/lib/utils'
+import { TEMAS, VEREDITOS, dataLonga, type Veredito } from '@/lib/jornal/tipos'
+import { COR_VEREDITO } from '@/components/jornal/estilos'
 
 export const metadata: Metadata = {
   title: 'É verdade? Checagem de boatos',
@@ -26,8 +26,8 @@ export default async function EVerdadePage() {
           </div>
           <ul className="grid gap-3 sm:grid-cols-2 min-w-0">
             {(Object.keys(VEREDITOS) as Veredito[]).map(k => (
-              <li key={k} className={`bg-white border-l-4 ${VEREDITOS[k].borda} p-4`}>
-                <span className={`inline-block font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${VEREDITOS[k].cor}`}>{VEREDITOS[k].nome}</span>
+              <li key={k} className={`bg-white border-l-4 ${COR_VEREDITO[k].borda} p-4`}>
+                <span className={`inline-block font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${COR_VEREDITO[k].fundo}`}>{VEREDITOS[k].nome}</span>
                 <p className="text-sm text-escola-preto mt-2">{VEREDITOS[k].frase}</p>
               </li>
             ))}
@@ -43,14 +43,14 @@ export default async function EVerdadePage() {
         ) : (
           <ul className="grid gap-4 md:grid-cols-2">
             {checagens.map(c => {
-              const v = c.veredito ? VEREDITOS[c.veredito] : null
+              const v = c.veredito ? { ...VEREDITOS[c.veredito], ...COR_VEREDITO[c.veredito] } : null
               return (
                 <li key={c.id}>
                   <Link href={`/noticias/${c.slug}`} className={`block h-full bg-white border-l-4 ${v?.borda ?? 'border-slate-600'} p-5 card-lift`}>
                     <div className="flex flex-wrap items-center gap-2">
-                      <span className={`font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${v?.cor ?? 'bg-slate-600 text-white'}`}>{v?.nome ?? 'Checagem'}</span>
+                      <span className={`font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded ${v?.fundo ?? 'bg-slate-600 text-white'}`}>{v?.nome ?? 'Checagem'}</span>
                       {c.tema && <span className="font-mono text-[10px] uppercase tracking-wider text-escola-cinza">{TEMAS[c.tema]}</span>}
-                      <time className="font-mono text-[11px] text-escola-cinza">{formatDate(c.publicadoEm ?? c.criadoEm)}</time>
+                      <time className="font-mono text-[11px] text-escola-cinza">{dataLonga(c.publicadoEm ?? c.criadoEm)}</time>
                     </div>
                     <h2 className="font-playfair text-xl font-bold text-escola-preto mt-2">{c.titulo}</h2>
                     {c.boato && <p className="text-sm text-escola-cinza mt-2 line-clamp-3">O que diziam: “{c.boato}”</p>}

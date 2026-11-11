@@ -17,9 +17,9 @@ export const ROTULO_TIPO: Record<TipoMateria, { nome: string; desc: string }> = 
 }
 
 export const EDITORIAS = {
-  escola: { nome: 'Escola', desc: 'O que acontece dentro do JB.', cor: 'bg-blue-100 text-blue-800 border-blue-200' },
-  bairro: { nome: 'Bairro', desc: 'A rua, a praça e o entorno da escola.', cor: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  cidade: { nome: 'Cidade', desc: 'Carlos Chagas e o Vale do Mucuri.', cor: 'bg-amber-100 text-amber-800 border-amber-200' },
+  escola: { nome: 'Escola', desc: 'O que acontece dentro do JB.' },
+  bairro: { nome: 'Bairro', desc: 'A rua, a praça e o entorno da escola.' },
+  cidade: { nome: 'Cidade', desc: 'Carlos Chagas e o Vale do Mucuri.' },
 } as const
 export type Editoria = keyof typeof EDITORIAS
 export const ehEditoria = (v: unknown): v is Editoria => typeof v === 'string' && v in EDITORIAS
@@ -34,12 +34,12 @@ export const ROTULO_STATUS: Record<StatusMateria, string> = {
   retirado: 'Tirada do ar',
 }
 
-/** Selo da checagem. A cor vai junto com o texto: nunca so cor. */
+/** Selo da checagem. As cores ficam em components/jornal/estilos.ts (o Tailwind nao le a pasta lib). */
 export const VEREDITOS = {
-  verdade: { nome: 'É verdade', frase: 'Conferimos e a informação está certa.', cor: 'bg-green-700 text-white', borda: 'border-green-700', texto: 'text-green-800' },
-  falso: { nome: 'É falso', frase: 'Conferimos e a informação não é verdadeira.', cor: 'bg-red-700 text-white', borda: 'border-red-700', texto: 'text-red-800' },
-  enganoso: { nome: 'É enganoso', frase: 'Tem um pedaço de verdade, mas do jeito que circula engana.', cor: 'bg-amber-600 text-white', borda: 'border-amber-600', texto: 'text-amber-800' },
-  sem_prova: { nome: 'Sem prova', frase: 'Ninguém conseguiu confirmar. Não repasse até ter certeza.', cor: 'bg-slate-600 text-white', borda: 'border-slate-600', texto: 'text-slate-700' },
+  verdade: { nome: 'É verdade', frase: 'Conferimos e a informação está certa.' },
+  falso: { nome: 'É falso', frase: 'Conferimos e a informação não é verdadeira.' },
+  enganoso: { nome: 'É enganoso', frase: 'Tem um pedaço de verdade, mas do jeito que circula engana.' },
+  sem_prova: { nome: 'Sem prova', frase: 'Ninguém conseguiu confirmar. Não repasse até ter certeza.' },
 } as const
 export type Veredito = keyof typeof VEREDITOS
 export const ehVeredito = (v: unknown): v is Veredito => typeof v === 'string' && v in VEREDITOS
@@ -242,6 +242,10 @@ export function dataCurta(iso: string, comAno = false): string {
 }
 
 export const periodoDaEdicao = (e: Pick<Edicao, 'inicio' | 'fim'>) => `${dataCurta(e.inicio)} a ${dataCurta(e.fim, true)}`
+
+/** Data por extenso no fuso da escola: materia publicada as 22h nao pode sair com a data do dia seguinte. */
+export const dataLonga = (iso: string | Date) =>
+  new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'America/Sao_Paulo' }).format(new Date(iso))
 
 /** Hoje no fuso da escola, YYYY-MM-DD. */
 export const hojeSP = (agora = new Date()) => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(agora)

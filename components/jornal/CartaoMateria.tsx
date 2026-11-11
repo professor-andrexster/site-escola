@@ -1,16 +1,16 @@
 import Image from 'next/image'
 import Link from 'next/link'
-import { formatDate } from '@/lib/utils'
 import { badgeCategoria } from '@/lib/categorias'
-import { EDITORIAS, VEREDITOS, type Materia } from '@/lib/jornal/tipos'
+import { EDITORIAS, VEREDITOS, dataLonga, type Materia } from '@/lib/jornal/tipos'
+import { COR_EDITORIA, COR_VEREDITO } from '@/components/jornal/estilos'
 
 /** Etiqueta da matéria: selo da checagem, tipo ou editoria. Sempre com texto, nunca só cor. */
 export function Etiqueta({ m }: { m: Pick<Materia, 'tipo' | 'editoria' | 'veredito' | 'categoria'> }) {
   const base = 'font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border'
-  if (m.tipo === 'checagem') return <span className={`${base} border-transparent ${m.veredito ? VEREDITOS[m.veredito].cor : 'bg-slate-600 text-white'}`}>{m.veredito ? VEREDITOS[m.veredito].nome : 'É verdade?'}</span>
+  if (m.tipo === 'checagem') return <span className={`${base} border-transparent ${m.veredito ? COR_VEREDITO[m.veredito].fundo : 'bg-slate-600 text-white'}`}>{m.veredito ? VEREDITOS[m.veredito].nome : 'É verdade?'}</span>
   if (m.tipo === 'servico') return <span className={`${base} bg-sky-100 text-sky-800 border-sky-200`}>Serviço</span>
   if (m.tipo === 'memoria') return <span className={`${base} bg-stone-200 text-stone-800 border-stone-300`}>Memória JB</span>
-  if (m.editoria) return <span className={`${base} ${EDITORIAS[m.editoria].cor}`}>{EDITORIAS[m.editoria].nome}</span>
+  if (m.editoria) return <span className={`${base} ${COR_EDITORIA[m.editoria]}`}>{EDITORIAS[m.editoria].nome}</span>
   const c = badgeCategoria(m.categoria)
   return c ? <span className={`${base} ${c.bg} ${c.text} ${c.border}`}>{c.label}</span> : null
 }
@@ -18,7 +18,7 @@ export function Etiqueta({ m }: { m: Pick<Materia, 'tipo' | 'editoria' | 'veredi
 const semOtimizar = (url: string) => url.startsWith('/api/podcast/capa/')
 
 export default function CartaoMateria({ m, assinatura, grande = false }: { m: Materia; assinatura?: string | null; grande?: boolean }) {
-  const data = formatDate(m.publicadoEm ?? m.criadoEm)
+  const data = dataLonga(m.publicadoEm ?? m.criadoEm)
   if (grande) {
     return (
       <Link href={`/noticias/${m.slug}`} className="group grid md:grid-cols-[minmax(0,1.1fr)_1fr] bg-white border border-escola-cinza-claro overflow-hidden card-lift">

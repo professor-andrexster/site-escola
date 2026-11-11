@@ -9,6 +9,7 @@ import {
   type ComoOuviu, type Editoria, type Fonte, type Materia, type Tema, type Veredito,
 } from '@/lib/jornal/tipos'
 import { BOTAO, BOTAO_LEVE, CAMPO, chamar, json } from '@/components/admin/podcast/comum'
+import { COR_VEREDITO } from '@/components/jornal/estilos'
 
 type Campos = Pick<Materia, 'titulo' | 'resumo' | 'texto' | 'editoria' | 'categoria' | 'fontes' | 'checklist' | 'boato' | 'veredito' | 'tema' | 'comoChecamos' | 'memoriaAno' | 'validoAte'>
 
@@ -200,7 +201,7 @@ export default function EditorMateria({ inicial, podeEditar, moderador, souAutor
                 <div className="flex flex-wrap gap-2">
                   {(Object.keys(VEREDITOS) as Veredito[]).map(k => (
                     <button key={k} type="button" onClick={() => mudar({ veredito: k })} aria-pressed={c.veredito === k} title={VEREDITOS[k].frase}
-                      className={`rounded-full px-3 py-1.5 text-sm font-semibold border ${c.veredito === k ? `${VEREDITOS[k].cor} border-transparent` : 'border-gray-200 bg-white text-gray-700'}`}>{VEREDITOS[k].nome}</button>
+                      className={`rounded-full px-3 py-1.5 text-sm font-semibold border ${c.veredito === k ? `${COR_VEREDITO[k].fundo} border-transparent` : 'border-gray-200 bg-white text-gray-700'}`}>{VEREDITOS[k].nome}</button>
                   ))}
                 </div>
               </div>
