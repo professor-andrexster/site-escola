@@ -2,7 +2,7 @@ import {
   FolderGit2,
   LayoutDashboard, FileText, Settings,
   Inbox, Gamepad2, Users, Trophy, GraduationCap, BookOpen, Library, Lightbulb, Rocket, User, Briefcase, Clock,
-  UserCheck, ScanLine, RotateCcw, Layers, Award, Target, FolderKanban, Mic,
+  UserCheck, ScanLine, RotateCcw, Layers, Award, Target, FolderKanban, Mic, Newspaper,
 } from 'lucide-react'
 import type { Profile } from '@/types/database'
 
@@ -49,6 +49,7 @@ const navGestao: NavGroup[] = [
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
+        { href: '/admin/jornal', label: 'Redação JBInforma', icon: Newspaper },
       ],
     },
     {
@@ -109,6 +110,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
+        { href: '/admin/jornal', label: 'Redação JBInforma', icon: Newspaper },
       ],
     },
   ],
@@ -127,6 +129,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
+        { href: '/admin/jornal', label: 'Redação JBInforma', icon: Newspaper },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },
@@ -146,6 +149,7 @@ export const navByRole: Record<Profile['role'], NavGroup[]> = {
         { href: '/admin/ideias', label: 'Fábrica de Ideias', icon: Lightbulb },
         { href: '/admin/desafios', label: 'Desafios', icon: Rocket },
         { href: '/admin/podcast', label: 'Podcast JB no Ar', icon: Mic },
+        { href: '/admin/jornal', label: 'Redação JBInforma', icon: Newspaper },
         { href: '/ranking', label: 'Ranking', icon: Trophy },
       ],
     },

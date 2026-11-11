@@ -8,7 +8,7 @@ import { prisma } from '@/lib/db'
  * do servidor e a resposta segue. CPF nunca entra aqui (nem mascarado).
  */
 
-export type AlvoTipo = 'monitor' | 'aluno' | 'episodio' | 'termo' | 'quadro'
+export type AlvoTipo = 'monitor' | 'aluno' | 'episodio' | 'termo' | 'quadro' | 'noticia' | 'pauta' | 'edicao'
 
 export const ROTULO_ACAO: Record<string, string> = {
   'monitor.adicionado': 'Tornou monitor',
@@ -46,6 +46,28 @@ export const ROTULO_ACAO: Record<string, string> = {
   'quadro.ativado': 'Reativou quadro',
   'quadro.desativado': 'Desativou quadro',
   'quadro.removido': 'Apagou quadro',
+  // Redacao do JBInforma (mesma equipe, mesma trilha de auditoria).
+  'jornal.criada': 'Jornal: começou matéria',
+  'jornal.editada': 'Jornal: editou matéria',
+  'jornal.enviada': 'Jornal: enviou para revisão',
+  'jornal.publicada': 'Jornal: publicou matéria',
+  'jornal.devolvida': 'Jornal: devolveu para ajuste',
+  'jornal.retirada': 'Jornal: tirou matéria do ar',
+  'jornal.rascunho': 'Jornal: voltou para rascunho',
+  'jornal.apagada': 'Jornal: apagou rascunho',
+  'jornal.foto': 'Jornal: trocou a foto',
+  'jornal.correcao': 'Jornal: publicou correção (Erramos)',
+  'jornal.correcao_removida': 'Jornal: apagou correção',
+  'jornal.pauta_aceita': 'Jornal: aceitou pauta',
+  'jornal.pauta_recusada': 'Jornal: recusou pauta',
+  'jornal.pauta_respondida': 'Jornal: respondeu pauta',
+  'jornal.pauta_apagada': 'Jornal: apagou pauta',
+  'jornal.pauta_equipe': 'Jornal: sugeriu pauta',
+  'jornal.edicao_criada': 'Jornal: criou edição',
+  'jornal.edicao_editada': 'Jornal: editou edição',
+  'jornal.edicao_publicada': 'Jornal: publicou edição',
+  'jornal.edicao_recolhida': 'Jornal: recolheu edição',
+  'jornal.edicao_apagada': 'Jornal: apagou edição',
 }
 
 async function ipDaRequisicao(): Promise<string | null> {

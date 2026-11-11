@@ -147,9 +147,13 @@ export default async function HomePage() {
                   <div className="w-10 h-px bg-escola-vermelho mb-4" />
                   <h2 className="font-playfair text-escola-azul font-black text-3xl md:text-4xl">JBInforma</h2>
                 </div>
-                <Link href="/noticias" className="font-mono text-xs uppercase tracking-widest text-escola-cinza hover:text-escola-azul transition-colors flex-shrink-0 mb-1 inline-flex items-center gap-1">
-                  Ver todas as notícias <ChevronRight className="w-3 h-3" />
-                </Link>
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2 font-mono text-xs uppercase tracking-widest text-escola-cinza flex-shrink-0 mb-1">
+                  <Link href="/noticias/e-verdade" className="hover:text-escola-azul transition-colors">É verdade?</Link>
+                  <Link href="/noticias/pauta" className="hover:text-escola-azul transition-colors">Mande sua pauta</Link>
+                  <Link href="/noticias" className="hover:text-escola-azul transition-colors inline-flex items-center gap-1">
+                    Ver todas as notícias <ChevronRight className="w-3 h-3" />
+                  </Link>
+                </div>
               </div>
             </AnimateOnScroll>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">

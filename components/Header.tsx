@@ -24,6 +24,9 @@ const navItems = [
     label: 'JBInforma',
     children: [
       { href: '/noticias', label: 'Notícias' },
+      { href: '/noticias/edicoes', label: 'Edição da semana' },
+      { href: '/noticias/e-verdade', label: 'É verdade?' },
+      { href: '/noticias/pauta', label: 'Mande sua pauta' },
       { href: '/podcast', label: 'Podcast JB no Ar' },
     ],
   },

@@ -628,10 +628,75 @@ model noticias {
   categoria     String?        @db.Text
   autor_id      String?        @db.Char(36)
   autor_nome    String?        @db.Text
+  /// Colunas da redacao do JBInforma. DDL em scripts/sql/jornal.sql.
+  tipo          String         @default("materia") @db.VarChar(12)
+  editoria      String?        @db.VarChar(12)
+  status        String?        @db.VarChar(12)
+  texto         String?        @db.LongText
+  fontes        String?        @db.Text
+  checklist     String?        @db.Text
+  boato         String?        @db.Text
+  veredito      String?        @db.VarChar(12)
+  tema          String?        @db.VarChar(12)
+  como_checamos String?        @db.Text
+  memoria_ano   Int?
+  valido_ate    DateTime?      @db.Date
+  feedback      String?        @db.Text
+  publicado_em  DateTime?      @db.DateTime(3)
+  pauta_id      String?        @db.Char(36)
   usuarios      usuarios?      @relation(fields: [autor_id], references: [id], onDelete: Restrict, onUpdate: Restrict)
   noticias_log  noticias_log[]
 
   @@index([autor_id], map: "noticias_autor_id_fkey")
+  @@index([tipo, publicado], map: "noticias_tipo_idx")
+  @@index([status], map: "noticias_status_idx")
+}
+
+/// Edicao da semana do JBInforma. DDL em scripts/sql/jornal.sql.
+model jornal_edicoes {
+  id           String    @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  numero       Int       @unique(map: "jornal_edicoes_numero_key")
+  titulo       String    @db.VarChar(140)
+  inicio       DateTime  @db.Date
+  fim          DateTime  @db.Date
+  carta        String?   @db.Text
+  materias     String?   @db.Text
+  episodio_id  String?   @db.Char(36)
+  status       String    @default("rascunho") @db.VarChar(10)
+  publicado_em DateTime? @db.DateTime(3)
+  criado_por   String?   @db.Char(36)
+  criado_em    DateTime  @default(now()) @db.DateTime(3)
+}
+
+/// Pauta aberta: sugestoes do publico e da equipe.
+model jornal_pautas {
+  id             String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  titulo         String   @db.VarChar(140)
+  descricao      String?  @db.Text
+  origem         String   @default("publico") @db.VarChar(8)
+  nome           String?  @db.VarChar(80)
+  vinculo        String?  @db.VarChar(16)
+  status         String   @default("nova") @db.VarChar(10)
+  resposta       String?  @db.VarChar(300)
+  responsavel_id String?  @db.Char(36)
+  noticia_id     String?  @db.Char(36)
+  ip             String?  @db.VarChar(64)
+  criado_em      DateTime @default(now()) @db.DateTime(3)
+  atualizado_em  DateTime @default(now()) @db.DateTime(3)
+
+  @@index([status], map: "jornal_pautas_status_idx")
+  @@index([ip, criado_em], map: "jornal_pautas_ip_idx")
+}
+
+/// Erramos: correcoes publicas de materia ja publicada.
+model jornal_correcoes {
+  id         String   @id @default(dbgenerated("(uuid())")) @db.Char(36)
+  noticia_id String   @db.Char(36)
+  texto      String   @db.Text
+  criado_por String?  @db.Char(36)
+  criado_em  DateTime @default(now()) @db.DateTime(3)
+
+  @@index([noticia_id], map: "jornal_correcoes_noticia_idx")
 }
 
 model noticias_log {
