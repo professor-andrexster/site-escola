@@ -8,6 +8,7 @@ export const SECOES = [
   { chave: 'servico', href: '/noticias/servico', rotulo: 'Serviço' },
   { chave: 'memoria', href: '/noticias/memoria', rotulo: 'Memória JB' },
   { chave: 'podcast', href: '/podcast', rotulo: 'Podcast' },
+  { chave: 'como', href: '/noticias/como-fazemos', rotulo: 'Como fazemos' },
 ] as const
 export type Secao = (typeof SECOES)[number]['chave'] | 'outra'
 
@@ -24,11 +25,11 @@ export default function CabecalhoJornal({ atual, titulo = 'JBInforma', sobre, ol
       </div>
       <nav className="bg-escola-creme border-b border-escola-cinza-claro" aria-label="Seções do jornal">
         <div className="container mx-auto px-4">
-          <ul className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+          <ul className="flex items-center gap-1 overflow-x-auto jornal-rolagem py-1.5">
             {SECOES.map(s => (
               <li key={s.chave} className="flex-shrink-0">
                 <Link href={s.href} aria-current={s.chave === atual ? 'page' : undefined}
-                  className={`block font-mono text-xs uppercase tracking-widest px-3 py-3 border-b-2 -mb-px transition-colors ${s.chave === atual ? 'border-escola-vermelho text-escola-azul font-semibold' : 'border-transparent text-escola-cinza hover:text-escola-azul'}`}>
+                  className={`block font-mono text-xs uppercase tracking-widest px-3 py-2 border-b-2 transition-colors ${s.chave === atual ? 'border-escola-vermelho text-escola-azul font-semibold' : 'border-transparent text-escola-cinza hover:text-escola-azul'}`}>
                   {s.rotulo}
                 </Link>
               </li>

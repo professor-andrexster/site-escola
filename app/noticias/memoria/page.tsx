@@ -16,6 +16,7 @@ const DECADAS = [1940, 1950, 1960, 1970, 1980, 1990, 2000, 2010, 2020]
 export default async function MemoriaPage() {
   const itens = await memorias()
   const total = itens.length
+  const semHistoria = DECADAS.filter(d => !itens.some(m => m.memoriaAno != null && m.memoriaAno >= d && m.memoriaAno < d + 10)).map(d => (d === 1940 ? 'anos 1940' : `anos ${d}`))
   return (
     <PageLayout>
       <CabecalhoJornal atual="memoria" titulo="Memória JB" olho="JBInforma · 1946 a 2026" sobre="Oitenta anos de escola contados por quem passou por ela." />
@@ -33,20 +34,28 @@ export default async function MemoriaPage() {
           </div>
         </section>
 
-        <ol className="space-y-10">
-          {DECADAS.map(d => {
-            const lista = itens.filter(m => m.memoriaAno != null && m.memoriaAno >= d && m.memoriaAno < d + 10)
-            return (
-              <li key={d} className="grid gap-6 md:grid-cols-[minmax(0,18rem)_1fr] border-t border-escola-cinza-claro pt-8">
-                <div>
-                  <p className="font-playfair text-5xl font-black text-escola-azul/25 leading-none">{d === 1940 ? '1946' : d}</p>
-                  <p className="font-mono text-xs uppercase tracking-widest text-escola-cinza mt-1">{d === 1940 ? 'a fundação e os primeiros anos' : `anos ${d}`}</p>
-                </div>
-                <div className="min-w-0">
-                  {lista.length === 0 ? (
-                    <p className="text-escola-cinza">Ainda não temos histórias desta época. <Link href="/noticias/pauta" className="text-escola-azul underline">Você conhece alguém que estudou aqui nesses anos?</Link></p>
-                  ) : (
-                    <ul className="grid gap-4 sm:grid-cols-2">
+        {total === 0 ? (
+          <section className="border-t border-escola-cinza-claro pt-10 text-center">
+            <h2 className="font-playfair text-2xl font-bold text-escola-azul">Oito décadas esperando para serem contadas</h2>
+            <ol className="flex flex-wrap justify-center gap-2 mt-6">
+              {DECADAS.map(d => (
+                <li key={d} className="bg-white border border-escola-cinza-claro px-4 py-2 font-playfair text-xl font-black text-escola-azul/40">{d === 1940 ? '1946' : d}</li>
+              ))}
+            </ol>
+            <p className="text-escola-cinza mt-6">Cada história publicada entra na década dela. <Link href="/noticias/pauta" className="text-escola-azul underline">Você conhece alguém que estudou aqui?</Link></p>
+          </section>
+        ) : (
+          <>
+            <ol className="space-y-10">
+              {DECADAS.filter(d => itens.some(m => m.memoriaAno != null && m.memoriaAno >= d && m.memoriaAno < d + 10)).map(d => {
+                const lista = itens.filter(m => m.memoriaAno != null && m.memoriaAno >= d && m.memoriaAno < d + 10)
+                return (
+                  <li key={d} className="grid gap-6 md:grid-cols-[minmax(0,18rem)_1fr] border-t border-escola-cinza-claro pt-8">
+                    <div>
+                      <p className="font-playfair text-5xl font-black text-escola-azul/25 leading-none">{d === 1940 ? '1946' : d}</p>
+                      <p className="font-mono text-xs uppercase tracking-widest text-escola-cinza mt-1">{d === 1940 ? 'a fundação e os primeiros anos' : `anos ${d}`}</p>
+                    </div>
+                    <ul className="grid gap-4 sm:grid-cols-2 min-w-0">
                       {lista.map(m => (
                         <li key={m.id}>
                           <Link href={`/noticias/${m.slug}`} className="flex gap-4 bg-white border border-escola-cinza-claro p-3 card-lift h-full">
@@ -64,12 +73,15 @@ export default async function MemoriaPage() {
                         </li>
                       ))}
                     </ul>
-                  )}
-                </div>
-              </li>
-            )
-          })}
-        </ol>
+                  </li>
+                )
+              })}
+            </ol>
+            {semHistoria.length > 0 && (
+              <p className="text-center text-escola-cinza mt-12 border-t border-escola-cinza-claro pt-8">Ainda sem histórias: {semHistoria.join(', ')}. <Link href="/noticias/pauta" className="text-escola-azul underline">Conhece alguém dessa época?</Link></p>
+            )}
+          </>
+        )}
       </div>
     </PageLayout>
   )

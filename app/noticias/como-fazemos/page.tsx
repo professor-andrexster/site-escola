@@ -21,7 +21,7 @@ const REGRAS = [
 export default function ComoFazemosPage() {
   return (
     <PageLayout>
-      <CabecalhoJornal atual="outra" titulo="Como o jornal é feito" olho="JBInforma · Regras da redação" sobre="O combinado entre a equipe e quem lê." />
+      <CabecalhoJornal atual="como" titulo="Como o jornal é feito" olho="JBInforma · Regras da redação" sobre="O combinado entre a equipe e quem lê." />
       <div className="container mx-auto px-4 py-12">
         <section className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr] mb-14">
           <div>

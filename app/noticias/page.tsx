@@ -46,7 +46,7 @@ export default async function NoticiasPage({ searchParams }: { searchParams: Pro
 
       <div className="bg-white border-b border-escola-cinza-claro sticky top-[104px] z-30">
         <div className="container mx-auto px-4">
-          <div className="flex items-center gap-2 py-3 overflow-x-auto scrollbar-none">
+          <div className="flex items-center gap-2 py-3 overflow-x-auto jornal-rolagem">
             <Link href="/noticias" className={chip(!filtrando)}>Todas</Link>
             {(Object.keys(EDITORIAS) as Editoria[]).map(k => (
               <Link key={k} href={`/noticias?editoria=${k}`} className={chip(editoria === k, COR_EDITORIA[k])}>{EDITORIAS[k].nome}</Link>

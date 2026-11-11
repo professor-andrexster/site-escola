@@ -15,7 +15,7 @@ export default async function ErramosPage() {
   const correcoes = await todasAsCorrecoes()
   return (
     <PageLayout>
-      <CabecalhoJornal atual="outra" titulo="Erramos" olho="JBInforma · Correções" sobre="Quando o jornal erra, corrige e avisa aqui." />
+      <CabecalhoJornal atual="como" titulo="Erramos" olho="JBInforma · Correções" sobre="Quando o jornal erra, corrige e avisa aqui." />
       <div className="container mx-auto px-4 py-12">
         <section className="grid gap-10 md:grid-cols-[minmax(0,18rem)_1fr]">
           <div>

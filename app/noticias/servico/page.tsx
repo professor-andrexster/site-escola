@@ -35,7 +35,7 @@ export default async function ServicoPage() {
                   <li key={s.id}>
                     <Link href={`/noticias/${s.slug}`} className="grid grid-cols-[5.5rem_1fr] gap-4 bg-white border border-escola-cinza-claro p-4 card-lift">
                       <div className="bg-escola-azul text-white text-center py-2 self-start">
-                        <span className="block font-mono text-[9px] uppercase tracking-widest opacity-80">{s.validoAte ? 'até' : 'sem prazo'}</span>
+                        <span className="block font-mono text-[10px] uppercase tracking-widest opacity-80">{s.validoAte ? 'até' : 'sem prazo'}</span>
                         {s.validoAte && <span className="block font-playfair font-bold text-sm leading-tight px-1">{dataCurta(s.validoAte)}</span>}
                       </div>
                       <div className="min-w-0">
