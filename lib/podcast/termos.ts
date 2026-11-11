@@ -215,7 +215,7 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
   const ano = d.ano ?? new Date().getFullYear()
   const p = await iniciar(
     'Termo de autorização de uso de imagem, voz e nome',
-    `Participação de estudante no podcast ${NOME_PODCAST} e na rádio da escola · ano letivo ${ano}`,
+    `Participação de estudante no podcast ${NOME_PODCAST}, na rádio e no jornal JBInforma · ano letivo ${ano}`,
     `Termo do responsável · ${ano}`
   )
 
@@ -229,9 +229,37 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
 
   secao(p, '3', 'Finalidade específica')
   texto(p,
-    `Participação do(a) estudante no projeto pedagógico ${NOME_PODCAST}, podcast e rádio da ${ESCOLA}, em que os estudantes entrevistam pessoas, produzem notícias e gravam episódios sob acompanhamento de professores. Esta autorização vale somente para este projeto e somente no ano letivo de ${ano}.`)
+    `Participação do(a) estudante no projeto pedagógico de comunicação da ${ESCOLA}: o podcast ${NOME_PODCAST}, a rádio interna e o jornal JBInforma. Os estudantes entrevistam pessoas, escrevem notícias e gravam episódios sob acompanhamento de professores. Esta autorização vale somente para este projeto e somente no ano letivo de ${ano}.`)
 
-  secao(p, '4', 'O que autorizo (marque cada item que autoriza)')
+  secao(p, '4', 'O que o(a) estudante faz no projeto')
+  texto(p, 'O(a) estudante pode exercer uma ou mais das funções abaixo. Todas têm acompanhamento de um professor monitor.', { depois: 3 })
+  texto(p, `No podcast ${NOME_PODCAST} e na rádio da escola:`, { fonte: p.negrito, tam: 9, depois: 3 })
+  marcadores(p, [
+    'Pauta e roteiro: escolher o assunto do episódio, pesquisar e escrever as perguntas e o roteiro.',
+    'Apresentação e locução: falar no episódio e nos avisos da rádio. A voz do(a) estudante fica gravada.',
+    'Entrevista: entrevistar colegas, professores, funcionários e pessoas da comunidade. Quem dá a entrevista assina um termo próprio.',
+    'Gravação: gravar o áudio pelo celular ou pelo computador, dentro do painel da escola, com o acesso pessoal do(a) estudante.',
+    'Edição: ouvir a gravação, cortar trechos e escolher o que entra no episódio.',
+    'Texto e capa: escrever o título e a descrição do episódio e escolher a imagem de capa.',
+  ])
+  texto(p, 'No jornal JBInforma:', { fonte: p.negrito, tam: 9, depois: 3 })
+  marcadores(p, [
+    'Pauta: sugerir assuntos e assumir pautas, inclusive as enviadas por moradores pelo site.',
+    'Apuração: ouvir as pessoas envolvidas, conferir as informações e anotar quem foi ouvido.',
+    'Redação: escrever matérias sobre a escola e o bairro. Matéria sobre a cidade só sai com aprovação da direção.',
+    'Checagem ("É verdade?"): verificar boatos sobre saúde, golpes, concursos e serviços públicos, mostrando como a informação foi conferida. Política partidária e disputas locais ficam de fora.',
+    'Memória e serviço: pesquisar a história da escola e escrever avisos úteis para a comunidade.',
+    'Fotografia: fazer fotos para as matérias. Os dados de localização da foto são apagados antes de publicar.',
+    'Correção: corrigir a matéria quando houver erro. A correção fica registrada na seção "Erramos".',
+  ])
+  texto(p, 'Limites que valem para todas as funções:', { fonte: p.negrito, tam: 9, depois: 3 })
+  marcadores(p, [
+    'O(a) estudante não publica nada sozinho(a). Tudo vai antes para o professor monitor, que publica, devolve para ajuste ou recusa.',
+    'O que o(a) estudante faz no painel (criar, enviar, corrigir) fica registrado com data e hora, para a escola acompanhar.',
+    'Este termo não autoriza saída da escola. Atividade fora da escola depende de autorização própria.',
+  ])
+
+  secao(p, '5', 'O que autorizo (marque cada item que autoriza)')
   texto(p, 'Tipo de conteúdo:', { fonte: p.negrito, tam: 9, depois: 3 })
   opcoes(p, [
     'Voz do(a) estudante (áudio dos episódios e entrevistas)',
@@ -239,22 +267,40 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
     'Fotografia do(a) estudante',
     'Vídeo do(a) estudante',
   ])
+  espaco(p, 78) // as caixas de "onde" ficam juntas, sem quebrar entre páginas
   texto(p, 'Onde pode ser divulgado:', { fonte: p.negrito, tam: 9, depois: 3 })
   opcoes(p, [
     'Rádio interna da escola (somente dentro da escola)',
     `Página do podcast no site oficial da escola`,
     'Jornal da escola JBInforma, no site oficial',
     'Redes sociais oficiais da escola',
+    'Aplicativos de podcast, que recebem os episódios pelo endereço público do programa (RSS)',
+    'Edição impressa do jornal (folha da semana, mural e distribuição na escola)',
   ])
   espaco(p, 20)
   caixa(p, MARGEM, p.y - 10)
   p.page.drawText('NÃO AUTORIZO nenhum dos usos acima.', { x: MARGEM + 15, y: p.y - 9, size: 9, font: p.negrito, color: TEXTO })
   p.y -= 18
 
-  secao(p, '5', 'Condições e garantias')
+  secao(p, '6', 'Compartilhamento: por onde o conteúdo pode circular')
+  texto(p, 'Leia com atenção. O que é publicado na internet pode ser visto e repassado por qualquer pessoa.', { depois: 3 })
+  marcadores(p, [
+    'Acesso público: o site da escola é aberto. Qualquer pessoa pode ler as matérias e ouvir os episódios, sem cadastro, e eles podem aparecer em buscas na internet.',
+    'Repasse por terceiros: quem acessa pode copiar o endereço, baixar o áudio e repassar por WhatsApp, redes sociais ou outros meios. A escola não controla esse repasse.',
+    'Aplicativos de podcast: se autorizado no item 5, os episódios ficam disponíveis em aplicativos de áudio, que copiam o programa a partir do endereço público (RSS).',
+    'Folha impressa: a edição da semana pode ser impressa, afixada no mural e levada para casa por estudantes e famílias.',
+    'Como o(a) estudante aparece: somente primeiro nome e turma. Nome completo, endereço, telefone, documentos e data de nascimento nunca são publicados.',
+    'Canais oficiais: a escola só publica nos meios marcados no item 5. Servidores e professores não publicam o conteúdo em perfis pessoais.',
+    'Compartilhamento pelo(a) estudante: ele(a) pode repassar o endereço do que já foi publicado. Não pode divulgar gravação bruta, bastidores, rascunho ou fala de colega e de entrevistado que ainda não passou pela revisão.',
+    'Dados com terceiros: a escola não vende nem cede dados de estudantes e não usa o conteúdo em propaganda. O áudio já publicado pode ser enviado a um serviço automático de transcrição (Google) somente para gerar o texto do episódio.',
+    'Depois da revogação: a escola tira o conteúdo do site, do endereço dos aplicativos e das redes oficiais. Cópias que outras pessoas já baixaram ou repassaram podem continuar circulando, e a escola não tem como apagá-las.',
+  ])
+
+  secao(p, '7', 'Condições e garantias')
   marcadores(p, [
     'A participação é voluntária e gratuita. Não autorizar não traz nenhum prejuízo ao(à) estudante na escola.',
     'Todo episódio e toda matéria são revisados por um professor monitor antes de serem publicados. O áudio já publicado pode ser transcrito por ferramenta automática, para quem não pode ouvir.',
+    'O(a) estudante pode sair da equipe quando quiser, sem prejuízo.',
     'É proibido: uso comercial; uso fora da finalidade e dos meios marcados acima; publicação em perfis pessoais de servidores; exposição vexatória ou constrangedora; divulgar endereço, telefone, documentos, localização ou rotina do(a) estudante.',
     'Os dados deste termo (inclusive o CPF do responsável) servem apenas para identificar quem autorizou. Ficam guardados pela escola em local de acesso restrito e nunca são publicados (LGPD).',
     `Validade: ano letivo de ${ano}. Para o ano seguinte, a escola pedirá um novo termo.`,
@@ -262,9 +308,9 @@ export async function termoResponsavel(d: Partial<DadosResponsavel> = {}): Promi
   ])
   texto(p, BASE_LEGAL, { tam: 7.5, cor: CINZA, fonte: p.italico, depois: 6 })
 
-  secao(p, '6', 'Declaração e assinaturas')
+  secao(p, '8', 'Declaração e assinaturas')
   texto(p,
-    'Declaro que li este termo, entendi as condições e autorizo, de forma prévia, expressa, específica e destacada, somente os usos marcados no item 4. O(a) estudante também foi ouvido(a) e concorda em participar.')
+    'Declaro que li este termo, conheci as funções do(a) estudante descritas no item 4, entendi como o conteúdo pode ser compartilhado (item 6) e autorizo, de forma prévia, expressa, específica e destacada, somente os usos marcados no item 5. O(a) estudante também foi ouvido(a) e concorda em participar.')
   localData(p)
   assinaturas(p, [
     { rotulo: 'Responsável legal', nome: d.responsavelNome ?? '' },
@@ -302,7 +348,8 @@ export async function termoEntrevistado(d: { nome?: string; descricao?: string; 
     `A entrevista foi feita por estudantes da equipe do ${NOME_PODCAST}, projeto pedagógico da ${ESCOLA}, sem cobrança e sem fins comerciais.`,
     'A gravação pode ser editada para caber no tempo do episódio, sem mudar o sentido do que eu disse.',
     'Meus documentos e telefone não são publicados.',
-    'Posso pedir a retirada da entrevista a qualquer momento, por escrito, na secretaria da escola.',
+    'O site da escola é público. Quem acessa pode ouvir, baixar e repassar a entrevista por WhatsApp, redes sociais ou aplicativos de podcast, e a escola não controla esse repasse.',
+    'Posso pedir a retirada da entrevista a qualquer momento, por escrito, na secretaria da escola. A escola tira do site e dos canais oficiais; cópias já repassadas por outras pessoas podem continuar circulando.',
   ])
   texto(p, BASE_LEGAL, { tam: 7.5, cor: CINZA, fonte: p.italico, depois: 6 })
 

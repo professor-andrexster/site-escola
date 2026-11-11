@@ -239,7 +239,7 @@ function LinhaAluno({ m, anoAtual, episodios }: { m: Membro; anoAtual: number; e
 
       {m.autorizacaoStatus === 'enviada' && (
         <p className="mt-3 text-xs text-blue-900 bg-blue-50 rounded-lg p-2">
-          Ao conferir, veja as caixas que o responsável marcou no item 4 do termo. Se ele não marcou <strong>voz</strong>, deixe &quot;Pode gravar áudio&quot; desligado. Se marcou &quot;Não autorizo&quot;, não libere.
+          Ao conferir, veja as caixas que o responsável marcou no item 5 do termo. Se ele não marcou <strong>voz</strong>, deixe &quot;Pode gravar áudio&quot; desligado. Se marcou &quot;Não autorizo&quot;, não libere.
         </p>
       )}
       {(m.autorizacaoStatus === 'pendente' || m.autorizacaoStatus === 'enviada' || m.autorizacaoStatus === 'revogada') && !m.vencida && (
