@@ -48,11 +48,12 @@ export default function Header() {
   const [alunoOpen, setAlunoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
-  // A data sai do servidor e é refeita no navegador: página guardada em cache
-  // pode trazer o dia anterior, então o texto é atualizado depois de montar.
-  const [hoje, setHoje] = useState(formatDate)
+  // Página guardada em cache pode trazer a data de outro dia. O React não troca
+  // texto que já veio do servidor, então a chave muda depois de montar e o
+  // trecho da data é refeito com o relógio do navegador.
+  const [montado, setMontado] = useState(false)
 
-  useEffect(() => { setHoje(formatDate()) }, [])
+  useEffect(() => { setMontado(true) }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -68,7 +69,7 @@ export default function Header() {
       {/* Top bar */}
       <div className="bg-escola-azul text-white/70 text-xs font-mono px-4 py-1.5">
         <div className="container mx-auto flex items-center justify-between">
-          <span className="capitalize hidden sm:block" suppressHydrationWarning>{hoje}</span>
+          <span key={montado ? 'navegador' : 'servidor'} className="capitalize hidden sm:block" suppressHydrationWarning>{formatDate()}</span>
           <div className="flex items-center gap-4">
             <span>Carlos Chagas — MG</span>
             <span className="text-white/70">|</span>
