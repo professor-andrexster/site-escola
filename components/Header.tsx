@@ -38,6 +38,7 @@ const navItems = [
 function formatDate() {
   return new Date().toLocaleDateString('pt-BR', {
     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    timeZone: 'America/Sao_Paulo',
   })
 }
 
@@ -47,6 +48,11 @@ export default function Header() {
   const [alunoOpen, setAlunoOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const pathname = usePathname()
+  // A data sai do servidor e é refeita no navegador: página guardada em cache
+  // pode trazer o dia anterior, então o texto é atualizado depois de montar.
+  const [hoje, setHoje] = useState(formatDate)
+
+  useEffect(() => { setHoje(formatDate()) }, [])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -62,7 +68,7 @@ export default function Header() {
       {/* Top bar */}
       <div className="bg-escola-azul text-white/70 text-xs font-mono px-4 py-1.5">
         <div className="container mx-auto flex items-center justify-between">
-          <span className="capitalize hidden sm:block">{formatDate()}</span>
+          <span className="capitalize hidden sm:block" suppressHydrationWarning>{hoje}</span>
           <div className="flex items-center gap-4">
             <span>Carlos Chagas — MG</span>
             <span className="text-white/70">|</span>
