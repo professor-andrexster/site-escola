@@ -97,6 +97,12 @@ export default function Footer() {
           <p className="font-mono text-xs text-white/60">
             SRE Teófilo Otoni · INEP 31146579
           </p>
+          <p className="font-mono text-xs text-white/60">
+            Desenvolvido por{' '}
+            <a href="https://andredev.nexialabs.com.br" target="_blank" rel="noopener" className="underline underline-offset-2 hover:text-white transition-colors">André Gomes</a>
+            {' · '}
+            <a href="https://wa.me/5533984656356" target="_blank" rel="noopener" className="underline underline-offset-2 hover:text-white transition-colors">(33) 98465-6356</a>
+          </p>
         </div>
       </div>
     </footer>
