@@ -1,6 +1,7 @@
 import { cursoPublicoPorSlug } from '@/lib/db/cursos'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import PageLayout from '@/components/PageLayout'
 
 export const revalidate = 60
 
@@ -11,6 +12,7 @@ export default async function CursoPublicoPage({ params }: { params: Promise<{ s
   const { curso, aulas } = dados
 
   return (
+    <PageLayout>
     <div className="bg-escola-creme min-h-screen pb-20">
       <div className="container mx-auto px-4 max-w-4xl py-12">
         <Link href="/cursos" className="inline-block text-escola-cinza hover:text-escola-vermelho text-sm mb-6 transition-colors">
@@ -44,5 +46,6 @@ export default async function CursoPublicoPage({ params }: { params: Promise<{ s
         </div>
       </div>
     </div>
+    </PageLayout>
   )
 }
